@@ -3,6 +3,7 @@
 *.bundle
 *.gem
 *.class
+*.jar
 .bundle
 Gemfile*
 pkg
@@ -14,5 +15,4 @@ tmp
 .project
 .settings
 /nbproject/private/
-ext/java/build
-ext/java/msgpack.jar
+
