@@ -1,0 +1,10 @@
+/*.gemspec
+*.so
+/Makefile
+/tmp
+*.gem
+.bundle
+Gemfile.lock
+pkg/*
+test/debug.log
+*~
