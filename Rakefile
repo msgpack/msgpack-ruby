@@ -8,6 +8,8 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 
+Bundler::GemHelper.install_tasks
+
 begin
   require 'rake/extensiontask'
 rescue LoadError
