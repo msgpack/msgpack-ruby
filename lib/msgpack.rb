@@ -13,11 +13,11 @@ module MessagePack
       require 'msgpack-0.6.0-devel.jar'
 
       require 'msgpack/msgpack.jar'
-      require 'msgpack/ext/java/utils'
+      require 'msgpack/utils'
     rescue LoadError => e
       raise e
     end
   else
-    require 'msgpack.so'
+    require 'msgpack/msgpack.so'
   end
 end
