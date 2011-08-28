@@ -1,4 +1,4 @@
-package msgpack.ext.java;
+package msgpack;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import msgpack.ext.java.runtime.MessagePackInputStream;
-import msgpack.ext.java.runtime.MessagePackOutputStream;
+import msgpack.runtime.MessagePackInputStream;
+import msgpack.runtime.MessagePackOutputStream;
 
 import org.jruby.Ruby;
 import org.jruby.RubyString;

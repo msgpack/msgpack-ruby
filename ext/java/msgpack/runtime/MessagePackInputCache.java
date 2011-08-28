@@ -1,4 +1,4 @@
-package msgpack.ext.java.runtime;
+package msgpack.runtime;
 
 import java.io.IOException;
 import java.util.ArrayList;

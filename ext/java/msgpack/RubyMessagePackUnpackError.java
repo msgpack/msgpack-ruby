@@ -1,4 +1,4 @@
-package msgpack.ext.java;
+package msgpack;
 
 import org.jruby.Ruby;
 import org.jruby.RubyClass;

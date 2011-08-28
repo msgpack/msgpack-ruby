@@ -1,4 +1,4 @@
-package msgpack.ext.java.runtime;
+package msgpack.runtime;
 
 import java.io.FilterOutputStream;
 import java.io.IOException;
