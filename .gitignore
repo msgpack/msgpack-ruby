@@ -8,3 +8,4 @@ pkg/*
 test/debug.log
 *~
 /rdoc
+/nbproject/private/
