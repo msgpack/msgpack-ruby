@@ -9,3 +9,4 @@ test/debug.log
 *~
 /rdoc
 /nbproject/private/
+lib/msgpack/msgpack.jar

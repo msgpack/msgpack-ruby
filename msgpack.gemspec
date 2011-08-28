@@ -5,11 +5,6 @@ require 'msgpack/version'
 Gem::Specification.new do |s|
   s.name = "msgpack"
   s.version = MessagePack::VERSION
-  if RUBY_PLATFORM =~ /java/
-    s.platform = "java"
-  else
-    s.platform = Gem::Platform::RUBY
-  end
   s.summary = "MessagePack, a binary-based efficient data interchange format."
   s.description = %q{MessagePack is a binary-based efficient object serialization library. It enables to exchange structured objects between many languages like JSON. But unlike JSON, it is very fast and small.}
   s.author = "FURUHASHI Sadayuki"
@@ -22,6 +17,13 @@ Gem::Specification.new do |s|
   s.files = `git ls-files`.split("\n")
   s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n") 
   s.require_paths = ["lib"]
+
+  if RUBY_PLATFORM =~ /java/
+    s.platform = "java"
+    s.files += ["lib/msgpack/msgpack.jar"]
+  else
+    s.platform = Gem::Platform::RUBY
+  end
 
   s.add_development_dependency 'bundler', ['>= 1.0.0']
   s.add_development_dependency 'rake', ['>= 0.8.7']
