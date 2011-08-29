@@ -12,9 +12,9 @@ import org.jruby.runtime.builtin.IRubyObject;
 @JRubyClass(name="UnpackError")
 @SuppressWarnings("serial")
 public class RubyMessagePackUnpackError extends RubyObject {
-    static RubyClass ERROR;
+    static public RubyClass ERROR;
 
-    static final ObjectAllocator ALLOCATOR = new ObjectAllocator() {
+    static final public ObjectAllocator ALLOCATOR = new ObjectAllocator() {
         public IRubyObject allocate(Ruby runtime, RubyClass clazz) {
             return new RubyMessagePackUnpackError(runtime, clazz);
         }

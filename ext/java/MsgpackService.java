@@ -1,7 +1,10 @@
-package msgpack;
+
 
 import java.io.IOException;
 
+import msgpack.RubyMessagePack;
+import msgpack.RubyMessagePackUnpackError;
+import msgpack.RubyMessagePackUnpacker;
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyModule;
