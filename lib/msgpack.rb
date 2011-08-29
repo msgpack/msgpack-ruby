@@ -18,6 +18,6 @@ module MessagePack
       raise e
     end
   else
-    require 'msgpack/msgpack.so'
+    require 'msgpack.so'
   end
 end

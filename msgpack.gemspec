@@ -23,6 +23,8 @@ Gem::Specification.new do |s|
     s.files += ["lib/msgpack/msgpack.jar"]
   else
     s.platform = Gem::Platform::RUBY
+    s.files -= Dir['lib/*.jar']
+    s.files -= Dir['ext/**/*.java']
   end
 
   s.add_development_dependency 'bundler', ['>= 1.0.0']
