@@ -8,7 +8,6 @@ import java.util.List;
 import org.jruby.Ruby;
 import org.jruby.RubySymbol;
 import org.jruby.runtime.builtin.IRubyObject;
-import org.jruby.runtime.marshal.UnmarshalStream;
 
 
 public class MessagePackInputCache {
