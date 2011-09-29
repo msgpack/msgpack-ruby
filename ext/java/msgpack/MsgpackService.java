@@ -1,10 +1,7 @@
-
+package msgpack;
 
 import java.io.IOException;
 
-import msgpack.RubyMessagePack;
-import msgpack.RubyMessagePackUnpackError;
-import msgpack.RubyMessagePackUnpacker;
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyModule;
@@ -14,6 +11,7 @@ import org.jruby.runtime.load.BasicLibraryService;
 public class MsgpackService implements BasicLibraryService {
 
     public boolean basicLoad(Ruby runtime) throws IOException {
+	System.out.println("executing msgpack service");
 	// define MessagePack module
 	RubyModule msgpackModule = runtime.defineModule("MessagePack");
 	msgpackModule.defineAnnotatedMethods(RubyMessagePack.class);
