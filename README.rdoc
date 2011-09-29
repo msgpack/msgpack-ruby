@@ -32,6 +32,6 @@ Use MessagePack::Unpacker for streaming deserialization.
 == Copyright
 
 Author::    frsyuki <frsyuki@users.sourceforge.jp>
-Copyright:: Copyright (c) 2008-2010 FURUHASHI Sadayuki
+Copyright:: Copyright (c) 2008-2011 FURUHASHI Sadayuki
 License::   Apache License, Version 2.0
 
