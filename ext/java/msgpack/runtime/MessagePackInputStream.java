@@ -58,23 +58,6 @@ import org.msgpack.unpacker.Unpacker;
 
 public class MessagePackInputStream extends InputStream {
 
-    // introduced for keeping ivar read state recursively.
-    private class MessagePackState {
-        private boolean ivarWaiting;
-        
-        MessagePackState(boolean ivarWaiting) {
-            this.ivarWaiting = ivarWaiting;
-        }
-        
-        boolean isIvarWaiting() {
-            return ivarWaiting;
-        }
-        
-        void setIvarWaiting(boolean ivarWaiting) {
-            this.ivarWaiting = ivarWaiting;
-        }
-    }
-
     protected final Ruby runtime;
 
     private Unpacker unpacker;
@@ -83,7 +66,7 @@ public class MessagePackInputStream extends InputStream {
 
     private final IRubyObject proc;
 
-    private final InputStream inputStream;
+    private final InputStream in;
 
     private final boolean taint;
 
@@ -94,23 +77,20 @@ public class MessagePackInputStream extends InputStream {
         this.unpacker = RubyMessagePack.getMessagePack(runtime).createUnpacker(in);
         this.cache = new MessagePackInputCache(runtime);
         this.proc = proc;
-        this.inputStream = in;
+        this.in = in;
         this.taint = taint;
         this.untrust = untrust;
     }
 
-    // r_object
+    public InputStream getInputStream() {
+	return in;
+    }
+
     public IRubyObject readObject() throws IOException {
-        return readObject(new MessagePackState(false), true);
+	return readObject(true);
     }
 
-    // r_object
     public IRubyObject readObject(boolean callProc) throws IOException {
-        return readObject(new MessagePackState(false), callProc);
-    }
-
-    // r_object0
-    public IRubyObject readObject(MessagePackState state, boolean callProc) throws IOException {
         //int type = readUnsignedByte();
 	int type = 0;// TODO
         IRubyObject result = null;
@@ -118,7 +98,7 @@ public class MessagePackInputStream extends InputStream {
             result = cache.readLink(this, type);
             if (callProc && runtime.is1_9()) return doCallProcForLink(result, type);
         } else {
-            result = readObjectDirectly(type, state, callProc);
+            result = readObjectDirectly(type, callProc);
         }
 
         result.setTaint(taint);
@@ -165,9 +145,9 @@ public class MessagePackInputStream extends InputStream {
         return result;
     }
 
-    private IRubyObject readObjectDirectly(int type, MessagePackState state, boolean callProc) throws IOException {
+    private IRubyObject readObjectDirectly(int type, boolean callProc) throws IOException {
 	Value value = unpacker.readValue();
-	IRubyObject rubyObj = readObjectDirectly(value, state, callProc);
+	IRubyObject rubyObj = readObjectDirectly(value, callProc);
         if (runtime.is1_9()) {
             if (callProc) {
                 return doCallProcForObj(rubyObj);
@@ -180,19 +160,18 @@ public class MessagePackInputStream extends InputStream {
 	return rubyObj;
     }
 
-    private IRubyObject readObjectDirectly(Value value, MessagePackState state, boolean callProc) throws IOException {
+    public IRubyObject readObjectDirectly(Value value, boolean callProc) throws IOException {
         IRubyObject rubyObj = null;
-        // FIXME case 'I' 
-        if (value.isNil()) {
+        if (value.isNilValue()) {
             value.asNilValue();
             rubyObj = runtime.getNil();
-        } else if (value.isBoolean()) {
+        } else if (value.isBooleanValue()) {
             boolean bool = ((BooleanValue) value.asBooleanValue()).getBoolean();
             rubyObj = bool ? runtime.getTrue() : runtime.getFalse();
-        } else if (value.isRaw()){
+        } else if (value.isRawValue()){
             byte[] bytes = ((RawValue) value.asRawValue()).getByteArray();
             rubyObj = RubyString.newString(runtime, bytes);
-        } else if (value.isInteger()) {
+        } else if (value.isIntegerValue()) {
             IntegerValue iv = (IntegerValue) value.asIntegerValue();
             try {
         	long l = iv.getLong();
@@ -201,32 +180,32 @@ public class MessagePackInputStream extends InputStream {
         	BigInteger bi = iv.getBigInteger();
         	rubyObj = RubyBignum.newBignum(runtime, bi);
             }
-        } else if (value.isFloat()) {
+        } else if (value.isFloatValue()) {
             double d = ((FloatValue) value.asFloatValue()).getDouble();
             rubyObj = RubyFloat.newFloat(runtime, d);
         } 
         // FIXME RubyRegexp
         // FIXME RubySymbol
-        else if (value.isArray()) {
+        else if (value.isArrayValue()) {
             ArrayValue arrayValue = value.asArrayValue();
             Value[] values = arrayValue.getElementArray();
             int length = values.length;
             RubyArray array = getRuntime().newArray(length);
             registerLinkTarget(array);
             for (int i = 0; i < length; ++i) {
-        	IRubyObject element = this.readObjectDirectly(values[i], state, callProc);
+        	IRubyObject element = this.readObjectDirectly(values[i], callProc);
         	array.append(element);
             }
             rubyObj = (IRubyObject) array;
-        } else if (value.isMap()) {
+        } else if (value.isMapValue()) {
             MapValue mapValue = value.asMapValue();
             RubyHash hash = RubyHash.newHash(getRuntime());
             registerLinkTarget(hash);
             for (Map.Entry<Value, Value> e : mapValue.entrySet()) {
         	// TODO
         	hash.fastASetCheckString(getRuntime(),
-        		readObjectDirectly(e.getKey(), state, callProc),
-        		readObjectDirectly(e.getValue(), state, callProc));
+        		readObjectDirectly(e.getKey(), callProc),
+        		readObjectDirectly(e.getValue(), callProc));
             }
             //if (defaultValue) result.default_value_set(input.unmarshalObject());
             rubyObj = (IRubyObject) hash;
@@ -270,7 +249,7 @@ public class MessagePackInputStream extends InputStream {
 
         int readLength = 0;
         while (readLength < length) {
-            int read = inputStream.read(buffer, readLength, length - readLength);
+            int read = in.read(buffer, readLength, length - readLength);
 
             if (read == -1) {
                 throw getRuntime().newArgumentError("marshal data too short");
@@ -349,6 +328,10 @@ public class MessagePackInputStream extends InputStream {
     }
 
     public int read() throws IOException {
-        return inputStream.read();
+        return in.read();
+    }
+
+    public void close() throws IOException {
+	in.close();
     }
 }

@@ -50,17 +50,17 @@ import org.jruby.runtime.encoding.EncodingCapable;
 import org.jruby.runtime.marshal.CoreObjectType;
 import org.jruby.runtime.marshal.DataType;
 import org.jruby.util.ByteList;
-import org.msgpack.MessagePack;
 import org.msgpack.packer.Packer;
 
 
 public final class MessagePackOutputStream extends FilterOutputStream {
+
     private final Ruby runtime;
+
     private Packer packer;
+
     private final MessagePackOutputCache cache;
-    private boolean tainted = false;
-    private boolean untrusted = false;
-    
+
     private int depth = 0;
 
     private final static char TYPE_IVAR = 'I';
@@ -79,12 +79,7 @@ public final class MessagePackOutputStream extends FilterOutputStream {
 
     public void writeObject(IRubyObject value) throws IOException {
         depth++;
-
-        tainted |= value.isTaint();
-        untrusted |= value.isUntrusted();
-
         writeAndRegister(value);
-
         depth--;
         if (depth == 0) {
             packer.close();
@@ -213,13 +208,19 @@ public final class MessagePackOutputStream extends FilterOutputStream {
         // marshalling logic.
         if (value instanceof CoreObjectType) {
             if (value instanceof DataType) {
-                throw value.getRuntime().newTypeError("no marshal_dump is defined for class " + value.getMetaClass().getName());
+                throw value.getRuntime().newTypeError(
+                	"no marshal_dump is defined for class " + value.getMetaClass().getName());
             }
             int nativeTypeIndex = ((CoreObjectType)value).getNativeTypeIndex();
-
             switch (nativeTypeIndex) {
-            case ClassIndex.ARRAY:
-                writeArray((RubyArray) value);
+            case ClassIndex.NIL:
+        	writeNil();
+                return;
+            case ClassIndex.STRING:
+        	writeString((RubyString) value);
+                return;
+            case ClassIndex.TRUE:
+        	writeTrue();
                 return;
             case ClassIndex.FALSE:
         	writeFalse();
@@ -227,101 +228,76 @@ public final class MessagePackOutputStream extends FilterOutputStream {
             case ClassIndex.FIXNUM:
         	writeFixnum((RubyFixnum) value);
         	return;
-            case ClassIndex.BIGNUM:
-        	writeBignum((RubyBignum) value);
-                return;
-            case ClassIndex.CLASS:
-        	// FIXME #MN
-        	throw runtime.newTypeError("unsupported error #MN");
-//                if (((RubyClass)value).isSingleton()) throw runtime.newTypeError("singleton class can't be dumped");
-//                write('c');
-//                RubyClass.marshalTo((RubyClass)value, this);
-//                return;
             case ClassIndex.FLOAT:
         	writeFloat((RubyFloat) value);
                 return;
-            case ClassIndex.HASH: {
+            case ClassIndex.BIGNUM:
+        	writeBignum((RubyBignum) value);
+                return;
+            case ClassIndex.ARRAY:
+                writeArray((RubyArray) value);
+                return;
+            case ClassIndex.HASH:
                 writeHash((RubyHash) value);
                 return;
-            }
+            case ClassIndex.CLASS:
+        	throw runtime.newNotImplementedError("class index"); // TODO #MN
             case ClassIndex.MODULE:
-        	// FIXME #MN
-        	throw runtime.newTypeError("unsupported error #MN");
-//                write('m');
-//                RubyModule.marshalTo((RubyModule)value, this);
-//                return;
-            case ClassIndex.NIL:
-        	writeNil();
-                return;
+        	throw runtime.newNotImplementedError("module index"); // TODO #MN
             case ClassIndex.OBJECT:
             case ClassIndex.BASICOBJECT:
-        	// FIXME #MN
-        	throw runtime.newTypeError("unsupported error #MN");
-//                dumpDefaultObjectHeader(value.getMetaClass());
-//                value.getMetaClass().getRealClass().marshal(value, this);
-//                return;
+        	throw runtime.newNotImplementedError("object or basicobject index"); // TODO #MN
             case ClassIndex.REGEXP:
-        	// FIXME #MN
-        	throw runtime.newTypeError("unsupported error #MN");
-//                write('/');
-//                RubyRegexp.marshalTo((RubyRegexp)value, this);
-//                return;
-            case ClassIndex.STRING:
-        	writeString((RubyString) value);
-                return;
+        	throw runtime.newNotImplementedError("regexp index"); // TODO #MN
             case ClassIndex.STRUCT:
-        	// FIXME #MN
-        	throw runtime.newTypeError("unsupported error #MN");
-//                RubyStruct.marshalTo((RubyStruct)value, this);
-//                return;
+        	throw runtime.newNotImplementedError("struct index"); // TODO #MN
             case ClassIndex.SYMBOL:
-        	// FIXME #MN
-        	throw runtime.newTypeError("unsupported error #MN");
-//                writeAndRegisterSymbol(((RubySymbol)value).asJavaString());
-//                return;
-            case ClassIndex.TRUE:
-        	writeTrue();
-                return;
+        	throw runtime.newNotImplementedError("symbol index"); // TODO #MN
             default:
-        	throw runtime.newTypeError("can't dump " + value.getMetaClass().getName());
+        	throw runtime.newTypeError("can't pack " + value.getMetaClass().getName());
             }
         } else {
-            // FIXME
-//            dumpDefaultObjectHeader(value.getMetaClass());
-//            value.getMetaClass().getRealClass().marshal(value, this);
+            throw runtime.newTypeError("can't pack " + value.getMetaClass().getName()); // TODO #MN
         }
+    }
+
+    private void writeNil() throws IOException {
+	packer.writeNil();
+    }
+
+    private void writeString(RubyString string) throws IOException {
+	registerLinkTarget(string);
+	packer.write(string.asJavaString());
+    }
+
+    private void writeTrue() throws IOException {
+	packer.write(true);
+    }
+
+    private void writeFalse() throws IOException {
+	packer.write(false);
+    }
+
+    private void writeFixnum(RubyFixnum fixnum) throws IOException {
+	packer.write(fixnum.getLongValue());
+    }
+
+    private void writeFloat(RubyFloat f) throws IOException {
+	packer.write(f.getValue());
+    }
+
+    private void writeBignum(RubyBignum bignum) throws IOException {
+	packer.write(bignum.getValue());
     }
 
     private void writeArray(RubyArray array) throws IOException {
 	registerLinkTarget(array);
-
         int length = array.getLength();
-        try {
-            packer.writeArrayBegin(length);
-            for (int i = 0; i < length; ++i) {
-        	writeObject(array.eltInternal(i));
-            }
-            packer.writeArrayEnd();
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw runtime.newConcurrencyError(
-        	    "Detected invalid array contents due to unsynchronized modifications with concurrent users");
+        packer.writeArrayBegin(length);
+        for (int i = 0; i < length; ++i) {
+            writeObject(array.eltInternal(i));
         }
-    }
-
-    private void writeFalse() throws IOException {
-	packer.writeBoolean(false);
-    }
-
-    private void writeFixnum(RubyFixnum fixnum) throws IOException {
-	packer.writeLong(fixnum.getLongValue());
-    }
-
-    private void writeBignum(RubyBignum bignum) throws IOException {
-	packer.writeBigInteger(bignum.getValue());
-    }
-
-    private void writeFloat(RubyFloat f) throws IOException {
-	packer.writeDouble(f.getValue());
+        packer.writeArrayEnd();
     }
 
     private void writeHash(RubyHash hash) throws IOException {
@@ -335,22 +311,8 @@ public final class MessagePackOutputStream extends FilterOutputStream {
 	    writeObject(key);
 	    IRubyObject val = (IRubyObject) e.getValue();
 	    writeObject(val);
-	    
 	}
 	packer.writeMapEnd();
-    }
-
-    private void writeNil() throws IOException {
-	packer.writeNil();
-    }
-
-    private void writeString(RubyString string) throws IOException {
-	registerLinkTarget(string);
-	packer.writeByteArray(string.getBytes());
-    }
-
-    private void writeTrue() throws IOException {
-	packer.writeBoolean(true);
     }
 
     public void writeUserClass(IRubyObject obj, RubyClass type) throws IOException {
@@ -488,11 +450,7 @@ public final class MessagePackOutputStream extends FilterOutputStream {
         out.write(value);
     }
 
-    public boolean isTainted() {
-        return tainted;
-    }
-
-    public boolean isUntrusted() {
-        return untrusted;
+    public void close() throws IOException {
+	super.close();
     }
 }
