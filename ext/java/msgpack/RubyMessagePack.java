@@ -21,8 +21,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,31 +64,22 @@ public class RubyMessagePack {
 
         try {
             if (io != null) {
-        	writeToStream(runtime, object, new IOOutputStream(io));
+        	MessagePackOutputStream out = new MessagePackOutputStream(runtime, new IOOutputStream(io));
+        	out.writeObject(object);
                 return io;
             }
 
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            boolean[] taintUntrust = writeToStream(runtime, object, out);
-            RubyString result = RubyString.newString(runtime, new ByteList(out.toByteArray()));
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            MessagePackOutputStream out = new MessagePackOutputStream(runtime, bout);
+            out.writeObject(object);
+            RubyString result = RubyString.newString(runtime, new ByteList(bout.toByteArray()));
 
-            if (taintUntrust[0]) {
-        	result.setTaint(true);
-            }
-            if (taintUntrust[1]) {
-        	result.setUntrusted(true);
-            }
+            result.setTaint(object.isTaint());
+            result.setUntrusted(object.isUntrusted());
             return result;
         } catch (IOException e) {
             throw runtime.newIOErrorFromException(e);
         }
-    }
-
-    private static boolean[] writeToStream(Ruby runtime, IRubyObject object, OutputStream out) throws IOException {
-	//MarshalStream output = new MarshalStream(runtime, rawOutput, depthLimit); // TODO #MN will delete it
-	MessagePackOutputStream msgpackOut = new MessagePackOutputStream(runtime, out);
-        msgpackOut.writeObject(object);
-        return new boolean[] { msgpackOut.isTainted(), msgpackOut.isUntrusted() };
     }
 
     @JRubyMethod(name = "unpack", required = 1, module = true)
@@ -103,13 +92,11 @@ public class RubyMessagePack {
         	throw runtime.newTypeError("instance of IO needed");
             }
 
-            boolean tainted = io.isTaint();
-            boolean untrusted = io.isUntrusted();
             ByteList bytes = ((RubyString) v).getByteList();
-            InputStream in = new ByteArrayInputStream(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
-            // TODO #MN will delete it
-            //return new UnmarshalStream(runtime, rawInput, proc, tainted, untrusted).unmarshalObject();
-            return new MessagePackInputStream(runtime, in, null, tainted, untrusted).readObject();
+            ByteArrayInputStream bin = new ByteArrayInputStream(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
+            //return new UnmarshalStream(runtime, rawInput, proc, tainted, untrusted).unmarshalObject(); // TODO #MN will delete it
+            MessagePackInputStream in = new MessagePackInputStream(runtime, bin, null, io.isTaint(), io.isUntrusted());
+            return in.readObject();
         } catch (EOFException e) {
             if (io.respondsTo("to_str")) {
         	throw runtime.newArgumentError("packed data too short");
@@ -122,8 +109,6 @@ public class RubyMessagePack {
 
     @JRubyMethod(name = "unpack_limit", required = 2, module = true)
     public static IRubyObject unpackLimit(ThreadContext context, IRubyObject recv, IRubyObject io, IRubyObject limit) {
-	// FIXME #MN
-	Ruby runtime = context.getRuntime();
-        throw runtime.newNotImplementedError("unpack_limit");
+        throw context.getRuntime().newNotImplementedError("unpack_limit"); // TODO #MN
     }
 }

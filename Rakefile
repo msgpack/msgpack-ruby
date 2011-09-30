@@ -32,7 +32,6 @@ end
 
 Bundler::GemHelper.install_tasks
 
-
 begin
   if jruby?
     require 'rake/javaextensiontask'
