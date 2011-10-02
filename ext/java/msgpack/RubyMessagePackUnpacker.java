@@ -64,27 +64,65 @@ public class RubyMessagePackUnpacker extends RubyObject {
 	return streamEq(context, io);
     }
 
-    @JRubyMethod(name = "data")
+    @JRubyMethod
     public IRubyObject data(ThreadContext context) {
-	// FIXME #MN
-	return this;
+	throw context.getRuntime().newNotImplementedError("data method"); // FIXME #MN
     }
-    
-    @JRubyMethod(name = "each")
-    public IRubyObject each(ThreadContext context, Block block) {
-	if (!block.isGiven()) { // validation
-	    throw context.getRuntime().newArgumentError("block is null");
-	}
 
-	// main process
-	return eachCommon(context, block);
+    @JRubyMethod
+    public IRubyObject execute(ThreadContext context, IRubyObject data, IRubyObject offset) {
+	throw context.getRuntime().newNotImplementedError("execute method"); // FIXME #MN
+    }
+
+    @JRubyMethod
+    public IRubyObject execute_limit(ThreadContext context, IRubyObject data, IRubyObject offset, IRubyObject limit) {
+	throw context.getRuntime().newNotImplementedError("execute_limit method"); // FIXME #MN
+    }
+
+    @JRubyMethod
+    public IRubyObject feed(ThreadContext context, IRubyObject data) {
+	reset(context);
+	Ruby runtime = context.getRuntime();
+	IRubyObject v = data.checkStringType();
+
+	if (v.isNil()) {
+            throw runtime.newTypeError("string instance needed");
+        }
+
+        ByteList bytes = ((RubyString) v).getByteList();
+        try {
+            InputStream in = new ByteArrayInputStream(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
+	    msgpackIn = new MessagePackInputStream(runtime, in, null, true, true);
+	} catch (IOException e) {
+	    throw context.getRuntime().newArgumentError("data is illegal");
+	}
+        return new RubyNil(runtime);
+    }
+
+    @JRubyMethod
+    public IRubyObject feed_each(ThreadContext context, IRubyObject data, Block block) {
+	reset(context);
+	feed(context, data);
+        return eachCommon(context, block);
+    }
+
+    @JRubyMethod
+    public IRubyObject each(ThreadContext context, Block block) {
+	if (block.isGiven()) {
+	    return eachCommon(context, block);
+	} else {
+	    //return enumeratorize(context.getRuntime(), this, "each");
+	    throw context.getRuntime().newNotImplementedError("enumeratorize each"); // FIXME #MN
+	}
     }
 
     private IRubyObject eachCommon(ThreadContext context, Block block) {
 	Ruby runtime = context.getRuntime();
-        if (!block.isGiven()) {
-            throw runtime.newLocalJumpErrorNoBlock();
-        }
+
+	if (!block.isGiven()) {
+	    throw runtime.newLocalJumpErrorNoBlock();
+	}
+
         if (msgpackIn == null) {
             throw new RaiseException(runtime, RubyMessagePackUnpackError.ERROR, "invoke feed method in advance", true);
         }
@@ -104,56 +142,17 @@ public class RubyMessagePackUnpacker extends RubyObject {
         return this;
     }
 
-    @JRubyMethod(name = "execute", required = 2)
-    public IRubyObject execute(ThreadContext context, IRubyObject data, IRubyObject offset) {
-	// FIXME #MN
-        return this;
-    }
-
-    @JRubyMethod(name = "execute_limit", required = 3)
-    public IRubyObject executeLimit(ThreadContext context, IRubyObject data, IRubyObject offset, IRubyObject limit) {
-	// FIXME #MN
-        return this;
-    }
-
-    @JRubyMethod(name = "feed", required = 1)
-    public IRubyObject feed(ThreadContext context, IRubyObject data) {
-	Ruby runtime = context.getRuntime();
-	IRubyObject v = data.checkStringType();
-
-	if (v.isNil()) {
-            throw runtime.newTypeError("string instance needed");
-        }
-
-        ByteList bytes = ((RubyString) v).getByteList();
-        try {
-            InputStream in = new ByteArrayInputStream(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
-	    msgpackIn = new MessagePackInputStream(runtime, in, null, true, true);
-	} catch (IOException e) {
-	    throw context.getRuntime().newArgumentError("data is illegal");
-	}
-        return new RubyNil(runtime);
-    }
-
-    @JRubyMethod(name = "feed_each", required = 1)
-    public IRubyObject feedEach(ThreadContext context, IRubyObject data, Block block) {
-	feed(context, data);
-	return each(context, block);
-    }
-
-    @JRubyMethod(name = "fill", required = 1)
+    @JRubyMethod
     public IRubyObject fill(ThreadContext context, IRubyObject data) {
-	// FIXME #MN
-	return this;
+	throw context.getRuntime().newNotImplementedError("fill method"); // FIXME #MN
     }
 
     @JRubyMethod(name = "finish?")
     public IRubyObject finish(ThreadContext context) {
-	// FIXME #MN
-	return this;
+	throw context.getRuntime().newNotImplementedError("finish method"); // FIXME #MN
     }
 
-    @JRubyMethod(name = "reset")
+    @JRubyMethod
     public IRubyObject reset(ThreadContext context) {
 	if (msgpackIn != null) {
 	    try {
@@ -168,7 +167,7 @@ public class RubyMessagePackUnpacker extends RubyObject {
 	return this;
     }
 
-    @JRubyMethod(name = "stream")
+    @JRubyMethod
     public IRubyObject stream(ThreadContext context) {
         return new RubyIO(context.getRuntime(), msgpackIn.getInputStream());
     }

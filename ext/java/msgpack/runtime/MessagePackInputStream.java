@@ -87,18 +87,14 @@ public class MessagePackInputStream extends InputStream {
     }
 
     public IRubyObject readObject() throws IOException {
-	return readObject(true);
-    }
-
-    public IRubyObject readObject(boolean callProc) throws IOException {
         //int type = readUnsignedByte();
 	int type = 0;// TODO
         IRubyObject result = null;
         if (cache.isLinkType(type)) {
             result = cache.readLink(this, type);
-            if (callProc && runtime.is1_9()) return doCallProcForLink(result, type);
+            if (runtime.is1_9()) return doCallProcForLink(result, type);
         } else {
-            result = readObjectDirectly(type, callProc);
+            result = readObjectDirectly(type);
         }
 
         result.setTaint(taint);
@@ -145,13 +141,11 @@ public class MessagePackInputStream extends InputStream {
         return result;
     }
 
-    private IRubyObject readObjectDirectly(int type, boolean callProc) throws IOException {
+    private IRubyObject readObjectDirectly(int type) throws IOException {
 	Value value = unpacker.readValue();
-	IRubyObject rubyObj = readObjectDirectly(value, callProc);
+	IRubyObject rubyObj = readObjectDirectly(value);
         if (runtime.is1_9()) {
-            if (callProc) {
-                return doCallProcForObj(rubyObj);
-            }
+            return doCallProcForObj(rubyObj);
             // TODO
 //        } else if (type != ':') {
 //            // call the proc, but not for symbols
@@ -160,7 +154,7 @@ public class MessagePackInputStream extends InputStream {
 	return rubyObj;
     }
 
-    public IRubyObject readObjectDirectly(Value value, boolean callProc) throws IOException {
+    private IRubyObject readObjectDirectly(Value value) throws IOException {
         IRubyObject rubyObj = null;
         if (value.isNilValue()) {
             value.asNilValue();
@@ -193,7 +187,7 @@ public class MessagePackInputStream extends InputStream {
             RubyArray array = getRuntime().newArray(length);
             registerLinkTarget(array);
             for (int i = 0; i < length; ++i) {
-        	IRubyObject element = this.readObjectDirectly(values[i], callProc);
+        	IRubyObject element = readObjectDirectly(values[i]);
         	array.append(element);
             }
             rubyObj = (IRubyObject) array;
@@ -204,8 +198,8 @@ public class MessagePackInputStream extends InputStream {
             for (Map.Entry<Value, Value> e : mapValue.entrySet()) {
         	// TODO
         	hash.fastASetCheckString(getRuntime(),
-        		readObjectDirectly(e.getKey(), callProc),
-        		readObjectDirectly(e.getValue(), callProc));
+        		readObjectDirectly(e.getKey()),
+        		readObjectDirectly(e.getValue()));
             }
             //if (defaultValue) result.default_value_set(input.unmarshalObject());
             rubyObj = (IRubyObject) hash;
@@ -284,47 +278,6 @@ public class MessagePackInputStream extends InputStream {
             }
         }
         return (int) result;
-    }
-
-    public void defaultVariablesUnmarshal(IRubyObject object) throws IOException {
-        int count = unmarshalInt();
-
-        RubyClass cls = object.getMetaClass().getRealClass();
-        for (int i = count; --i >= 0; ) {
-            IRubyObject key = readObject(false);
-            if (i == 0) { // first ivar
-                if (runtime.is1_9()
-                        && (object instanceof RubyString || object instanceof RubyRegexp)
-                        && count >= 1) { // 1.9 string encoding
-                    EncodingCapable strObj = (EncodingCapable)object;
-
-                    if (key.asJavaString().equals(MarshalStream.SYMBOL_ENCODING_SPECIAL)) {
-                        // special case for USASCII and UTF8
-                        if (readObject().isTrue()) {
-                            strObj.setEncoding(UTF8Encoding.INSTANCE);
-                        } else {
-                            strObj.setEncoding(USASCIIEncoding.INSTANCE);
-                        }
-                        continue;
-                    } else if (key.asJavaString().equals("encoding")) {
-                        // read off " byte for the string
-                        read();
-                        ByteList encodingName = unmarshalString();
-                        Entry entry = runtime.getEncodingService().findEncodingOrAliasEntry(encodingName);
-                        if (entry == null) {
-                            throw runtime.newArgumentError("invalid encoding in marshaling stream: " + encodingName);
-                        }
-                        Encoding encoding = entry.getEncoding();
-                        strObj.setEncoding(encoding);
-                        continue;
-                    } // else fall through as normal ivar
-                }
-            }
-            String name = key.asJavaString();
-            IRubyObject value = readObject();
-
-            cls.getVariableAccessorForWrite(name).set(object, value);
-        }
     }
 
     public int read() throws IOException {
