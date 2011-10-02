@@ -9,9 +9,9 @@ require 'rubygems'
 require 'json'
 end
 
-CASES_PATH         = "#{here}/cases.mpac"
-CASES_COMPACT_PATH = "#{here}/cases_compact.mpac"
-CASES_JSON_PATH    = "#{here}/cases.json"
+CASES_PATH         = "#{here}/resources/cases.mpac"
+CASES_COMPACT_PATH = "#{here}/resources/cases_compact.mpac"
+CASES_JSON_PATH    = "#{here}/resources/cases.json"
 
 class MessagePackTestCases < Test::Unit::TestCase
 	def feed_file(path)
