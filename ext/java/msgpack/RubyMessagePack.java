@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import msgpack.runtime.RubyObjectUnpacker;
-import msgpack.runtime.RubyObjectPacker;
+import msgpack.template.RubyObjectPacker;
+import msgpack.template.RubyObjectUnpacker;
 
 import org.jruby.Ruby;
 import org.jruby.RubyString;

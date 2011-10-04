@@ -17,9 +17,10 @@
 //
 package msgpack;
 
+import java.io.EOFException;
 import java.io.IOException;
 
-import msgpack.runtime.RubyObjectUnpacker;
+import msgpack.template.RubyObjectUnpacker;
 
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
@@ -127,6 +128,8 @@ public class RubyMessagePackUnpacker extends RubyObject {
 	    } else {
 		block.yield(context, value);
 	    }
+	} catch (EOFException e) {
+	    // ignore
 	} catch (IOException e) {
 	    throw new RaiseException(runtime, RubyMessagePackUnpackError.ERROR, "cannot convert data", true);
 	}

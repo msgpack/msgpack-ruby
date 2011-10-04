@@ -15,7 +15,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-package msgpack.runtime;
+package msgpack.template;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -24,7 +24,6 @@ import java.util.Map;
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
 import org.jruby.RubyBignum;
-import org.jruby.RubyClass;
 import org.jruby.RubyFixnum;
 import org.jruby.RubyFloat;
 import org.jruby.RubyHash;
@@ -52,14 +51,14 @@ public final class RubyObjectPacker {
         writeRubyObjectDirectly(packer, value);
         depth--;
         if (depth == 0) {
-            // FIXME #MN
-            packer.close();
+            packer.flush();
         }
     }
 
     public void writeRubyObjectDirectly(BufferPacker packer, IRubyObject value) throws IOException {
         if (value instanceof CoreObjectType) {
             if (value instanceof DataType) {
+        	// FIXME #MN
                 throw value.getRuntime().newTypeError(
                 	"no marshal_dump is defined for class " + value.getMetaClass().getName());
             }
@@ -161,10 +160,6 @@ public final class RubyObjectPacker {
 	    writeRubyObject(packer, (IRubyObject) e.getValue());
 	}
 	packer.writeMapEnd();
-    }
-
-    public void writeUserClass(IRubyObject obj, RubyClass type) throws IOException {
-	throw runtime.newNotImplementedError("writeUserClass"); // TODO #MN
     }
 
     public byte[] toByteArray(BufferPacker packer) {
