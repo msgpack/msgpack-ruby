@@ -1,181 +1,178 @@
 #!/usr/bin/env ruby
-require File.dirname(__FILE__)+'/test_helper'
+here = File.dirname(__FILE__)
+require "#{here}/test_helper"
 
 class MessagePackTestPackUnpack < Test::Unit::TestCase
-	def self.it(name, &block)
-		define_method("test_#{name}", &block)
-	end
-
-	it "nil" do
+	def test_nil
 		check 1, nil
 	end
 
-	it "true" do
+	def test_true
 		check 1, true
 	end
 
-	it "false" do
+	def test_false
 		check 1, false
 	end
 
-	it "zero" do
+	def test_zero
 		check 1, 0
 	end
 
-	it "positive fixnum" do
+	def test_positive_fixnum
 		check 1, 1
 		check 1, (1<<6)
 		check 1, (1<<7)-1
 	end
 
-	it "positive int 8" do
+	def test_positive_int_8
 		check 1, -1
 		check 2, (1<<7)
 		check 2, (1<<8)-1
 	end
 
-	it "positive int 16" do
+	def test_positive_int_16
 		check 3, (1<<8)
 		check 3, (1<<16)-1
 	end
 
-	it "positive int 32" do
+	def test_positive_int_32
 		check 5, (1<<16)
 		check 5, (1<<32)-1
 	end
 
-	it "positive int 64" do
+	def test_positive_int_64
 		check 9, (1<<32)
 		check 9, (1<<64)-1
 	end
 
-	it "negative fixnum" do
+	def test_negative_fixnum
 		check 1, -1
 		check 1, -((1<<5)-1)
 		check 1, -(1<<5)
 	end
 
-	it "negative int 8" do
+	def test_negative_int_8
 		check 2, -((1<<5)+1)
 		check 2, -(1<<7)
 	end
 
-	it "negative int 16" do
+	def test_negative_int_16
 		check 3, -((1<<7)+1)
 		check 3, -(1<<15)
 	end
 
-	it "negative int 32" do
+	def test_negative_int_32
 		check 5, -((1<<15)+1)
 		check 5, -(1<<31)
 	end
 
-	it "negative int 64" do
+	def test_negative_int_64
 		check 9, -((1<<31)+1)
 		check 9, -(1<<63)
 	end
 
-	it "double" do
+	def test_double
 		check 9, 1.0
 		check 9, 0.1
 		check 9, -0.1
 		check 9, -1.0
 	end
 
-	it "fixraw" do
+	def test_fixraw
 		check_raw 1, 0
 		check_raw 1, (1<<5)-1
 	end
 
-	it "raw 16" do
+	def test_raw_16
 		check_raw 3, (1<<5)
 		check_raw 3, (1<<16)-1
 	end
 
-	it "raw 32" do
+	def test_raw_32
 		check_raw 5, (1<<16)
 		#check_raw 5, (1<<32)-1  # memory error
 	end
 
-	it "fixarray" do
+	def test_fixarray
 		check_array 1, 0
 		check_array 1, (1<<4)-1
 	end
 
-	it "array 16" do
+	def test_array_16
 		check_array 3, (1<<4)
 		check_array 3, (1<<16)-1
 	end
 
-	it "array 32" do
+	def test_array_32
 		check_array 5, (1<<16)
 		#check_array 5, (1<<32)-1  # memory error
 	end
 
-	it "nil" do
+  def test_emptyarray
+    match [], "\x90"
+  end
+
+  def test_range_1
+    obj = (0..14).to_a
+    match obj, "\x9f\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e"
+  end
+
+  def test_range_2
+    obj = (0..15).to_a
+    match obj, "\xdc\x00\x10\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f"
+  end
+
+	def test_nil
 		match nil, "\xc0"
 	end
 
-	it "false" do
+	def test_false
 		match false, "\xc2"
 	end
 
-	it "true" do
+	def test_true
 		match true, "\xc3"
 	end
 
-	it "0" do
+	def test_0
 		match 0, "\x00"
 	end
 
-	it "127" do
+	def test_127
 		match 127, "\x7f"
 	end
 
-	it "128" do
+	def test_128
 		match 128, "\xcc\x80"
 	end
 
-	it "256" do
+	def test_256
 		match 256, "\xcd\x01\x00"
 	end
 
-	it "-1" do
+	def test_negative_1
 		match -1, "\xff"
 	end
 
-	it "-33" do
+	def test_negative_33
 		match -33, "\xd0\xdf"
 	end
 
-	it "-129" do
+	def test_negative_129
 		match -129, "\xd1\xff\x7f"
 	end
 
-	it "{1=>1}" do
+	def test_map1_1
 		obj = {1=>1}
 		match obj, "\x81\x01\x01"
 	end
 
-	it "1.0" do
+	def test_1point0
 		match 1.0, "\xcb\x3f\xf0\x00\x00\x00\x00\x00\x00"
 	end
 
-	it "[]" do
-		match [], "\x90"
-	end
-
-	it "[0, 1, ..., 14]" do
-		obj = (0..14).to_a
-		match obj, "\x9f\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e"
-	end
-
-	it "[0, 1, ..., 15]" do
-		obj = (0..15).to_a
-		match obj, "\xdc\x00\x10\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f"
-	end
-
-	it "{}" do
+  def test_emptymap
 		obj = {}
 		match obj, "\x80"
 	end
@@ -207,7 +204,7 @@ class MessagePackTestPackUnpack < Test::Unit::TestCase
 #		#check_map 5, (1<<32)-1  # memory error
 #	end
 
-	it "buffer" do
+	def test_buffer
 		str = "a"*32*1024*4
 		raw = str.to_msgpack
 		pac = MessagePack::Unpacker.new
@@ -239,7 +236,7 @@ class MessagePackTestPackUnpack < Test::Unit::TestCase
 		assert(parsed)
 	end
 
-	it "gc mark" do
+	def test_gc_mark
 		obj = [1024, {["a","b"]=>["c","d"]}, ["e","f"], "d", 70000, 4.12, 1.5, 1.5, 1.5]
 		num = 4
 		raw = obj.to_msgpack * num
@@ -257,7 +254,7 @@ class MessagePackTestPackUnpack < Test::Unit::TestCase
 		assert_equal(parsed, num)
 	end
 
-	it "streaming backward compatibility" do
+	def test_streaming_backward_compatibility
 		obj = [1024, {["a","b"]=>["c","d"]}, ["e","f"], "d", 70000, 4.12, 1.5, 1.5, 1.5]
 		num = 4
 		raw = obj.to_msgpack * num
@@ -281,9 +278,9 @@ class MessagePackTestPackUnpack < Test::Unit::TestCase
 		assert_equal(parsed, num)
 	end
 
-	it "MessagePack::VERSION constant" do
-		p MessagePack::VERSION
-	end
+#	def test_msgpack_version_constantk
+#		p MessagePack::VERSION
+#	end
 
 	private
 	def check(len, obj)

@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
-require File.dirname(__FILE__)+'/test_helper'
+here = File.dirname(__FILE__)
+require "#{here}/test_helper"
 
 if RUBY_VERSION < "1.9"
 	exit
@@ -10,39 +11,39 @@ class MessagePackTestEncoding < Test::Unit::TestCase
 		define_method("test_#{name}", &block)
 	end
 
-	it "US-ASCII" do
-		check_unpack "abc".force_encoding("US-ASCII")
-	end
+  def test_us_ascii
+    ckeck_unpack "abc".force_encoding("US-ASCII")
+  end
 
-	it "UTF-8 ascii" do
-		check_unpack "abc".force_encoding("UTF-8")
-	end
+  def test_utf_8_ascii
+    check_unpack "abc".force_encoding("UTF-8")
+  end
 
-	it "UTF-8 mbstr" do
-		check_unpack "\xE3\x81\x82".force_encoding("UTF-8")
-	end
+  def test_utf_8_mbstr
+    check_unpack "\xE3\x81\x82".force_encoding("UTF-8")
+  end
 
-	it "UTF-8 invalid" do
-		check_unpack "\xD0".force_encoding("UTF-8")
-	end
+  def test_utf_8_invalid
+    check_unpack "\xD0".force_encoding("UTF-8")
+  end
 
-	it "ASCII-8BIT" do
-		check_unpack "\xD0".force_encoding("ASCII-8BIT")
-	end
+  def test_ascii_8bit
+    check_unpack "\xD0".force_encoding("ASCII-8BIT")
+  end
 
-	it "EUC-JP" do
-		x = "\xA4\xA2".force_encoding("EUC-JP")
-		check_unpack(x)
-	end
+  def test_euc_jp
+    x = "\xA4\xA2".force_encoding("EUC-JP")
+    check_unpack(x)
+  end
 
-	it "EUC-JP invalid" do
-		begin
-			"\xD0".force_encoding("EUC-JP").to_msgpack
-			assert(false)
-		rescue Encoding::InvalidByteSequenceError
-			assert(true)
-		end
-	end
+  def test_euc_jp_invalid
+    begin
+      "\xD0".force_encoding("EUC-JP").to_msgpack
+      assert(false)
+    rescue Encoding::InvalidByteSequenceError
+      assert(true)
+    end
+  end
 
 	private
 	def check_unpack(str)
@@ -65,4 +66,3 @@ class MessagePackTestEncoding < Test::Unit::TestCase
 		end
 	end
 end
-

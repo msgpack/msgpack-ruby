@@ -3,10 +3,10 @@ here = File.dirname(__FILE__)
 require "#{here}/test_helper"
 
 begin
-require 'json'
+  require 'json'
 rescue LoadError
-require 'rubygems'
-require 'json'
+	require 'rubygems'
+  require 'json'
 end
 
 CASES_PATH         = "#{here}/resources/cases.mpac"
@@ -14,12 +14,6 @@ CASES_COMPACT_PATH = "#{here}/resources/cases_compact.mpac"
 CASES_JSON_PATH    = "#{here}/resources/cases.json"
 
 class MessagePackTestCases < Test::Unit::TestCase
-	def feed_file(path)
-		pac = MessagePack::Unpacker.new
-		pac.feed File.read(path)
-		pac
-	end
-
 	def test_compare_compact
 		pac  = feed_file(CASES_PATH)
 		cpac = feed_file(CASES_COMPACT_PATH)
@@ -42,5 +36,10 @@ class MessagePackTestCases < Test::Unit::TestCase
 			assert_equal(obj, jobj)
 		}
 	end
-end
 
+	def feed_file(path)
+    pac = MessagePack::Unpacker.new
+    pac.feed File.read(path)
+    pac
+  end
+end
