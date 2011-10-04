@@ -22,8 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import msgpack.template.RubyObjectPacker;
-import msgpack.template.RubyObjectUnpacker;
+import msgpack.template.RubyObjectTemplate;
 
 import org.jruby.Ruby;
 import org.jruby.RubyString;
@@ -66,10 +65,10 @@ public class RubyMessagePack {
         	throw runtime.newNotImplementedError("io != null"); // FIXME #MN
             }
 
-            RubyObjectPacker out = new RubyObjectPacker(runtime);
             BufferPacker packer = getMessagePack(runtime).createBufferPacker();
-            out.writeRubyObject(packer, object);
-            RubyString result = RubyString.newString(runtime, new ByteList(out.toByteArray(packer)));
+            RubyObjectTemplate tmpl = new RubyObjectTemplate(runtime);
+            tmpl.write(packer, object);
+            RubyString result = RubyString.newString(runtime, new ByteList(packer.toByteArray()));
             result.setTaint(object.isTaint());
             result.setUntrusted(object.isUntrusted());
             return result;
@@ -89,10 +88,13 @@ public class RubyMessagePack {
             }
 
             ByteList bytes = ((RubyString) v).getByteList();
-            RubyObjectUnpacker in = new RubyObjectUnpacker(runtime);
             BufferUnpacker unpacker = getMessagePack(runtime).createBufferUnpacker();
-            return in.readRubyObject(unpacker, bytes.getUnsafeBytes(), bytes.begin(), bytes.length(),
-        	    io.isTaint(), io.isUntrusted());
+            unpacker.wrap(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
+            RubyObjectTemplate tmpl = new RubyObjectTemplate(runtime);
+            IRubyObject object = tmpl.read(unpacker, null);
+            object.setTaint(io.isTaint());
+            object.setUntrusted(io.isUntrusted());
+            return object;
         } catch (EOFException e) {
             if (io.respondsTo("to_str")) {
         	throw runtime.newArgumentError("packed data too short");

@@ -20,7 +20,7 @@ package msgpack;
 import java.io.EOFException;
 import java.io.IOException;
 
-import msgpack.template.RubyObjectUnpacker;
+import msgpack.template.RubyObjectTemplate;
 
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
@@ -119,8 +119,8 @@ public class RubyMessagePackUnpacker extends RubyObject {
 	}
 
 	try {
-	    RubyObjectUnpacker in = new RubyObjectUnpacker(runtime);
-	    IRubyObject value = in.readRubyObjectDirectly(unpacker);
+	    RubyObjectTemplate tmpl = new RubyObjectTemplate(runtime);
+	    IRubyObject value = tmpl.read(unpacker, null);
 	    int nativeTypeIndex = ((CoreObjectType) value).getNativeTypeIndex();
 	    if (nativeTypeIndex == ClassIndex.ARRAY) {
 		RubyArray arrayValue = (RubyArray) value;

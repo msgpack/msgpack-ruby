@@ -34,7 +34,6 @@ import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.runtime.marshal.CoreObjectType;
 import org.jruby.runtime.marshal.DataType;
 import org.msgpack.MessageTypeException;
-import org.msgpack.packer.BufferPacker;
 import org.msgpack.packer.Packer;
 import org.msgpack.template.AbstractTemplate;
 import org.msgpack.template.Templates;
