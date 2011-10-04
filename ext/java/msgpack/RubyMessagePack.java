@@ -17,15 +17,13 @@
 //
 package msgpack;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import msgpack.runtime.MessagePackInputStream;
-import msgpack.runtime.MessagePackOutputStream;
+import msgpack.runtime.RubyObjectUnpacker;
+import msgpack.runtime.RubyObjectPacker;
 
 import org.jruby.Ruby;
 import org.jruby.RubyString;
@@ -34,8 +32,9 @@ import org.jruby.anno.JRubyModule;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.util.ByteList;
-import org.jruby.util.IOOutputStream;
 import org.msgpack.MessagePack;
+import org.msgpack.packer.BufferPacker;
+import org.msgpack.unpacker.BufferUnpacker;
 
 
 @JRubyModule(name = "MessagePack")
@@ -64,16 +63,13 @@ public class RubyMessagePack {
 
         try {
             if (io != null) {
-        	MessagePackOutputStream out = new MessagePackOutputStream(runtime, new IOOutputStream(io));
-        	out.writeObject(object);
-                return io;
+        	throw runtime.newNotImplementedError("io != null"); // FIXME #MN
             }
 
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            MessagePackOutputStream out = new MessagePackOutputStream(runtime, bout);
-            out.writeObject(object);
-            RubyString result = RubyString.newString(runtime, new ByteList(bout.toByteArray()));
-
+            RubyObjectPacker out = new RubyObjectPacker(runtime);
+            BufferPacker packer = getMessagePack(runtime).createBufferPacker();
+            out.writeRubyObject(packer, object);
+            RubyString result = RubyString.newString(runtime, new ByteList(out.toByteArray(packer)));
             result.setTaint(object.isTaint());
             result.setUntrusted(object.isUntrusted());
             return result;
@@ -93,10 +89,10 @@ public class RubyMessagePack {
             }
 
             ByteList bytes = ((RubyString) v).getByteList();
-            ByteArrayInputStream bin = new ByteArrayInputStream(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
-            //return new UnmarshalStream(runtime, rawInput, proc, tainted, untrusted).unmarshalObject(); // TODO #MN will delete it
-            MessagePackInputStream in = new MessagePackInputStream(runtime, bin, null, io.isTaint(), io.isUntrusted());
-            return in.readObject();
+            RubyObjectUnpacker in = new RubyObjectUnpacker(runtime);
+            BufferUnpacker unpacker = getMessagePack(runtime).createBufferUnpacker();
+            return in.readRubyObject(unpacker, bytes.getUnsafeBytes(), bytes.begin(), bytes.length(),
+        	    io.isTaint(), io.isUntrusted());
         } catch (EOFException e) {
             if (io.respondsTo("to_str")) {
         	throw runtime.newArgumentError("packed data too short");

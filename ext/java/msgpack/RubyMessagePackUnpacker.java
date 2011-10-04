@@ -17,17 +17,14 @@
 //
 package msgpack;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
-import msgpack.runtime.MessagePackInputStream;
+import msgpack.runtime.RubyObjectUnpacker;
 
 import org.jruby.Ruby;
 import org.jruby.RubyArray;
 import org.jruby.RubyClass;
 import org.jruby.RubyIO;
-import org.jruby.RubyNil;
 import org.jruby.RubyObject;
 import org.jruby.RubyString;
 import org.jruby.anno.JRubyClass;
@@ -41,6 +38,8 @@ import org.jruby.runtime.Visibility;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.runtime.marshal.CoreObjectType;
 import org.jruby.util.ByteList;
+import org.msgpack.MessagePack;
+import org.msgpack.unpacker.BufferUnpacker;
 
 
 @SuppressWarnings("serial")
@@ -53,7 +52,7 @@ public class RubyMessagePackUnpacker extends RubyObject {
         }
     };
 
-    private MessagePackInputStream msgpackIn = null;
+    private BufferUnpacker unpacker;
 
     public RubyMessagePackUnpacker(Ruby runtime, RubyClass clazz) {
 	super(runtime, clazz);
@@ -61,6 +60,8 @@ public class RubyMessagePackUnpacker extends RubyObject {
 
     @JRubyMethod(name = "initialize", optional = 1, visibility = Visibility.PRIVATE)
     public IRubyObject initialize(ThreadContext context, IRubyObject io) {
+	MessagePack msgpack = RubyMessagePack.getMessagePack(context.getRuntime());
+	unpacker = msgpack.createBufferUnpacker();
 	return streamEq(context, io);
     }
 
@@ -81,7 +82,6 @@ public class RubyMessagePackUnpacker extends RubyObject {
 
     @JRubyMethod
     public IRubyObject feed(ThreadContext context, IRubyObject data) {
-	reset(context);
 	Ruby runtime = context.getRuntime();
 	IRubyObject v = data.checkStringType();
 
@@ -90,18 +90,12 @@ public class RubyMessagePackUnpacker extends RubyObject {
         }
 
         ByteList bytes = ((RubyString) v).getByteList();
-        try {
-            InputStream in = new ByteArrayInputStream(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
-	    msgpackIn = new MessagePackInputStream(runtime, in, null, true, true);
-	} catch (IOException e) {
-	    throw context.getRuntime().newArgumentError("data is illegal");
-	}
-        return new RubyNil(runtime);
+        unpacker.feed(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
+        return runtime.getNil();
     }
 
     @JRubyMethod
     public IRubyObject feed_each(ThreadContext context, IRubyObject data, Block block) {
-	reset(context);
 	feed(context, data);
         return eachCommon(context, block);
     }
@@ -123,12 +117,9 @@ public class RubyMessagePackUnpacker extends RubyObject {
 	    throw runtime.newLocalJumpErrorNoBlock();
 	}
 
-        if (msgpackIn == null) {
-            throw new RaiseException(runtime, RubyMessagePackUnpackError.ERROR, "invoke feed method in advance", true);
-        }
-
 	try {
-	    IRubyObject value = msgpackIn.readObject();
+	    RubyObjectUnpacker in = new RubyObjectUnpacker(runtime);
+	    IRubyObject value = in.readRubyObjectDirectly(unpacker);
 	    int nativeTypeIndex = ((CoreObjectType) value).getNativeTypeIndex();
 	    if (nativeTypeIndex == ClassIndex.ARRAY) {
 		RubyArray arrayValue = (RubyArray) value;
@@ -154,34 +145,20 @@ public class RubyMessagePackUnpacker extends RubyObject {
 
     @JRubyMethod
     public IRubyObject reset(ThreadContext context) {
-	if (msgpackIn != null) {
-	    try {
-		msgpackIn.close();
-	    } catch (IOException e) {
-		throw new RaiseException(context.getRuntime(),
-			RubyMessagePackUnpackError.ERROR, "cannot convert data", true);
-	    } finally {
-		msgpackIn = null;		
-	    }
-	}
+	unpacker.clear();
 	return this;
     }
 
     @JRubyMethod
     public IRubyObject stream(ThreadContext context) {
-        return new RubyIO(context.getRuntime(), msgpackIn.getInputStream());
+	throw context.getRuntime().newNotImplementedError("stream method"); // FIXME #MN
     }
 
     @JRubyMethod(name = "stream=", required = 1)
     public IRubyObject streamEq(ThreadContext context, IRubyObject io) {
 	reset(context);
 	if (io != null && io instanceof RubyIO) {
-	    try {
-		InputStream in = ((RubyIO) io).getInStream();
-		msgpackIn = new MessagePackInputStream(context.getRuntime(), in, null, io.isTaint(), io.isUntrusted());
-	    } catch (IOException e) {
-		throw context.getRuntime().newArgumentError("illegal io");
-	    }
+	    throw context.getRuntime().newNotImplementedError("stream= method"); // FIXME #MN
 	}
         return this;
     }
