@@ -261,12 +261,10 @@ public class RubyObjectTemplate extends AbstractTemplate<IRubyObject> {
 	MapValue mapValue = value.asMapValue();
         RubyHash hash = RubyHash.newHash(runtime);
         for (Map.Entry<Value, Value> e : mapValue.entrySet()) {
-    	// TODO
-    	hash.fastASetCheckString(runtime,
+            hash.fastASetCheckString(runtime,
     		readRubyObjectDirectly(unpacker, e.getKey()),
     		readRubyObjectDirectly(unpacker, e.getValue()));
         }
-        //if (defaultValue) result.default_value_set(input.unmarshalObject());
         return (IRubyObject) hash;
     }
 }
