@@ -7,5 +7,5 @@ rescue LoadError
 end
 
 if ENV["GC_STRESS"]
-	GC.stress = true
+  GC.stress = true
 end
