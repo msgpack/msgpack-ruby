@@ -12,7 +12,7 @@ class MessagePackTestEncoding < Test::Unit::TestCase
   end
 
   it "US-ASCII" do
-    ckeck_unpack "abc".force_encoding("US-ASCII")
+    check_unpack "abc".force_encoding("US-ASCII")
   end
 
   it "UTF-8 ascii" do
