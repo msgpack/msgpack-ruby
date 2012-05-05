@@ -6,13 +6,10 @@ module MessagePack
       require 'java'
 
       # load dependencies of MessagePack for Java
-      require 'slf4j-api-1.6.1.jar'
-      require 'slf4j-log4j12-1.6.1.jar'
-      require 'log4j-1.2.16.jar'
       require 'json-simple-1.1.jar'
       require 'javassist-3.15.0-GA.jar'
       # load MessagePack for Java
-      require 'msgpack-0.6.0-devel.jar'
+      require 'msgpack-0.6.5.jar'
 
       # load Java extension of MessagePack for Ruby
       require 'msgpack/msgpack.jar'
