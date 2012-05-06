@@ -89,6 +89,7 @@ public class RubyMessagePack {
 
             ByteList bytes = ((RubyString) v).getByteList();
             BufferUnpacker unpacker = getMessagePack(runtime).createBufferUnpacker();
+            unpacker.setArraySizeLimit(131071);
             unpacker.wrap(bytes.getUnsafeBytes(), bytes.begin(), bytes.length());
             RubyObjectTemplate tmpl = new RubyObjectTemplate(runtime);
             IRubyObject object = tmpl.read(unpacker, null);

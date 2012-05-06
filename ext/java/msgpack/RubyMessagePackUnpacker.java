@@ -63,7 +63,7 @@ public class RubyMessagePackUnpacker extends RubyObject {
     public IRubyObject initialize(ThreadContext context, IRubyObject io) {
 	MessagePack msgpack = RubyMessagePack.getMessagePack(context.getRuntime());
 	unpacker = msgpack.createBufferUnpacker();
-	unpacker.setArraySizeLimit(65535);
+	unpacker.setArraySizeLimit(131071);
 	return streamEq(context, io);
     }
 
