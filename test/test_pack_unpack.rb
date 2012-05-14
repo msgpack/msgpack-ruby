@@ -248,7 +248,7 @@ class MessagePackTestPackUnpack < Test::Unit::TestCase
       pac.feed_each(fe) {|obj|
         assert(!parsed)
         assert_equal(obj, str)
-	parsed = true
+        parsed = true
       }
     end
 
@@ -265,8 +265,8 @@ class MessagePackTestPackUnpack < Test::Unit::TestCase
       #pac.feed(b)
       pac.feed_each(b) {|o|
         GC.start
-	assert_equal(obj, o)
-	parsed += 1
+        assert_equal(obj, o)
+        parsed += 1
       }
       GC.start
     end
@@ -286,12 +286,12 @@ class MessagePackTestPackUnpack < Test::Unit::TestCase
       nread = pac.execute(buffer, nread)
       if pac.finished?
         o = pac.data
-	assert_equal(obj, o)
-	parsed += 1
-	pac.reset
-	buffer.slice!(0, nread)
-	nread = 0
-	next unless buffer.empty?
+	      assert_equal(obj, o)
+       	parsed += 1
+        pac.reset
+        buffer.slice!(0, nread)
+        nread = 0
+        next unless buffer.empty?
       end
     end
     assert_equal(parsed, num)
