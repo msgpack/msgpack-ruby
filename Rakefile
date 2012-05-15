@@ -8,11 +8,7 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 
-def jruby?
-  !! (RUBY_PLATFORM =~ /java/)
-end
-
-if jruby?
+if RUBY_PLATFORM =~ /java/
   module Bundler
     class GemHelper
       def build_gem
@@ -33,7 +29,7 @@ end
 Bundler::GemHelper.install_tasks
 
 begin
-  if jruby?
+  if RUBY_PLATFORM =~ /java/
     require 'rake/javaextensiontask'
   else
     require 'rake/extensiontask'
@@ -62,7 +58,7 @@ Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_files.include('ext/**/*.c')
 end
 
-if jruby?
+if RUBY_PLATFORM =~ /java/
   Rake::JavaExtensionTask.new("msgpack") do |ext|
     jruby_home = RbConfig::CONFIG['prefix']
     ext.ext_dir = 'ext/java'
@@ -70,7 +66,6 @@ if jruby?
     jars = ["#{jruby_home}/lib/jruby.jar"] + FileList['lib/*.jar']
     ext.classpath = jars.map { |x| File.expand_path x }.join ':'
   end
-
 else
   Rake::ExtensionTask.new("msgpack") do |ext|
   end

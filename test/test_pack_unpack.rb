@@ -274,6 +274,10 @@ class MessagePackTestPackUnpack < Test::Unit::TestCase
   end
 
   it "streaming backward compatibility" do
+    if RUBY_PLATFORM =~ /java/
+      return
+    end
+
     obj = [1024, {["a","b"]=>["c","d"]}, ["e","f"], "d", 70000, 4.12, 1.5, 1.5, 1.5]
     num = 4
     raw = obj.to_msgpack * num
