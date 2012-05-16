@@ -71,8 +71,7 @@ public class RubyObjectTemplate extends AbstractTemplate<IRubyObject> {
 
     private void writeRubyObjectDirectly(Packer packer, IRubyObject value) throws IOException {
         if (value instanceof CoreObjectType) {
-            if (value instanceof DataType) {
-        	// FIXME #MN
+            if (value instanceof DataType) { // FIXME #MN
                 throw value.getRuntime().newTypeError(
                 	"no marshal_dump is defined for class " + value.getMetaClass().getName());
             }
@@ -201,6 +200,7 @@ public class RubyObjectTemplate extends AbstractTemplate<IRubyObject> {
         } else if (value.isMapValue()) {
             return readHash(unpacker, value);
         }
+        // TODO #MN
         // FIXME RubyRegexp
         // FIXME RubySymbol
         // FIXME RubyClass

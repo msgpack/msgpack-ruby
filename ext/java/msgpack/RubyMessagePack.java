@@ -61,7 +61,7 @@ public class RubyMessagePack {
 
         try {
             if (io != null) {
-        	throw runtime.newNotImplementedError("io != null");
+                throw runtime.newNotImplementedError("io != null"); // FIXME #MN
             }
 
             BufferPacker packer = getMessagePack(runtime).createBufferPacker();
@@ -107,6 +107,6 @@ public class RubyMessagePack {
 
     @JRubyMethod(name = "unpack_limit", required = 2, module = true)
     public static IRubyObject unpackLimit(ThreadContext context, IRubyObject recv, IRubyObject io, IRubyObject limit) {
-        throw context.getRuntime().newNotImplementedError("unpack_limit");
+        throw context.getRuntime().newNotImplementedError("unpack_limit"); // FIXME #MN
     }
 }
