@@ -19,12 +19,10 @@ package msgpack;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.util.Iterator;
 
 import msgpack.template.RubyObjectTemplate;
 
 import org.jruby.Ruby;
-import org.jruby.RubyArray;
 import org.jruby.RubyClass;
 import org.jruby.RubyIO;
 import org.jruby.RubyObject;
@@ -33,16 +31,15 @@ import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.Block;
-import org.jruby.runtime.ClassIndex;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.Visibility;
 import org.jruby.runtime.builtin.IRubyObject;
-import org.jruby.runtime.marshal.CoreObjectType;
 import org.jruby.util.ByteList;
 import org.msgpack.MessagePack;
 import org.msgpack.type.Value;
 import org.msgpack.unpacker.BufferUnpacker;
+import org.msgpack.unpacker.UnpackerIterator;
 
 @SuppressWarnings("serial")
 @JRubyClass(name = "Unpacker")
@@ -56,6 +53,8 @@ public class RubyMessagePackUnpacker extends RubyObject {
 
     private BufferUnpacker unpacker;
 
+    private UnpackerIterator unpackerIter;
+
     public RubyMessagePackUnpacker(Ruby runtime, RubyClass clazz) {
 	super(runtime, clazz);
     }
@@ -64,6 +63,7 @@ public class RubyMessagePackUnpacker extends RubyObject {
     public IRubyObject initialize(ThreadContext context, IRubyObject io) {
 	MessagePack msgpack = RubyMessagePack.getMessagePack(context.getRuntime());
 	unpacker = msgpack.createBufferUnpacker();
+	unpackerIter = unpacker.iterator();
 	unpacker.setArraySizeLimit(131071);
 	return streamEq(context, io);
     }
@@ -114,19 +114,21 @@ public class RubyMessagePackUnpacker extends RubyObject {
     }
 
     private IRubyObject eachCommon(ThreadContext context, Block block) {
-	Ruby runtime = context.getRuntime();
+        Ruby runtime = context.getRuntime();
 
-	if (!block.isGiven()) {
+        if (!block.isGiven()) {
 	    throw runtime.newLocalJumpErrorNoBlock();
 	}
 
 	try {
-	    RubyObjectTemplate tmpl = new RubyObjectTemplate(runtime);
-	    IRubyObject value = tmpl.read(unpacker, null);
-            block.yield(context, value);
+            RubyObjectTemplate tmpl = new RubyObjectTemplate(runtime);
+            while (unpackerIter.hasNext()) {
+                Value v = unpackerIter.next();
+                IRubyObject value = tmpl.readRubyObjectDirectly(unpacker, v);
+                block.yield(context, value);
+            }
 	} catch (EOFException e) {
             // ignore
-	    e.printStackTrace();
 	} catch (IOException e) {
 	    throw new RaiseException(runtime, RubyMessagePackUnpackError.ERROR, "cannot convert data", true);
 	}
