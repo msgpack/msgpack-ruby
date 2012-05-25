@@ -1,7 +1,7 @@
 /*
- * MessagePack for Ruby unpacking routine
+ * MessagePack for Ruby
  *
- * Copyright (C) 2008-2010 FURUHASHI Sadayuki
+ * Copyright (C) 2008-2012 FURUHASHI Sadayuki
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,12 +15,18 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#ifndef UNPACK_H__
-#define UNPACK_H__
+#ifndef MSGPACK_RUBY_MODULE_INIT_H__
+#define MSGPACK_RUBY_MODULE_INIT_H__
 
-#include "ruby.h"
+#include "compat.h"
 
-void Init_msgpack_unpack(VALUE mMessagePack);
+void Init_msgpack(void);
 
-#endif /* unpack.h */
+void Buffer_module_init(VALUE mMessagePack);
+
+void Packer_module_init(VALUE mMessagePack);
+
+void Unpacker_module_init(VALUE mMessagePack);
+
+#endif
 

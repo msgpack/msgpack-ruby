@@ -1,7 +1,7 @@
 /*
- * MessagePack for Ruby packing routine
+ * MessagePack for Ruby
  *
- * Copyright (C) 2008-2010 FURUHASHI Sadayuki
+ * Copyright (C) 2008-2012 FURUHASHI Sadayuki
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,12 +15,25 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#ifndef PACK_H__
-#define PACK_H__
+#ifndef MSGPACK_RUBY_POOL_H__
+#define MSGPACK_RUBY_POOL_H__
 
-#include "ruby.h"
+#include "compat.h"
+#include "sysdep.h"
 
-void Init_msgpack_pack(VALUE mMessagePack);
+void msgpack_pool_static_init();
 
-#endif /* pack.h */
+void msgpack_pool_init();
+
+void msgpack_pool_destroy();
+
+//TODO msgpack_pool_realloc(void* ptr, size_t& allocated_size, size_t required_size);
+void* msgpack_pool_malloc(size_t aligned_size);
+
+//TODO msgpack_pool_realloc(void* ptr, size_t& current_size, size_t required_size);
+void* msgpack_pool_realloc(void* ptr, size_t aligned_size);
+
+void msgpack_pool_free(void* ptr);
+
+#endif
 

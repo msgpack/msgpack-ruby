@@ -1,7 +1,7 @@
 /*
  * MessagePack for Ruby
  *
- * Copyright (C) 2008-2010 FURUHASHI Sadayuki
+ * Copyright (C) 2008-2012 FURUHASHI Sadayuki
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,9 +15,10 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#ifndef COMPAT_H__
-#define COMPAT_H__
+#ifndef MSGPACK_RUBY_COMPAT_H__
+#define MSGPACK_RUBY_COMPAT_H__
 
+#include "ruby.h"
 
 #ifdef HAVE_RUBY_ENCODING_H
 #include "ruby/encoding.h"
@@ -26,6 +27,11 @@ extern int s_enc_utf8;
 extern int s_enc_ascii8bit;
 extern int s_enc_usascii;
 extern VALUE s_enc_utf8_value;
+#endif
+
+/* MacRuby */
+#if defined(__MACRUBY__)
+#undef COMPAT_HAVE_ENCODING
 #endif
 
 /* MRI 1.9 */
@@ -62,15 +68,8 @@ extern VALUE s_enc_utf8_value;
 #endif
 
 
-/* Rubinius */
-#if defined(RUBINIUS)
-static inline void rb_gc_enable() { return; }
-static inline void rb_gc_disable() { return; }
-
-/* JRuby */
-#elif defined(JRUBY)
-static inline void rb_gc_enable() { return; }
-static inline void rb_gc_disable() { return; }
+#ifndef NOUSE_STR_NEW_MOVE
+#define USE_STR_NEW_MOVE
 #endif
 
 
@@ -95,5 +94,5 @@ static inline void rb_gc_disable() { return; }
 #endif
 
 
-#endif /* compat.h */
+#endif
 
