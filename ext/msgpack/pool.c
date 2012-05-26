@@ -87,8 +87,8 @@ void msgpack_pool_free(msgpack_pool_t* pl,
 
 msgpack_pool_t msgpack_pool_static_instance;
 
-
 #ifdef USE_STR_NEW_MOVE
+/* note: this code is magical: */
 static VALUE rb_str_new_move(char* data, size_t length, size_t capacity)
 {
     NEWOBJ(str, struct RString);
@@ -104,6 +104,9 @@ static VALUE rb_str_new_move(char* data, size_t length, size_t capacity)
     /* this is safe. see msgpack_pool_malloc() */
     data[length] = '\0';
 
+    /* ???: unknown whether this is needed or not */
+    OBJ_FREEZE(str);
+
     return (VALUE) str;
 }
 #endif
@@ -114,6 +117,8 @@ VALUE msgpack_pool_move_to_string(msgpack_pool_t* pl,
     VALUE s = rb_str_new_move(ptr, offset+size, offset+size);
     if(offset > 0) {
         s = rb_str_substr(s, offset, size);
+    } else {
+        s = rb_str_dup(s);
     }
     return s;
 }

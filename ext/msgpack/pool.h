@@ -76,6 +76,7 @@ void msgpack_pool_free(msgpack_pool_t* pl,
         void* ptr, size_t size);
 
 #ifdef USE_STR_NEW_MOVE
+/* assert size > RSTRING_EMBED_LEN_MAX */
 VALUE msgpack_pool_move_to_string(msgpack_pool_t* pl,
         void* ptr, size_t offset, size_t size);
 #endif

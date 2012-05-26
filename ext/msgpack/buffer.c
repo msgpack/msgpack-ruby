@@ -233,14 +233,9 @@ static VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c)
     if(sz == 0) {
         return rb_str_buf_new(0);
 #ifdef USE_STR_NEW_MOVE
-        /* note: this code is magical: */
     } else if(sz > RSTRING_EMBED_LEN_MAX) {
         c->mapped_string = msgpack_pool_static_move_to_string(
                 c->first, 0, c->last - c->first);
-        //VALUE mapped_string = rb_str_new_move(c->first,
-        //        c->last - c->first,
-        //        c->last - c->first);
-        //c->mapped_string = mapped_string;
         return c->mapped_string;
 #endif
     } else {
@@ -262,14 +257,9 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
         if(sz == 0) {
             return rb_str_buf_new(0);
 #ifdef USE_STR_NEW_MOVE
-        /* note: this code is magical: */
         } else if(sz > RSTRING_EMBED_LEN_MAX) {
             b->tail.mapped_string = msgpack_pool_static_move_to_string(
                     b->tail.first, 0, b->tail.last - b->tail.first);
-            //VALUE mapped_string = rb_str_new_move(b->tail.first,
-            //        b->tail.last - b->tail.first,
-            //        b->tail_buffer_end - b->tail.first);
-            //b->tail.mapped_string = mapped_string;
             return b->tail.mapped_string;
 #endif
         }
