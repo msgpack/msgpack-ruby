@@ -305,15 +305,35 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
     return rb_str_dup(string);
 }
 
-VALUE msgpack_buffer_top_as_string(msgpack_buffer_t* b, size_t* offset)
+bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest)
 {
-    if(b->head == &b->tail && b->read_buffer == b->tail.first) {
-        *offset = 0;
-        return msgpack_buffer_all_as_string(b);
+    if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
+            && msgpack_buffer_top_readable_size(b) >= length
+#ifndef USE_STR_NEW_MOVE
+            && b->tail.mapped_string != NO_MAPPED_STRING;
+#endif
+            ) {
+
+        size_t offset;
+        VALUE src;
+
+        if(b->head == &b->tail && b->read_buffer == b->tail.first) {
+            offset = 0;
+            src = msgpack_buffer_all_as_string(b);
+        } else {
+            offset = b->read_buffer - b->head->first;
+            src = _msgpack_buffer_chunk_as_string(b->head);
+        }
+
+		*dest = rb_str_substr(src, offset, length);
+
+        _msgpack_buffer_consumed(b, length);
+
+
+        return true;
     }
 
-    *offset = b->read_buffer - b->head->first;
-    return _msgpack_buffer_chunk_as_string(b->head);
+    return false;
 }
 
 VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b)

@@ -201,21 +201,16 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 static int read_raw_body_cont(msgpack_unpacker_t* uk)
 {
     /* try zero-copy */
-    if(uk->reading_raw_remaining >= MSGPACK_UNPACKER_RAW_BODY_REFERENCE_THRESHOLD
-            && msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)) > uk->reading_raw_remaining
-            && RSTRING_LEN(uk->reading_raw) == 0
-#ifndef USE_STR_NEW_MOVE
-            && msgpack_buffer_top_is_mapped(UNPACKER_BUFFER_(uk))
-#endif
-            ) {
-        size_t offset;
-        VALUE src = msgpack_buffer_top_as_string(UNPACKER_BUFFER_(uk), &offset);
-		VALUE r = rb_str_substr(src, offset, uk->reading_raw_remaining);
-        msgpack_buffer_skip_top(UNPACKER_BUFFER_(uk), uk->reading_raw_remaining);
-        object_complete(uk, r);
-        uk->reading_raw = Qnil;
-        uk->reading_raw_remaining = 0;
-        return PRIMITIVE_OBJECT_COMPLETE;
+    //if(uk->reading_raw == Qnil || RSTRING_LEN(uk->reading_raw) == 0) {  // TODO the reason is not known but this optimization is slow
+    if(RSTRING_LEN(uk->reading_raw) == 0) {
+        VALUE string;
+        if(msgpack_buffer_try_refer_string(UNPACKER_BUFFER_(uk), uk->reading_raw_remaining, &string)) {
+            object_complete(uk, string);
+            uk->reading_raw = Qnil;
+            uk->reading_raw_remaining = 0;
+            return PRIMITIVE_OBJECT_COMPLETE;
+        }
+        uk->reading_raw = rb_str_buf_new(uk->reading_raw_remaining);
     }
 
     if(uk->io != Qnil) {
@@ -276,7 +271,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         if(count == 0) {
             return object_complete(uk, rb_str_buf_new(0));
         }
-        uk->reading_raw = rb_str_buf_new(count);
+        //uk->reading_raw = rb_str_buf_new(count);
         uk->reading_raw_remaining = count;
         return read_raw_body_cont(uk);
 

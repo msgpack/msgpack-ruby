@@ -29,6 +29,16 @@
 #define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD (256*1024)
 #endif
 
+#ifndef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
+#define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD 256
+
+#if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD < RSTRING_LEN
+#undef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
+#define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD RSTRING_LEN
+#endif
+
+#endif
+
 #define NO_MAPPED_STRING ((VALUE)0)
 
 struct msgpack_buffer_chunk_t;
@@ -230,11 +240,6 @@ static inline union msgpack_buffer_cast_block_t* msgpack_buffer_refer_cast_block
     return &b->cast_block;
 }
 
-static inline void msgpack_buffer_skip_top(msgpack_buffer_t* b, size_t length)
-{
-    _msgpack_buffer_consumed(b, length);
-}
-
 bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length);
 
 bool msgpack_buffer_skip_all(msgpack_buffer_t* b, size_t length);
@@ -258,12 +263,7 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b);
 
 VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b);
 
-static inline bool msgpack_buffer_top_is_mapped(msgpack_buffer_t* b)
-{
-    return b->tail.mapped_string != NO_MAPPED_STRING;
-}
-
-VALUE msgpack_buffer_top_as_string(msgpack_buffer_t* b, size_t* offset);
+bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest);
 
 //static inline int msgpack_buffer_remaining(msgpack_buffer_t* b)
 //{
