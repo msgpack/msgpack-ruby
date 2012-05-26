@@ -312,7 +312,7 @@ static VALUE Buffer_to_a(VALUE self)
 
 void Buffer_module_init(VALUE mMessagePack)
 {
-    msgpack_pool_static_init();
+    msgpack_pool_static_init_default();
 
     VALUE cBuffer = rb_define_class_under(mMessagePack, "Buffer", rb_cObject);
 

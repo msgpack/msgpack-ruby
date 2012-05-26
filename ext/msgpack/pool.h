@@ -21,19 +21,107 @@
 #include "compat.h"
 #include "sysdep.h"
 
-void msgpack_pool_static_init();
+struct msgpack_pool_t;
+typedef struct msgpack_pool_t msgpack_pool_t;
 
-void msgpack_pool_init();
+struct msgpack_pool_chunk_t;
+typedef struct msgpack_pool_chunk_t msgpack_pool_chunk_t;
 
-void msgpack_pool_destroy();
+/*
+ *   chunk
+ *   +----------------+
+ *   |   chunk_size   |
+ *   +----------------+
+ *   ^
+ * +-|-----+-------+-------+-------+
+ * | void* | void* |       |       |
+ * +-------+-------+-------+-------+
+ * ^array_head     ^array_tail     ^array_end
+ *
+ * +---------------------------+
+ * array_end - array_head = chunk_size
+ */
+struct msgpack_pool_t {
+    void** array_tail;
+    void** array_head;
+    void** array_end;
+    size_t chunk_size;
+};
 
-//TODO msgpack_pool_realloc(void* ptr, size_t& allocated_size, size_t required_size);
-void* msgpack_pool_malloc(size_t aligned_size);
+#ifndef MSGPACK_POOL_CHUNK_SIZE
+#define MSGPACK_POOL_CHUNK_SIZE 2*1024
+#endif
 
-//TODO msgpack_pool_realloc(void* ptr, size_t& current_size, size_t required_size);
-void* msgpack_pool_realloc(void* ptr, size_t aligned_size);
+#ifndef MSGPACK_POOL_SIZE
+#define MSGPACK_POOL_SIZE 1024
+#endif
 
-void msgpack_pool_free(void* ptr);
+void msgpack_pool_init(msgpack_pool_t* pl,
+        size_t chunk_size, size_t pool_size);
+
+static inline void msgpack_pool_init_default(msgpack_pool_t* pl)
+{
+    msgpack_pool_init(pl, MSGPACK_POOL_CHUNK_SIZE, MSGPACK_POOL_SIZE);
+}
+
+void msgpack_pool_destroy(msgpack_pool_t* pl);
+
+void* msgpack_pool_malloc(msgpack_pool_t* pl,
+        size_t required_size, size_t* allocated_size);
+
+void* msgpack_pool_realloc(msgpack_pool_t* pl,
+        void* ptr, size_t required_size, size_t* current_size);
+
+void msgpack_pool_free(msgpack_pool_t* pl,
+        void* ptr, size_t size);
+
+#ifdef USE_STR_NEW_MOVE
+VALUE msgpack_pool_move_to_string(msgpack_pool_t* pl,
+        void* ptr, size_t offset, size_t size);
+#endif
+
+
+extern msgpack_pool_t msgpack_pool_static_instance;
+
+static inline void msgpack_pool_static_init(
+        size_t chunk_size, size_t pool_size)
+{
+    msgpack_pool_init(&msgpack_pool_static_instance, chunk_size, pool_size);
+}
+
+static inline void msgpack_pool_static_init_default()
+{
+    msgpack_pool_init_default(&msgpack_pool_static_instance);
+}
+
+static inline void msgpack_pool_static_destroy()
+{
+    msgpack_pool_destroy(&msgpack_pool_static_instance);
+}
+
+static inline void* msgpack_pool_static_malloc(
+        size_t required_size, size_t* allocated_size)
+{
+    return msgpack_pool_malloc(&msgpack_pool_static_instance, required_size, allocated_size);
+}
+
+static inline void* msgpack_pool_static_realloc(
+        void* ptr, size_t required_size, size_t* current_size)
+{
+    return msgpack_pool_realloc(&msgpack_pool_static_instance, ptr, required_size, current_size);
+}
+
+static inline void msgpack_pool_static_free(
+        void* ptr, size_t size)
+{
+    return msgpack_pool_free(&msgpack_pool_static_instance, ptr, size);
+}
+
+static inline VALUE msgpack_pool_static_move_to_string(
+        void* ptr, size_t offset, size_t size)
+{
+    return msgpack_pool_move_to_string(&msgpack_pool_static_instance, ptr, offset, size);
+}
 
 #endif
 

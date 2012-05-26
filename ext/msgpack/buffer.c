@@ -17,7 +17,6 @@
  */
 
 #include "buffer.h"
-#include "pool.h"
 
 void msgpack_buffer_init(msgpack_buffer_t* b)
 {
@@ -29,7 +28,8 @@ void msgpack_buffer_init(msgpack_buffer_t* b)
 static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
 {
     if(c->mapped_string == NO_MAPPED_STRING) {
-        msgpack_pool_free(c->first);
+        //msgpack_pool_free(c->first);
+        free(c->first);
     } else {
         c->mapped_string = NO_MAPPED_STRING;
     }
@@ -224,26 +224,6 @@ size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t l
     }
 }
 
-#ifdef USE_STR_NEW_MOVE
-static VALUE rb_str_new_move(char* data, size_t length, size_t capacity)
-{
-    NEWOBJ(str, struct RString);
-    OBJSETUP(str, rb_cString, T_STRING);
-
-    str->as.heap.ptr = data;
-    str->as.heap.len = length;
-    str->as.heap.aux.capa = capacity;
-
-    FL_SET(str, FL_USER1);  /* set STR_NOEMBED */
-    RBASIC(str)->flags &= ~RSTRING_EMBED_LEN_MASK;
-
-    /* this is safe. see msgpack_pool_malloc() */
-    data[length] = '\0';
-
-    return (VALUE) str;
-}
-#endif
-
 static VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c)
 {
     if(c->mapped_string != NO_MAPPED_STRING) {
@@ -255,10 +235,12 @@ static VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c)
 #ifdef USE_STR_NEW_MOVE
         /* note: this code is magical: */
     } else if(sz > RSTRING_EMBED_LEN_MAX) {
-        VALUE mapped_string = rb_str_new_move(c->first,
-                c->last - c->first,
-                c->last - c->first);
-        c->mapped_string = mapped_string;
+        c->mapped_string = msgpack_pool_static_move_to_string(
+                c->first, 0, c->last - c->first);
+        //VALUE mapped_string = rb_str_new_move(c->first,
+        //        c->last - c->first,
+        //        c->last - c->first);
+        //c->mapped_string = mapped_string;
         return c->mapped_string;
 #endif
     } else {
@@ -282,10 +264,12 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
 #ifdef USE_STR_NEW_MOVE
         /* note: this code is magical: */
         } else if(sz > RSTRING_EMBED_LEN_MAX) {
-            VALUE mapped_string = rb_str_new_move(b->tail.first,
-                    b->tail.last - b->tail.first,
-                    b->tail_buffer_end - b->tail.first);
-            b->tail.mapped_string = mapped_string;
+            b->tail.mapped_string = msgpack_pool_static_move_to_string(
+                    b->tail.first, 0, b->tail.last - b->tail.first);
+            //VALUE mapped_string = rb_str_new_move(b->tail.first,
+            //        b->tail.last - b->tail.first,
+            //        b->tail_buffer_end - b->tail.first);
+            //b->tail.mapped_string = mapped_string;
             return b->tail.mapped_string;
 #endif
         }
@@ -328,7 +312,6 @@ bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* 
 		*dest = rb_str_substr(src, offset, length);
 
         _msgpack_buffer_consumed(b, length);
-
 
         return true;
     }
@@ -421,21 +404,13 @@ void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t lengt
 
     if(b->tail.mapped_string == NO_MAPPED_STRING) {
         /* realloc */
-        size_t next_filled = tail_filled + length;
-        size_t next_capacity = (b->tail_buffer_end - b->tail.first) * 2;
-        if(next_capacity == 0) {
-            next_capacity = MSGPACK_BUFFER_INITIAL_CHUNK_SIZE;
-        }
+        size_t capacity = b->tail_buffer_end - b->tail.first;
+        char* mem = msgpack_pool_static_realloc(b->tail.first, tail_filled+length, &capacity);
 
-        while(next_capacity < next_filled) {
-            next_capacity *= 2;
-        }
-
-        char* mem = msgpack_pool_realloc(b->tail.first, next_capacity);
-        char* last = mem;
+        char* last = mem + tail_filled;
         if(data != NULL) {
-            memcpy(mem+tail_filled, data, length);
-            last += next_filled;
+            memcpy(last, data, length);
+            last += length;
         }
 
         /* consider read_buffer */
@@ -447,16 +422,13 @@ void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t lengt
         /* rebuild tail chunk */
         b->tail.first = mem;
         b->tail.last = last;
-        b->tail_buffer_end = mem + next_capacity;
+        b->tail_buffer_end = mem + capacity;
 
     } else {
         /* allocate new chunk */
-        size_t next_capacity = MSGPACK_BUFFER_INITIAL_CHUNK_SIZE;
-        while(next_capacity < length) {
-            next_capacity *= 2;
-        }
+        size_t capacity;
+        char* mem = msgpack_pool_static_malloc(length, &capacity);
 
-        char* mem = msgpack_pool_malloc(next_capacity);
         char* last = mem;
         if(data != NULL) {
             memcpy(mem, data, length);
@@ -469,7 +441,7 @@ void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t lengt
         b->tail.first = mem;
         b->tail.last = last;
         b->tail.mapped_string = NO_MAPPED_STRING;
-        b->tail_buffer_end = last;
+        b->tail_buffer_end = mem + capacity;
 
         /* consider read_buffer */
         if(b->head == &b->tail) {

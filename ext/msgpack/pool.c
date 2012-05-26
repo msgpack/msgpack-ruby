@@ -18,45 +18,103 @@
 
 #include "pool.h"
 
-// TODO implement pooling
-
-void msgpack_pool_static_init()
+void msgpack_pool_init(msgpack_pool_t* pl,
+        size_t chunk_size, size_t pool_size)
 {
+    memset(pl, 0, sizeof(msgpack_pool_t));
+
+    pl->array_head = calloc(pool_size, sizeof(void*));
+    pl->array_tail = pl->array_head;
+    pl->array_end = pl->array_head + pool_size;
+    pl->chunk_size = chunk_size;
 }
 
-void msgpack_pool_init()
+void msgpack_pool_destroy(msgpack_pool_t* pl)
 {
+    void** p = pl->array_head;
+    for(; p < pl->array_end; p++) {
+        free(*p);
+    }
+    free(pl->array_head);
 }
 
-void msgpack_pool_destroy()
-{
-}
-
-void* msgpack_pool_malloc(size_t aligned_size)
+void* msgpack_pool_malloc(msgpack_pool_t* pl,
+        size_t required_size, size_t* allocated_size)
 {
 #ifdef USE_STR_NEW_MOVE
     /* +1: for rb_str_new_move */
-    return malloc(aligned_size+1);
-#else
-    return malloc(aligned_size);
+    required_size += 1;
 #endif
+    if(required_size > pl->chunk_size) {
+        *allocated_size = required_size;
+        return malloc(required_size);
+    }
+    if(pl->array_head == pl->array_tail) {
+        *allocated_size = pl->chunk_size;
+        return malloc(pl->chunk_size);
+    }
+    *allocated_size = pl->chunk_size;
+    return pl->array_tail--;
 }
 
-void* msgpack_pool_realloc(void* ptr, size_t aligned_size)
+void* msgpack_pool_realloc(msgpack_pool_t* pl,
+        void* ptr, size_t required_size, size_t* current_size)
 {
     if(ptr == NULL) {
-        return msgpack_pool_malloc(aligned_size);
+        return msgpack_pool_malloc(pl, required_size, current_size);
     }
 #ifdef USE_STR_NEW_MOVE
     /* +1: for rb_str_new_move */
-    return realloc(ptr, aligned_size+1);
-#else
-    return realloc(ptr, aligned_size);
+    required_size += 1;
 #endif
+    size_t next_size = *current_size * 2;
+    while(next_size < required_size) {
+        next_size *= 2;
+    }
+    *current_size = next_size;
+    return realloc(ptr, next_size);
 }
 
-void msgpack_pool_free(void* ptr)
+void msgpack_pool_free(msgpack_pool_t* pl,
+        void* ptr, size_t size)
 {
-    free(ptr);
+    if(pl->array_end == pl->array_tail || pl->chunk_size < size) {
+        free(ptr);
+    }
+    *pl->array_tail = ptr;
+    pl->array_tail++;
+}
+
+msgpack_pool_t msgpack_pool_static_instance;
+
+
+#ifdef USE_STR_NEW_MOVE
+static VALUE rb_str_new_move(char* data, size_t length, size_t capacity)
+{
+    NEWOBJ(str, struct RString);
+    OBJSETUP(str, rb_cString, T_STRING);
+
+    str->as.heap.ptr = data;
+    str->as.heap.len = length;
+    str->as.heap.aux.capa = capacity;
+
+    FL_SET(str, FL_USER1);  /* set STR_NOEMBED */
+    RBASIC(str)->flags &= ~RSTRING_EMBED_LEN_MASK;
+
+    /* this is safe. see msgpack_pool_malloc() */
+    data[length] = '\0';
+
+    return (VALUE) str;
+}
+#endif
+
+VALUE msgpack_pool_move_to_string(msgpack_pool_t* pl,
+        void* ptr, size_t offset, size_t size)
+{
+    VALUE s = rb_str_new_move(ptr, offset+size, offset+size);
+    if(offset > 0) {
+        s = rb_str_substr(s, offset, size);
+    }
+    return s;
 }
 
