@@ -116,43 +116,32 @@ static VALUE Unpacker_feed(VALUE self, VALUE data)
     return Qnil;
 }
 
-// TODO
-//static VALUE Unpacker_each(VALUE self)
-//{
-//    UNPACKER(self, uk);
-//
-//#ifdef RETURN_ENUMERATOR
-//    RETURN_ENUMERATOR(self, 0, 0);
-//#endif
-//
-//    while(true) {
-//        // TODO catch EOFError
-//        VALUE v = msgpack_unpacker_read(uk);
-//        rb_yield(v);
-//    }
-//}
+static VALUE Unpacker_each(VALUE self)
+{
+    UNPACKER(self, uk);
 
-// TODO
-//static VALUE Unpacker_feed_each(VALUE self, VALUE data)
-//{
-//    UNPACKER(self, uk);
-//    StringValue(data);
-//
-//#ifdef RETURN_ENUMERATOR
-//    RETURN_ENUMERATOR(self, 0, 0);
-//#endif
-//
-//    msgpack_unpacker_feed_string_reference(uk, data);
-//
-//    while(true) {
-//        // TODO catch EOFError
-//        VALUE v = msgpack_unpacker_read(uk);
-//        rb_yield(v);
-//    }
-//
-//    // TODO ensure section
-//    msgpack_buffer_copy_last_reference(UNPACKER_BUFFER_(uk), data);
-//}
+#ifdef RETURN_ENUMERATOR
+    RETURN_ENUMERATOR(self, 0, 0);
+#endif
+
+    while(true) {
+        int r = msgpack_unpacker_read(uk, 0);
+        if(r < 0) {
+            if(r == PRIMITIVE_EOF) {
+                return Qnil;
+            }
+            raise_unpacker_error(r);
+        }
+        rb_yield(msgpack_unpacker_get_last_object(uk));
+    }
+}
+
+static VALUE Unpacker_feed_each(VALUE self, VALUE data)
+{
+    // TODO optimize?
+    Unpacker_feed(self, data);
+    return Unpacker_each(self);
+}
 
 void Unpacker_module_init(VALUE mMessagePack)
 {
@@ -164,5 +153,7 @@ void Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cUnpacker, "read", Unpacker_read, -1);
     rb_define_method(cUnpacker, "skip", Unpacker_skip, 0);
     rb_define_method(cUnpacker, "feed", Unpacker_feed, 1);
+    rb_define_method(cUnpacker, "each", Unpacker_each, 0);
+    rb_define_method(cUnpacker, "feed_each", Unpacker_feed_each, 1);
 }
 
