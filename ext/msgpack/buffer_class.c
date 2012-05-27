@@ -21,6 +21,8 @@
 #include "buffer.h"
 #include "buffer_class.h"
 
+static ID s_write;
+
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
     Data_Get_Struct(from, msgpack_buffer_t, name); \
@@ -311,8 +313,32 @@ static VALUE Buffer_to_a(VALUE self)
     return msgpack_buffer_all_as_string_array(b);
 }
 
+/**
+ * Document-method: MessagePack::Buffer#write_to(io)
+ *
+ * call-seq:
+ *   MessagePack::Buffer#write_to(io)
+ *
+ *
+ */
+static VALUE Buffer_write_to(VALUE self, VALUE io)
+{
+    VALUE ary = Buffer_to_a(self);
+
+    unsigned int len = (unsigned int)RARRAY_LEN(ary);
+    unsigned int i;
+    for(i=0; i < len; ++i) {
+        VALUE e = rb_ary_entry(ary, i);
+        rb_funcall(io, s_write, 1, e);
+    }
+
+    return Qnil;
+}
+
 VALUE MessagePack_Buffer_module_init(VALUE mMessagePack)
 {
+    s_write = rb_intern("write");
+
     msgpack_pool_static_init_default();
 
     VALUE cBuffer = rb_define_class_under(mMessagePack, "Buffer", rb_cObject);
@@ -327,6 +353,7 @@ VALUE MessagePack_Buffer_module_init(VALUE mMessagePack)
     rb_define_method(cBuffer, "skip", Buffer_skip, 1);
     rb_define_method(cBuffer, "read", Buffer_read, -1);
     rb_define_method(cBuffer, "readpartial", Buffer_readpartial, -1);
+    rb_define_method(cBuffer, "write_to", Buffer_write_to, 1);
     rb_define_method(cBuffer, "to_str", Buffer_to_str, 0);
     rb_define_method(cBuffer, "to_s", Buffer_to_str, 0); /* alias */
     rb_define_method(cBuffer, "to_a", Buffer_to_a, 0);

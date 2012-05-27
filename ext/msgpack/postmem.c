@@ -84,7 +84,11 @@ void* msgpack_postmem_realloc(msgpack_postmem_t* pm,
     while(next_size < required_size) {
         next_size *= 2;
     }
+#ifndef DISABLE_STR_NEW_MOVE
+    *current_size = next_size - 1;
+#else
     *current_size = next_size;
+#endif
     return realloc(ptr, next_size);
 }
 
