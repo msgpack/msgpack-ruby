@@ -19,14 +19,14 @@
 #include "pool.h"
 
 void msgpack_pool_init(msgpack_pool_t* pl,
-        size_t chunk_size, size_t pool_size)
+        size_t alloc_size, size_t pool_size)
 {
     memset(pl, 0, sizeof(msgpack_pool_t));
 
     pl->array_head = calloc(pool_size, sizeof(void*));
     pl->array_tail = pl->array_head;
     pl->array_end = pl->array_head + pool_size;
-    pl->chunk_size = chunk_size;
+    pl->alloc_size = alloc_size;
 }
 
 void msgpack_pool_destroy(msgpack_pool_t* pl)
@@ -45,15 +45,15 @@ void* msgpack_pool_malloc(msgpack_pool_t* pl,
     /* +1: for rb_str_new_move */
     required_size += 1;
 #endif
-    if(required_size > pl->chunk_size) {
+    if(required_size > pl->alloc_size) {
         *allocated_size = required_size;
         return malloc(required_size);
     }
     if(pl->array_head == pl->array_tail) {
-        *allocated_size = pl->chunk_size;
-        return malloc(pl->chunk_size);
+        *allocated_size = pl->alloc_size;
+        return malloc(pl->alloc_size);
     }
-    *allocated_size = pl->chunk_size;
+    *allocated_size = pl->alloc_size;
     return pl->array_tail--;
 }
 
@@ -78,7 +78,7 @@ void* msgpack_pool_realloc(msgpack_pool_t* pl,
 void msgpack_pool_free(msgpack_pool_t* pl,
         void* ptr, size_t size)
 {
-    if(pl->array_end == pl->array_tail || pl->chunk_size < size) {
+    if(pl->array_end == pl->array_tail || pl->alloc_size < size) {
         free(ptr);
     }
     *pl->array_tail = ptr;

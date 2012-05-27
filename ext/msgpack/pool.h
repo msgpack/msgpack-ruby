@@ -30,7 +30,7 @@ typedef struct msgpack_pool_chunk_t msgpack_pool_chunk_t;
 /*
  *   chunk
  *   +----------------+
- *   |   chunk_size   |
+ *   |   alloc_size   |
  *   +----------------+
  *   ^
  * +-|-----+-------+-------+-------+
@@ -39,13 +39,13 @@ typedef struct msgpack_pool_chunk_t msgpack_pool_chunk_t;
  * ^array_head     ^array_tail     ^array_end
  *
  * +---------------------------+
- * array_end - array_head = chunk_size
+ * array_end - array_head = alloc_size
  */
 struct msgpack_pool_t {
     void** array_tail;
     void** array_head;
     void** array_end;
-    size_t chunk_size;
+    size_t alloc_size;
 };
 
 #ifndef MSGPACK_POOL_CHUNK_SIZE
@@ -57,7 +57,7 @@ struct msgpack_pool_t {
 #endif
 
 void msgpack_pool_init(msgpack_pool_t* pl,
-        size_t chunk_size, size_t pool_size);
+        size_t alloc_size, size_t pool_size);
 
 static inline void msgpack_pool_init_default(msgpack_pool_t* pl)
 {
@@ -85,9 +85,9 @@ VALUE msgpack_pool_move_to_string(msgpack_pool_t* pl,
 extern msgpack_pool_t msgpack_pool_static_instance;
 
 static inline void msgpack_pool_static_init(
-        size_t chunk_size, size_t pool_size)
+        size_t alloc_size, size_t pool_size)
 {
-    msgpack_pool_init(&msgpack_pool_static_instance, chunk_size, pool_size);
+    msgpack_pool_init(&msgpack_pool_static_instance, alloc_size, pool_size);
 }
 
 static inline void msgpack_pool_static_init_default()

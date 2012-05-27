@@ -192,6 +192,16 @@ typedef unsigned int _msgpack_atomic_counter_t;
     ({ cast val; memcpy(&val, (char*)from, 8); _msgpack_be64(val); })
 */
 
+#if defined(_MSC_VER)
+#define _msgpack_bsp32(name, val) \
+    long name; \
+    _BitScanForward(&name, val)
+#else
+#define _msgpack_bsp32(name, val) \
+    int name = __builtin_ctz(val)
+/* TODO default impl */
+#endif
+
 
 #endif
 
