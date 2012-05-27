@@ -39,19 +39,6 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 #ifdef _WIN32
-#define _msgpack_atomic_counter_header <windows.h>
-typedef long _msgpack_atomic_counter_t;
-#define _msgpack_sync_decr_and_fetch(ptr) InterlockedDecrement(ptr)
-#define _msgpack_sync_incr_and_fetch(ptr) InterlockedIncrement(ptr)
-#elif defined(__GNUC__) && ((__GNUC__*10 + __GNUC_MINOR__) < 41)
-#define _msgpack_atomic_counter_header "gcc_atomic.h"
-#else
-typedef unsigned int _msgpack_atomic_counter_t;
-#define _msgpack_sync_decr_and_fetch(ptr) __sync_sub_and_fetch(ptr, 1)
-#define _msgpack_sync_incr_and_fetch(ptr) __sync_add_and_fetch(ptr, 1)
-#endif
-
-#ifdef _WIN32
 
 #ifdef __cplusplus
 /* numeric_limits<T>::min,max */
@@ -80,6 +67,7 @@ typedef unsigned int _msgpack_atomic_counter_t;
 
 #ifdef __LITTLE_ENDIAN__
 
+/* _msgpack_be16 */
 #ifdef _WIN32
 #  if defined(ntohs)
 #    define _msgpack_be16(x) ntohs(x)
@@ -94,6 +82,7 @@ typedef unsigned int _msgpack_atomic_counter_t;
 #  define _msgpack_be16(x) ntohs(x)
 #endif
 
+/* _msgpack_be32 */
 #ifdef _WIN32
 #  if defined(ntohl)
 #    define _msgpack_be32(x) ntohl(x)
@@ -110,6 +99,7 @@ typedef unsigned int _msgpack_atomic_counter_t;
 #  define _msgpack_be32(x) ntohl(x)
 #endif
 
+/* _msgpack_be64 */
 #if defined(_byteswap_uint64) || (defined(_MSC_VER) && _MSC_VER >= 1400)
 #  define _msgpack_be64(x) (_byteswap_uint64(x))
 #elif defined(bswap_64)
@@ -128,70 +118,15 @@ typedef unsigned int _msgpack_atomic_counter_t;
       ((((uint64_t)x) >> 56)                         ) )
 #endif
 
-#define _msgpack_load16(cast, from) ((cast)( \
-        (((uint16_t)((uint8_t*)(from))[0]) << 8) | \
-        (((uint16_t)((uint8_t*)(from))[1])     ) ))
-
-#define _msgpack_load32(cast, from) ((cast)( \
-        (((uint32_t)((uint8_t*)(from))[0]) << 24) | \
-        (((uint32_t)((uint8_t*)(from))[1]) << 16) | \
-        (((uint32_t)((uint8_t*)(from))[2]) <<  8) | \
-        (((uint32_t)((uint8_t*)(from))[3])      ) ))
-
-#define _msgpack_load64(cast, from) ((cast)( \
-        (((uint64_t)((uint8_t*)(from))[0]) << 56) | \
-        (((uint64_t)((uint8_t*)(from))[1]) << 48) | \
-        (((uint64_t)((uint8_t*)(from))[2]) << 40) | \
-        (((uint64_t)((uint8_t*)(from))[3]) << 32) | \
-        (((uint64_t)((uint8_t*)(from))[4]) << 24) | \
-        (((uint64_t)((uint8_t*)(from))[5]) << 16) | \
-        (((uint64_t)((uint8_t*)(from))[6]) << 8)  | \
-        (((uint64_t)((uint8_t*)(from))[7])     )  ))
-
-#else
-
+#else  /* big endian */
 #define _msgpack_be16(x) (x)
 #define _msgpack_be32(x) (x)
 #define _msgpack_be64(x) (x)
 
-#define _msgpack_load16(cast, from) ((cast)( \
-        (((uint16_t)((uint8_t*)from)[0]) << 8) | \
-        (((uint16_t)((uint8_t*)from)[1])     ) ))
-
-#define _msgpack_load32(cast, from) ((cast)( \
-        (((uint32_t)((uint8_t*)from)[0]) << 24) | \
-        (((uint32_t)((uint8_t*)from)[1]) << 16) | \
-        (((uint32_t)((uint8_t*)from)[2]) <<  8) | \
-        (((uint32_t)((uint8_t*)from)[3])      ) ))
-
-#define _msgpack_load64(cast, from) ((cast)( \
-        (((uint64_t)((uint8_t*)from)[0]) << 56) | \
-        (((uint64_t)((uint8_t*)from)[1]) << 48) | \
-        (((uint64_t)((uint8_t*)from)[2]) << 40) | \
-        (((uint64_t)((uint8_t*)from)[3]) << 32) | \
-        (((uint64_t)((uint8_t*)from)[4]) << 24) | \
-        (((uint64_t)((uint8_t*)from)[5]) << 16) | \
-        (((uint64_t)((uint8_t*)from)[6]) << 8)  | \
-        (((uint64_t)((uint8_t*)from)[7])     )  ))
 #endif
 
 
-#define _msgpack_store16(to, num) \
-    do { uint16_t val = _msgpack_be16(num); memcpy(to, &val, 2); } while(0)
-#define _msgpack_store32(to, num) \
-    do { uint32_t val = _msgpack_be32(num); memcpy(to, &val, 4); } while(0)
-#define _msgpack_store64(to, num) \
-    do { uint64_t val = _msgpack_be64(num); memcpy(to, &val, 8); } while(0)
-
-/*
-#define _msgpack_load16(cast, from) \
-    ({ cast val; memcpy(&val, (char*)from, 2); _msgpack_be16(val); })
-#define _msgpack_load32(cast, from) \
-    ({ cast val; memcpy(&val, (char*)from, 4); _msgpack_be32(val); })
-#define _msgpack_load64(cast, from) \
-    ({ cast val; memcpy(&val, (char*)from, 8); _msgpack_be64(val); })
-*/
-
+/* _msgpack_bsp32 */
 #if defined(_MSC_VER)
 #define _msgpack_bsp32(name, val) \
     long name; \
