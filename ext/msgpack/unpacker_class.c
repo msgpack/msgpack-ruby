@@ -19,6 +19,11 @@
 #include "unpacker.h"
 #include "unpacker_class.h"
 
+static ID s_read;
+static ID s_readpartial;
+
+static VALUE cUnpacker;
+
 static VALUE eUnpackerError;
 static VALUE eMalformedFormatError;
 static VALUE eUnapackerStackError;  // < eMalformedFormatError?
@@ -182,9 +187,56 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
     return Unpacker_each(self);
 }
 
+VALUE MessagePack_Unpacker_create(int argc, VALUE* args)
+{
+    if(argc == 0 || (argc == 1 && args[0] == Qnil)) {
+        return Unpacker_alloc(cUnpacker);
+    }
+
+    if(argc != 1) {
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
+    }
+    VALUE v = args[0];
+
+    VALUE klass = rb_class_of(v);
+    if(klass == cUnpacker) {
+        return v;
+    }
+
+    if(klass == rb_cString) {
+        VALUE self = Unpacker_alloc(cUnpacker);
+        UNPACKER(self, uk);
+        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), v);
+        return self;
+    }
+
+    ID read_method;
+
+    if(rb_respond_to(v, s_readpartial)) {
+        read_method = s_readpartial;
+    } else if(rb_respond_to(v, s_read)) {
+        read_method = s_read;
+    } else {
+        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+    }
+
+    VALUE self = Unpacker_alloc(cUnpacker);
+    UNPACKER(self, uk);
+    msgpack_unpacker_set_io(uk, v, read_method);
+    return self;
+}
+
+static VALUE MessagePack_Unpacker(int argc, VALUE* argv, VALUE self)
+{
+    return MessagePack_Unpacker_create(argc, argv);
+}
+
 VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
-    VALUE cUnpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
+    s_read = rb_intern("read");
+    s_readpartial = rb_intern("readpartial");
+
+    cUnpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
     rb_define_alloc_func(cUnpacker, Unpacker_alloc);
 
@@ -197,6 +249,9 @@ VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cUnpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cUnpacker, "each", Unpacker_each, 0);
     rb_define_method(cUnpacker, "feed_each", Unpacker_feed_each, 1);
+
+    /* MessagePack::Unpacker(x) */
+    rb_define_module_function(mMessagePack, "Unpacker", MessagePack_Unpacker, 1);
 
     return cUnpacker;
 }

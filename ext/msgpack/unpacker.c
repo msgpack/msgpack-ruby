@@ -20,17 +20,6 @@
 
 #define HEAD_BYTE_REQUIRED 0xc6
 
-static ID s_read; // TODO initialzie for read_all_data_from_io_to_string
-static ID s_sysread;
-static ID s_readpartial;
-
-void msgpack_unpacker_static_init()
-{
-    s_read = rb_intern("read");
-    s_sysread = rb_intern("sysread");
-    s_readpartial = rb_intern("readpartial");
-}
-
 void msgpack_unpacker_init(msgpack_unpacker_t* uk)
 {
     memset(uk, 0, sizeof(msgpack_unpacker_t));
@@ -135,9 +124,9 @@ static size_t feed_buffer_from_io(msgpack_unpacker_t* uk)
 static void read_all_data_from_io_to_string(msgpack_unpacker_t* uk, VALUE string, size_t length)
 {
     if(RSTRING_LEN(string) == 0) {
-        rb_funcall(uk->io, s_read, 2, LONG2FIX(length), string);
+        rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(length), string);
     } else {
-        rb_funcall(uk->io, s_read, 2, LONG2FIX(length), uk->io_buffer);
+        rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(length), uk->io_buffer);
         rb_str_buf_cat(string, (const void*)RSTRING_PTR(uk->io_buffer), RSTRING_LEN(uk->io_buffer));
     }
 }

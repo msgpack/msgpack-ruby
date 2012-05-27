@@ -147,7 +147,7 @@ VALUE MessagePack_Packer_create(int argc, VALUE* args)
 
     VALUE self = Packer_alloc(cPacker);
     PACKER(self, pk);
-    msgpack_packer_set_io(pk, v, s_write);
+    msgpack_packer_set_io(pk, v, write_method);
     return self;
 }
 

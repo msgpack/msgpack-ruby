@@ -79,13 +79,18 @@ enum msgpack_unpacker_object_type {
     MAP,
 };
 
-void msgpack_unpacker_static_init();
-
 void msgpack_unpacker_init(msgpack_unpacker_t* uk);
 
 void msgpack_unpacker_destroy(msgpack_unpacker_t* uk);
 
 void msgpack_unpacker_mark(msgpack_unpacker_t* uk);
+
+static inline void msgpack_unpacker_set_io(msgpack_unpacker_t* uk, VALUE io, ID io_partial_read_method)
+{
+    uk->io = io;
+    uk->io_partial_read_method = io_partial_read_method;
+}
+
 
 
 /* error codes */
