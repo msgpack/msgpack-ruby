@@ -106,6 +106,21 @@ static VALUE Unpacker_skip(VALUE self)
     return Qnil;
 }
 
+static VALUE Unpacker_skip_nil(VALUE self)
+{
+    UNPACKER(self, uk);
+
+    int r = msgpack_unpacker_skip_nil(uk);
+    if(r < 0) {
+        raise_unpacker_error(r);
+    }
+
+    if(r) {
+        return Qtrue;
+    }
+    return Qfalse;
+}
+
 static VALUE Unpacker_feed(VALUE self, VALUE data)
 {
     UNPACKER(self, uk);
@@ -140,7 +155,7 @@ printf("error: %d\n", r);
 
 static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 {
-    // TODO optimize?
+    // TODO optimize
     Unpacker_feed(self, data);
     return Unpacker_each(self);
 }
@@ -154,6 +169,7 @@ VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cUnpacker, "initialize", Unpacker_initialize, -1);
     rb_define_method(cUnpacker, "read", Unpacker_read, -1);
     rb_define_method(cUnpacker, "skip", Unpacker_skip, 0);
+    rb_define_method(cUnpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cUnpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cUnpacker, "each", Unpacker_each, 0);
     rb_define_method(cUnpacker, "feed_each", Unpacker_feed_each, 1);

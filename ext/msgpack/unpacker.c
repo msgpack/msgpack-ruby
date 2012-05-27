@@ -574,5 +574,13 @@ int get_next_object_type(msgpack_unpacker_t* uk)
 int msgpack_unpacker_skip_nil(msgpack_unpacker_t* uk)
 {
     // TODO
+    int b = get_head_byte(uk);
+    if(b < 0) {
+        return b;
+    }
+    if(b == 0xc0) {
+        return 1;
+    }
+    return 0;
 }
 
