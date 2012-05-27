@@ -52,15 +52,12 @@ static inline void msgpack_pool_init(msgpack_pool_t* pl,
 #define MSGPACK_PREMEM_SIZE 1024
 #endif
 
-// TODO
-//#if MSGPACK_PREMEM_SIZE < (RSTRING_EMBED_LEN_MAX)
-//#undef MSGPACK_PREMEM_SIZE
-//#define MSGPACK_PREMEM_SIZE RSTRING_EMBED_LEN_MAX
-//#endif
+#if MSGPACK_PREMEM_SIZE < 191
+#error MSGPACK_PREMEM_SIZE must be > RSTRING_EMBED_LEN_MAX which is 95 or 191
+#endif
 
 static inline void msgpack_pool_init_default(msgpack_pool_t* pl)
 {
-    // TODO
     msgpack_pool_init(pl, MSGPACK_PREMEM_SIZE, MSGPACK_POSTMEM_CHUNK_SIZE, MSGPACK_POSTMEM_SIZE);
 }
 

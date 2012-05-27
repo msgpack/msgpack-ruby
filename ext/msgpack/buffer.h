@@ -30,11 +30,9 @@
 #define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD 256
 #endif
 
-// TODO
-//#if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD < RSTRING_EMBED_LEN_MAX
-//#undef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
-//#define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD RSTRING_EMBED_LEN_MAX
-//#endif
+#if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD <= 191
+#error MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD must be > RSTRING_EMBED_LEN_MAX which is 95 or 191
+#endif
 
 #define NO_MAPPED_STRING ((VALUE)0)
 
@@ -234,6 +232,11 @@ static inline union msgpack_buffer_cast_block_t* msgpack_buffer_refer_cast_block
     return &b->cast_block;
 }
 
+
+/*
+ * bulk read / skip functions
+ */
+
 bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length);
 
 bool msgpack_buffer_skip_all(msgpack_buffer_t* b, size_t length);
@@ -259,17 +262,6 @@ VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b);
 
 bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest);
 
-//static inline int msgpack_buffer_remaining(msgpack_buffer_t* b)
-//{
-//    size_t rem = b->head_buffer_size;
-//    msgpack_buffer_chunk_t* c = b->head;
-//    msgpack_buffer_chunk_t* const tail = b->tail;
-//    while(c != c->tail) {
-//        c = c->next;  /* skip head buffer */
-//        rem += c->length;
-//    }
-//    return rem;
-//}
 
 #endif
 

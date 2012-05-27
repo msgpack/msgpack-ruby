@@ -203,8 +203,7 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 static int read_raw_body_cont(msgpack_unpacker_t* uk)
 {
     /* try zero-copy */
-    if(uk->reading_raw == Qnil || RSTRING_LEN(uk->reading_raw) == 0) {  // TODO the reason is not known but this optimization is slow
-    //if(RSTRING_LEN(uk->reading_raw) == 0) {
+    if(uk->reading_raw == Qnil || RSTRING_LEN(uk->reading_raw) == 0) {
         VALUE string;
         if(msgpack_buffer_try_refer_string(UNPACKER_BUFFER_(uk), uk->reading_raw_remaining, &string)) {
             object_complete(uk, string);
