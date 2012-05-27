@@ -96,8 +96,6 @@ static VALUE Unpacker_skip(VALUE self)
 {
     UNPACKER(self, uk);
 
-    // TODO args check?
-
     int r = msgpack_unpacker_skip(uk, 0);
     if(r < 0) {
         raise_unpacker_error(r);
@@ -119,6 +117,30 @@ static VALUE Unpacker_skip_nil(VALUE self)
         return Qtrue;
     }
     return Qfalse;
+}
+
+static VALUE Unpacker_read_array_header(VALUE self)
+{
+    UNPACKER(self, uk);
+
+    long r = msgpack_unpacker_read_array_header(uk);
+    if(r < 0) {
+        raise_unpacker_error(r);
+    }
+
+    return LONG2NUM(r);
+}
+
+static VALUE Unpacker_read_map_header(VALUE self)
+{
+    UNPACKER(self, uk);
+
+    long r = msgpack_unpacker_read_map_header(uk);
+    if(r < 0) {
+        raise_unpacker_error(r);
+    }
+
+    return LONG2NUM(r);
 }
 
 static VALUE Unpacker_feed(VALUE self, VALUE data)
@@ -170,6 +192,8 @@ VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cUnpacker, "read", Unpacker_read, -1);
     rb_define_method(cUnpacker, "skip", Unpacker_skip, 0);
     rb_define_method(cUnpacker, "skip_nil", Unpacker_skip_nil, 0);
+    rb_define_method(cUnpacker, "read_array_header", Unpacker_read_array_header, 0);
+    rb_define_method(cUnpacker, "read_map_header", Unpacker_read_map_header, 0);
     rb_define_method(cUnpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cUnpacker, "each", Unpacker_each, 0);
     rb_define_method(cUnpacker, "feed_each", Unpacker_feed_each, 1);

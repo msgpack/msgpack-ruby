@@ -109,9 +109,9 @@ int get_next_object_type(msgpack_unpacker_t* uk);
 
 int msgpack_unpacker_skip_nil(msgpack_unpacker_t* uk);
 
-int msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk);
+long msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk);
 
-int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk);
+long msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk);
 
 #endif
 

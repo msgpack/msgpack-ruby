@@ -466,20 +466,62 @@ static int read_primitive(msgpack_unpacker_t* uk)
     SWITCH_RANGE_END
 }
 
-int msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk)
+long msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk)
 {
     int b = get_head_byte(uk);
+    if(b < 0) {
+        return b;
+    }
 
-    // TODO
-    //READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
-    //int count = _msgpack_be16(cb->u16);
+    long count;
+
+    if(0x90 < b && b < 0x9f) {
+        count = b & 0x0f;
+
+    } else if(b == 0xdc) {
+        /* array 16 */
+        size_t avail = msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk));
+        READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
+        count = _msgpack_be16(cb->u16);
+
+    } else if(b == 0xdd) {
+        /* array 32 */
+        size_t avail = msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk));
+        READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 4);
+        /* FIXME u32 may be bigger than long */
+        count = _msgpack_be32(cb->u32);
+    }
+
+    return count;
 }
 
-int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk)
+long msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk)
 {
-    // TODO
-    //READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
-    //int count = _msgpack_be16(cb->u16);
+    int b = get_head_byte(uk);
+    if(b < 0) {
+        return b;
+    }
+
+    long count;
+
+    if(0x80 < b && b < 0x8f) {
+        count = b & 0x0f;
+
+    } else if(b == 0xde) {
+        /* map 16 */
+        size_t avail = msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk));
+        READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
+        count = _msgpack_be16(cb->u16);
+
+    } else if(b == 0xdf) {
+        /* map 32 */
+        size_t avail = msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk));
+        READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 4);
+        /* FIXME u32 may be bigger than long */
+        count = _msgpack_be32(cb->u32);
+    }
+
+    return count;
 }
 
 int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
@@ -573,7 +615,6 @@ int get_next_object_type(msgpack_unpacker_t* uk)
 
 int msgpack_unpacker_skip_nil(msgpack_unpacker_t* uk)
 {
-    // TODO
     int b = get_head_byte(uk);
     if(b < 0) {
         return b;
