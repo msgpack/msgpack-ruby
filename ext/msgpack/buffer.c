@@ -18,6 +18,16 @@
 
 #include "buffer.h"
 
+void msgpack_buffer_static_init()
+{
+    msgpack_pool_static_init_default();
+}
+
+void msgpack_buffer_static_destroy()
+{
+    msgpack_pool_static_destroy();
+}
+
 void msgpack_buffer_init(msgpack_buffer_t* b)
 {
     memset(b, 0, sizeof(msgpack_buffer_t));
