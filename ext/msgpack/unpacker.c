@@ -87,6 +87,7 @@ static inline int _msgpack_unpacker_stack_push(msgpack_unpacker_t* uk, enum stac
     next->object = object;
     next->key = Qnil;
 
+//printf("push count: %d depth:%d type:%d\n", count, uk->stack_depth, type);
     uk->stack_depth++;
     return PRIMITIVE_CONTAINER_START;
 }
@@ -174,6 +175,7 @@ static int read_head_byte(msgpack_unpacker_t* uk)
         }
         feed_buffer_from_io(uk);
     }
+//printf("%lu\n", msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)));
     return msgpack_buffer_read_1(UNPACKER_BUFFER_(uk));
 }
 
@@ -201,8 +203,8 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 static int read_raw_body_cont(msgpack_unpacker_t* uk)
 {
     /* try zero-copy */
-    //if(uk->reading_raw == Qnil || RSTRING_LEN(uk->reading_raw) == 0) {  // TODO the reason is not known but this optimization is slow
-    if(RSTRING_LEN(uk->reading_raw) == 0) {
+    if(uk->reading_raw == Qnil || RSTRING_LEN(uk->reading_raw) == 0) {  // TODO the reason is not known but this optimization is slow
+    //if(RSTRING_LEN(uk->reading_raw) == 0) {
         VALUE string;
         if(msgpack_buffer_try_refer_string(UNPACKER_BUFFER_(uk), uk->reading_raw_remaining, &string)) {
             object_complete(uk, string);
@@ -258,6 +260,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
     if(b < 0) {
         return b;
     }
+    //printf("b:%d\n", b);
 
     SWITCH_RANGE_BEGIN(b)
     SWITCH_RANGE(b, 0x00, 0x7f)  // Positive Fixnum
@@ -280,6 +283,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         if(count == 0) {
             return object_complete(uk, rb_ary_new());
         }
+//printf("fix array %d\n", count);
         return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(count));
 
     SWITCH_RANGE(b, 0x80, 0x8f)  // FixMap
@@ -287,6 +291,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         if(count == 0) {
             return object_complete(uk, rb_hash_new());
         }
+//printf("fix map %d %x\n", count, b);
         return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP, count*2, rb_hash_new());
 
     SWITCH_RANGE(b, 0xc0, 0xdf)  // Variable
@@ -334,14 +339,14 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xcd:  // unsigned int 16
             {
-                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 1);
-                return cb->u8;
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
+                return _msgpack_be16(cb->u16);
             }
 
         case 0xce:  // unsigned int 32
             {
-                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
-                return _msgpack_be16(cb->u16);
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 4);
+                return _msgpack_be32(cb->u32);
             }
 
         case 0xcf:  // unsigned int 64
@@ -393,7 +398,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_str_buf_new(0));
                 }
-                uk->reading_raw = rb_str_buf_new(count);
+                //uk->reading_raw = rb_str_buf_new(count);
                 uk->reading_raw_remaining = count;
                 return read_raw_body_cont(uk);
             }
@@ -405,7 +410,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_str_buf_new(0));
                 }
-                uk->reading_raw = rb_str_buf_new(count);
+                //uk->reading_raw = rb_str_buf_new(count);
                 uk->reading_raw_remaining = count;
                 return read_raw_body_cont(uk);
             }
@@ -451,10 +456,12 @@ static int read_primitive(msgpack_unpacker_t* uk)
             }
 
         default:
+            printf("invalid byte: %x\n", b);
             return PRIMITIVE_INVALID_BYTE;
         }
 
     SWITCH_RANGE_DEFAULT
+        printf("invalid byte: %x\n", b);
         return PRIMITIVE_INVALID_BYTE;
 
     SWITCH_RANGE_END
@@ -492,25 +499,30 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
             return PRIMITIVE_OBJECT_COMPLETE;
         }
 
-        msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
-        switch(top->type) {
-        case STACK_TYPE_ARRAY:
-            rb_ary_push(top->object, uk->last_object);
-            break;
-        case STACK_TYPE_MAP:
-            if(top->count % 2 == 0) {
-                top->key = uk->last_object;
-            } else {
-                rb_hash_aset(top->object, top->key, uk->last_object);
+        container_completed:
+        {
+            msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
+            switch(top->type) {
+            case STACK_TYPE_ARRAY:
+                rb_ary_push(top->object, uk->last_object);
+                break;
+            case STACK_TYPE_MAP:
+                if(top->count % 2 == 0) {
+                    top->key = uk->last_object;
+                } else {
+                    rb_hash_aset(top->object, top->key, uk->last_object);
+                }
+                break;
             }
-            break;
-        }
-        size_t count = --top->count;
+            size_t count = --top->count;
+//printf("calc count: %d  depth=%d\n", count, uk->stack_depth);
 
-        if(count == 0) {
-            object_complete(uk, top->object);
-            if(msgpack_unpacker_stack_pop(uk) <= target_stack_depth) {
-                return PRIMITIVE_OBJECT_COMPLETE;
+            if(count == 0) {
+                object_complete(uk, top->object);
+                if(msgpack_unpacker_stack_pop(uk) <= target_stack_depth) {
+                    return PRIMITIVE_OBJECT_COMPLETE;
+                }
+                goto container_completed;
             }
         }
     }
@@ -523,19 +535,28 @@ int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth)
         if(r < 0) {
             return r;
         }
+        if(r == PRIMITIVE_CONTAINER_START) {
+            continue;
+        }
+        /* PRIMITIVE_OBJECT_COMPLETE */
+
         if(msgpack_unpacker_stack_is_empty(uk)) {
             return PRIMITIVE_OBJECT_COMPLETE;
         }
 
-        msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
-        /* deleted section */
-        /* TODO optimize: #define SKIP and #include unpacker_incl.h */
-        size_t count = --top->count;
+        container_completed:
+        {
+            msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
+            /* deleted section */
+            /* TODO optimize: #define SKIP and #include unpacker_incl.h */
+            size_t count = --top->count;
 
-        if(count == 0) {
-            object_complete(uk, Qnil);
-            if(msgpack_unpacker_stack_pop(uk) <= target_stack_depth) {
-                return PRIMITIVE_OBJECT_COMPLETE;
+            if(count == 0) {
+                object_complete(uk, Qnil);
+                if(msgpack_unpacker_stack_pop(uk) <= target_stack_depth) {
+                    return PRIMITIVE_OBJECT_COMPLETE;
+                }
+                goto container_completed;
             }
         }
     }

@@ -41,19 +41,31 @@ void msgpack_postmem_destroy(msgpack_postmem_t* pm)
 void* msgpack_postmem_alloc(msgpack_postmem_t* pm,
         size_t required_size, size_t* allocated_size)
 {
-#ifdef USE_STR_NEW_MOVE
+#ifndef DISABLE_STR_NEW_MOVE
     /* +1: for rb_str_new_move */
     required_size += 1;
 #endif
     if(required_size > pm->alloc_size) {
+#ifndef DISABLE_STR_NEW_MOVE
+        *allocated_size = required_size - 1;
+#else
         *allocated_size = required_size;
+#endif
         return malloc(required_size);
     }
     if(pm->array_head == pm->array_tail) {
+#ifndef DISABLE_STR_NEW_MOVE
+        *allocated_size = pm->alloc_size - 1;
+#else
         *allocated_size = pm->alloc_size;
+#endif
         return malloc(pm->alloc_size);
     }
+#ifndef DISABLE_STR_NEW_MOVE
+    *allocated_size = pm->alloc_size - 1;
+#else
     *allocated_size = pm->alloc_size;
+#endif
     pm->array_tail--;
     return *pm->array_tail;
 }
@@ -64,7 +76,7 @@ void* msgpack_postmem_realloc(msgpack_postmem_t* pm,
     if(ptr == NULL) {
         return msgpack_postmem_alloc(pm, required_size, current_size);
     }
-#ifdef USE_STR_NEW_MOVE
+#ifndef DISABLE_STR_NEW_MOVE
     /* +1: for rb_str_new_move */
     required_size += 1;
 #endif
@@ -89,7 +101,7 @@ void msgpack_postmem_free(msgpack_postmem_t* pm,
     pm->array_tail++;
 }
 
-#ifdef USE_STR_NEW_MOVE
+#ifndef DISABLE_STR_NEW_MOVE
 /* note: this code is magical: */
 static VALUE rb_str_new_move(char* data, size_t length)
 {

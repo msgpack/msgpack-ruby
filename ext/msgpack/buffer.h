@@ -22,12 +22,8 @@
 #include "sysdep.h"
 #include "pool.h"
 
-#ifndef MSGPACK_BUFFER_INITIAL_CHUNK_SIZE
-#define MSGPACK_BUFFER_INITIAL_CHUNK_SIZE (32*1024)
-#endif
-
 #ifndef MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD
-#define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD (32*1024)
+#define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD (1024*1024)
 #endif
 
 #ifndef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
@@ -202,7 +198,14 @@ static inline void _msgpack_buffer_consumed(msgpack_buffer_t* b, size_t length)
 {
     b->read_buffer += length;
     if(b->read_buffer >= b->head->last) {
+//size_t i = 0;
+//msgpack_buffer_chunk_t* c = b->head;
+//while(c != &b->tail) {
+//    c = c->next;
+//    i++;
+//}
         _msgpack_buffer_pop_chunk(b);
+//printf("pop %d tail_filled=%lu\n", i, b->tail.last - b->tail.first);
     }
 }
 
@@ -217,7 +220,7 @@ static inline int msgpack_buffer_read_1(msgpack_buffer_t* b)
 {
     int r = (int) (unsigned char) b->read_buffer[0];
 
-    b->read_buffer += 1;
+    _msgpack_buffer_consumed(b, 1);
 
     return r;
 }
@@ -226,7 +229,7 @@ static inline union msgpack_buffer_cast_block_t* msgpack_buffer_refer_cast_block
 {
     memcpy(b->cast_block.buffer, b->read_buffer, n);
 
-    b->read_buffer += n;
+    _msgpack_buffer_consumed(b, n);
 
     return &b->cast_block;
 }

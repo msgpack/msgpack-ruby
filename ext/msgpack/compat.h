@@ -68,11 +68,6 @@ extern VALUE s_enc_utf8_value;
 #endif
 
 
-#ifndef NOUSE_STR_NEW_MOVE
-#define USE_STR_NEW_MOVE
-#endif
-
-
 /* MRI 1.8.5 */
 #ifndef RSTRING_PTR
 #define RSTRING_PTR(s) (RSTRING(s)->ptr)

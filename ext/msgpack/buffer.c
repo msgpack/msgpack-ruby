@@ -231,13 +231,25 @@ static VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c, size_t r
     size_t sz = c->last - c->first - read_offset;
 
     if(c->mapped_string != NO_MAPPED_STRING) {
-        return rb_str_substr(c->mapped_string, read_offset, sz);
+        if(read_offset > 0) {
+            return rb_str_substr(c->mapped_string, read_offset, sz);
+        } else {
+            return rb_str_dup(c->mapped_string);
+        }
     }
 
-#ifdef USE_STR_NEW_MOVE
+    if(sz == 0) {
+        return rb_str_buf_new(0);
+    }
+
+#ifndef DISABLE_STR_NEW_MOVE
     if(msgpack_pool_static_try_move_to_string(
                 c->first, c->last - c->first, &c->mapped_string)) {
-        return rb_str_substr(c->mapped_string, read_offset, sz);
+        if(read_offset > 0) {
+            return rb_str_substr(c->mapped_string, read_offset, sz);
+        } else {
+            return rb_str_dup(c->mapped_string);
+        }
     }
 #endif
 
@@ -267,10 +279,9 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
 
 bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest)
 {
-    return false;
     if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
             && msgpack_buffer_top_readable_size(b) >= length
-#ifndef USE_STR_NEW_MOVE
+#ifdef DISABLE_STR_NEW_MOVE
             && b->tail.mapped_string != NO_MAPPED_STRING
 #endif
             ) {
@@ -368,6 +379,7 @@ void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t lengt
         /* realloc */
         size_t capacity = b->tail_buffer_end - b->tail.first;
         char* mem = msgpack_pool_static_realloc(b->tail.first, tail_filled+length, &capacity);
+//printf("realloc %lu tail filled=%lu\n", capacity, tail_filled);
 
         char* last = mem + tail_filled;
         if(data != NULL) {
@@ -389,7 +401,7 @@ void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t lengt
     } else {
         /* allocate new chunk */
         size_t capacity;
-        char* mem = msgpack_pool_static_malloc(length, &capacity);
+        char* mem = msgpack_pool_static_alloc(length, &capacity);
 
         char* last = mem;
         if(data != NULL) {

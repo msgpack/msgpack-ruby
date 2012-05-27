@@ -67,8 +67,8 @@ static void raise_unpacker_error(int r)
         break;
     case PRIMITIVE_STACK_TOO_DEEP:
         // TODO
-        //rb_raise(eMalformedFormatError, "invalid byte");
-        rb_raise(rb_eRuntimeError, "invalid byte");
+        //rb_raise(eMalformedFormatError, "stack level too deep");
+        rb_raise(rb_eRuntimeError, "stack level too deep");
         break;
     default:
         // TODO
@@ -130,6 +130,7 @@ static VALUE Unpacker_each(VALUE self)
             if(r == PRIMITIVE_EOF) {
                 return Qnil;
             }
+printf("error: %d\n", r);
             raise_unpacker_error(r);
         }
         rb_yield(msgpack_unpacker_get_last_object(uk));

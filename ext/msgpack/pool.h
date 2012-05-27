@@ -25,19 +25,23 @@ struct msgpack_pool_t;
 typedef struct msgpack_pool_t msgpack_pool_t;
 
 struct msgpack_pool_t {
+#ifndef DISABLE_PREMEM
     msgpack_premem_t premem;
+#endif
     msgpack_postmem_t postmem;
 };
 
 static inline void msgpack_pool_init(msgpack_pool_t* pl,
         size_t pre_size, size_t post_size, size_t pool_size)
 {
+#ifndef DISABLE_PREMEM
     msgpack_premem_init(&pl->premem, pre_size);
+#endif
     msgpack_postmem_init(&pl->postmem, post_size, pool_size);
 }
 
 #ifndef MSGPACK_POSTMEM_CHUNK_SIZE
-#define MSGPACK_POSTMEM_CHUNK_SIZE 32*1024
+#define MSGPACK_POSTMEM_CHUNK_SIZE 8*1024
 #endif
 
 #ifndef MSGPACK_POSTMEM_SIZE
@@ -62,23 +66,31 @@ static inline void msgpack_pool_init_default(msgpack_pool_t* pl)
 
 static inline void msgpack_pool_destroy(msgpack_pool_t* pl)
 {
+#ifndef DISABLE_PREMEM
     msgpack_premem_destroy(&pl->premem);
+#endif
     msgpack_postmem_destroy(&pl->postmem);
 }
 
 static inline void* msgpack_pool_alloc(msgpack_pool_t* pl,
         size_t required_size, size_t* allocated_size)
 {
+#ifndef DISABLE_PREMEM
     if(required_size <= pl->premem.alloc_size) {
         *allocated_size = pl->premem.alloc_size;
         return msgpack_premem_alloc(&pl->premem);
     }
+#endif
     return msgpack_postmem_alloc(&pl->postmem, required_size, allocated_size);
 }
 
 static inline void* msgpack_pool_realloc(msgpack_pool_t* pl,
         void* ptr, size_t required_size, size_t* current_size)
 {
+    if(ptr == NULL) {
+        return msgpack_pool_alloc(pl, required_size, current_size);
+    }
+#ifndef DISABLE_PREMEM
     size_t len = *current_size;
     if(len <= pl->premem.alloc_size) {
         void* ptr2 = msgpack_postmem_alloc(&pl->postmem, required_size, current_size);
@@ -86,27 +98,32 @@ static inline void* msgpack_pool_realloc(msgpack_pool_t* pl,
         msgpack_premem_free(&pl->premem, ptr);
         return ptr2;
     }
+#endif
     return msgpack_postmem_realloc(&pl->postmem, ptr, required_size, current_size);
 }
 
 static inline void msgpack_pool_free(msgpack_pool_t* pl,
         void* ptr, size_t min_size)
 {
+#ifndef DISABLE_PREMEM
     if(min_size <= pl->premem.alloc_size) {
         if(msgpack_premem_free(&pl->premem, ptr)) {
             return;
         }
     }
+#endif
     msgpack_postmem_free(&pl->postmem, ptr, min_size);
 }
 
 static inline bool msgpack_pool_try_move_to_string(msgpack_pool_t* pl,
         void* ptr, size_t size, VALUE* to)
 {
+#ifndef DISABLE_PREMEM
     if(size < pl->premem.alloc_size) {
         return false;
     }
-#ifdef USE_STR_NEW_MOVE
+#endif
+#ifndef DISABLE_STR_NEW_MOVE
     *to = msgpack_postmem_move_to_string(&pl->postmem, ptr, size);
     return true;
 #else
@@ -134,7 +151,7 @@ static inline void msgpack_pool_static_destroy()
     msgpack_pool_destroy(&msgpack_pool_static_instance);
 }
 
-static inline void* msgpack_pool_static_malloc(
+static inline void* msgpack_pool_static_alloc(
         size_t required_size, size_t* allocated_size)
 {
     return msgpack_pool_alloc(&msgpack_pool_static_instance, required_size, allocated_size);

@@ -62,7 +62,7 @@ void* msgpack_postmem_realloc(msgpack_postmem_t* pm,
 void msgpack_postmem_free(msgpack_postmem_t* pm,
         void* ptr, size_t size_hint);
 
-#ifdef USE_STR_NEW_MOVE
+#ifndef DISABLE_STR_NEW_MOVE
 /* assert size > RSTRING_EMBED_LEN_MAX */
 VALUE msgpack_postmem_move_to_string(msgpack_postmem_t* pm,
         void* ptr, size_t size);
