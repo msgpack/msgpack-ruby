@@ -28,7 +28,7 @@ struct msgpack_premem_chunk_t;
 typedef struct msgpack_premem_chunk_t msgpack_premem_chunk_t;
 
 /*
- * a chunk contains buffers.
+ * a chunk contains 32 buffers.
  * size of each buffer is alloc_size bytes.
  */
 struct msgpack_premem_chunk_t {

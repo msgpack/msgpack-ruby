@@ -15,18 +15,12 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#ifndef MSGPACK_RUBY_MODULE_INIT_H__
-#define MSGPACK_RUBY_MODULE_INIT_H__
+#ifndef MSGPACK_RUBY_BUFFER_CLASS_H__
+#define MSGPACK_RUBY_BUFFER_CLASS_H__
 
 #include "compat.h"
 
-void Init_msgpack(void);
-
-void Buffer_module_init(VALUE mMessagePack);
-
-void Packer_module_init(VALUE mMessagePack);
-
-void Unpacker_module_init(VALUE mMessagePack);
+VALUE MessagePack_Buffer_module_init(VALUE mMessagePack);
 
 #endif
 

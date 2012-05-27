@@ -19,11 +19,13 @@
 #include "compat.h"
 #include "ruby.h"
 #include "packer.h"
+#include "packer_class.h"
 
-// TODO
-//static ID s_to_msgpack;
-//static ID s_append;
-//static ID s_write;
+static ID s_to_msgpack;
+static ID s_append;
+static ID s_write;
+
+static VALUE cPacker;
 
 
 #define PACKER(from, name) \
@@ -110,9 +112,57 @@ static VALUE Packer_append(VALUE self, VALUE string_or_buffer)
     return self;
 }
 
-void Packer_module_init(VALUE mMessagePack)
+VALUE MessagePack_Packer_create(int argc, VALUE* args)
 {
-    VALUE cPacker = rb_define_class_under(mMessagePack, "Packer", rb_cObject);
+    if(argc == 0 || (argc == 1 && args[0] == Qnil)) {
+        return Packer_alloc(cPacker);
+    }
+
+    if(argc != 1) {
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
+    }
+    VALUE v = args[0];
+
+    VALUE klass = rb_class_of(v);
+    if(klass == cPacker) {
+        return v;
+    }
+
+    if(klass == rb_cString) {
+        VALUE self = Packer_alloc(cPacker);
+        PACKER(self, pk);
+        msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
+        return self;
+    }
+
+    ID write_method;
+
+    if(rb_respond_to(v, s_write)) {
+        write_method = s_write;
+    } else if(rb_respond_to(v, s_append)) {
+        write_method = s_append;
+    } else {
+        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+    }
+
+    VALUE self = Packer_alloc(cPacker);
+    PACKER(self, pk);
+    msgpack_packer_set_io(pk, v, s_write);
+    return self;
+}
+
+static VALUE MessagePack_Packer(int argc, VALUE* argv, VALUE self)
+{
+    return MessagePack_Packer_create(argc, argv);
+}
+
+VALUE MessagePack_Packer_module_init(VALUE mMessagePack)
+{
+	s_to_msgpack = rb_intern("to_msgpack");
+	s_append = rb_intern("<<");
+	s_write = rb_intern("write");
+
+    cPacker = rb_define_class_under(mMessagePack, "Packer", rb_cObject);
 
     rb_define_alloc_func(cPacker, Packer_alloc);
 
@@ -125,5 +175,10 @@ void Packer_module_init(VALUE mMessagePack)
     rb_define_method(cPacker, "to_s", Packer_to_str, 0);
     rb_define_method(cPacker, "to_a", Packer_to_a, 0);
     rb_define_method(cPacker, "append", Packer_append, 1);
+
+    /* MessagePack::Packer(x) */
+    rb_define_module_function(mMessagePack, "Packer", MessagePack_Packer, 1);
+
+    return cPacker;
 }
 

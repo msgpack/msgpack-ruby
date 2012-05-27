@@ -15,18 +15,12 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+#ifndef MSGPACK_RUBY_UNPACKER_CLASS_H__
+#define MSGPACK_RUBY_UNPACKER_CLASS_H__
 
-#include "module_init.h"
+#include "compat.h"
 
-void Init_msgpack(void)
-{
-	VALUE mMessagePack = rb_define_module("MessagePack");
+VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack);
 
-    /* MessagePack::VERSION */
-	rb_define_const(mMessagePack, "VERSION", rb_str_new2(MESSAGEPACK_VERSION));
-
-	Buffer_module_init(mMessagePack);
-	Packer_module_init(mMessagePack);
-    Unpacker_module_init(mMessagePack);
-}
+#endif
 

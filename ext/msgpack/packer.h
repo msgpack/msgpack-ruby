@@ -37,6 +37,12 @@ void msgpack_packer_destroy(msgpack_packer_t* pk);
 
 void msgpack_packer_mark(msgpack_packer_t* pk);
 
+static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_write_all_method)
+{
+    pk->io = io;
+    pk->io_write_all_method = io_write_all_method;
+}
+
 
 void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t require);
 
@@ -261,7 +267,7 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
     msgpack_buffer_append(PACKER_BUFFER_(pk), name, len);
 }
 
-static inline void msgpack_packere_write_fixnum_value(msgpack_packer_t* pk, VALUE v)
+static inline void msgpack_packer_write_fixnum_value(msgpack_packer_t* pk, VALUE v)
 {
 #ifdef JRUBY
     msgpack_packer_write_long(pk, FIXNUM_P(v) ? FIX2LONG(v) : rb_num2ll(v));
@@ -289,6 +295,7 @@ void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v);
 void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v);
 
 void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v);
+
 
 #endif
 

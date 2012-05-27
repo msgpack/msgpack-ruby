@@ -17,6 +17,7 @@
  */
 
 #include "unpacker.h"
+#include "unpacker_class.h"
 
 static VALUE eUnpackerError;
 static VALUE eMalformedFormatError;
@@ -144,7 +145,7 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
     return Unpacker_each(self);
 }
 
-void Unpacker_module_init(VALUE mMessagePack)
+VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
     VALUE cUnpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
@@ -156,5 +157,7 @@ void Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cUnpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cUnpacker, "each", Unpacker_each, 0);
     rb_define_method(cUnpacker, "feed_each", Unpacker_feed_each, 1);
+
+    return cUnpacker;
 }
 

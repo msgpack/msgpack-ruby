@@ -19,6 +19,7 @@
 #include "compat.h"
 #include "ruby.h"
 #include "buffer.h"
+#include "buffer_class.h"
 
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
@@ -310,7 +311,7 @@ static VALUE Buffer_to_a(VALUE self)
     return msgpack_buffer_all_as_string_array(b);
 }
 
-void Buffer_module_init(VALUE mMessagePack)
+VALUE MessagePack_Buffer_module_init(VALUE mMessagePack)
 {
     msgpack_pool_static_init_default();
 
@@ -329,5 +330,7 @@ void Buffer_module_init(VALUE mMessagePack)
     rb_define_method(cBuffer, "to_str", Buffer_to_str, 0);
     rb_define_method(cBuffer, "to_s", Buffer_to_str, 0); /* alias */
     rb_define_method(cBuffer, "to_a", Buffer_to_a, 0);
+
+    return cBuffer;
 }
 
