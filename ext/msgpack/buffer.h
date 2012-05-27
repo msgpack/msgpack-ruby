@@ -32,13 +32,13 @@
 
 #ifndef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
 #define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD 256
-
-#if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD < RSTRING_LEN
-#undef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
-#define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD RSTRING_LEN
 #endif
 
-#endif
+// TODO
+//#if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD < RSTRING_EMBED_LEN_MAX
+//#undef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
+//#define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD RSTRING_EMBED_LEN_MAX
+//#endif
 
 #define NO_MAPPED_STRING ((VALUE)0)
 
@@ -122,10 +122,6 @@ void msgpack_buffer_mark(msgpack_buffer_t* b);
  * writer functions
  */
 
-//msgpack_buffer_t* _msgpack_buffer_push_writable_chunk(msgpack_buffer_t* b, const char* data, size_t length, VALUE mapped_string);
-
-//msgpack_buffer_t* _msgpack_buffer_push_reference_chunk(msgpack_buffer_t* b, const char* data, size_t length, VALUE mapped_string);
-
 void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b);
 
 static inline size_t msgpack_buffer_writable_size(const msgpack_buffer_t* b)
@@ -187,12 +183,6 @@ static inline void msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE strin
         msgpack_buffer_append(b, RSTRING_PTR(string), length);
     }
 }
-
-//msgpack_buffer_chunk_t* msgpack_buffer_append_chunk(msgpack_buffer_t* b, size_t required_length);
-
-//msgpack_buffer_chunk_t* msgpack_buffer_append_reference_chunk(msgpack_buffer_t* b, const char* data, size_t length, VALUE mapped_string);
-
-//void msgpack_buffer_copy_last_reference_chunk(msgpack_buffer_t* b, msgpack_buffer_chunk_t* last_chunk);
 
 
 /*

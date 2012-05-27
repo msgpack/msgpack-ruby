@@ -28,8 +28,7 @@ void msgpack_buffer_init(msgpack_buffer_t* b)
 static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
 {
     if(c->mapped_string == NO_MAPPED_STRING) {
-        //msgpack_pool_free(c->first);
-        free(c->first);
+        msgpack_pool_static_free(c->first, c->last - c->first);
     } else {
         c->mapped_string = NO_MAPPED_STRING;
     }
@@ -44,7 +43,10 @@ void msgpack_buffer_destroy(msgpack_buffer_t* b)
         _msgpack_buffer_chunk_destroy(c);
         c = c->next;
     }
-    _msgpack_buffer_chunk_destroy(c);
+    if(c->first != NULL) {
+        /* tail may not be initialized */
+        _msgpack_buffer_chunk_destroy(c);
+    }
 }
 
 void msgpack_buffer_mark(msgpack_buffer_t* b)
@@ -224,45 +226,29 @@ size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t l
     }
 }
 
-static VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c)
+static VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c, size_t read_offset)
 {
+    size_t sz = c->last - c->first - read_offset;
+
     if(c->mapped_string != NO_MAPPED_STRING) {
-        return rb_str_dup(c->mapped_string);
+        return rb_str_substr(c->mapped_string, read_offset, sz);
     }
-    size_t sz = c->last - c->first;
-    if(sz == 0) {
-        return rb_str_buf_new(0);
+
 #ifdef USE_STR_NEW_MOVE
-    } else if(sz > RSTRING_EMBED_LEN_MAX) {
-        c->mapped_string = msgpack_pool_static_move_to_string(
-                c->first, 0, c->last - c->first);
-        return c->mapped_string;
-#endif
-    } else {
-        return rb_str_new(c->first, c->last - c->first);
+    if(msgpack_pool_static_try_move_to_string(
+                c->first, c->last - c->first, &c->mapped_string)) {
+        return rb_str_substr(c->mapped_string, read_offset, sz);
     }
+#endif
+
+    return rb_str_new(c->first + read_offset, sz);
 }
 
 VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
 {
-    if(b->head == &b->tail && b->read_buffer == b->tail.first) {
-        /*
-         * b->read_buffer == b->tail.first and b->head != &b->tail
-         * if mapped_string is shared string
-         */
-        if(b->tail.mapped_string != NO_MAPPED_STRING) {
-            return rb_str_dup(b->tail.mapped_string);
-        }
-        size_t sz = b->tail.last - b->tail.first;
-        if(sz == 0) {
-            return rb_str_buf_new(0);
-#ifdef USE_STR_NEW_MOVE
-        } else if(sz > RSTRING_EMBED_LEN_MAX) {
-            b->tail.mapped_string = msgpack_pool_static_move_to_string(
-                    b->tail.first, 0, b->tail.last - b->tail.first);
-            return b->tail.mapped_string;
-#endif
-        }
+    if(b->head == &b->tail) {
+        size_t read_offset = b->read_buffer - b->head->first;
+        return _msgpack_buffer_chunk_as_string(&b->tail, read_offset);
     }
 
     size_t sz = msgpack_buffer_all_readable_size(b);
@@ -281,28 +267,18 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
 
 bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest)
 {
+    return false;
     if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
             && msgpack_buffer_top_readable_size(b) >= length
 #ifndef USE_STR_NEW_MOVE
-            && b->tail.mapped_string != NO_MAPPED_STRING;
+            && b->tail.mapped_string != NO_MAPPED_STRING
 #endif
             ) {
 
-        size_t offset;
-        VALUE src;
-
-        if(b->head == &b->tail && b->read_buffer == b->tail.first) {
-            offset = 0;
-            src = msgpack_buffer_all_as_string(b);
-        } else {
-            offset = b->read_buffer - b->head->first;
-            src = _msgpack_buffer_chunk_as_string(b->head);
-        }
-
-		*dest = rb_str_substr(src, offset, length);
+        size_t read_offset = b->read_buffer - b->head->first;
+        *dest = _msgpack_buffer_chunk_as_string(b->head, read_offset);
 
         _msgpack_buffer_consumed(b, length);
-
         return true;
     }
 
@@ -311,28 +287,24 @@ bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* 
 
 VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b)
 {
-    VALUE ary = rb_ary_new();
-    VALUE s;
-
-    if(b->head == &b->tail && b->read_buffer == b->tail.first) {
-        s = msgpack_buffer_all_as_string(b);
+    if(b->head == &b->tail) {
+        VALUE s = msgpack_buffer_all_as_string(b);
+        VALUE ary = rb_ary_new();  /* TODO capacity = 1 */
         rb_ary_push(ary, s);
         return ary;
     }
 
-    msgpack_buffer_chunk_t* c = b->head;
+    VALUE ary = rb_ary_new();
+    VALUE s;
 
-    if(b->read_buffer == b->head->first) {
-        s = _msgpack_buffer_chunk_as_string(b->head);
-        rb_ary_push(ary, s);
-        c = b->head->next;
-        if(c == &b->tail) {
-            return ary;
-        }
-    }
+    size_t read_offset = b->read_buffer - b->head->first;
+    s = _msgpack_buffer_chunk_as_string(b->head, read_offset);
+    rb_ary_push(ary, s);
+
+    msgpack_buffer_chunk_t* c = b->head->next;
 
     while(true) {
-        s = _msgpack_buffer_chunk_as_string(c);
+        s = _msgpack_buffer_chunk_as_string(c, 0);
         rb_ary_push(ary, s);
         if(c == &b->tail) {
             return ary;

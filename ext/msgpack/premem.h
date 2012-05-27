@@ -42,6 +42,7 @@ struct msgpack_premem_t {
     size_t alloc_size;
 };
 
+/* assert alloc_size % sysconf(_SC_PAGE_SIZE) == 0 */
 void msgpack_premem_init(msgpack_premem_t* pm,
         size_t alloc_size);
 
@@ -57,6 +58,17 @@ void* _msgpack_premem_alloc2(msgpack_premem_t* pm);
 #define _msgpack_premem_chunk_try_alloc(c, alloc_size) \
     if((c)->mask != 0) { \
         _msgpack_premem_chunk_alloc(c, alloc_size); \
+    }
+
+#define _msgpack_premem_chunk_try_check(c, ptr, alloc_size) \
+    { \
+        ptrdiff_t pdiff = ((char*)(ptr)) - ((char*)(c)->buffers); \
+        if(0 <= pdiff) { \
+            size_t pos = pdiff / alloc_size; \
+            if(pos < 32) { \
+                return true; \
+            } \
+        } \
     }
 
 #define _msgpack_premem_chunk_try_free(c, ptr, alloc_size) \
@@ -82,8 +94,10 @@ bool _msgpack_premem_free2(msgpack_premem_t* pm, void* ptr);
 static inline bool msgpack_premem_free(msgpack_premem_t* pm, void* ptr)
 {
     _msgpack_premem_chunk_try_free(&pm->head, ptr, pm->alloc_size);
-    _msgpack_premem_free2(pm, ptr);
+    return _msgpack_premem_free2(pm, ptr);
 }
+
+bool msgpack_premem_check(msgpack_premem_t* pm, void* ptr);
 
 #endif
 

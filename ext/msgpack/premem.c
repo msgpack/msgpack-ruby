@@ -61,3 +61,12 @@ bool _msgpack_premem_free2(msgpack_premem_t* pm, void* ptr)
     return false;
 }
 
+bool msgpack_premem_check(msgpack_premem_t* pm, void* ptr)
+{
+    msgpack_premem_chunk_t* c = &pm->head;
+    for(; c != NULL; c = c->next) {
+        _msgpack_premem_chunk_try_check(c, ptr, pm->alloc_size);
+    }
+    return false;
+}
+

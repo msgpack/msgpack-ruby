@@ -18,76 +18,110 @@
 #ifndef MSGPACK_RUBY_POOL_H__
 #define MSGPACK_RUBY_POOL_H__
 
-#include "compat.h"
-#include "sysdep.h"
+#include "premem.h"
+#include "postmem.h"
 
 struct msgpack_pool_t;
 typedef struct msgpack_pool_t msgpack_pool_t;
 
-struct msgpack_pool_chunk_t;
-typedef struct msgpack_pool_chunk_t msgpack_pool_chunk_t;
-
-/*
- *   chunk
- *   +----------------+
- *   |   alloc_size   |
- *   +----------------+
- *   ^
- * +-|-----+-------+-------+-------+
- * | void* | void* |       |       |
- * +-------+-------+-------+-------+
- * ^array_head     ^array_tail     ^array_end
- *
- * +---------------------------+
- * array_end - array_head = alloc_size
- */
 struct msgpack_pool_t {
-    void** array_tail;
-    void** array_head;
-    void** array_end;
-    size_t alloc_size;
+    msgpack_premem_t premem;
+    msgpack_postmem_t postmem;
 };
 
-#ifndef MSGPACK_POOL_CHUNK_SIZE
-#define MSGPACK_POOL_CHUNK_SIZE 2*1024
+static inline void msgpack_pool_init(msgpack_pool_t* pl,
+        size_t pre_size, size_t post_size, size_t pool_size)
+{
+    msgpack_premem_init(&pl->premem, pre_size);
+    msgpack_postmem_init(&pl->postmem, post_size, pool_size);
+}
+
+#ifndef MSGPACK_POSTMEM_CHUNK_SIZE
+#define MSGPACK_POSTMEM_CHUNK_SIZE 32*1024
 #endif
 
-#ifndef MSGPACK_POOL_SIZE
-#define MSGPACK_POOL_SIZE 1024
+#ifndef MSGPACK_POSTMEM_SIZE
+#define MSGPACK_POSTMEM_SIZE 64
 #endif
 
-void msgpack_pool_init(msgpack_pool_t* pl,
-        size_t alloc_size, size_t pool_size);
+#ifndef MSGPACK_PREMEM_SIZE
+#define MSGPACK_PREMEM_SIZE 1024
+#endif
+
+// TODO
+//#if MSGPACK_PREMEM_SIZE < (RSTRING_EMBED_LEN_MAX)
+//#undef MSGPACK_PREMEM_SIZE
+//#define MSGPACK_PREMEM_SIZE RSTRING_EMBED_LEN_MAX
+//#endif
 
 static inline void msgpack_pool_init_default(msgpack_pool_t* pl)
 {
-    msgpack_pool_init(pl, MSGPACK_POOL_CHUNK_SIZE, MSGPACK_POOL_SIZE);
+    // TODO
+    msgpack_pool_init(pl, MSGPACK_PREMEM_SIZE, MSGPACK_POSTMEM_CHUNK_SIZE, MSGPACK_POSTMEM_SIZE);
 }
 
-void msgpack_pool_destroy(msgpack_pool_t* pl);
+static inline void msgpack_pool_destroy(msgpack_pool_t* pl)
+{
+    msgpack_premem_destroy(&pl->premem);
+    msgpack_postmem_destroy(&pl->postmem);
+}
 
-void* msgpack_pool_malloc(msgpack_pool_t* pl,
-        size_t required_size, size_t* allocated_size);
+static inline void* msgpack_pool_alloc(msgpack_pool_t* pl,
+        size_t required_size, size_t* allocated_size)
+{
+    if(required_size <= pl->premem.alloc_size) {
+        *allocated_size = pl->premem.alloc_size;
+        return msgpack_premem_alloc(&pl->premem);
+    }
+    return msgpack_postmem_alloc(&pl->postmem, required_size, allocated_size);
+}
 
-void* msgpack_pool_realloc(msgpack_pool_t* pl,
-        void* ptr, size_t required_size, size_t* current_size);
+static inline void* msgpack_pool_realloc(msgpack_pool_t* pl,
+        void* ptr, size_t required_size, size_t* current_size)
+{
+    size_t len = *current_size;
+    if(len <= pl->premem.alloc_size) {
+        void* ptr2 = msgpack_postmem_alloc(&pl->postmem, required_size, current_size);
+        memcpy(ptr2, ptr, len);
+        msgpack_premem_free(&pl->premem, ptr);
+        return ptr2;
+    }
+    return msgpack_postmem_realloc(&pl->postmem, ptr, required_size, current_size);
+}
 
-void msgpack_pool_free(msgpack_pool_t* pl,
-        void* ptr, size_t size);
+static inline void msgpack_pool_free(msgpack_pool_t* pl,
+        void* ptr, size_t min_size)
+{
+    if(min_size <= pl->premem.alloc_size) {
+        if(msgpack_premem_free(&pl->premem, ptr)) {
+            return;
+        }
+    }
+    msgpack_postmem_free(&pl->postmem, ptr, min_size);
+}
 
+static inline bool msgpack_pool_try_move_to_string(msgpack_pool_t* pl,
+        void* ptr, size_t size, VALUE* to)
+{
+    if(size < pl->premem.alloc_size) {
+        return false;
+    }
 #ifdef USE_STR_NEW_MOVE
-/* assert size > RSTRING_EMBED_LEN_MAX */
-VALUE msgpack_pool_move_to_string(msgpack_pool_t* pl,
-        void* ptr, size_t offset, size_t size);
+    *to = msgpack_postmem_move_to_string(&pl->postmem, ptr, size);
+    return true;
+#else
+    return false;
 #endif
+}
 
 
 extern msgpack_pool_t msgpack_pool_static_instance;
 
 static inline void msgpack_pool_static_init(
-        size_t alloc_size, size_t pool_size)
+        size_t pre_size, size_t post_size, size_t pool_size)
 {
-    msgpack_pool_init(&msgpack_pool_static_instance, alloc_size, pool_size);
+    msgpack_pool_init(&msgpack_pool_static_instance,
+            pre_size, post_size, pool_size);
 }
 
 static inline void msgpack_pool_static_init_default()
@@ -103,25 +137,28 @@ static inline void msgpack_pool_static_destroy()
 static inline void* msgpack_pool_static_malloc(
         size_t required_size, size_t* allocated_size)
 {
-    return msgpack_pool_malloc(&msgpack_pool_static_instance, required_size, allocated_size);
+    return msgpack_pool_alloc(&msgpack_pool_static_instance, required_size, allocated_size);
 }
 
 static inline void* msgpack_pool_static_realloc(
         void* ptr, size_t required_size, size_t* current_size)
 {
-    return msgpack_pool_realloc(&msgpack_pool_static_instance, ptr, required_size, current_size);
+    return msgpack_pool_realloc(&msgpack_pool_static_instance,
+            ptr, required_size, current_size);
 }
 
 static inline void msgpack_pool_static_free(
-        void* ptr, size_t size)
+        void* ptr, size_t min_size)
 {
-    return msgpack_pool_free(&msgpack_pool_static_instance, ptr, size);
+    return msgpack_pool_free(&msgpack_pool_static_instance,
+            ptr, min_size);
 }
 
-static inline VALUE msgpack_pool_static_move_to_string(
-        void* ptr, size_t offset, size_t size)
+static inline bool msgpack_pool_static_try_move_to_string(
+        void* ptr, size_t size, VALUE* to)
 {
-    return msgpack_pool_move_to_string(&msgpack_pool_static_instance, ptr, offset, size);
+    return msgpack_pool_try_move_to_string(&msgpack_pool_static_instance,
+            ptr, size, to);
 }
 
 #endif
