@@ -55,8 +55,48 @@ static VALUE Unpacker_alloc(VALUE klass)
 
 static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 {
-    // TODO io
-    // TODO stack size
+    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
+        return self;
+    }
+
+    VALUE io = Qnil;
+    VALUE options = Qnil;
+
+    if(argc == 1) {
+        VALUE v = argv[0];
+        if(rb_type(v) == RUBY_T_HASH) {
+            options = v;
+        } else {
+            io = v;
+        }
+
+    } else if(argc == 2) {
+        io = argv[0];
+        options = argv[1];
+        if(rb_type(options) != RUBY_T_HASH) {
+            rb_raise(rb_eArgError, "expected Hash but found %s.", "TODO"); // TODO klass.to_s
+        }
+
+    } else {
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
+    }
+
+    UNPACKER(self, uk);
+
+    if(io != Qnil) {
+        ID read_method;
+
+        if(rb_respond_to(io, s_readpartial)) {
+            read_method = s_readpartial;
+        } else if(rb_respond_to(io, s_read)) {
+            read_method = s_read;
+        } else {
+            rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+        }
+
+        msgpack_unpacker_set_io(uk, io, read_method);
+    }
+
     return self;
 }
 
@@ -90,7 +130,7 @@ static VALUE Unpacker_read(int argc, VALUE* argv, VALUE self)
 {
     UNPACKER(self, uk);
 
-    // TODO args check
+    // TODO argv check
 
     int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
@@ -190,34 +230,34 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
     return Unpacker_each(self);
 }
 
-VALUE MessagePack_Unpacker_create(int argc, VALUE* args)
+VALUE MessagePack_Unpacker_create(int argc, VALUE* argv)
 {
-    if(argc == 0 || (argc == 1 && args[0] == Qnil)) {
+    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
         return Unpacker_alloc(cUnpacker);
     }
 
     if(argc != 1) {
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
     }
-    VALUE v = args[0];
+    VALUE io = argv[0];
 
-    VALUE klass = rb_class_of(v);
+    VALUE klass = rb_class_of(io);
     if(klass == cUnpacker) {
-        return v;
+        return io;
     }
 
     if(klass == rb_cString) {
         VALUE self = Unpacker_alloc(cUnpacker);
         UNPACKER(self, uk);
-        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), v);
+        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), io);
         return self;
     }
 
     ID read_method;
 
-    if(rb_respond_to(v, s_readpartial)) {
+    if(rb_respond_to(io, s_readpartial)) {
         read_method = s_readpartial;
-    } else if(rb_respond_to(v, s_read)) {
+    } else if(rb_respond_to(io, s_read)) {
         read_method = s_read;
     } else {
         rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
@@ -225,7 +265,7 @@ VALUE MessagePack_Unpacker_create(int argc, VALUE* args)
 
     VALUE self = Unpacker_alloc(cUnpacker);
     UNPACKER(self, uk);
-    msgpack_unpacker_set_io(uk, v, read_method);
+    msgpack_unpacker_set_io(uk, io, read_method);
     return self;
 }
 
