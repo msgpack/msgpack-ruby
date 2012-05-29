@@ -69,6 +69,20 @@ static VALUE Buffer_initialize(VALUE self)
 }
 
 /**
+ * Document-method: MessagePack::Buffer#clear
+ *
+ * call-seq:
+ *   MessagePack::Buffer#clear
+ *
+ */
+static VALUE Buffer_clear(VALUE self)
+{
+    BUFFER(self, b);
+    msgpack_buffer_clear(b);
+    return Qnil;
+}
+
+/**
  * Document-method: MessagePack::Buffer#size
  *
  * call-seq:
@@ -389,6 +403,7 @@ VALUE MessagePack_Buffer_module_init(VALUE mMessagePack)
     rb_define_alloc_func(cBuffer, Buffer_alloc);
 
     rb_define_method(cBuffer, "initialize", Buffer_initialize, 0);
+    rb_define_method(cBuffer, "clear", Buffer_clear, 0);
     rb_define_method(cBuffer, "size", Buffer_size, 0);
     rb_define_method(cBuffer, "empty?", Buffer_empty_p, 0);
     rb_define_method(cBuffer, "append", Buffer_append, 1);

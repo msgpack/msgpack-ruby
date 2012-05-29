@@ -49,13 +49,23 @@ static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
 void msgpack_buffer_destroy(msgpack_buffer_t* b)
 {
     msgpack_buffer_chunk_t* c = b->head;
+    msgpack_buffer_chunk_t* n;
     while(c != &b->tail) {
         _msgpack_buffer_chunk_destroy(c);
-        c = c->next;
+        n = c->next;
+        free(c);
+        c = n;
     }
     if(c->first != NULL) {
         /* tail may not be initialized */
         _msgpack_buffer_chunk_destroy(c);
+    }
+
+    c = b->free_list;
+    while(c != NULL) {
+        n = c->next;
+        free(c);
+        c = n;
     }
 }
 
@@ -100,6 +110,13 @@ bool _msgpack_buffer_pop_chunk(msgpack_buffer_t* b)
     b->read_buffer = b->head->first;
 
     return true;
+}
+
+void msgpack_buffer_clear(msgpack_buffer_t* b)
+{
+    while(_msgpack_buffer_pop_chunk(b)) {
+        ;
+    }
 }
 
 size_t msgpack_buffer_all_readable_size(const msgpack_buffer_t* b)
