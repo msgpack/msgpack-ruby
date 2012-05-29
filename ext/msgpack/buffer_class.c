@@ -94,8 +94,7 @@ static VALUE Buffer_size(VALUE self)
 static VALUE Buffer_empty_p(VALUE self)
 {
     BUFFER(self, b);
-    /* TODO optimize */
-    if(msgpack_buffer_all_readable_size(b) == 0) {
+    if(msgpack_buffer_top_readable_size(b) == 0) {
         return Qtrue;
     } else {
         return Qfalse;
