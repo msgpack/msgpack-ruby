@@ -479,6 +479,9 @@ long msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk)
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 4);
         /* FIXME u32 may be bigger than long */
         count = _msgpack_be32(cb->u32);
+
+    } else {
+        return PRIMITIVE_UNEXPECTED_TYPE;
     }
 
     return count;
@@ -508,6 +511,9 @@ long msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk)
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 4);
         /* FIXME u32 may be bigger than long */
         count = _msgpack_be32(cb->u32);
+
+    } else {
+        return PRIMITIVE_UNEXPECTED_TYPE;
     }
 
     return count;

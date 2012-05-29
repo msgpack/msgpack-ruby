@@ -24,16 +24,6 @@
 #define MSGPACK_UNPACKER_STACK_CAPACITY 128
 #endif
 
-#ifndef MSGPACK_UNPACKER_RAW_BODY_REFERENCE_THRESHOLD
-#define MSGPACK_UNPACKER_RAW_BODY_REFERENCE_THRESHOLD 256
-
-#if MSGPACK_UNPACKER_RAW_BODY_REFERENCE_THRESHOLD < RSTRING_LEN
-#undef MSGPACK_UNPACKER_RAW_BODY_REFERENCE_THRESHOLD
-#define MSGPACK_UNPACKER_RAW_BODY_REFERENCE_THRESHOLD RSTRING_LEN
-#endif
-
-#endif
-
 struct msgpack_unpacker_t;
 typedef struct msgpack_unpacker_t msgpack_unpacker_t;
 
@@ -99,6 +89,7 @@ static inline void msgpack_unpacker_set_io(msgpack_unpacker_t* uk, VALUE io, ID 
 #define PRIMITIVE_EOF -1
 #define PRIMITIVE_INVALID_BYTE -2
 #define PRIMITIVE_STACK_TOO_DEEP -3
+#define PRIMITIVE_UNEXPECTED_TYPE -4
 
 int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth);
 

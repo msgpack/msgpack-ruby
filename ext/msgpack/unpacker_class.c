@@ -76,6 +76,9 @@ static void raise_unpacker_error(int r)
         //rb_raise(eMalformedFormatError, "stack level too deep");
         rb_raise(rb_eRuntimeError, "stack level too deep");
         break;
+    case PRIMITIVE_UNEXPECTED_TYPE:
+        rb_raise(rb_eRuntimeError, "unexpected type");
+        break;
     default:
         // TODO
         //rb_raise(eUnpackerError, "logically unknown error %d", r);
