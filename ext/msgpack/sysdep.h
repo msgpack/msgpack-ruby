@@ -38,19 +38,7 @@ typedef unsigned __int64 uint64_t;
 #include <stdbool.h>
 #endif
 
-#ifdef _WIN32
-
-#ifdef __cplusplus
-/* numeric_limits<T>::min,max */
-#ifdef max
-#undef max
-#endif
-#ifdef min
-#undef min
-#endif
-#endif
-
-#else
+#ifndef _WIN32 /* arpa/inet.h requires an extra dll on win32 */
 #include <arpa/inet.h>  /* __BYTE_ORDER */
 #endif
 
