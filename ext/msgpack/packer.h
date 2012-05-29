@@ -20,6 +20,10 @@
 
 #include "buffer.h"
 
+#ifndef MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY
+#define MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY (1024)
+#endif
+
 struct msgpack_packer_t;
 typedef struct msgpack_packer_t msgpack_packer_t;
 
@@ -244,16 +248,14 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
 }
 
 
-void msgpack_buffer_flush_buffer_to_io(msgpack_packer_t* pk);
-
 void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
     msgpack_packer_write_raw_header(pk, RSTRING_LEN(v));  /* FIXME check RSTRING_LEN(v) < uint32_t max */
-    if(pk->io != Qnil && RSTRING_LEN(v) > 1024) {  /* TODO */
-        msgpack_buffer_flush_buffer_to_io(pk);
-        _msgpack_packer_write_string_to_io(pk, v);
+    if(pk->io != Qnil && RSTRING_LEN(v) > MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY) {
+        msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
+        rb_funcall(pk->io, pk->io_write_all_method, v);
     } else {
         msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
     }

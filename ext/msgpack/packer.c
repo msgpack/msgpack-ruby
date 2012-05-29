@@ -39,20 +39,10 @@ void msgpack_packer_mark(msgpack_packer_t* pk)
 }
 
 
-void msgpack_buffer_flush_buffer_to_io(msgpack_packer_t* pk)
-{
-    // TODO write_to
-}
-
-void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string)
-{
-    // TODO
-}
-
 void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t require)
 {
     if(pk->io != Qnil) {
-        msgpack_buffer_flush_buffer_to_io(pk);
+        msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
     } else {
         msgpack_buffer_expand(PACKER_BUFFER_(pk), require);
     }

@@ -336,6 +336,22 @@ VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b)
     return ary;
 }
 
+void msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method)
+{
+    if(msgpack_buffer_top_readable_size(b) == 0) {
+        return;
+    }
+
+    size_t read_offset = b->read_buffer - b->head->first;
+    VALUE s = _msgpack_buffer_chunk_as_string(&b->tail, read_offset);
+    rb_funcall(io, write_method, 1, s);
+
+    while(_msgpack_buffer_pop_chunk(b)) {
+        VALUE s = _msgpack_buffer_chunk_as_string(b->head, 0);
+        rb_funcall(io, write_method, 1, s);
+    }
+}
+
 
 static inline msgpack_buffer_chunk_t* _msgpack_buffer_alloc_new_chunk(msgpack_buffer_t* b)
 {
