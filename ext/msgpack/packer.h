@@ -268,10 +268,15 @@ void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
-    msgpack_packer_write_raw_header(pk, RSTRING_LEN(v));  /* FIXME check RSTRING_LEN(v) < uint32_t max */
+    size_t len = RSTRING_LEN(v);
+    if(len > 0xffffffffUL) {
+        // TODO rb_eArgError?
+        rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
+    }
+    msgpack_packer_write_raw_header(pk, (unsigned int)len);
     if(pk->io != Qnil && RSTRING_LEN(v) > MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY) {
         msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
-        rb_funcall(pk->io, pk->io_write_all_method, v);
+        rb_funcall(pk->io, pk->io_write_all_method, 1, v);
     } else {
         msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
     }
@@ -281,7 +286,11 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
 {
 	const char* name = rb_id2name(SYM2ID(v));
 	size_t len = strlen(name);
-    msgpack_packer_write_raw_header(pk, len);  /* FIXME check len < uint32_t max */
+    if(len > 0xffffffffUL) {
+        // TODO rb_eArgError?
+        rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
+    }
+    msgpack_packer_write_raw_header(pk, (unsigned int)len);  /* FIXME check len < uint32_t max */
     msgpack_buffer_append(PACKER_BUFFER_(pk), name, len);
 }
 

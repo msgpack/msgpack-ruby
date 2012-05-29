@@ -51,11 +51,16 @@ void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t requir
 void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)
 {
     /* FIXME check len < uint32_t max */
-    unsigned int len = (unsigned int)RARRAY_LEN(v);
-    msgpack_packer_write_array_header(pk, len);
+    size_t len = RARRAY_LEN(v);
+    if(len > 0xffffffffUL) {
+        // TODO rb_eArgError?
+        rb_raise(rb_eArgError, "size of array is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
+    }
+    unsigned int len32 = (unsigned int)len;
+    msgpack_packer_write_array_header(pk, len32);
 
     unsigned int i;
-    for(i=0; i < len; ++i) {
+    for(i=0; i < len32; ++i) {
         VALUE e = rb_ary_entry(v, i);
         msgpack_packer_write_value(pk, e);
     }
@@ -75,8 +80,13 @@ int write_hash_foreach(VALUE key, VALUE value, VALUE pk_value)
 void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 {
     /* FIXME check len < uint32_t max */
-    unsigned int len = (unsigned int) RHASH_SIZE(v);
-    msgpack_packer_write_map_header(pk, len);
+    size_t len =  RHASH_SIZE(v);
+    if(len > 0xffffffffUL) {
+        // TODO rb_eArgError?
+        rb_raise(rb_eArgError, "size of array is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
+    }
+    unsigned int len32 = (unsigned int)len;
+    msgpack_packer_write_map_header(pk, len32);
 
     rb_hash_foreach(v, write_hash_foreach, (VALUE) pk);
 }
