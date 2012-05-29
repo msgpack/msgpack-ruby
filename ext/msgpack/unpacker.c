@@ -605,14 +605,74 @@ int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth)
     }
 }
 
-int get_next_object_type(msgpack_unpacker_t* uk)
+int msgpack_unpacker_peek_next_object_type(msgpack_unpacker_t* uk)
 {
     int b = get_head_byte(uk);
     if(b < 0) {
         return b;
     }
-    // TODO swtich
-    // TODO raise EOFError if buffer is empty
+
+    SWITCH_RANGE_BEGIN(b)
+    SWITCH_RANGE(b, 0x00, 0x7f)  // Positive Fixnum
+        return TYPE_INTEGER;
+
+    SWITCH_RANGE(b, 0xe0, 0xff)  // Negative Fixnum
+        return TYPE_INTEGER;
+
+    SWITCH_RANGE(b, 0xa0, 0xbf)  // FixRaw
+        return TYPE_RAW;
+
+    SWITCH_RANGE(b, 0x90, 0x9f)  // FixArray
+        return TYPE_ARRAY;
+
+    SWITCH_RANGE(b, 0x80, 0x8f)  // FixMap
+        return TYPE_MAP;
+
+    SWITCH_RANGE(b, 0xc0, 0xdf)  // Variable
+        switch(b) {
+        case 0xc0:  // nil
+            return TYPE_NIL;
+
+        case 0xc2:  // false
+        case 0xc3:  // true
+            return TYPE_BOOLEAN;
+
+        case 0xca:  // float
+        case 0xcb:  // double
+            return TYPE_FLOAT;
+
+        case 0xcc:  // unsigned int  8
+        case 0xcd:  // unsigned int 16
+        case 0xce:  // unsigned int 32
+        case 0xcf:  // unsigned int 64
+            return TYPE_INTEGER;
+
+        case 0xd0:  // signed int  8
+        case 0xd1:  // signed int 16
+        case 0xd2:  // signed int 32
+        case 0xd3:  // signed int 64
+            return TYPE_INTEGER;
+
+        case 0xda:  // raw 16
+        case 0xdb:  // raw 32
+            return TYPE_RAW;
+
+        case 0xdc:  // array 16
+        case 0xdd:  // array 32
+            return TYPE_ARRAY;
+
+        case 0xde:  // map 16
+        case 0xdf:  // map 32
+            return TYPE_MAP;
+
+        default:
+            return PRIMITIVE_INVALID_BYTE;
+        }
+
+    SWITCH_RANGE_DEFAULT
+        return PRIMITIVE_INVALID_BYTE;
+
+    SWITCH_RANGE_END
 }
 
 int msgpack_unpacker_skip_nil(msgpack_unpacker_t* uk)

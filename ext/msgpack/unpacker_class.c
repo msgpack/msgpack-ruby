@@ -24,9 +24,10 @@ static ID s_readpartial;
 
 static VALUE cUnpacker;
 
-static VALUE eUnpackerError;
+static VALUE eUnpackError;
 static VALUE eMalformedFormatError;
-static VALUE eUnapackerStackError;  // < eMalformedFormatError?
+static VALUE eStackError;  // TODO < eMalformedFormatError?
+static VALUE eTypeError;
 
 #define UNPACKER(from, name) \
     msgpack_unpacker_t *name = NULL; \
@@ -105,24 +106,14 @@ static void raise_unpacker_error(int r)
     switch(r) {
     case PRIMITIVE_EOF:
         rb_raise(rb_eEOFError, "end of buffer reached");
-        break;
     case PRIMITIVE_INVALID_BYTE:
-        // TODO
-        //rb_raise(eMalformedFormatError, "invalid byte");
-        rb_raise(rb_eRuntimeError, "invalid byte");
-        break;
+        rb_raise(eMalformedFormatError, "invalid byte");
     case PRIMITIVE_STACK_TOO_DEEP:
-        // TODO
-        //rb_raise(eMalformedFormatError, "stack level too deep");
-        rb_raise(rb_eRuntimeError, "stack level too deep");
-        break;
+        rb_raise(eStackError, "stack level too deep");
     case PRIMITIVE_UNEXPECTED_TYPE:
-        rb_raise(rb_eRuntimeError, "unexpected type");
-        break;
+        rb_raise(eTypeError, "unexpected type");
     default:
-        // TODO
-        //rb_raise(eUnpackerError, "logically unknown error %d", r);
-        rb_raise(rb_eRuntimeError, "logically unknown error %d", r);
+        rb_raise(eUnpackError, "logically unknown error %d", r);
     }
 }
 
@@ -173,7 +164,7 @@ static VALUE Unpacker_read_array_header(VALUE self)
 
     long r = msgpack_unpacker_read_array_header(uk);
     if(r < 0) {
-        raise_unpacker_error(r);
+        raise_unpacker_error((int)r);
     }
 
     return LONG2NUM(r);
@@ -185,10 +176,39 @@ static VALUE Unpacker_read_map_header(VALUE self)
 
     long r = msgpack_unpacker_read_map_header(uk);
     if(r < 0) {
-        raise_unpacker_error(r);
+        raise_unpacker_error((int)r);
     }
 
     return LONG2NUM(r);
+}
+
+static VALUE Unpacker_peek_next_type(VALUE self)
+{
+    UNPACKER(self, uk);
+
+    int r = msgpack_unpacker_peek_next_object_type(uk);
+    if(r < 0) {
+        raise_unpacker_error(r);
+    }
+
+    switch((enum msgpack_unpacker_object_type) r) {
+    case TYPE_NIL:
+        return rb_intern("nil");
+    case TYPE_BOOLEAN:
+        return rb_intern("boolean");
+    case TYPE_INTEGER:
+        return rb_intern("integer");
+    case TYPE_FLOAT:
+        return rb_intern("float");
+    case TYPE_RAW:
+        return rb_intern("raw");
+    case TYPE_ARRAY:
+        return rb_intern("array");
+    case TYPE_MAP:
+        return rb_intern("map");
+    default:
+        rb_raise(eUnpackError, "logically unknown type %d", r);
+    }
 }
 
 static VALUE Unpacker_feed(VALUE self, VALUE data)
@@ -281,6 +301,11 @@ VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
 
     cUnpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
+    eUnpackError = rb_define_class_under(mMessagePack, "UnpackError", rb_eStandardError);
+    eMalformedFormatError = rb_define_class_under(mMessagePack, "MalformedFormatError", eUnpackError);
+    eStackError = rb_define_class_under(mMessagePack, "StackError", eUnpackError);
+    eTypeError = rb_define_class_under(mMessagePack, "TypeError", rb_eStandardError);
+
     rb_define_alloc_func(cUnpacker, Unpacker_alloc);
 
     rb_define_method(cUnpacker, "initialize", Unpacker_initialize, -1);
@@ -289,6 +314,7 @@ VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cUnpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cUnpacker, "read_array_header", Unpacker_read_array_header, 0);
     rb_define_method(cUnpacker, "read_map_header", Unpacker_read_map_header, 0);
+    //rb_define_method(cUnpacker, "peek_next_type", Unpacker_peek_next_type, 0);
     rb_define_method(cUnpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cUnpacker, "each", Unpacker_each, 0);
     rb_define_method(cUnpacker, "feed_each", Unpacker_feed_each, 1);
