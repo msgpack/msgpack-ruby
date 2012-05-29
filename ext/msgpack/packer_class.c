@@ -50,7 +50,11 @@ static VALUE Packer_alloc(VALUE klass)
     msgpack_packer_t* pk = ALLOC_N(msgpack_packer_t, 1);
     msgpack_packer_init(pk);
 
-    return Data_Wrap_Struct(klass, msgpack_packer_mark, Packer_free, pk);
+    VALUE self = Data_Wrap_Struct(klass, msgpack_packer_mark, Packer_free, pk);
+
+    msgpack_packer_set_to_msgpack_method(pk, s_to_msgpack, self);
+
+    return self;
 }
 
 static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)

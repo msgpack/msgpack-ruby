@@ -29,8 +29,12 @@ typedef struct msgpack_packer_t msgpack_packer_t;
 
 struct msgpack_packer_t {
     msgpack_buffer_t buffer;
+
     VALUE io;
     ID io_write_all_method;
+
+    ID to_msgpack_method;
+    VALUE to_msgpack_arg;
 };
 
 #define PACKER_BUFFER_(pk) (&(pk)->buffer)
@@ -40,6 +44,13 @@ void msgpack_packer_init(msgpack_packer_t* pk);
 void msgpack_packer_destroy(msgpack_packer_t* pk);
 
 void msgpack_packer_mark(msgpack_packer_t* pk);
+
+static inline void msgpack_packer_set_to_msgpack_method(msgpack_packer_t* pk,
+        ID to_msgpack_method, VALUE to_msgpack_arg)
+{
+    pk->to_msgpack_method = to_msgpack_method;
+    pk->to_msgpack_arg = to_msgpack_arg;
+}
 
 static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_write_all_method)
 {

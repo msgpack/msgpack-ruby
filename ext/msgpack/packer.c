@@ -83,7 +83,7 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 
 static void _msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
 {
-    // TODO
+    rb_funcall(v, pk->to_msgpack_method, 1, pk->to_msgpack_arg);
 }
 
 void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v)
@@ -99,7 +99,7 @@ void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v)
         msgpack_packer_write_false(pk);
         break;
     case RUBY_T_FIXNUM:
-        msgpack_packere_write_fixnum_value(pk, v);
+        msgpack_packer_write_fixnum_value(pk, v);
         break;
     case RUBY_T_SYMBOL:
         msgpack_packer_write_symbol_value(pk, v);
