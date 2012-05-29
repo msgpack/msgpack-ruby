@@ -59,8 +59,51 @@ static VALUE Packer_alloc(VALUE klass)
 
 static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
 {
-    // TODO io
+    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
+        return self;
+    }
+
+    VALUE io = Qnil;
+    VALUE options = Qnil;
+
+    if(argc == 1) {
+        VALUE v = argv[0];
+        if(rb_type(v) == RUBY_T_HASH) {
+            options = v;
+        } else {
+            io = v;
+        }
+
+    } else if(argc == 2) {
+        io = argv[0];
+        options = argv[1];
+        if(rb_type(options) != RUBY_T_HASH) {
+            rb_raise(rb_eArgError, "expected Hash but found %s.", "TODO"); // TODO klass.to_s
+        }
+
+    } else {
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
+    }
+
+    PACKER(self, pk);
+
+    // TODO options
     // TODO reference threshold
+
+    if(io != Qnil) {
+        ID write_method;
+
+        if(rb_respond_to(io, s_write)) {
+            write_method = s_write;
+        } else if(rb_respond_to(io, s_append)) {
+            write_method = s_append;
+        } else {
+            rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+        }
+
+        msgpack_packer_set_io(pk, io, write_method);
+    }
+
     return self;
 }
 
@@ -125,25 +168,25 @@ VALUE MessagePack_Packer_create(int argc, VALUE* args)
     if(argc != 1) {
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
     }
-    VALUE v = args[0];
+    VALUE io = args[0];
 
-    VALUE klass = rb_class_of(v);
+    VALUE klass = rb_class_of(io);
     if(klass == cPacker) {
-        return v;
+        return io;
     }
 
     if(klass == rb_cString) {
         VALUE self = Packer_alloc(cPacker);
         PACKER(self, pk);
-        msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
+        msgpack_buffer_append_string(PACKER_BUFFER_(pk), io);
         return self;
     }
 
     ID write_method;
 
-    if(rb_respond_to(v, s_write)) {
+    if(rb_respond_to(io, s_write)) {
         write_method = s_write;
-    } else if(rb_respond_to(v, s_append)) {
+    } else if(rb_respond_to(io, s_append)) {
         write_method = s_append;
     } else {
         rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
@@ -151,7 +194,7 @@ VALUE MessagePack_Packer_create(int argc, VALUE* args)
 
     VALUE self = Packer_alloc(cPacker);
     PACKER(self, pk);
-    msgpack_packer_set_io(pk, v, write_method);
+    msgpack_packer_set_io(pk, io, write_method);
     return self;
 }
 
