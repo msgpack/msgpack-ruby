@@ -142,6 +142,7 @@ static union msgpack_buffer_cast_block_t* read_cast_block(msgpack_unpacker_t* uk
         feed_buffer_from_io(uk);
         cb = msgpack_buffer_read_cast_block(UNPACKER_BUFFER_(uk), n);
     } while(cb == NULL);
+    return cb;
 }
 
 
@@ -324,53 +325,57 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xcc:  // unsigned int  8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 1);
-                return cb->u8;
+                uint8_t u8 = cb->u8;
+                return object_complete(uk, INT2FIX((int)u8));
             }
 
         case 0xcd:  // unsigned int 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
-                return _msgpack_be16(cb->u16);
+                uint16_t u16 = _msgpack_be16(cb->u16);
+                return object_complete(uk, INT2FIX((int)u16));
             }
 
         case 0xce:  // unsigned int 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 4);
-                return _msgpack_be32(cb->u32);
+                uint32_t u32 = _msgpack_be32(cb->u32);
+                return object_complete(uk, ULONG2NUM((unsigned long)u32));
             }
 
         case 0xcf:  // unsigned int 64
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 8);
-                // TODO
                 uint64_t u64 = _msgpack_be64(cb->u64);
-                return object_complete(uk, Qnil);
+                return object_complete(uk, rb_ull2inum(u64));
             }
 
         case 0xd0:  // signed int  8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 1);
-                return cb->i8;
+                int8_t i8 = cb->i8;
+                return object_complete(uk, INT2FIX((int)i8));
             }
 
         case 0xd1:  // signed int 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
-                return _msgpack_be16(cb->i16);
+                int16_t i16 = cb->i16;
+                return object_complete(uk, INT2FIX((int)i16));
             }
 
         case 0xd2:  // signed int 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 4);
-                return _msgpack_be32(cb->i32);
+                int32_t i32 = cb->i32;
+                return object_complete(uk, LONG2FIX((long)i32));
             }
 
         case 0xd3:  // signed int 64
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 8);
-                // TODO
                 int64_t i64 = _msgpack_be64(cb->i64);
-                return object_complete(uk, Qnil);
+                return object_complete(uk, rb_ll2inum(i64));
             }
 
         //case 0xd4:
