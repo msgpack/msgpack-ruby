@@ -141,6 +141,19 @@ static VALUE Packer_to_str(VALUE self)
     return msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
 }
 
+static VALUE Packer_flush(VALUE self)
+{
+    PACKER(self, pk);
+
+    if(pk->io == Qnil) {
+        return Qnil;
+    }
+
+    msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
+
+    return Qnil;
+}
+
 static VALUE Packer_to_a(VALUE self)
 {
     PACKER(self, pk);
@@ -218,6 +231,7 @@ VALUE MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cPacker, "write_nil", Packer_write_nil, 0);
     rb_define_method(cPacker, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cPacker, "write_map_header", Packer_write_map_header, 1);
+    rb_define_method(cPacker, "flush", Packer_flush, 0);
     rb_define_method(cPacker, "to_str", Packer_to_str, 0);
     rb_define_method(cPacker, "to_s", Packer_to_str, 0);
     rb_define_method(cPacker, "to_a", Packer_to_a, 0);
