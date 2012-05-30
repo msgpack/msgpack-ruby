@@ -1,4 +1,3 @@
-# -*- mode: ruby; coding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
 require 'msgpack/version'
 
@@ -14,21 +13,12 @@ Gem::Specification.new do |s|
   s.has_rdoc = true
   s.rdoc_options = ["ext"]
 
-  s.files = `git ls-files`.split("\n")
-  s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n") 
-  s.require_paths = ["lib"]
+  files = `git ls-files`.split("\n")
 
-  if RUBY_PLATFORM =~ /java/
-    s.platform = "java"
-    s.files += ["lib/msgpack/msgpack.jar"]
-  else
-    s.platform = Gem::Platform::RUBY
-    s.files -= Dir['lib/*.jar']
-    s.files -= Dir['ext/**/*.java']
-  end
+  s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
+
+  s.require_paths = ["lib"]
 
   s.add_development_dependency 'bundler', ['>= 1.0.0']
   s.add_development_dependency 'rake', ['>= 0.8.7']
-  s.add_development_dependency 'rake-compiler', ['~> 0.7.1']
-  
 end

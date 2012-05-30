@@ -117,11 +117,9 @@ static void raise_unpacker_error(int r)
     }
 }
 
-static VALUE Unpacker_read(int argc, VALUE* argv, VALUE self)
+static VALUE Unpacker_read(VALUE self)
 {
     UNPACKER(self, uk);
-
-    // TODO argv check
 
     int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
@@ -309,7 +307,7 @@ VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_alloc_func(cUnpacker, Unpacker_alloc);
 
     rb_define_method(cUnpacker, "initialize", Unpacker_initialize, -1);
-    rb_define_method(cUnpacker, "read", Unpacker_read, -1);
+    rb_define_method(cUnpacker, "read", Unpacker_read, 0);
     rb_define_method(cUnpacker, "skip", Unpacker_skip, 0);
     rb_define_method(cUnpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cUnpacker, "read_array_header", Unpacker_read_array_header, 0);

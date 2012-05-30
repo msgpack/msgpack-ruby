@@ -19,36 +19,14 @@ describe Buffer do
     b.empty?.should == false
   end
 
-  it 'readpartial with limit decrements size' do
+  it 'read with limit decrements size' do
     b = Buffer.new
 
     b.append 'ch'
 
-    b.readpartial(1).should == 'c'
+    b.read(1).should == 'c'
     b.size.should == 1
-    b.readpartial(1).should == 'h'
-    b.size.should == 0
-  end
-
-  it 'readpartial against the empty buffer raises EOFError' do
-    b = Buffer.new
-
-    lambda {
-      b.readpartial(1)
-    }.should raise_error(EOFError)
-
-    b.append '1'
-
-    b.readpartial(1).should == '1'
-
-    lambda {
-      b.readpartial(1)
-    }.should raise_error(EOFError)
-
-    lambda {
-      b.readpartial
-    }.should raise_error(EOFError)
-
+    b.read(1).should == 'h'
     b.size.should == 0
   end
 
@@ -85,39 +63,39 @@ describe Buffer do
     }.should raise_error(EOFError)
   end
 
-  it 'read with limit decrements size' do
+  it 'read_all with limit decrements size' do
     b = Buffer.new
 
     b.append 'ch'
 
-    b.read(1).should == 'c'
+    b.read_all(1).should == 'c'
     b.size.should == 1
-    b.read(1).should == 'h'
+    b.read_all(1).should == 'h'
     b.size.should == 0
   end
 
-  it 'read against the insufficient buffer raises EOFError' do
+  it 'read_all against the insufficient buffer raises EOFError' do
     b = Buffer.new
 
     lambda {
-      b.read(1)
+      b.read_all(1)
     }.should raise_error(EOFError)
 
     b.append 'c'
 
     lambda {
-      b.read(2)
+      b.read_all(2)
     }.should raise_error(EOFError)
 
     b.size.should == 1
 
-    b.read(1).should == 'c'
+    b.read_all(1).should == 'c'
 
     lambda {
-      b.read(1)
+      b.read_all(1)
     }.should raise_error(EOFError)
 
-    b.read.should == ''
+    b.read_all.should == ''
   end
 
   it 'big append 1' do
@@ -129,13 +107,13 @@ describe Buffer do
     b.append(big1)
     b.size == biglen
 
-    b.read.should == big1
+    b.read_all.should == big1
     b.size.should == 0
 
     b.append("c")
     b.size.should == 1
 
-    b.read.should == "c"
+    b.read_all.should == "c"
     b.size.should == 0
   end
 
@@ -152,17 +130,17 @@ describe Buffer do
     b.append(big2)
     b.size.should == biglen * 2
 
-    b.read(1).should == "a"
+    b.read_all(1).should == "a"
     b.size.should == biglen * 2 - 1
 
-    b.read(biglen-1).should == "a" * (biglen-1)
+    b.read_all(biglen-1).should == "a" * (biglen-1)
     b.size.should == biglen
 
-    b.read(biglen).should == big2
+    b.read_all(biglen).should == big2
     b.size.should == 0
   end
 
-  it 'big append and read' do
+  it 'big append and read_all' do
     biglen = 1024*1024 + 2
     halflen = biglen / 2
     big1 = "a" * biglen
@@ -182,19 +160,19 @@ describe Buffer do
     b.size.should == biglen * 3
 
     # consume part of a chunk
-    b.read(1).should == 'a'
+    b.read_all(1).should == 'a'
     b.size.should == biglen * 3 - 1
 
     # consume just a chunk
-    b.read(biglen-1).should == 'a'*(biglen-1)
+    b.read_all(biglen-1).should == 'a'*(biglen-1)
     b.size.should == biglen * 2
 
     # consume a chunk + half
-    b.read(biglen + halflen).should == big2 + big3_half
+    b.read_all(biglen + halflen).should == big2 + big3_half
     b.size.should == halflen
 
     # consume just a chunk
-    b.read(halflen).should == big3_half
+    b.read_all(halflen).should == big3_half
     b.size.should == 0
   end
 
@@ -209,7 +187,7 @@ describe Buffer do
     b.append("c")
     b.size.should == biglen + 1
 
-    b.read(1)
+    b.read_all(1)
     b.size.should == biglen
 
     b.append("c")
@@ -225,7 +203,7 @@ describe Buffer do
     b.append(big1)
     big1[0] = 'b'
 
-    b.read.should == "a" * biglen
+    b.read_all.should == "a" * biglen
   end
 
   it 'short append and to_s' do

@@ -1,6 +1,7 @@
 *.o
 *.so
 *.gem
+*.class
 .bundle
 Gemfile*
 pkg
