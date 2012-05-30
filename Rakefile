@@ -70,7 +70,7 @@ task "gem" do
   if RUBY_PLATFORM =~ /java/
     Rake::Task["gem:java"].invoke
   else
-    create_gem(platform, ["lib/msgpack/**/*.{so,bundle}"], ["ext/**/*"])
+    create_gem(nil, ["lib/msgpack/**/*.{so,bundle}"], ["ext/**/*"])
   end
 end
 
@@ -114,9 +114,10 @@ task "gem:java" do
     classpath = ["#{jruby_home}/lib/jruby.jar"] + Dir['*.jar']
     files = Dir['msgpack/**/*.java']
 
+    FileUtils.rm_rf "ext/java/build"
     FileUtils.mkdir_p 'build'
     run_command "javac -cp '#{classpath.join(':')}' -d build #{files.join(' ')}"
-    run_command "jar cvf build/msgpack.jar -C build/ ."
+    run_command "jar cvf msgpack.jar -C build/ ."
   ensure
     Dir.chdir('../..')
   end
@@ -124,12 +125,12 @@ task "gem:java" do
   begin
     FileUtils.mkdir_p 'lib/msgpack/java'
     FileUtils.cp Dir["ext/java/*.jar"], "lib/"
-    FileUtils.cp "ext/java/build/msgpack.jar", "lib/msgpack"
+    FileUtils.cp "ext/java/msgpack.jar", "lib/msgpack"
 
     create_gem('java', [], ["ext/msgpack/**/*"])
   ensure
-    FileUtils.rm_rf Dir["ext/java/build"]
-    FileUtils.rm_rf Dir["lib/msgpack/java"]
+    FileUtils.rm_rf "ext/java/build"
+    FileUtils.rm_rf "lib/msgpack/java"
     FileUtils.rm_rf Dir["lib/*.jar"]
   end
 end
