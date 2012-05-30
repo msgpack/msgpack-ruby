@@ -13,4 +13,5 @@ tmp
 .project
 .settings
 /nbproject/private/
-lib/msgpack/msgpack.jar
+ext/java/build
+ext/java/msgpack.jar

@@ -41,25 +41,25 @@ describe Buffer do
     b.size.should == 0
   end
 
-  it 'skip against the insufficient buffer raises EOFError' do
+  it 'skip_all against the insufficient buffer raises EOFError' do
     b = Buffer.new
 
     lambda {
-      b.skip(1)
+      b.skip_all(1)
     }.should raise_error(EOFError)
 
     b.append 'c'
 
     lambda {
-      b.skip(2)
+      b.skip_all(2)
     }.should raise_error(EOFError)
 
     b.size.should == 1
 
-    b.skip(1)
+    b.skip_all(1)
 
     lambda {
-      b.skip(1)
+      b.skip_all(1)
     }.should raise_error(EOFError)
   end
 

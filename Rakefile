@@ -2,15 +2,25 @@
 require 'bundler'
 Bundler::GemHelper.install_tasks
 
-#require 'rdoc/task'
 require 'rspec/core'
 require 'rspec/core/rake_task'
+#require 'rdoc/task'
 
 RSpec::Core::RakeTask.new(:spec) do |t|
-  t.rspec_opts = ["-c", "-f progress", "-r ./spec/spec_helper.rb"]
+  t.rspec_opts = ["-c", "-f progress"]
+  if RUBY_PLATFORM =~ /java/
+    t.rspec_opts << "-r./ext/java/msgpack"
+  else
+    t.rspec_opts << "-r./ext/msgpack/msgpack"
+  end
+  t.rspec_opts << "-Ilib"
+  t.rspec_opts << "-r./lib/msgpack/version"
+  t.rspec_opts << "-r./spec/spec_helper.rb"
   t.pattern = 'spec/**/*_spec.rb'
   t.verbose = true
 end
+
+task :spec => :compile
 
 desc 'Run RSpec code examples and measure coverage'
 task :coverage do |t|
@@ -108,6 +118,31 @@ task "gem:build" do
 end
 
 task "gem:java" do
+  Rake::Task["compile:java"].invoke
+
+  begin
+    FileUtils.mkdir_p 'lib/msgpack/java'
+    FileUtils.cp Dir["ext/java/*.jar"], "lib/"
+    FileUtils.cp "ext/java/msgpack.jar", "lib/msgpack"
+
+    create_gem('java', [], ["ext/msgpack/**/*"])
+  ensure
+    FileUtils.rm_rf "ext/java/build"
+    FileUtils.rm_rf "lib/msgpack/java"
+    FileUtils.rm_rf Dir["lib/*.jar"]
+  end
+end
+
+task "compile" do
+  if RUBY_PLATFORM =~ /java/
+    Rake::Task["compile:java"].invoke
+  else
+    ruby = 'ruby'  # TODO use self
+    run_command "cd ext/msgpack && '#{ruby}' extconf.rb && make clean && make"
+  end
+end
+
+task "compile:java" do
   Dir.chdir('ext/java')
   begin
     jruby_home = RbConfig::CONFIG['prefix']
@@ -120,18 +155,6 @@ task "gem:java" do
     run_command "jar cvf msgpack.jar -C build/ ."
   ensure
     Dir.chdir('../..')
-  end
-
-  begin
-    FileUtils.mkdir_p 'lib/msgpack/java'
-    FileUtils.cp Dir["ext/java/*.jar"], "lib/"
-    FileUtils.cp "ext/java/msgpack.jar", "lib/msgpack"
-
-    create_gem('java', [], ["ext/msgpack/**/*"])
-  ensure
-    FileUtils.rm_rf "ext/java/build"
-    FileUtils.rm_rf "lib/msgpack/java"
-    FileUtils.rm_rf Dir["lib/*.jar"]
   end
 end
 
