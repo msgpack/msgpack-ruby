@@ -8,5 +8,10 @@ if ENV['SIMPLE_COV']
   end
 end
 
+if ENV['GC_STRESS']
+  puts "enable GC.stress"
+  GC.stress = true
+end
+
 include MessagePack
 

@@ -1,15 +1,6 @@
 require 'spec_helper'
 
-if ENV['GC_STRESS']
-  puts "enable GC.stress"
-  GC.stress = true
-end
-
 describe Buffer do
-  let :buffer do
-    Buffer.new
-  end
-
   EXAMPLES = {}
   EXAMPLES[:empty01] = ''
   EXAMPLES[:empty02] = ''
@@ -403,6 +394,57 @@ describe Buffer do
     case_keys.each {|k|
       cases[k].skip_all(0)
       cases[k].read_all.should == examples[k]
+    }
+  end
+
+  it 'random read/write' do
+    r = Random.new
+    s = r.bytes(0)
+    b = Buffer.new
+
+    puts "random read/write seed: 0x#{r.seed.to_s(16)}"
+    100.times {
+      # write
+      r.rand(3).times do
+        n = r.rand(1024*1400)
+        x = r.bytes(n)
+        s << x
+        b << x
+      end
+
+      # read
+      r.rand(2).times do
+        n = r.rand(1024*1400)
+        ex = s.slice!(0, n)
+        ex = nil if ex.empty?
+        b.read(n).should == ex
+        b.size.should == s.size
+      end
+    }
+  end
+
+  it 'random skip write' do
+    r = Random.new
+    s = r.bytes(0)
+    b = Buffer.new
+
+    puts "random skip/write seed: 0x#{r.seed.to_s(16)}"
+    100.times {
+      # write
+      r.rand(3).times do
+        n = r.rand(1024*1400)
+        x = r.bytes(n)
+        s << x
+        b << x
+      end
+
+      # skip
+      r.rand(2).times do
+        n = r.rand(1024*1400)
+        ex = s.slice!(0, n)
+        b.skip(n).should == ex.size
+        b.size.should == s.size
+      end
     }
   end
 end
