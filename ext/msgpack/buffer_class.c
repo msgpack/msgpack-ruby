@@ -229,7 +229,7 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
 
     if(out != Qnil) {
         CHECK_STRING_TYPE(out);
-	    rb_str_resize(out, 0);
+        rb_str_resize(out, 0);
     }
 
     /* do nothing */
@@ -302,7 +302,7 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
 
     if(out != Qnil) {
         CHECK_STRING_TYPE(out);
-	    rb_str_resize(out, 0);
+        rb_str_resize(out, 0);
     }
 
     /* do nothing */

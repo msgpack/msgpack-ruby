@@ -218,9 +218,9 @@ static VALUE MessagePack_Packer(int argc, VALUE* argv, VALUE self)
 
 VALUE MessagePack_Packer_module_init(VALUE mMessagePack)
 {
-	s_to_msgpack = rb_intern("to_msgpack");
-	s_append = rb_intern("<<");
-	s_write = rb_intern("write");
+    s_to_msgpack = rb_intern("to_msgpack");
+    s_append = rb_intern("<<");
+    s_write = rb_intern("write");
 
     cPacker = rb_define_class_under(mMessagePack, "Packer", rb_cObject);
 

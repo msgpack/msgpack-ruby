@@ -231,36 +231,36 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
 
 static inline void msgpack_packer_write_array_header(msgpack_packer_t* pk, unsigned int n)
 {
-	if(n < 16) {
+    if(n < 16) {
         _msgpack_packer_ensure_writable(pk, 1);
-		unsigned char h = 0x90 | (uint8_t) n;
+        unsigned char h = 0x90 | (uint8_t) n;
         msgpack_buffer_write_1(PACKER_BUFFER_(pk), h);
-	} else if(n < 65536) {
+    } else if(n < 65536) {
         _msgpack_packer_ensure_writable(pk, 3);
         uint16_t be = _msgpack_be16(n);
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xdc, (const void*)&be, 2);
-	} else {
+    } else {
         _msgpack_packer_ensure_writable(pk, 5);
         uint32_t be = _msgpack_be32(n);
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xdd, (const void*)&be, 4);
-	}
+    }
 }
 
 static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigned int n)
 {
-	if(n < 16) {
+    if(n < 16) {
         _msgpack_packer_ensure_writable(pk, 1);
-		unsigned char h = 0x80 | (uint8_t) n;
+        unsigned char h = 0x80 | (uint8_t) n;
         msgpack_buffer_write_1(PACKER_BUFFER_(pk), h);
-	} else if(n < 65536) {
+    } else if(n < 65536) {
         _msgpack_packer_ensure_writable(pk, 3);
         uint16_t be = _msgpack_be16(n);
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xde, (const void*)&be, 2);
-	} else {
+    } else {
         _msgpack_packer_ensure_writable(pk, 5);
         uint32_t be = _msgpack_be32(n);
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xdf, (const void*)&be, 4);
-	}
+    }
 }
 
 
@@ -284,8 +284,8 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
 
 static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)
 {
-	const char* name = rb_id2name(SYM2ID(v));
-	size_t len = strlen(name);
+    const char* name = rb_id2name(SYM2ID(v));
+    size_t len = strlen(name);
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
@@ -305,16 +305,16 @@ static inline void msgpack_packer_write_fixnum_value(msgpack_packer_t* pk, VALUE
 
 static inline void msgpack_packer_write_bignum_value(msgpack_packer_t* pk, VALUE v)
 {
-	if(RBIGNUM_POSITIVE_P(v)) {
-		msgpack_packer_write_u64(pk, rb_big2ull(v));
-	} else {
-		msgpack_packer_write_long(pk, rb_big2ll(v));  /* FIXME long long? */
-	}
+    if(RBIGNUM_POSITIVE_P(v)) {
+        msgpack_packer_write_u64(pk, rb_big2ull(v));
+    } else {
+        msgpack_packer_write_long(pk, rb_big2ll(v));  /* FIXME long long? */
+    }
 }
 
 static inline void msgpack_packer_write_float_value(msgpack_packer_t* pk, VALUE v)
 {
-	msgpack_packer_write_double(pk, rb_num2dbl(v));
+    msgpack_packer_write_double(pk, rb_num2dbl(v));
 }
 
 void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v);
