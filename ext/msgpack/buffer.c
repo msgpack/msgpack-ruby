@@ -149,6 +149,10 @@ bool msgpack_buffer_skip_all(msgpack_buffer_t* b, size_t length)
 
 bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length)
 {
+    if(length == 0) {
+        return;
+    }
+
     size_t chunk_size = msgpack_buffer_top_readable_size(b);
     if(length <= chunk_size) {
         if(buffer != NULL) {
