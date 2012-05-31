@@ -204,12 +204,12 @@ static inline void msgpack_packer_write_double(msgpack_packer_t* pk, double v)
 {
     _msgpack_packer_ensure_writable(pk, 9);
     union {
-        double f;
-        uint64_t i;
+        double d;
+        uint64_t u64;
         char mem[8];
     } castbuf = { v };
-    castbuf.i = _msgpack_be_double(castbuf.i); /* FIXME _msgpack_be_double */
-    msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xcf, castbuf.mem, 8);
+    castbuf.u64 = _msgpack_be_double(castbuf.u64); /* FIXME _msgpack_be_double */
+    msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xcb, castbuf.mem, 8);
 }
 
 static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigned int n)

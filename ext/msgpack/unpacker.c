@@ -360,14 +360,14 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xd1:  // signed int 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 2);
-                int16_t i16 = cb->i16;
+                int16_t i16 = _msgpack_be16(cb->i16);
                 return object_complete(uk, INT2FIX((int)i16));
             }
 
         case 0xd2:  // signed int 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, avail, 4);
-                int32_t i32 = cb->i32;
+                int32_t i32 = _msgpack_be32(cb->i32);
                 return object_complete(uk, LONG2FIX((long)i32));
             }
 
