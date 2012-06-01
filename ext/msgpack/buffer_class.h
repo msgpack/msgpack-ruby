@@ -18,9 +18,11 @@
 #ifndef MSGPACK_RUBY_BUFFER_CLASS_H__
 #define MSGPACK_RUBY_BUFFER_CLASS_H__
 
-#include "compat.h"
+#include "buffer.h"
 
 VALUE MessagePack_Buffer_module_init(VALUE mMessagePack);
+
+VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner);
 
 #endif
 

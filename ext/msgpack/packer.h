@@ -35,6 +35,8 @@ struct msgpack_packer_t {
 
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
+
+    VALUE buffer_ref;
 };
 
 #define PACKER_BUFFER_(pk) (&(pk)->buffer)

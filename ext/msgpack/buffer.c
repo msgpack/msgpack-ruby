@@ -77,6 +77,8 @@ void msgpack_buffer_mark(msgpack_buffer_t* b)
         c = c->next;
     }
     rb_gc_mark(c->mapped_string);
+
+    rb_gc_mark(b->owner);
 }
 
 static inline void _msgpack_buffer_pop_chunk_no_check(msgpack_buffer_t* b)
@@ -150,7 +152,7 @@ bool msgpack_buffer_skip_all(msgpack_buffer_t* b, size_t length)
 bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length)
 {
     if(length == 0) {
-        return;
+        return true;
     }
 
     size_t chunk_size = msgpack_buffer_top_readable_size(b);

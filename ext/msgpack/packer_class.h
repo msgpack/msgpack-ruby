@@ -18,7 +18,7 @@
 #ifndef MSGPACK_RUBY_PACKER_CLASS_H__
 #define MSGPACK_RUBY_PACKER_CLASS_H__
 
-#include "compat.h"
+#include "packer.h"
 
 VALUE MessagePack_Packer_module_init(VALUE mMessagePack);
 

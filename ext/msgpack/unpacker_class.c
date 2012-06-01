@@ -18,6 +18,7 @@
 
 #include "unpacker.h"
 #include "unpacker_class.h"
+#include "buffer_class.h"
 
 static ID s_read;
 static ID s_readpartial;
@@ -36,12 +37,11 @@ static VALUE eTypeError;
         rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
     }
 
-static void Unpacker_free(void* data)
+static void Unpacker_free(msgpack_unpacker_t* uk)
 {
-    if(data == NULL) {
+    if(uk == NULL) {
         return;
     }
-    msgpack_unpacker_t* uk = (msgpack_unpacker_t*) data;
     msgpack_unpacker_destroy(uk);
     free(uk);
 }
@@ -51,7 +51,11 @@ static VALUE Unpacker_alloc(VALUE klass)
     msgpack_unpacker_t* uk = ALLOC_N(msgpack_unpacker_t, 1);
     msgpack_unpacker_init(uk);
 
-    return Data_Wrap_Struct(klass, msgpack_unpacker_mark, Unpacker_free, uk);
+    VALUE self = Data_Wrap_Struct(klass, msgpack_unpacker_mark, Unpacker_free, uk);
+
+    uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
+
+    return self;
 }
 
 static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
@@ -115,6 +119,12 @@ static void raise_unpacker_error(int r)
     default:
         rb_raise(eUnpackError, "logically unknown error %d", r);
     }
+}
+
+static VALUE Unpacker_buffer(VALUE self)
+{
+    UNPACKER(self, uk);
+    return uk->buffer_ref;
 }
 
 static VALUE Unpacker_read(VALUE self)
@@ -307,6 +317,7 @@ VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_alloc_func(cUnpacker, Unpacker_alloc);
 
     rb_define_method(cUnpacker, "initialize", Unpacker_initialize, -1);
+    rb_define_method(cUnpacker, "buffer", Unpacker_buffer, 0);
     rb_define_method(cUnpacker, "read", Unpacker_read, 0);
     rb_define_method(cUnpacker, "skip", Unpacker_skip, 0);
     rb_define_method(cUnpacker, "skip_nil", Unpacker_skip_nil, 0);

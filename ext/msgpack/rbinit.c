@@ -16,8 +16,9 @@
  *    limitations under the License.
  */
 
-#include "packer_class.h"
 #include "buffer_class.h"
+#include "packer_class.h"
+#include "unpacker_class.h"
 #include "core_ext.h"
 
 void Init_msgpack(void)

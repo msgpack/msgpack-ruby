@@ -20,6 +20,7 @@
 #include "ruby.h"
 #include "packer.h"
 #include "packer_class.h"
+#include "buffer_class.h"
 
 static ID s_to_msgpack;
 static ID s_append;
@@ -27,20 +28,18 @@ static ID s_write;
 
 static VALUE cPacker;
 
-
 #define PACKER(from, name) \
-    msgpack_packer_t *name = NULL; \
+    msgpack_packer_t* name; \
     Data_Get_Struct(from, msgpack_packer_t, name); \
     if(name == NULL) { \
         rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
     }
 
-static void Packer_free(void* data)
+static void Packer_free(msgpack_packer_t* pk)
 {
-    if(data == NULL) {
+    if(pk == NULL) {
         return;
     }
-    msgpack_packer_t* pk = (msgpack_packer_t*) data;
     msgpack_packer_destroy(pk);
     free(pk);
 }
@@ -53,6 +52,7 @@ static VALUE Packer_alloc(VALUE klass)
     VALUE self = Data_Wrap_Struct(klass, msgpack_packer_mark, Packer_free, pk);
 
     msgpack_packer_set_to_msgpack_method(pk, s_to_msgpack, self);
+    pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
 
     return self;
 }
@@ -107,32 +107,38 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
     return self;
 }
 
+static VALUE Packer_buffer(VALUE self)
+{
+    PACKER(self, pk);
+    return pk->buffer_ref;
+}
+
 static VALUE Packer_write(VALUE self, VALUE v)
 {
     PACKER(self, pk);
     msgpack_packer_write_value(pk, v);
-    return Qnil;
+    return self;
 }
 
 static VALUE Packer_write_nil(VALUE self)
 {
     PACKER(self, pk);
     msgpack_packer_write_nil(pk);
-    return Qnil;
+    return self;
 }
 
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
     msgpack_packer_write_array_header(pk, NUM2UINT(n));
-    return Qnil;
+    return self;
 }
 
 static VALUE Packer_write_map_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
     msgpack_packer_write_map_header(pk, NUM2UINT(n));
-    return Qnil;
+    return self;
 }
 
 static VALUE Packer_to_str(VALUE self)
@@ -145,13 +151,11 @@ static VALUE Packer_flush(VALUE self)
 {
     PACKER(self, pk);
 
-    if(pk->io == Qnil) {
-        return Qnil;
+    if(pk->io != Qnil) {
+        msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
     }
 
-    msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
-
-    return Qnil;
+    return self;
 }
 
 static VALUE Packer_to_a(VALUE self)
@@ -227,13 +231,14 @@ VALUE MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_alloc_func(cPacker, Packer_alloc);
 
     rb_define_method(cPacker, "initialize", Packer_initialize, -1);
+    rb_define_method(cPacker, "buffer", Packer_buffer, 0);
     rb_define_method(cPacker, "write", Packer_write, 1);
     rb_define_method(cPacker, "write_nil", Packer_write_nil, 0);
     rb_define_method(cPacker, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cPacker, "write_map_header", Packer_write_map_header, 1);
     rb_define_method(cPacker, "flush", Packer_flush, 0);
     rb_define_method(cPacker, "to_str", Packer_to_str, 0);
-    rb_define_method(cPacker, "to_s", Packer_to_str, 0);
+    rb_define_alias(cPacker, "to_s", "to_str");
     rb_define_method(cPacker, "to_a", Packer_to_a, 0);
     rb_define_method(cPacker, "append", Packer_append, 1);
 

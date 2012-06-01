@@ -23,6 +23,8 @@
 
 static ID s_write;
 
+static VALUE cBuffer;
+
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
     Data_Get_Struct(from, msgpack_buffer_t, name); \
@@ -67,6 +69,14 @@ static VALUE Buffer_initialize(VALUE self)
 {
     return self;
 }
+
+
+VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
+{
+    b->owner = owner;
+    return Data_Wrap_Struct(cBuffer, msgpack_buffer_mark, NULL, b);
+}
+
 
 /**
  * Document-method: MessagePack::Buffer#clear
@@ -398,7 +408,7 @@ VALUE MessagePack_Buffer_module_init(VALUE mMessagePack)
 
     msgpack_buffer_static_init();
 
-    VALUE cBuffer = rb_define_class_under(mMessagePack, "Buffer", rb_cObject);
+    cBuffer = rb_define_class_under(mMessagePack, "Buffer", rb_cObject);
 
     rb_define_alloc_func(cBuffer, Buffer_alloc);
 

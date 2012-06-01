@@ -56,6 +56,10 @@ void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
         rb_gc_mark(s->object);
         rb_gc_mark(s->key);
     }
+
+    /* See MessagePack_Buffer_wrap */
+    /* msgpack_buffer_mark(UNPACKER_BUFFER_(uk)); */
+    rb_gc_mark(uk->buffer_ref);
 }
 
 /* stack funcs */

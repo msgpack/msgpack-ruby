@@ -56,6 +56,8 @@ struct msgpack_unpacker_t {
     VALUE io;
     VALUE io_buffer;
     ID io_partial_read_method;
+
+    VALUE buffer_ref;
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)

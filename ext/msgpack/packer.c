@@ -34,8 +34,11 @@ void msgpack_packer_destroy(msgpack_packer_t* pk)
 
 void msgpack_packer_mark(msgpack_packer_t* pk)
 {
-    msgpack_buffer_mark(PACKER_BUFFER_(pk));
     rb_gc_mark(pk->io);
+
+    /* See MessagePack_Buffer_wrap */
+    /* msgpack_buffer_mark(PACKER_BUFFER_(pk)); */
+    rb_gc_mark(pk->buffer_ref);
 }
 
 
@@ -43,9 +46,11 @@ void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t requir
 {
     if(pk->io != Qnil) {
         msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
-    } else {
-        msgpack_buffer_expand(PACKER_BUFFER_(pk), require);
+        if(msgpack_buffer_writable_size(PACKER_BUFFER_(pk)) >= require) {
+            return;
+        }
     }
+    msgpack_buffer_expand(PACKER_BUFFER_(pk), require);
 }
 
 void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)

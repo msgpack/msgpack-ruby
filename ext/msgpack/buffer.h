@@ -100,6 +100,8 @@ struct msgpack_buffer_t {
     msgpack_buffer_chunk_t* free_list;
 
     union msgpack_buffer_cast_block_t cast_block;
+
+    VALUE owner;
 };
 
 /*
