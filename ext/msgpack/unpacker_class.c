@@ -297,9 +297,9 @@ VALUE MessagePack_Unpacker_create(int argc, VALUE* argv)
     return self;
 }
 
-static VALUE MessagePack_Unpacker(int argc, VALUE* argv, VALUE self)
+static VALUE MessagePack_Unpacker(VALUE self, VALUE arg)
 {
-    return MessagePack_Unpacker_create(argc, argv);
+    return MessagePack_Unpacker_create(1, &arg);
 }
 
 VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)

@@ -20,6 +20,13 @@ describe Packer do
     Packer.new(StringIO.new, {})
   end
 
+  it 'Packer' do
+    Packer(packer).object_id.should == packer.object_id
+    Packer(nil).class.should == Packer
+    Packer('').class.should == Packer
+    Packer('initbuf').to_s.should == 'initbuf'
+  end
+
   it 'write' do
     packer.write([])
     packer.to_s.should == "\x90"
