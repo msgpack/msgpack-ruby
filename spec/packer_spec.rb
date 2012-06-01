@@ -72,5 +72,7 @@ describe Packer do
     packer.buffer.to_s.should == 'frsyuki'
     packer.buffer.object_id.should == o1
   end
+
+  # TODO other methods
 end
 
