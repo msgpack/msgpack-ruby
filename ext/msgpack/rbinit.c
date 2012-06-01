@@ -25,9 +25,6 @@ void Init_msgpack(void)
 {
     VALUE mMessagePack = rb_define_module("MessagePack");
 
-    /* MessagePack::VERSION */
-    rb_define_const(mMessagePack, "VERSION", rb_str_new2(MESSAGEPACK_VERSION));
-
     MessagePack_Buffer_module_init(mMessagePack);
     MessagePack_Packer_module_init(mMessagePack);
     MessagePack_Unpacker_module_init(mMessagePack);

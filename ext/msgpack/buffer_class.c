@@ -361,7 +361,6 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
 static VALUE Buffer_to_str(VALUE self)
 {
     BUFFER(self, b);
-
     return msgpack_buffer_all_as_string(b);
 }
 
@@ -376,7 +375,6 @@ static VALUE Buffer_to_str(VALUE self)
 static VALUE Buffer_to_a(VALUE self)
 {
     BUFFER(self, b);
-
     return msgpack_buffer_all_as_string_array(b);
 }
 
@@ -390,7 +388,8 @@ static VALUE Buffer_to_a(VALUE self)
  */
 static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
-    VALUE ary = Buffer_to_a(self);
+    BUFFER(self, b);
+    VALUE ary = msgpack_buffer_all_as_string_array(b);
 
     unsigned int len = (unsigned int)RARRAY_LEN(ary);
     unsigned int i;

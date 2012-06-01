@@ -141,12 +141,6 @@ static VALUE Packer_write_map_header(VALUE self, VALUE n)
     return self;
 }
 
-static VALUE Packer_to_str(VALUE self)
-{
-    PACKER(self, pk);
-    return msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
-}
-
 static VALUE Packer_flush(VALUE self)
 {
     PACKER(self, pk);
@@ -158,23 +152,68 @@ static VALUE Packer_flush(VALUE self)
     return self;
 }
 
+static VALUE Packer_clear(VALUE self)
+{
+    PACKER(self, pk);
+    msgpack_buffer_clear(PACKER_BUFFER_(pk));
+    return Qnil;
+}
+
+static VALUE Packer_size(VALUE self)
+{
+    PACKER(self, pk);
+    size_t size = msgpack_buffer_all_readable_size(PACKER_BUFFER_(pk));
+    return SIZET2NUM(size);
+}
+
+static VALUE Packer_empty_p(VALUE self)
+{
+    PACKER(self, pk);
+    if(msgpack_buffer_top_readable_size(PACKER_BUFFER_(pk)) == 0) {
+        return Qtrue;
+    } else {
+        return Qfalse;
+    }
+}
+
+static VALUE Packer_to_str(VALUE self)
+{
+    PACKER(self, pk);
+    return msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
+}
+
 static VALUE Packer_to_a(VALUE self)
 {
     PACKER(self, pk);
     return msgpack_buffer_all_as_string_array(PACKER_BUFFER_(pk));
 }
 
-static VALUE Packer_append(VALUE self, VALUE string_or_buffer)
+static VALUE Packer_write_to(VALUE self, VALUE io)
 {
     PACKER(self, pk);
+    VALUE ary = msgpack_buffer_all_as_string_array(PACKER_BUFFER_(pk));
 
-    // TODO if string_or_buffer is a Buffer
-    VALUE string = string_or_buffer;
+    unsigned int len = (unsigned int)RARRAY_LEN(ary);
+    unsigned int i;
+    for(i=0; i < len; ++i) {
+        VALUE e = rb_ary_entry(ary, i);
+        rb_funcall(io, s_write, 1, e);
+    }
 
-    msgpack_buffer_append_string(PACKER_BUFFER_(pk), string);
-
-    return self;
+    return Qnil;
 }
+
+//static VALUE Packer_append(VALUE self, VALUE string_or_buffer)
+//{
+//    PACKER(self, pk);
+//
+//    // TODO if string_or_buffer is a Buffer
+//    VALUE string = string_or_buffer;
+//
+//    msgpack_buffer_append_string(PACKER_BUFFER_(pk), string);
+//
+//    return self;
+//}
 
 VALUE MessagePack_Packer_create(int argc, VALUE* args)
 {
@@ -237,10 +276,17 @@ VALUE MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cPacker, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cPacker, "write_map_header", Packer_write_map_header, 1);
     rb_define_method(cPacker, "flush", Packer_flush, 0);
+
+    /* delegation methods */
+    rb_define_method(cPacker, "clear", Packer_clear, 0);
+    rb_define_method(cPacker, "size", Packer_size, 0);
+    rb_define_method(cPacker, "empty?", Packer_empty_p, 0);
+    rb_define_method(cPacker, "write_to", Packer_write_to, 1);
     rb_define_method(cPacker, "to_str", Packer_to_str, 0);
     rb_define_alias(cPacker, "to_s", "to_str");
     rb_define_method(cPacker, "to_a", Packer_to_a, 0);
-    rb_define_method(cPacker, "append", Packer_append, 1);
+    //rb_define_method(cPacker, "append", Packer_append, 1);
+    //rb_define_alias(cPacker, "<<", "append");
 
     /* MessagePack::Packer(x) */
     rb_define_module_function(mMessagePack, "Packer", MessagePack_Packer, 1);
