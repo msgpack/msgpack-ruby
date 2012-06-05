@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.has_rdoc = true
   s.rdoc_options = ["ext"]
 
-  files = `git ls-files`.split("\n")
+  s.files = `git ls-files`.split("\n")
 
   s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
 
