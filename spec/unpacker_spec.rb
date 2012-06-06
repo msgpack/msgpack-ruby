@@ -42,6 +42,12 @@ describe Unpacker do
     unpacker.skip_nil.should == false
   end
 
+  it 'skip_nil raises EOFError' do
+    lambda {
+      unpacker.skip_nil
+    }.should raise_error(EOFError)
+  end
+
   # TODO skip methods
   # TODO feed
   # TODO each
