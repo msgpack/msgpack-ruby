@@ -18,11 +18,15 @@
 #ifndef MSGPACK_RUBY_UNPACKER_CLASS_H__
 #define MSGPACK_RUBY_UNPACKER_CLASS_H__
 
-#include "compat.h"
+#include "unpacker.h"
 
-VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack);
+extern VALUE cMessagePack_Unpacker;
+
+void MessagePack_Unpacker_module_init(VALUE mMessagePack);
 
 //VALUE MessagePack_Unpacker_create(int argc, VALUE* argv);
+
+VALUE MessagePack_unpack(int argc, VALUE* argv);
 
 #endif
 

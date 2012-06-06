@@ -23,7 +23,7 @@
 static ID s_read;
 static ID s_readpartial;
 
-static VALUE cUnpacker;
+VALUE cMessagePack_Unpacker;
 
 static VALUE eUnpackError;
 static VALUE eMalformedFormatError;
@@ -58,6 +58,26 @@ static VALUE Unpacker_alloc(VALUE klass)
     return self;
 }
 
+static ID get_read_method(VALUE io)
+{
+    if(rb_respond_to(io, s_readpartial)) {
+        return s_readpartial;
+    } else if(rb_respond_to(io, s_read)) {
+        return s_read;
+    } else {
+        return 0;
+    }
+}
+
+static ID read_method_of(VALUE io)
+{
+    ID m = get_read_method(io);
+    if(m == 0) {
+        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+    }
+    return m;
+}
+
 static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 {
     if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
@@ -89,16 +109,7 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
     UNPACKER(self, uk);
 
     if(io != Qnil) {
-        ID read_method;
-
-        if(rb_respond_to(io, s_readpartial)) {
-            read_method = s_readpartial;
-        } else if(rb_respond_to(io, s_read)) {
-            read_method = s_read;
-        } else {
-            rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
-        }
-
+        ID read_method = read_method_of(io);
         msgpack_unpacker_set_io(uk, io, read_method);
     }
 
@@ -261,7 +272,7 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 //VALUE MessagePack_Unpacker_create(int argc, VALUE* argv)
 //{
 //    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
-//        return Unpacker_alloc(cUnpacker);
+//        return Unpacker_alloc(cMessagePack_Unpacker);
 //    }
 //
 //    if(argc != 1) {
@@ -270,12 +281,12 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 //    VALUE io = argv[0];
 //
 //    VALUE klass = rb_class_of(io);
-//    if(klass == cUnpacker) {
+//    if(klass == cMessagePack_Unpacker) {
 //        return io;
 //    }
 //
 //    if(klass == rb_cString) {
-//        VALUE self = Unpacker_alloc(cUnpacker);
+//        VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
 //        UNPACKER(self, uk);
 //        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), io);
 //        return self;
@@ -291,7 +302,7 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 //        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
 //    }
 //
-//    VALUE self = Unpacker_alloc(cUnpacker);
+//    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
 //    UNPACKER(self, uk);
 //    msgpack_unpacker_set_io(uk, io, read_method);
 //    return self;
@@ -302,36 +313,75 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 //    return MessagePack_Unpacker_create(1, &arg);
 //}
 
-VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
+VALUE MessagePack_unpack(int argc, VALUE* argv)
+{
+    VALUE src;
+
+    switch(argc) {
+    case 1:
+        src = argv[0];
+        break;
+    default:
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
+    }
+
+    ID read_method = get_read_method(src);
+    if(read_method == 0) {
+        src = StringValue(src);
+    }
+
+    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
+    UNPACKER(self, uk);
+
+    if(read_method == 0) {
+        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
+    } else {
+        msgpack_unpacker_set_io(uk, src, read_method);
+    }
+
+    int r = msgpack_unpacker_read(uk, 0);
+    if(r < 0) {
+        raise_unpacker_error(r);
+    }
+    return msgpack_unpacker_get_last_object(uk);
+}
+
+static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
+{
+    return MessagePack_unpack(argc, argv);
+}
+
+void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
     s_read = rb_intern("read");
     s_readpartial = rb_intern("readpartial");
 
-    cUnpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
+    cMessagePack_Unpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
     eUnpackError = rb_define_class_under(mMessagePack, "UnpackError", rb_eStandardError);
     eMalformedFormatError = rb_define_class_under(mMessagePack, "MalformedFormatError", eUnpackError);
     eStackError = rb_define_class_under(mMessagePack, "StackError", eUnpackError);
     eTypeError = rb_define_class_under(mMessagePack, "TypeError", rb_eStandardError);
 
-    rb_define_alloc_func(cUnpacker, Unpacker_alloc);
+    rb_define_alloc_func(cMessagePack_Unpacker, Unpacker_alloc);
 
-    rb_define_method(cUnpacker, "initialize", Unpacker_initialize, -1);
-    rb_define_method(cUnpacker, "buffer", Unpacker_buffer, 0);
-    rb_define_method(cUnpacker, "read", Unpacker_read, 0);
-    rb_define_alias(cMessagePack_Packer, "unpack", "read");
-    rb_define_method(cUnpacker, "skip", Unpacker_skip, 0);
-    rb_define_method(cUnpacker, "skip_nil", Unpacker_skip_nil, 0);
-    rb_define_method(cUnpacker, "read_array_header", Unpacker_read_array_header, 0);
-    rb_define_method(cUnpacker, "read_map_header", Unpacker_read_map_header, 0);
-    //rb_define_method(cUnpacker, "peek_next_type", Unpacker_peek_next_type, 0);
-    rb_define_method(cUnpacker, "feed", Unpacker_feed, 1);
-    rb_define_method(cUnpacker, "each", Unpacker_each, 0);
-    rb_define_method(cUnpacker, "feed_each", Unpacker_feed_each, 1);
+    rb_define_method(cMessagePack_Unpacker, "initialize", Unpacker_initialize, -1);
+    rb_define_method(cMessagePack_Unpacker, "buffer", Unpacker_buffer, 0);
+    rb_define_method(cMessagePack_Unpacker, "read", Unpacker_read, 0);
+    rb_define_alias(cMessagePack_Unpacker, "unpack", "read");
+    rb_define_method(cMessagePack_Unpacker, "skip", Unpacker_skip, 0);
+    rb_define_method(cMessagePack_Unpacker, "skip_nil", Unpacker_skip_nil, 0);
+    rb_define_method(cMessagePack_Unpacker, "read_array_header", Unpacker_read_array_header, 0);
+    rb_define_method(cMessagePack_Unpacker, "read_map_header", Unpacker_read_map_header, 0);
+    //rb_define_method(cMessagePack_Unpacker, "peek_next_type", Unpacker_peek_next_type, 0);
+    rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed, 1);
+    rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
+    rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
 
     /* MessagePack::Unpacker(x) */
     //rb_define_module_function(mMessagePack, "Unpacker", MessagePack_Unpacker, 1);
 
-    return cUnpacker;
+    /* MessagePack.unpack(x) */
+    rb_define_module_function(mMessagePack, "unpack", MessagePack_unpack_module_method, -1);
 }
 

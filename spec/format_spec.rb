@@ -206,10 +206,7 @@ describe MessagePack do
   def check(len, obj)
     raw = obj.to_msgpack.to_s
     raw.length.should == len
-    # TODO MessagePack.unpack
-    u = MessagePack::Unpacker.new
-    u.feed(raw)
-    u.read.should == obj
+    MessagePack.unpack(raw).should == obj
   end
 
   def check_raw(overhead, num)
