@@ -72,7 +72,7 @@ static ID write_method_of(VALUE io)
 {
     ID m = get_write_method(io);
     if(m == -1) {
-        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", rb_obj_classname(io));
     }
     return m;
 }
@@ -98,7 +98,7 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
         io = argv[0];
         options = argv[1];
         if(rb_type(options) != RUBY_T_HASH) {
-            rb_raise(rb_eArgError, "expected Hash but found %s.", "TODO"); // TODO klass.to_s
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(io));
         }
 
     } else {

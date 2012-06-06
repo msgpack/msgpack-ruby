@@ -27,7 +27,7 @@ VALUE cMessagePack_Unpacker;
 
 static VALUE eUnpackError;
 static VALUE eMalformedFormatError;
-static VALUE eStackError;  // TODO < eMalformedFormatError?
+static VALUE eStackError;
 static VALUE eTypeError;
 
 #define UNPACKER(from, name) \
@@ -73,7 +73,7 @@ static ID read_method_of(VALUE io)
 {
     ID m = get_read_method(io);
     if(m == 0) {
-        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", rb_obj_classname(io));
     }
     return m;
 }
@@ -99,7 +99,7 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
         io = argv[0];
         options = argv[1];
         if(rb_type(options) != RUBY_T_HASH) {
-            rb_raise(rb_eArgError, "expected Hash but found %s.", "TODO"); // TODO klass.to_s
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(io));
         }
 
     } else {
@@ -299,7 +299,7 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 //    } else if(rb_respond_to(io, s_read)) {
 //        read_method = s_read;
 //    } else {
-//        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+//        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", rb_obj_classname(io));
 //    }
 //
 //    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
