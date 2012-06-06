@@ -3,9 +3,9 @@ require 'json'
 
 describe MessagePack do
   here = File.dirname(__FILE__)
-  CASES         = File.read("#{here}/cases.mpac")
+  CASES         = File.read("#{here}/cases.msg")
   CASES_JSON    = File.read("#{here}/cases.json")
-  CASES_COMPACT = File.read("#{here}/cases_compact.mpac")
+  CASES_COMPACT = File.read("#{here}/cases_compact.msg")
 
   it 'compare with json' do
     ms = []
