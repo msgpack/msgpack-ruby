@@ -57,6 +57,17 @@ static VALUE Packer_alloc(VALUE klass)
     return self;
 }
 
+static ID write_method_of(VALUE io)
+{
+    if(rb_respond_to(io, s_write)) {
+        return s_write;
+    } else if(rb_respond_to(io, s_append)) {
+        return s_append;
+    } else {
+        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
+    }
+}
+
 static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
 {
     if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
@@ -91,16 +102,7 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
     // TODO reference threshold
 
     if(io != Qnil) {
-        ID write_method;
-
-        if(rb_respond_to(io, s_write)) {
-            write_method = s_write;
-        } else if(rb_respond_to(io, s_append)) {
-            write_method = s_append;
-        } else {
-            rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
-        }
-
+        ID write_method = write_method_of(io);
         msgpack_packer_set_io(pk, io, write_method);
     }
 
@@ -238,15 +240,7 @@ VALUE MessagePack_Packer_create(int argc, VALUE* args)
         return self;
     }
 
-    ID write_method;
-
-    if(rb_respond_to(io, s_write)) {
-        write_method = s_write;
-    } else if(rb_respond_to(io, s_append)) {
-        write_method = s_append;
-    } else {
-        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", "TODO"); // TODO klass.to_s
-    }
+    ID write_method = write_method_of(io);
 
     VALUE self = Packer_alloc(cPacker);
     PACKER(self, pk);
@@ -254,9 +248,47 @@ VALUE MessagePack_Packer_create(int argc, VALUE* args)
     return self;
 }
 
-static VALUE MessagePack_Packer(VALUE self, VALUE arg)
+static VALUE MessagePack_Packer(VALUE mod, VALUE arg)
 {
     return MessagePack_Packer_create(1, &arg);
+}
+
+VALUE MessagePack_pack(int argc, VALUE* argv)
+{
+    VALUE v;
+    VALUE io = Qnil;
+    ID write_method;
+
+    switch(argc) {
+    case 2:
+        io = argv[1];
+        write_method = write_method_of(io);
+        /* pass-through */
+    case 1:
+        v = argv[0];
+        break;
+    default:
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..2)", argc);
+    }
+
+    VALUE self = Packer_alloc(cPacker);
+    PACKER(self, pk);
+
+    if(io != Qnil) {
+        msgpack_packer_set_io(pk, io, write_method);
+        msgpack_packer_write_value(pk, v);
+        Packer_flush(self);
+        return Qnil;
+
+    } else {
+        msgpack_packer_write_value(pk, v);
+        return msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
+    }
+}
+
+static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
+{
+    return MessagePack_pack(argc, argv);
 }
 
 VALUE MessagePack_Packer_module_init(VALUE mMessagePack)
@@ -290,6 +322,9 @@ VALUE MessagePack_Packer_module_init(VALUE mMessagePack)
 
     /* MessagePack::Packer(x) */
     rb_define_module_function(mMessagePack, "Packer", MessagePack_Packer, 1);
+
+    /* MessagePack.pack(x) */
+    rb_define_module_function(mMessagePack, "pack", MessagePack_pack_module_method, -1);
 
     return cPacker;
 }

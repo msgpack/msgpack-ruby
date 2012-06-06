@@ -20,77 +20,80 @@
 #include "packer.h"
 #include "packer_class.h"
 
-#define CREATE_PACKER(argc, argv, packer, pk) \
+#define ENSURE_PACKER(argc, argv, packer, pk) \
+    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) { \
+        return MessagePack_pack(1, &self); \
+    } \
     VALUE packer = MessagePack_Packer_create(argc, argv); \
     msgpack_packer_t *pk; \
     Data_Get_Struct(packer, msgpack_packer_t, pk);
 
 static VALUE NilClass_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_nil(pk);
     return packer;
 }
 
 static VALUE TrueClass_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_true(pk);
     return packer;
 }
 
 static VALUE FalseClass_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_false(pk);
     return packer;
 }
 
 static VALUE Fixnum_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_fixnum_value(pk, self);
     return packer;
 }
 
 static VALUE Bignum_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_bignum_value(pk, self);
     return packer;
 }
 
 static VALUE Float_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_float_value(pk, self);
     return packer;
 }
 
 static VALUE String_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_string_value(pk, self);
     return packer;
 }
 
 static VALUE Array_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_array_value(pk, self);
     return packer;
 }
 
 static VALUE Hash_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_hash_value(pk, self);
     return packer;
 }
 
 static VALUE Symbol_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
-    CREATE_PACKER(argc, argv, packer, pk);
+    ENSURE_PACKER(argc, argv, packer, pk);
     msgpack_packer_write_symbol_value(pk, self);
     return packer;
 }

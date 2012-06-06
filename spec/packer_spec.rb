@@ -73,6 +73,17 @@ describe Packer do
     packer.buffer.object_id.should == o1
   end
 
+  it 'to_msgpack returns String' do
+    nil.to_msgpack.class.should == String
+    true.to_msgpack.class.should == String
+    false.to_msgpack.class.should == String
+    1.to_msgpack.class.should == String
+    1.0.to_msgpack.class.should == String
+    "".to_msgpack.class.should == String
+    Hash.new.to_msgpack.class.should == String
+    Array.new.to_msgpack.class.should == String
+  end
+
   # TODO other methods
 end
 
