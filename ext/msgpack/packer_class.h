@@ -20,9 +20,11 @@
 
 #include "packer.h"
 
-VALUE MessagePack_Packer_module_init(VALUE mMessagePack);
+extern VALUE cMessagePack_Packer;
 
-VALUE MessagePack_Packer_create(int argc, VALUE* argv);
+void MessagePack_Packer_module_init(VALUE mMessagePack);
+
+//VALUE MessagePack_Packer_create(int argc, VALUE* argv);
 
 VALUE MessagePack_pack(int argc, VALUE* argv);
 

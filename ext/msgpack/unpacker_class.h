@@ -22,7 +22,7 @@
 
 VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack);
 
-VALUE MessagePack_Unpacker_create(int argc, VALUE* argv);
+//VALUE MessagePack_Unpacker_create(int argc, VALUE* argv);
 
 #endif
 
