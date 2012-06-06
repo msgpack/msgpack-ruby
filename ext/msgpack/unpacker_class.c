@@ -319,6 +319,7 @@ VALUE MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cUnpacker, "initialize", Unpacker_initialize, -1);
     rb_define_method(cUnpacker, "buffer", Unpacker_buffer, 0);
     rb_define_method(cUnpacker, "read", Unpacker_read, 0);
+    rb_define_alias(cMessagePack_Packer, "unpack", "read");
     rb_define_method(cUnpacker, "skip", Unpacker_skip, 0);
     rb_define_method(cUnpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cUnpacker, "read_array_header", Unpacker_read_array_header, 0);

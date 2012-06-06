@@ -306,6 +306,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "initialize", Packer_initialize, -1);
     rb_define_method(cMessagePack_Packer, "buffer", Packer_buffer, 0);
     rb_define_method(cMessagePack_Packer, "write", Packer_write, 1);
+    rb_define_alias(cMessagePack_Packer, "write", "pack");
     rb_define_method(cMessagePack_Packer, "write_nil", Packer_write_nil, 0);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
