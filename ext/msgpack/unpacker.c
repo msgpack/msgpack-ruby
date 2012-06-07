@@ -31,7 +31,7 @@ void msgpack_unpacker_init(msgpack_unpacker_t* uk)
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
     uk->io = Qnil;
-    uk->io_buffer = rb_str_buf_new(0);
+    uk->io_buffer = Qnil;
 
     uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_t));
     uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
@@ -69,14 +69,19 @@ void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
 /* read at least 1 byte */
 static size_t feed_buffer_from_io(msgpack_unpacker_t* uk)
 {
-    rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(MSGPACK_UNPACKER_IO_READ_SIZE), uk->io_buffer);
+    if(uk->io_buffer == Qnil) {
+        uk->io_buffer = rb_funcall(uk->io, uk->io_partial_read_method, 1, LONG2FIX(MSGPACK_UNPACKER_IO_READ_SIZE));
+        StringValue(uk->io_buffer);
+    } else {
+        rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(MSGPACK_UNPACKER_IO_READ_SIZE), uk->io_buffer);
+    }
 
     size_t len = RSTRING_LEN(uk->io_buffer);
     if(len == 0) {
         rb_raise(rb_eEOFError, "IO reached end of file");
     }
 
-    /* TODO zero-copy optimize */
+    /* TODO zero-copy optimize? */
     msgpack_buffer_append(UNPACKER_BUFFER_(uk), RSTRING_PTR(uk->io_buffer), len);
 
     return len;
@@ -172,8 +177,13 @@ static void read_all_data_from_io_to_string(msgpack_unpacker_t* uk, VALUE string
 {
     if(RSTRING_LEN(string) == 0) {
         rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(length), string);
-    } else {
-        rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(length), uk->io_buffer);
+    } else if(uk->io_buffer != Qnil) {
+        if(uk->io_buffer == Qnil) {
+            uk->io_buffer = rb_funcall(uk->io, uk->io_partial_read_method, 1, LONG2FIX(length));
+            StringValue(uk->io_buffer);
+        } else {
+            rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(length), uk->io_buffer);
+        }
         rb_str_buf_cat(string, (const void*)RSTRING_PTR(uk->io_buffer), RSTRING_LEN(uk->io_buffer));
     }
 }
@@ -202,7 +212,7 @@ static union msgpack_buffer_cast_block_t* read_cast_block(msgpack_unpacker_t* uk
 static int read_raw_body_cont(msgpack_unpacker_t* uk)
 {
     /* try zero-copy */
-    if(uk->reading_raw == Qnil || RSTRING_LEN(uk->reading_raw) == 0) {
+    if(uk->reading_raw == Qnil/* || RSTRING_LEN(uk->reading_raw) == 0*/) {
         VALUE string;
         if(msgpack_buffer_try_refer_string(UNPACKER_BUFFER_(uk), uk->reading_raw_remaining, &string)) {
             object_complete(uk, string);
