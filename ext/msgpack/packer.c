@@ -71,7 +71,7 @@ void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)
     }
 }
 
-int write_hash_foreach(VALUE key, VALUE value, VALUE pk_value)
+static int write_hash_foreach(VALUE key, VALUE value, VALUE pk_value)
 {
     if (key == Qundef) {
         return ST_CONTINUE;
