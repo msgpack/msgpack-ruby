@@ -23,7 +23,7 @@
 
 static ID s_write;
 
-static VALUE cBuffer;
+VALUE cMessagePack_Buffer;
 
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
@@ -74,7 +74,7 @@ static VALUE Buffer_initialize(VALUE self)
 VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
 {
     b->owner = owner;
-    return Data_Wrap_Struct(cBuffer, msgpack_buffer_mark, NULL, b);
+    return Data_Wrap_Struct(cMessagePack_Buffer, msgpack_buffer_mark, NULL, b);
 }
 
 
@@ -401,31 +401,29 @@ static VALUE Buffer_write_to(VALUE self, VALUE io)
     return Qnil;
 }
 
-VALUE MessagePack_Buffer_module_init(VALUE mMessagePack)
+void MessagePack_Buffer_module_init(VALUE mMessagePack)
 {
     s_write = rb_intern("write");
 
     msgpack_buffer_static_init();
 
-    cBuffer = rb_define_class_under(mMessagePack, "Buffer", rb_cObject);
+    cMessagePack_Buffer = rb_define_class_under(mMessagePack, "Buffer", rb_cObject);
 
-    rb_define_alloc_func(cBuffer, Buffer_alloc);
+    rb_define_alloc_func(cMessagePack_Buffer, Buffer_alloc);
 
-    rb_define_method(cBuffer, "initialize", Buffer_initialize, 0);
-    rb_define_method(cBuffer, "clear", Buffer_clear, 0);
-    rb_define_method(cBuffer, "size", Buffer_size, 0);
-    rb_define_method(cBuffer, "empty?", Buffer_empty_p, 0);
-    rb_define_method(cBuffer, "append", Buffer_append, 1);
-    rb_define_alias(cBuffer, "<<", "append");
-    rb_define_method(cBuffer, "skip", Buffer_skip, 1);
-    rb_define_method(cBuffer, "skip_all", Buffer_skip_all, 1);
-    rb_define_method(cBuffer, "read", Buffer_read, -1);
-    rb_define_method(cBuffer, "read_all", Buffer_read_all, -1);
-    rb_define_method(cBuffer, "write_to", Buffer_write_to, 1);
-    rb_define_method(cBuffer, "to_str", Buffer_to_str, 0);
-    rb_define_alias(cBuffer, "to_s", "to_str");
-    rb_define_method(cBuffer, "to_a", Buffer_to_a, 0);
-
-    return cBuffer;
+    rb_define_method(cMessagePack_Buffer, "initialize", Buffer_initialize, 0);
+    rb_define_method(cMessagePack_Buffer, "clear", Buffer_clear, 0);
+    rb_define_method(cMessagePack_Buffer, "size", Buffer_size, 0);
+    rb_define_method(cMessagePack_Buffer, "empty?", Buffer_empty_p, 0);
+    rb_define_method(cMessagePack_Buffer, "append", Buffer_append, 1);
+    rb_define_alias(cMessagePack_Buffer, "<<", "append");
+    rb_define_method(cMessagePack_Buffer, "skip", Buffer_skip, 1);
+    rb_define_method(cMessagePack_Buffer, "skip_all", Buffer_skip_all, 1);
+    rb_define_method(cMessagePack_Buffer, "read", Buffer_read, -1);
+    rb_define_method(cMessagePack_Buffer, "read_all", Buffer_read_all, -1);
+    rb_define_method(cMessagePack_Buffer, "write_to", Buffer_write_to, 1);
+    rb_define_method(cMessagePack_Buffer, "to_str", Buffer_to_str, 0);
+    rb_define_alias(cMessagePack_Buffer, "to_s", "to_str");
+    rb_define_method(cMessagePack_Buffer, "to_a", Buffer_to_a, 0);
 }
 

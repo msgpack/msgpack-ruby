@@ -20,7 +20,9 @@
 
 #include "buffer.h"
 
-VALUE MessagePack_Buffer_module_init(VALUE mMessagePack);
+extern VALUE cMessagePack_Buffer;
+
+void MessagePack_Buffer_module_init(VALUE mMessagePack);
 
 VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner);
 
