@@ -231,34 +231,6 @@ size_t msgpack_buffer_read(msgpack_buffer_t* b, char* buffer, size_t length)
     }
 }
 
-size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t length)
-{
-    size_t chunk_size = msgpack_buffer_top_readable_size(b);
-    if(chunk_size == 0) {
-        return 0;
-    }
-
-    size_t const length_orig = length;
-
-    while(true) {
-        if(length <= chunk_size) {
-            rb_str_buf_cat(string, b->read_buffer, length);
-
-            _msgpack_buffer_consumed(b, length);
-            return length;
-        }
-
-        rb_str_buf_cat(string, b->read_buffer, chunk_size);
-        length -= chunk_size;
-
-        if(!_msgpack_buffer_pop_chunk(b)) {
-            return length_orig - length;
-        }
-
-        chunk_size = msgpack_buffer_top_readable_size(b);
-    }
-}
-
 static VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c, size_t read_offset)
 {
     size_t sz = c->last - c->first - read_offset;
@@ -315,7 +287,7 @@ bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* 
     if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
             && msgpack_buffer_top_readable_size(b) >= length
 #ifdef DISABLE_STR_NEW_MOVE
-            && b->tail.mapped_string != NO_MAPPED_STRING
+            && b->head->mapped_string != NO_MAPPED_STRING
 #endif
             ) {
 
@@ -327,6 +299,54 @@ bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* 
     }
 
     return false;
+}
+
+size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t length)
+{
+    size_t chunk_size = msgpack_buffer_top_readable_size(b);
+    if(chunk_size == 0) {
+        return 0;
+    }
+
+#ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
+    /* optimize */
+    if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD &&
+            RSTRING_LEN(string) == 0 &&
+            length <= chunk_size
+#ifdef DISABLE_STR_NEW_MOVE
+            && b->head->mapped_string != NO_MAPPED_STRING
+#endif
+            ) {
+        size_t read_offset = b->read_buffer - b->head->first;
+        VALUE s = _msgpack_buffer_chunk_as_string(b->head, read_offset);
+        if(RSTRING_LEN(s) > length) {
+            s = rb_str_substr(s, 0, length);
+        }
+        rb_str_replace(string, s);
+        _msgpack_buffer_consumed(b, length);
+        return length;
+    }
+#endif
+
+    size_t const length_orig = length;
+
+    while(true) {
+        if(length <= chunk_size) {
+            rb_str_buf_cat(string, b->read_buffer, length);
+
+            _msgpack_buffer_consumed(b, length);
+            return length;
+        }
+
+        rb_str_buf_cat(string, b->read_buffer, chunk_size);
+        length -= chunk_size;
+
+        if(!_msgpack_buffer_pop_chunk(b)) {
+            return length_orig - length;
+        }
+
+        chunk_size = msgpack_buffer_top_readable_size(b);
+    }
 }
 
 VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b)
