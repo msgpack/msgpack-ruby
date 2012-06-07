@@ -216,7 +216,7 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
 {
     VALUE out = Qnil;
     bool length_spec = false;
-    unsigned long n = -1;
+    unsigned long n = 0;
 
     switch(argc) {
     case 2:
@@ -239,13 +239,14 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
 
     if(out != Qnil) {
         CHECK_STRING_TYPE(out);
-        rb_str_resize(out, 0);
     }
 
     /* do nothing */
     if(length_spec && n == 0) {
         if(out == Qnil) {
             out = rb_str_buf_new(0);
+        } else {
+            rb_str_resize(out, 0);
         }
         return out;
     }
@@ -263,14 +264,27 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
         if(sz == 0) {
             if(out == Qnil) {
                 out = rb_str_buf_new(0);
+            } else {
+                rb_str_resize(out, 0);
             }
             return out;
         }
         n = sz;
     }
 
+#ifndef DISABLE_BUFFER_READ_TO_S_OPTIMIZE
+    /* same as to_s; optimize */
+    if(sz == n && out == Qnil) {
+        VALUE str = msgpack_buffer_all_as_string(b);
+        msgpack_buffer_clear(b);
+        return str;
+    }
+#endif
+
     if(out == Qnil) {
         out = rb_str_buf_new(n);
+    } else {
+        rb_str_resize(out, 0);
     }
     msgpack_buffer_read_to_string(b, out, n);
 
@@ -312,13 +326,14 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
 
     if(out != Qnil) {
         CHECK_STRING_TYPE(out);
-        rb_str_resize(out, 0);
     }
 
     /* do nothing */
     if(length_spec && n == 0) {
         if(out == Qnil) {
             out = rb_str_buf_new(0);
+        } else {
+            rb_str_resize(out, 0);
         }
         return out;
     }
@@ -333,6 +348,8 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
             /* read zero or more bytes */
             if(out == Qnil) {
                 out = rb_str_buf_new(0);
+            } else {
+                rb_str_resize(out, 0);
             }
             return out;
         }
@@ -342,8 +359,19 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
         n = sz;
     }
 
+#ifndef DISABLE_BUFFER_READ_TO_S_OPTIMIZE
+    /* same as to_s; optimize */
+    if(sz == n && out == Qnil) {
+        VALUE str = msgpack_buffer_all_as_string(b);
+        msgpack_buffer_clear(b);
+        return str;
+    }
+#endif
+
     if(out == Qnil) {
         out = rb_str_buf_new(n);
+    } else {
+        rb_str_resize(out, 0);
     }
     msgpack_buffer_read_to_string(b, out, n);
 
