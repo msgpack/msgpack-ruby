@@ -467,12 +467,12 @@ static int read_primitive(msgpack_unpacker_t* uk)
             }
 
         default:
-            printf("invalid byte: %x\n", b);
+            //printf("invalid byte: %x\n", b);
             return PRIMITIVE_INVALID_BYTE;
         }
 
     SWITCH_RANGE_DEFAULT
-        printf("invalid byte: %x\n", b);
+        //printf("invalid byte: %x\n", b);
         return PRIMITIVE_INVALID_BYTE;
 
     SWITCH_RANGE_END

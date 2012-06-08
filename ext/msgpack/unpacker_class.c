@@ -255,7 +255,6 @@ static VALUE Unpacker_each(VALUE self)
             if(r == PRIMITIVE_EOF) {
                 return Qnil;
             }
-printf("error: %d\n", r);
             raise_unpacker_error(r);
         }
         rb_yield(msgpack_unpacker_get_last_object(uk));

@@ -60,6 +60,26 @@ describe Unpacker do
     unpacker.buffer.object_id.should == o1
   end
 
+  it 'raises level stack too deep error' do
+    packer = Packer.new
+    512.times do
+      packer.write_array_header(1)
+    end
+    packer.write(nil)
+
+    unpacker = Unpacker.new(packer.buffer)
+    lambda {
+      unpacker.read
+    }.should raise_error(MessagePack::StackError)
+  end
+
+  it 'raises invalid byte error' do
+    unpacker.feed("\xc6")
+    lambda {
+      unpacker.read
+    }.should raise_error(MessagePack::MalformedFormatError)
+  end
+
   it "gc mark" do
     obj = [1024, {["a","b"]=>["c","d"]}, ["e","f"], "d", 70000, 4.12, 1.5, 1.5, 1.5]
     raw = obj.to_msgpack.to_s * 4
