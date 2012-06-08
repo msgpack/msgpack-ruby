@@ -1,3 +1,4 @@
+# encoding: ascii-8bit
 require 'spec_helper'
 
 describe Buffer do
@@ -398,7 +399,7 @@ describe Buffer do
   end
 
   it 'random read/write' do
-    r = Random.new
+    r = Random.new#(0x7ae1a8b4042fd9d589281dbb081caf37)
     s = r.bytes(0)
     b = Buffer.new
 
@@ -417,7 +418,9 @@ describe Buffer do
         n = r.rand(1024*1400)
         ex = s.slice!(0, n)
         ex = nil if ex.empty?
-        b.read(n).should == ex
+        x = b.read(n)
+        x.size == ex.size if x != nil
+        x.should == ex
         b.size.should == s.size
       end
     }
