@@ -64,14 +64,14 @@ static ID get_write_method(VALUE io)
     } else if(rb_respond_to(io, s_append)) {
         return s_append;
     } else {
-        return -1;
+        return 0;
     }
 }
 
 static ID write_method_of(VALUE io)
 {
     ID m = get_write_method(io);
-    if(m == -1) {
+    if(m == 0) {
         rb_raise(rb_eArgError, "expected String or IO-like but found %s.", rb_obj_classname(io));
     }
     return m;

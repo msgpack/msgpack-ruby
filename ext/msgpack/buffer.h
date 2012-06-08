@@ -180,6 +180,9 @@ static inline void msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE strin
     /* if FL_ALL(string, FL_USER1|FL_USER3) == STR_ASSOC_P(string) returns true, rb_str_dup will copy the string */
     if(length >= MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD && !FL_ALL(string, FL_USER1|FL_USER3)) {
         VALUE mapped_string = rb_str_dup(string);
+#ifdef COMPAT_HAVE_ENCODING
+        ENCODING_SET(mapped_string, s_enc_ascii8bit);
+#endif
         _msgpack_buffer_append_reference(b, RSTRING_PTR(mapped_string), length, mapped_string);
     } else {
         msgpack_buffer_append(b, RSTRING_PTR(string), length);
