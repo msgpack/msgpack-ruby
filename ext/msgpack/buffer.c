@@ -18,8 +18,19 @@
 
 #include "buffer.h"
 
+#ifdef RUBY_VM
+#define HAVE_RB_STR_REPLACE
+#endif
+
+#ifndef HAVE_RB_STR_REPLACE
+static ID s_replace;
+#endif
+
 void msgpack_buffer_static_init()
 {
+#ifndef HAVE_RB_STR_REPLACE
+    s_replace = rb_intern("replace");
+#endif
     msgpack_pool_static_init_default();
 }
 
@@ -325,9 +336,9 @@ size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t l
         if(read_offset > 0 || RSTRING_LEN(s) - read_offset > length) {
             s = rb_str_substr(s, read_offset, length);
         }
-#ifndef RUBY_VM
+#ifndef HAVE_RB_STR_REPLACE
         /* TODO MRI 1.8 */
-        rb_funcall(string, rb_intern("replace"), 1, s);
+        rb_funcall(string, s_replace, 1, s);
 #else
         rb_str_replace(string, s);
 #endif

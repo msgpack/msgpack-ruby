@@ -36,14 +36,23 @@ extern VALUE s_enc_utf8_value;
 #endif
 
 
+/* Rubinius */
+#if defined(RUBINIUS)
+#define DISABLE_STR_NEW_MOVE
+#endif
+
+
 /* MRI 1.9 */
 #if defined(RUBY_VM)
 /* if FL_ALL(str, FL_USER1|FL_USER3) == STR_ASSOC_P(str) returns true, rb_str_dup will copy the string */
 #define STR_DUP_LIKELY_DOES_COPY(str) FL_ALL(str, FL_USER1|FL_USER3)
 
-/* MRI 1.8 and Rubinius */
+#elif defined(RUBINIUS)
+#define STR_DUP_LIKELY_DOES_COPY(str) (1)
+
 #else
-#define STR_DUP_LIKELY_DOES_COPY(str) !FL_TEST(str, ELTS_SHARED)
+/* MRI 1.8 */
+#define STR_DUP_LIKELY_DOES_COPY(str) (!FL_TEST(str, ELTS_SHARED))
 #endif
 
 
