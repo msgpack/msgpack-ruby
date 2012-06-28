@@ -84,6 +84,8 @@ static inline void msgpack_unpacker_set_io(msgpack_unpacker_t* uk, VALUE io, ID 
     uk->io_partial_read_method = io_partial_read_method;
 }
 
+void msgpack_unpacker_reset(msgpack_unpacker_t* uk);
+
 
 
 /* error codes */

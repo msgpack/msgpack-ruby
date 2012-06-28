@@ -62,6 +62,24 @@ void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
     rb_gc_mark(uk->buffer_ref);
 }
 
+void msgpack_unpacker_reset(msgpack_unpacker_t* uk)
+{
+    msgpack_buffer_clear(UNPACKER_BUFFER_(uk));
+
+    uk->head_byte = HEAD_BYTE_REQUIRED;
+
+    memset(uk->stack, 0, sizeof(msgpack_unpacker_t) * uk->stack_depth);
+    uk->stack_depth = 0;
+
+    uk->last_object = Qnil;
+    uk->reading_raw = Qnil;
+    uk->reading_raw_remaining = 0;
+    uk->io = Qnil;
+    uk->io_buffer = Qnil;
+    uk->io_partial_read_method = 0;
+    uk->buffer_ref = Qnil;
+}
+
 #ifndef MSGPACK_UNPACKER_IO_READ_SIZE
 #define MSGPACK_UNPACKER_IO_READ_SIZE (64*1024)
 #endif

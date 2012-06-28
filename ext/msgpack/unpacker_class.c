@@ -23,6 +23,8 @@
 static ID s_read;
 static ID s_readpartial;
 
+static msgpack_unpacker_t s_unpacker;
+
 VALUE cMessagePack_Unpacker;
 
 static VALUE eUnpackError;
@@ -89,7 +91,7 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 
     if(argc == 1) {
         VALUE v = argv[0];
-        if(rb_type(v) == RUBY_T_HASH) {
+        if(rb_type(v) == T_HASH) {
             options = v;
         } else {
             io = v;
@@ -98,7 +100,7 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
     } else if(argc == 2) {
         io = argv[0];
         options = argv[1];
-        if(rb_type(options) != RUBY_T_HASH) {
+        if(rb_type(options) != T_HASH) {
             rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(io));
         }
 
@@ -315,6 +317,7 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 VALUE MessagePack_unpack(int argc, VALUE* argv)
 {
     VALUE src;
+    ID read_method = 0;
 
     switch(argc) {
     case 1:
@@ -324,25 +327,32 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
     }
 
-    ID read_method = get_read_method(src);
-    if(read_method == 0) {
-        src = StringValue(src);
+    if(rb_type(src) != T_STRING) {
+        read_method = get_read_method(src);
+        if(read_method == 0) {
+            src = StringValue(src);
+        }
     }
 
-    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
-    UNPACKER(self, uk);
+    // TODO reuse pre-allocated instance?
+    //VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
+    //UNPACKER(self, uk);
+    msgpack_unpacker_reset(&s_unpacker);
 
     if(read_method == 0) {
-        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
+        // TODO change buffer reference threshold instead of calling _msgpack_buffer_append_reference
+        msgpack_buffer_append_string(UNPACKER_BUFFER_(&s_unpacker), src);
+        //_msgpack_buffer_append_reference(UNPACKER_BUFFER_(&s_unpacker), RSTRING_PTR(src), RSTRING_LEN(src), src);
     } else {
-        msgpack_unpacker_set_io(uk, src, read_method);
+        msgpack_unpacker_set_io(&s_unpacker, src, read_method);
     }
 
-    int r = msgpack_unpacker_read(uk, 0);
+    int r = msgpack_unpacker_read(&s_unpacker, 0);
     if(r < 0) {
         raise_unpacker_error(r);
     }
-    return msgpack_unpacker_get_last_object(uk);
+
+    return msgpack_unpacker_get_last_object(&s_unpacker);
 }
 
 static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
@@ -354,6 +364,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
     s_read = rb_intern("read");
     s_readpartial = rb_intern("readpartial");
+    msgpack_unpacker_init(&s_unpacker);
 
     cMessagePack_Unpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 

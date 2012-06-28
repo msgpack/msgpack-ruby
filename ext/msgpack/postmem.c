@@ -106,9 +106,11 @@ void msgpack_postmem_free(msgpack_postmem_t* pm,
 }
 
 #ifndef DISABLE_STR_NEW_MOVE
-/* note: this code is magical: */
 static VALUE rb_str_new_move(char* data, size_t length)
 {
+/* MRI 1.9 */
+#ifdef RUBY_VM
+/* note: this code is magical: */
     NEWOBJ(str, struct RString);
     OBJSETUP(str, rb_cString, T_STRING);
 
@@ -126,7 +128,23 @@ static VALUE rb_str_new_move(char* data, size_t length)
     OBJ_FREEZE(str);
 
     return (VALUE) str;
+
+/* MRI 1.8 */
+#else
+    NEWOBJ(str, struct RString);
+    OBJSETUP(str, rb_cString, T_STRING);
+
+    str->ptr = data;
+    str->len = length;
+    str->aux.capa = length;
+
+    /* this is safe. see msgpack_postmem_alloc() */
+    data[length] = '\0';
+
+    return (VALUE) str;
+#endif
 }
+
 #endif
 
 VALUE msgpack_postmem_move_to_string(msgpack_postmem_t* pm,

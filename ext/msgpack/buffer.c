@@ -325,7 +325,12 @@ size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t l
         if(read_offset > 0 || RSTRING_LEN(s) - read_offset > length) {
             s = rb_str_substr(s, read_offset, length);
         }
+#ifndef RUBY_VM
+        /* TODO MRI 1.8 */
+        rb_funcall(string, rb_intern("replace"), 1, s);
+#else
         rb_str_replace(string, s);
+#endif
         _msgpack_buffer_consumed(b, length);
         return length;
     }

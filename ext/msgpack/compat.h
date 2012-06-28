@@ -20,6 +20,12 @@
 
 #include "ruby.h"
 
+#if defined(HAVE_RUBY_ST_H)
+#include "ruby/st.h"  // ruby hash on Ruby 1.9
+#elif defined(HAVE_ST_H)
+#include "st.h"       // ruby hash on Ruby 1.8
+#endif
+
 #ifdef HAVE_RUBY_ENCODING_H
 #include "ruby/encoding.h"
 #define COMPAT_HAVE_ENCODING
@@ -29,10 +35,29 @@ extern int s_enc_usascii;
 extern VALUE s_enc_utf8_value;
 #endif
 
+
+/* MRI 1.9 */
+#if defined(RUBY_VM)
+/* if FL_ALL(str, FL_USER1|FL_USER3) == STR_ASSOC_P(str) returns true, rb_str_dup will copy the string */
+#define STR_DUP_LIKELY_DOES_COPY(str) FL_ALL(str, FL_USER1|FL_USER3)
+
+/* MRI 1.8 and Rubinius */
+#else
+#define STR_DUP_LIKELY_DOES_COPY(str) !FL_TEST(str, ELTS_SHARED)
+#endif
+
+
 /* MacRuby */
 #if defined(__MACRUBY__)
 #undef COMPAT_HAVE_ENCODING
 #endif
+
+
+/* MRI 1.8 */
+#ifndef SIZET2NUM
+#define SIZET2NUM(v) ULL2NUM(v)
+#endif
+
 
 /* MRI 1.9 */
 #if defined(RUBY_VM)

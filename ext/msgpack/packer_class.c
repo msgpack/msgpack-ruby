@@ -88,7 +88,7 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
 
     if(argc == 1) {
         VALUE v = argv[0];
-        if(rb_type(v) == RUBY_T_HASH) {
+        if(rb_type(v) == T_HASH) {
             options = v;
         } else {
             io = v;
@@ -97,7 +97,7 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
     } else if(argc == 2) {
         io = argv[0];
         options = argv[1];
-        if(rb_type(options) != RUBY_T_HASH) {
+        if(rb_type(options) != T_HASH) {
             rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(io));
         }
 

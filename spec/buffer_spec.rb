@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'random_compat'
 
 describe Buffer do
   EXAMPLES = {}

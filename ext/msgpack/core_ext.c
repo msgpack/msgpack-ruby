@@ -31,6 +31,7 @@ static inline VALUE delegete_to_pack(int argc, VALUE* argv, VALUE self)
         argv2[1] = argv[0];
         return MessagePack_pack(2, argv2);
     }
+    // FIXME
 }
 
 #define ENSURE_PACKER(argc, argv, packer, pk) \

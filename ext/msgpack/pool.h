@@ -102,6 +102,9 @@ static inline void* msgpack_pool_realloc(msgpack_pool_t* pl,
 static inline void msgpack_pool_free(msgpack_pool_t* pl,
         void* ptr, size_t min_size)
 {
+    if(ptr == NULL) {
+        return;
+    }
 #ifndef DISABLE_PREMEM
     if(min_size <= pl->premem.alloc_size) {
         if(msgpack_premem_free(&pl->premem, ptr)) {

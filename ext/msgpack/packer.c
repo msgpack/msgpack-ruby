@@ -104,34 +104,34 @@ static void _msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
 void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v)
 {
     switch(rb_type(v)) {
-    case RUBY_T_NIL:
+    case T_NIL:
         msgpack_packer_write_nil(pk);
         break;
-    case RUBY_T_TRUE:
+    case T_TRUE:
         msgpack_packer_write_true(pk);
         break;
-    case RUBY_T_FALSE:
+    case T_FALSE:
         msgpack_packer_write_false(pk);
         break;
-    case RUBY_T_FIXNUM:
+    case T_FIXNUM:
         msgpack_packer_write_fixnum_value(pk, v);
         break;
-    case RUBY_T_SYMBOL:
+    case T_SYMBOL:
         msgpack_packer_write_symbol_value(pk, v);
         break;
-    case RUBY_T_STRING:
+    case T_STRING:
         msgpack_packer_write_string_value(pk, v);
         break;
-    case RUBY_T_ARRAY:
+    case T_ARRAY:
         msgpack_packer_write_array_value(pk, v);
         break;
-    case RUBY_T_HASH:
+    case T_HASH:
         msgpack_packer_write_hash_value(pk, v);
         break;
-    case RUBY_T_BIGNUM:
+    case T_BIGNUM:
         msgpack_packer_write_bignum_value(pk, v);
         break;
-    case RUBY_T_FLOAT:
+    case T_FLOAT:
         msgpack_packer_write_float_value(pk, v);
         break;
     default:
