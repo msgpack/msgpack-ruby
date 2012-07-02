@@ -292,7 +292,7 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
     }
-    msgpack_packer_write_raw_header(pk, (unsigned int)len);  /* FIXME check len < uint32_t max */
+    msgpack_packer_write_raw_header(pk, (unsigned int)len);
     msgpack_buffer_append(PACKER_BUFFER_(pk), name, len);
 }
 

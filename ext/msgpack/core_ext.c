@@ -30,8 +30,9 @@ static inline VALUE delegete_to_pack(int argc, VALUE* argv, VALUE self)
         argv2[0] = self;
         argv2[1] = argv[0];
         return MessagePack_pack(2, argv2);
+    } else {
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
     }
-    // FIXME
 }
 
 #define ENSURE_PACKER(argc, argv, packer, pk) \

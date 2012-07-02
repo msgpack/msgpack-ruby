@@ -113,9 +113,16 @@ typedef unsigned __int64 uint64_t;
 
 #endif
 
-/* FIXME arm */
+
 #define _msgpack_be_float(x) _msgpack_be32(x)
+
+#if defined(__arm__) && !(__ARM_EABI__)
+/* ARM OABI */
+#define _msgpack_be_double(x) \
+    ( (((x) & 0xFFFFFFFFUL) << 32UL) | ((x) >> 32UL) )
+#else
 #define _msgpack_be_double(x) _msgpack_be64(x)
+#endif
 
 /* _msgpack_bsp32 */
 #if defined(_MSC_VER)

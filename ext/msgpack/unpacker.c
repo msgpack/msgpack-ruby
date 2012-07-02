@@ -328,7 +328,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xca:  // float
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                /* TODO arm */
                 cb->u32 = _msgpack_be_float(cb->u32);
                 return object_complete(uk, rb_float_new(cb->f));
             }
@@ -336,7 +335,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xcb:  // double
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 8);
-                /* TODO arm */
                 cb->u64 = _msgpack_be_double(cb->u64);
                 return object_complete(uk, rb_float_new(cb->d));
             }
