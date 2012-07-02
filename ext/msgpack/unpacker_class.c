@@ -183,24 +183,26 @@ static VALUE Unpacker_read_array_header(VALUE self)
 {
     UNPACKER(self, uk);
 
-    long r = msgpack_unpacker_read_array_header(uk);
+    uint32_t size;
+    int r = msgpack_unpacker_read_array_header(uk, &size);
     if(r < 0) {
-        raise_unpacker_error((int)r);
+        raise_unpacker_error(r);
     }
 
-    return LONG2NUM(r);
+    return LONG2NUM(size);
 }
 
 static VALUE Unpacker_read_map_header(VALUE self)
 {
     UNPACKER(self, uk);
 
-    long r = msgpack_unpacker_read_map_header(uk);
+    uint32_t size;
+    int r = msgpack_unpacker_read_map_header(uk, &size);
     if(r < 0) {
         raise_unpacker_error((int)r);
     }
 
-    return LONG2NUM(r);
+    return LONG2NUM(size);
 }
 
 static VALUE Unpacker_peek_next_type(VALUE self)

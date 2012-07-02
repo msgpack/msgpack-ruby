@@ -55,7 +55,6 @@ void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t requir
 
 void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)
 {
-    /* FIXME check len < uint32_t max */
     size_t len = RARRAY_LEN(v);
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?
@@ -84,7 +83,6 @@ static int write_hash_foreach(VALUE key, VALUE value, VALUE pk_value)
 
 void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 {
-    /* FIXME check len < uint32_t max */
     size_t len =  RHASH_SIZE(v);
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?

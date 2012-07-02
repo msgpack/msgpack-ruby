@@ -206,20 +206,6 @@ static void read_all_data_from_io_to_string(msgpack_unpacker_t* uk, VALUE string
     }
 }
 
-static union msgpack_buffer_cast_block_t* read_cast_block(msgpack_unpacker_t* uk, int n)
-{
-    /* TODO */
-    if(uk->io == Qnil) {
-        return NULL;
-    }
-    union msgpack_buffer_cast_block_t* cb;
-    do {
-        feed_buffer_from_io(uk);
-        cb = msgpack_buffer_read_cast_block(UNPACKER_BUFFER_(uk), n);
-    } while(cb == NULL);
-    return cb;
-}
-
 
 #define READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, n) \
     union msgpack_buffer_cast_block_t* cb = msgpack_buffer_read_cast_block(UNPACKER_BUFFER_(uk), n); \
@@ -496,64 +482,58 @@ static int read_primitive(msgpack_unpacker_t* uk)
     SWITCH_RANGE_END
 }
 
-long msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk)
+int msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk, uint32_t* result_size)
 {
     int b = get_head_byte(uk);
     if(b < 0) {
         return b;
     }
 
-    long count;
-
     if(0x90 < b && b < 0x9f) {
-        count = b & 0x0f;
+        *result_size = b & 0x0f;
 
     } else if(b == 0xdc) {
         /* array 16 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-        count = _msgpack_be16(cb->u16);
+        *result_size = _msgpack_be16(cb->u16);
 
     } else if(b == 0xdd) {
         /* array 32 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-        /* FIXME u32 may be bigger than long */
-        count = _msgpack_be32(cb->u32);
+        *result_size = _msgpack_be32(cb->u32);
 
     } else {
         return PRIMITIVE_UNEXPECTED_TYPE;
     }
 
-    return count;
+    return 0;
 }
 
-long msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk)
+int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk, uint32_t* result_size)
 {
     int b = get_head_byte(uk);
     if(b < 0) {
         return b;
     }
 
-    long count;
-
     if(0x80 < b && b < 0x8f) {
-        count = b & 0x0f;
+        *result_size = b & 0x0f;
 
     } else if(b == 0xde) {
         /* map 16 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-        count = _msgpack_be16(cb->u16);
+        *result_size = _msgpack_be16(cb->u16);
 
     } else if(b == 0xdf) {
         /* map 32 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-        /* FIXME u32 may be bigger than long */
-        count = _msgpack_be32(cb->u32);
+        *result_size = _msgpack_be32(cb->u32);
 
     } else {
         return PRIMITIVE_UNEXPECTED_TYPE;
     }
 
-    return count;
+    return 0;
 }
 
 int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
