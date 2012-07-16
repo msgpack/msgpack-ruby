@@ -13,5 +13,7 @@ if ENV['GC_STRESS']
   GC.stress = true
 end
 
+require 'msgpack'
+
 include MessagePack
 

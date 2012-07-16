@@ -8,14 +8,7 @@ require 'rdoc/task'
 
 RSpec::Core::RakeTask.new(:spec) do |t|
   t.rspec_opts = ["-c", "-f progress"]
-  if RUBY_PLATFORM =~ /java/
-    t.rspec_opts << "-r./ext/java/msgpack"
-  else
-    t.rspec_opts << "-r./ext/msgpack/msgpack"
-  end
   t.rspec_opts << "-Ilib"
-  t.rspec_opts << "-r./lib/msgpack/version"
-  t.rspec_opts << "-r./spec/spec_helper.rb"
   t.pattern = 'spec/**/*_spec.rb'
   t.verbose = true
 end
