@@ -251,6 +251,8 @@ static VALUE Unpacker_skip_nil(VALUE self)
  * Read a header of an array and returns its size.
  * It converts a serialized array into a stream of elements.
  *
+ * If the serialized object is not an array, it raises MessagePack::TypeError which extends MessagePack::UnpackError.
+ *
  */
 static VALUE Unpacker_read_array_header(VALUE self)
 {
@@ -273,6 +275,8 @@ static VALUE Unpacker_read_array_header(VALUE self)
  *
  * Read a header of an map and returns its size.
  * It converts a serialized map into a stream of key-value pairs.
+ *
+ * If the serialized object is not a map, it raises MessagePack::TypeError which extends MessagePack::UnpackError.
  *
  */
 static VALUE Unpacker_read_map_header(VALUE self)
@@ -337,6 +341,27 @@ static VALUE Unpacker_feed(VALUE self, VALUE data)
     return self;
 }
 
+static VALUE Unpacker_each_impl(VALUE self)
+{
+    UNPACKER(self, uk);
+
+    while(true) {
+        int r = msgpack_unpacker_read(uk, 0);
+        if(r < 0) {
+            if(r == PRIMITIVE_EOF) {
+                return Qnil;
+            }
+            raise_unpacker_error(r);
+        }
+        rb_yield(msgpack_unpacker_get_last_object(uk));
+    }
+}
+
+static VALUE Unpacker_rescue_EOFError(VALUE self)
+{
+    return Qnil;
+}
+
 /**
  * Document-method: each
  *
@@ -359,16 +384,13 @@ static VALUE Unpacker_each(VALUE self)
     RETURN_ENUMERATOR(self, 0, 0);
 #endif
 
-    // FIXME catch EOFError if internal io is set
-    while(true) {
-        int r = msgpack_unpacker_read(uk, 0);
-        if(r < 0) {
-            if(r == PRIMITIVE_EOF) {
-                return Qnil;
-            }
-            raise_unpacker_error(r);
-        }
-        rb_yield(msgpack_unpacker_get_last_object(uk));
+    if(uk->io == Qnil) {
+	    return Unpacker_each_impl(self);
+    } else {
+        /* rescue EOFError if io is set */
+	    return rb_rescue2(Unpacker_each_impl, self,
+			    Unpacker_rescue_EOFError, self,
+                rb_eEOFError, NULL);
     }
 }
 
