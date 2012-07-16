@@ -21,9 +21,21 @@
 #include "buffer.h"
 #include "buffer_class.h"
 
-static ID s_write;
+/*
+ * Document-class: MessagePack::Buffer
+ *
+ * MessagePack::Buffer is a byte-array buffer which is intended to handle
+ * large binary objects efficiently. It suppresses copying data when appending
+ * or reading them if it's possible. (this technique is know as Copy-on-Write)
+ *
+ */
+#if 0
+VALUE mMessagePack = rb_define_module("MessagePack");  /* dummy for rdoc */
+#endif
 
 VALUE cMessagePack_Buffer;
+
+static ID s_write;
 
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
@@ -57,10 +69,7 @@ static VALUE Buffer_alloc(VALUE klass)
 }
 
 /**
- * Document-method: MessagePack::Buffer#initialize
- *
- * call-seq:
- *   MessagePack::Buffer.new
+ * Document-method: initialize
  *
  * Creates an instance of the MessagePack::Buffer.
  *
@@ -79,10 +88,12 @@ VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
 
 
 /**
- * Document-method: MessagePack::Buffer#clear
+ * Document-method: clear
  *
  * call-seq:
- *   MessagePack::Buffer#clear
+ *   clear
+ *
+ * Makes the buffer empty
  *
  */
 static VALUE Buffer_clear(VALUE self)
@@ -93,11 +104,12 @@ static VALUE Buffer_clear(VALUE self)
 }
 
 /**
- * Document-method: MessagePack::Buffer#size
+ * Document-method: size
  *
  * call-seq:
- *   MessagePack::Buffer#size
+ *   size -> integer
  *
+ * Returns size of the buffer.
  *
  */
 static VALUE Buffer_size(VALUE self)
@@ -108,11 +120,13 @@ static VALUE Buffer_size(VALUE self)
 }
 
 /**
- * Document-method: MessagePack::Buffer#empty?
+ * Document-method: empty?
  *
  * call-seq:
- *   MessagePack::Buffer#empty?
+ *   empty? -> bool
  *
+ * Returns _true_ if the buffer is empty.
+ * This method is slightly faster than _size_.
  *
  */
 static VALUE Buffer_empty_p(VALUE self)
@@ -126,11 +140,12 @@ static VALUE Buffer_empty_p(VALUE self)
 }
 
 /**
- * Document-method: MessagePack::Buffer#append
+ * Document-method: append
  *
  * call-seq:
- *   MessagePack::Buffer#append(string_or_buffer)
+ *   append(string) -> self
  *
+ * Appends the given string to the buffer.
  *
  */
 static VALUE Buffer_append(VALUE self, VALUE string_or_buffer)
@@ -148,11 +163,16 @@ static VALUE Buffer_append(VALUE self, VALUE string_or_buffer)
 }
 
 /**
- * Document-method: MessagePack::Buffer#skip
+ * Document-method: skip
  *
  * call-seq:
- *   MessagePack::Buffer#skip(n)
+ *   skip(n) -> integer
  *
+ * Consumes _n_ bytes from the head of the buffer.
+ *
+ * If the size of the buffer is less than _n_, it skips all of data in the buffer and returns integer less than _n_.
+ *
+ * If _n_ is 0, it does nothing and returns _0_.
  *
  */
 static VALUE Buffer_skip(VALUE self, VALUE n)
@@ -178,11 +198,16 @@ static VALUE Buffer_skip(VALUE self, VALUE n)
 }
 
 /**
- * Document-method: MessagePack::Buffer#skip_all
+ * Document-method: skip_all
  *
  * call-seq:
- *   MessagePack::Buffer#skip_all(n)
+ *   skip_all(n) -> self
  *
+ * Consumes _n_ bytes from the head of the buffer.
+ *
+ * If the size of the buffer is less than _n_, it does nothing and raises EOFError.
+ *
+ * If _n_ is 0, it does nothing.
  *
  */
 static VALUE Buffer_skip_all(VALUE self, VALUE n)
@@ -205,11 +230,20 @@ static VALUE Buffer_skip_all(VALUE self, VALUE n)
 }
 
 /**
- * Document-method: MessagePack::Buffer#read_all
+ * Document-method: read_all
  *
  * call-seq:
- *   MessagePack::Buffer#read_all(n=nil, out='')
+ *   read_all -> string
+ *   read_all(n) -> string
+ *   read_all(n, string) -> string
  *
+ * Consumes _n_ bytes from the head of the buffer and returns consumed data.
+ *
+ * If the size of the buffer is less than _n_, it does nothing and raises EOFError.
+ *
+ * If _n_ is 0, it does nothing and returns an empty string.
+ *
+ * If the optional _string_ argument is given, the content of the string will be replaced with the consumed data.
  *
  */
 static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
@@ -292,11 +326,20 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
 }
 
 /**
- * Document-method: MessagePack::Buffer#read
+ * Document-method: read
  *
  * call-seq:
- *   MessagePack::Buffer#read(n=nil, out='')
+ *   read -> string
+ *   read(n) -> string
+ *   read(n, string) -> string
  *
+ * Consumes _n_ bytes from the head of the buffer and returns consumed data.
+ *
+ * If the size of the buffer is less than _n_, it reads all of data in the buffer.
+ *
+ * If _n_ is 0, it does nothing and returns an empty string.
+ *
+ * If the optional _string_ argument is given, the content of the string will be replaced with the consumed data.
  *
  */
 static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
@@ -379,11 +422,14 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
 }
 
 /**
- * Document-method: MessagePack::Buffer#to_str
+ * Document-method: to_str
  *
  * call-seq:
- *   MessagePack::Buffer#to_str
+ *   to_str -> string
  *
+ * Returns all data in the buffer as a string.
+ *
+ * Destructive update to the returned string does NOT effect the buffer.
  *
  */
 static VALUE Buffer_to_str(VALUE self)
@@ -393,11 +439,15 @@ static VALUE Buffer_to_str(VALUE self)
 }
 
 /**
- * Document-method: MessagePack::Buffer#to_a
+ * Document-method: to_a
  *
  * call-seq:
- *   MessagePack::Buffer#to_a
+ *   to_a -> array_of_strings
  *
+ * Returns content of the buffer as an array of strings.
+ *
+ * This method is sometimes faster than to_s because the internal
+ * structure of the buffer is a queue of buffer chunks.
  *
  */
 static VALUE Buffer_to_a(VALUE self)
@@ -407,11 +457,12 @@ static VALUE Buffer_to_a(VALUE self)
 }
 
 /**
- * Document-method: MessagePack::Buffer#write_to
+ * Document-method: write_to
  *
  * call-seq:
- *   MessagePack::Buffer#write_to(io)
+ *   write_to(io)
  *
+ * Writes all of data in the buffer into the given IO.
  *
  */
 static VALUE Buffer_write_to(VALUE self, VALUE io)

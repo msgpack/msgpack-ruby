@@ -20,12 +20,23 @@
 #include "unpacker_class.h"
 #include "buffer_class.h"
 
+/*
+ * Document-class: MessagePack::Unpacker
+ *
+ * MessagePack::Unpacker is an interface to deserialize objects from MessagePack::Buffer.
+ * It has an internal buffer which is an instance of the MessagePack::Buffer.
+ *
+ */
+#if 0
+VALUE mMessagePack = rb_define_module("MessagePack");  /* dummy for rdoc */
+#endif
+
+VALUE cMessagePack_Unpacker;
+
 static ID s_read;
 static ID s_readpartial;
 
 static msgpack_unpacker_t s_unpacker;
-
-VALUE cMessagePack_Unpacker;
 
 static VALUE eUnpackError;
 static VALUE eMalformedFormatError;
@@ -80,6 +91,21 @@ static ID read_method_of(VALUE io)
     return m;
 }
 
+/**
+ * Document-method: initialize
+ *
+ * call-seq:
+ *   initialize(options={})
+ *   initialize(io, options={})
+ *
+ * Creates an instance of the MessagePack::Unpacker.
+ *
+ * If the optional _io_ argument is given, it reads data from the IO to fill the internal buffer.
+ * _io_ must respond to _readpartial(length,string)_ or _read(length,string)_ method.
+ *
+ * Currently, no options are supported.
+ *
+ */
 static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 {
     if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
@@ -134,12 +160,30 @@ static void raise_unpacker_error(int r)
     }
 }
 
+/**
+ * Document-method: buffer
+ *
+ * call-seq:
+ *   buffer -> #<MessagePack::Buffer>
+ *
+ * Returns internal buffer.
+ *
+ */
 static VALUE Unpacker_buffer(VALUE self)
 {
     UNPACKER(self, uk);
     return uk->buffer_ref;
 }
 
+/**
+ * Document-method: read
+ *
+ * call-seq:
+ *   read -> object
+ *
+ * Deserializes an object and returns it.
+ *
+ */
 static VALUE Unpacker_read(VALUE self)
 {
     UNPACKER(self, uk);
@@ -152,6 +196,15 @@ static VALUE Unpacker_read(VALUE self)
     return msgpack_unpacker_get_last_object(uk);
 }
 
+/**
+ * Document-method: skip
+ *
+ * call-seq:
+ *   skip
+ *
+ * Deserializes an object and ignores it. This method is faster than _read_.
+ *
+ */
 static VALUE Unpacker_skip(VALUE self)
 {
     UNPACKER(self, uk);
@@ -164,6 +217,16 @@ static VALUE Unpacker_skip(VALUE self)
     return Qnil;
 }
 
+/**
+ * Document-method: skip_nil
+ *
+ * call-seq:
+ *   skip_nil -> bool
+ *
+ * Deserializes a nil value if it exists and returns _true_.
+ * Otherwise, if a byte exists but the byte is not nil value or the internal buffer is empty, returns _false_.
+ *
+ */
 static VALUE Unpacker_skip_nil(VALUE self)
 {
     UNPACKER(self, uk);
@@ -179,6 +242,16 @@ static VALUE Unpacker_skip_nil(VALUE self)
     return Qfalse;
 }
 
+/**
+ * Document-method: read_array_header
+ *
+ * call-seq:
+ *   read_array_header -> integer
+ *
+ * Read a header of an array and returns its size.
+ * It converts a serialized array into a stream of elements.
+ *
+ */
 static VALUE Unpacker_read_array_header(VALUE self)
 {
     UNPACKER(self, uk);
@@ -192,6 +265,16 @@ static VALUE Unpacker_read_array_header(VALUE self)
     return LONG2NUM(size);
 }
 
+/**
+ * Document-method: read_map_header
+ *
+ * call-seq:
+ *   read_map_header -> integer
+ *
+ * Read a header of an map and returns its size.
+ * It converts a serialized map into a stream of key-value pairs.
+ *
+ */
 static VALUE Unpacker_read_map_header(VALUE self)
 {
     UNPACKER(self, uk);
@@ -234,6 +317,15 @@ static VALUE Unpacker_peek_next_type(VALUE self)
     }
 }
 
+/**
+ * Document-method: feed
+ *
+ * call-seq:
+ *   feed(string) -> self
+ *
+ * Appends data into the internal buffer.
+ *
+ */
 static VALUE Unpacker_feed(VALUE self, VALUE data)
 {
     UNPACKER(self, uk);
@@ -242,9 +334,23 @@ static VALUE Unpacker_feed(VALUE self, VALUE data)
 
     msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), data);
 
-    return Qnil;
+    return self;
 }
 
+/**
+ * Document-method: each
+ *
+ * call-seq:
+ *   each {|object| }
+ *
+ * Repeats to deserialize objects.
+ *
+ * It repeats until the internal buffer does not include any complete objects.
+ *
+ * If the internal IO was set, it reads data from the IO when the buffer becomes empty,
+ * and returns when the IO raised EOFError.
+ *
+ */
 static VALUE Unpacker_each(VALUE self)
 {
     UNPACKER(self, uk);
@@ -253,6 +359,7 @@ static VALUE Unpacker_each(VALUE self)
     RETURN_ENUMERATOR(self, 0, 0);
 #endif
 
+    // FIXME catch EOFError if internal io is set
     while(true) {
         int r = msgpack_unpacker_read(uk, 0);
         if(r < 0) {
@@ -265,6 +372,16 @@ static VALUE Unpacker_each(VALUE self)
     }
 }
 
+/**
+ * Document-method: feed_each
+ *
+ * call-seq:
+ *   feed_each(string) {|object| }
+ *
+ * Appends data into the internal buffer and repeats to deserialize objects.
+ * Same as _feed(string).each {|object }_.
+ *
+ */
 static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 {
     // TODO optimize
@@ -354,9 +471,24 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         raise_unpacker_error(r);
     }
 
+    // FIXME raise if extra bytes follow
+
     return msgpack_unpacker_get_last_object(&s_unpacker);
 }
 
+/**
+ * call-seq:
+ *   unapck(string) -> object
+ *   load(string) -> object
+ *   unapck(io) -> object
+ *   load(io) -> object
+ *
+ * Deserializes an object from the given _src_ and returns the deserialized object.
+ *
+ * If the given argument is not a string, it assumes the argument is IO and reads data from the IO.
+ * _io_ must respond to _readpartial(length,string)_ or _read(length,string)_ method.
+ *
+ */
 static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
 {
     return MessagePack_unpack(argc, argv);
@@ -395,5 +527,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 
     /* MessagePack.unpack(x) */
     rb_define_module_function(mMessagePack, "unpack", MessagePack_unpack_module_method, -1);
+    rb_define_module_function(mMessagePack, "load", MessagePack_unpack_module_method, -1);
 }
 

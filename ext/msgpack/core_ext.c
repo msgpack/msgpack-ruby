@@ -43,6 +43,13 @@ static inline VALUE delegete_to_pack(int argc, VALUE* argv, VALUE self)
     msgpack_packer_t *pk; \
     Data_Get_Struct(packer, msgpack_packer_t, pk);
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE NilClass_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -50,6 +57,13 @@ static VALUE NilClass_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE TrueClass_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -57,6 +71,13 @@ static VALUE TrueClass_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE FalseClass_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -64,6 +85,13 @@ static VALUE FalseClass_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE Fixnum_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -71,6 +99,13 @@ static VALUE Fixnum_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE Bignum_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -78,6 +113,13 @@ static VALUE Bignum_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE Float_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -85,6 +127,13 @@ static VALUE Float_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE String_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -92,6 +141,13 @@ static VALUE String_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE Array_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -99,6 +155,13 @@ static VALUE Array_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE Hash_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -106,6 +169,13 @@ static VALUE Hash_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+/**
+ * call-seq:
+ *   to_msgpack([io]) -> string
+ *
+ * Same as MessagePack.to_msgpack(self[, io]).
+ *
+ */
 static VALUE Symbol_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);

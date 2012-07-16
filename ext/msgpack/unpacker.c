@@ -193,6 +193,7 @@ static inline bool msgpack_unpacker_stack_is_empty(msgpack_unpacker_t* uk)
 
 static void read_all_data_from_io_to_string(msgpack_unpacker_t* uk, VALUE string, size_t length)
 {
+    // FIXME catch EOFError
     if(RSTRING_LEN(string) == 0) {
         rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(length), string);
     } else if(uk->io_buffer != Qnil) {
