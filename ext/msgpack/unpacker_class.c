@@ -180,6 +180,7 @@ static VALUE Unpacker_buffer(VALUE self)
  *
  * call-seq:
  *   read -> object
+ *   unpack -> object
  *
  * Deserializes an object and returns it.
  *
@@ -507,7 +508,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
  *
  * Deserializes an object from the given _src_ and returns the deserialized object.
  *
- * If the given argument is not a string, it assumes the argument is IO and reads data from the IO.
+ * If the given argument is not a string, it assumes the argument is an IO and reads data from the IO.
  * _io_ must respond to _readpartial(length,string)_ or _read(length,string)_ method.
  *
  */
@@ -524,6 +525,9 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 
     cMessagePack_Unpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
+    VALUE mMessagePack_nodoc = mMessagePack_nodoc;  /* for rdoc */
+    VALUE cMessagePack_Unpacker_nodoc = cMessagePack_Unpacker;  /* for rdoc */
+
     eUnpackError = rb_define_class_under(mMessagePack, "UnpackError", rb_eStandardError);
     eMalformedFormatError = rb_define_class_under(mMessagePack, "MalformedFormatError", eUnpackError);
     eStackError = rb_define_class_under(mMessagePack, "StackError", eUnpackError);
@@ -534,7 +538,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "initialize", Unpacker_initialize, -1);
     rb_define_method(cMessagePack_Unpacker, "buffer", Unpacker_buffer, 0);
     rb_define_method(cMessagePack_Unpacker, "read", Unpacker_read, 0);
-    rb_define_alias(cMessagePack_Unpacker, "unpack", "read");
+    rb_define_alias(cMessagePack_Unpacker_nodoc, "unpack", "read");
     rb_define_method(cMessagePack_Unpacker, "skip", Unpacker_skip, 0);
     rb_define_method(cMessagePack_Unpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cMessagePack_Unpacker, "read_array_header", Unpacker_read_array_header, 0);
@@ -549,6 +553,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 
     /* MessagePack.unpack(x) */
     rb_define_module_function(mMessagePack, "unpack", MessagePack_unpack_module_method, -1);
-    rb_define_module_function(mMessagePack, "load", MessagePack_unpack_module_method, -1);
+    rb_define_module_function(mMessagePack_nodoc, "load", MessagePack_unpack_module_method, -1);
 }
 
