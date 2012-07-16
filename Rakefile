@@ -4,7 +4,7 @@ Bundler::GemHelper.install_tasks
 
 require 'rspec/core'
 require 'rspec/core/rake_task'
-#require 'rdoc/task'
+require 'rdoc/task'
 
 RSpec::Core::RakeTask.new(:spec) do |t|
   t.rspec_opts = ["-c", "-f progress"]
@@ -28,15 +28,15 @@ task :coverage do |t|
   Rake::Task["spec"].invoke
 end
 
-#desc 'Generate RDoc'
-#RDoc::Task.new(:rdoc) do |rdoc|
-#  rdoc.rdoc_dir = 'rdoc'
-#  rdoc.title = 'MessagePack for Ruby'
-#  rdoc.options << '--line-numbers' << '--inline-source'
-#  rdoc.rdoc_files.include('README')
-#  rdoc.rdoc_files.include('lib/**/*.rb')
-#  rdoc.rdoc_files.include('ext/**/*.c')
-#end
+desc 'Generate RDoc'
+RDoc::Task.new(:rdoc) do |rdoc|
+  rdoc.rdoc_dir = 'doc'
+  rdoc.title = 'MessagePack for Ruby'
+  rdoc.options << '--line-numbers' << '--inline-source'
+  rdoc.rdoc_files.include('README.rdoc')
+  rdoc.rdoc_files.include('lib/**/*.rb')
+  rdoc.rdoc_files.include('ext/msgpack/**/*.c')
+end
 
 def create_gemspec(platform, extra_globs, remove_globs)
   spec = eval(File.read('msgpack.gemspec'))
