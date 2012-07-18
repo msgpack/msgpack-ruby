@@ -501,9 +501,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
 
 /**
  * call-seq:
- *   unapck(string) -> object
  *   load(string) -> object
- *   unapck(io) -> object
  *   load(io) -> object
  *
  * Deserializes an object from the given _src_ and returns the deserialized object.
@@ -511,6 +509,18 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
  * If the given argument is not a string, it assumes the argument is an IO and reads data from the IO.
  * _io_ must respond to _readpartial(length,string)_ or _read(length,string)_ method.
  *
+ */
+static VALUE MessagePack_load_module_method(int argc, VALUE* argv, VALUE mod)
+{
+    return MessagePack_unpack(argc, argv);
+}
+
+/**
+ * call-seq:
+ *   unapck(string) -> object
+ *   unapck(io) -> object
+ *
+ * Alias of load
  */
 static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
 {
@@ -525,12 +535,24 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 
     cMessagePack_Unpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
-    VALUE mMessagePack_nodoc = mMessagePack_nodoc;  /* for rdoc */
-    VALUE cMessagePack_Unpacker_nodoc = cMessagePack_Unpacker;  /* for rdoc */
-
+    /**
+     * TODO rdoc comments
+     */
     eUnpackError = rb_define_class_under(mMessagePack, "UnpackError", rb_eStandardError);
+
+    /**
+     * TODO rdoc comments
+     */
     eMalformedFormatError = rb_define_class_under(mMessagePack, "MalformedFormatError", eUnpackError);
+
+    /**
+     * TODO rdoc comments
+     */
     eStackError = rb_define_class_under(mMessagePack, "StackError", eUnpackError);
+
+    /**
+     * TODO rdoc comments
+     */
     eTypeError = rb_define_class_under(mMessagePack, "TypeError", rb_eStandardError);
 
     rb_define_alloc_func(cMessagePack_Unpacker, Unpacker_alloc);
@@ -538,7 +560,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "initialize", Unpacker_initialize, -1);
     rb_define_method(cMessagePack_Unpacker, "buffer", Unpacker_buffer, 0);
     rb_define_method(cMessagePack_Unpacker, "read", Unpacker_read, 0);
-    rb_define_alias(cMessagePack_Unpacker_nodoc, "unpack", "read");
+    rb_define_alias(cMessagePack_Unpacker, "unpack", "read");
     rb_define_method(cMessagePack_Unpacker, "skip", Unpacker_skip, 0);
     rb_define_method(cMessagePack_Unpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cMessagePack_Unpacker, "read_array_header", Unpacker_read_array_header, 0);
@@ -552,7 +574,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     //rb_define_module_function(mMessagePack, "Unpacker", MessagePack_Unpacker, 1);
 
     /* MessagePack.unpack(x) */
+    rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);
     rb_define_module_function(mMessagePack, "unpack", MessagePack_unpack_module_method, -1);
-    rb_define_module_function(mMessagePack_nodoc, "load", MessagePack_unpack_module_method, -1);
 }
 

@@ -489,8 +489,6 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
 
     cMessagePack_Buffer = rb_define_class_under(mMessagePack, "Buffer", rb_cObject);
 
-    VALUE cMessagePack_Buffer_nodoc = cMessagePack_Buffer;  /* for rdoc */
-
     rb_define_alloc_func(cMessagePack_Buffer, Buffer_alloc);
 
     rb_define_method(cMessagePack_Buffer, "initialize", Buffer_initialize, 0);
@@ -498,7 +496,7 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Buffer, "size", Buffer_size, 0);
     rb_define_method(cMessagePack_Buffer, "empty?", Buffer_empty_p, 0);
     rb_define_method(cMessagePack_Buffer, "append", Buffer_append, 1);
-    rb_define_alias(cMessagePack_Buffer_nodoc, "<<", "append");
+    rb_define_alias(cMessagePack_Buffer, "<<", "append");
     rb_define_method(cMessagePack_Buffer, "skip", Buffer_skip, 1);
     rb_define_method(cMessagePack_Buffer, "skip_all", Buffer_skip_all, 1);
     rb_define_method(cMessagePack_Buffer, "read", Buffer_read, -1);

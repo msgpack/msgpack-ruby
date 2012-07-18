@@ -4,7 +4,7 @@ Bundler::GemHelper.install_tasks
 
 require 'rspec/core'
 require 'rspec/core/rake_task'
-require 'rdoc/task'
+require 'yard'
 
 RSpec::Core::RakeTask.new(:spec) do |t|
   t.rspec_opts = ["-c", "-f progress"]
@@ -21,14 +21,11 @@ task :coverage do |t|
   Rake::Task["spec"].invoke
 end
 
-desc 'Generate RDoc'
-RDoc::Task.new(:rdoc) do |rdoc|
-  rdoc.rdoc_dir = 'doc'
-  rdoc.title = 'MessagePack for Ruby'
-  rdoc.options << '--line-numbers' << '--inline-source'
-  rdoc.rdoc_files.include('README.rdoc')
-  rdoc.rdoc_files.include('lib/**/*.rb')
-  rdoc.rdoc_files.include('ext/msgpack/**/*.c')
+desc 'Generate YARD document'
+YARD::Rake::YardocTask.new(:doc) do |t|
+  t.files   = ['ext/msgpack/**/*.c','lib/**/*.rb']
+  t.options = []
+  t.options << '--debug' << '--verbose' if $trace
 end
 
 def create_gemspec(platform, extra_globs, remove_globs)

@@ -443,9 +443,7 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 
 /**
  * call-seq:
- *   pack(obj) -> string
  *   dump(obj) -> string
- *   pack(obj, io) -> nil
  *   dump(obj, io) -> nil
  *
  * Serializes the given _object_ and returns the serialized data as a string.
@@ -453,6 +451,18 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
  * If the optional _io_ argument is given, it writes serialzied objects into the IO and returns nil.
  * _io_ must respond to _readpartial(length,string)_ or _read(length,string)_ method.
  *
+ */
+static VALUE MessagePack_dump_module_method(int argc, VALUE* argv, VALUE mod)
+{
+    return MessagePack_pack(argc, argv);
+}
+
+/**
+ * call-seq:
+ *   pack(obj) -> string
+ *   pack(obj, io) -> nil
+ *
+ * Alias of dump
  */
 static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
 {
@@ -467,15 +477,12 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
 
     cMessagePack_Packer = rb_define_class_under(mMessagePack, "Packer", rb_cObject);
 
-    VALUE mMessagePack_nodoc = mMessagePack_nodoc;  /* for rdoc */
-    VALUE cMessagePack_Packer_nodoc = cMessagePack_Packer;  /* for rdoc */
-
     rb_define_alloc_func(cMessagePack_Packer, Packer_alloc);
 
     rb_define_method(cMessagePack_Packer, "initialize", Packer_initialize, -1);
     rb_define_method(cMessagePack_Packer, "buffer", Packer_buffer, 0);
     rb_define_method(cMessagePack_Packer, "write", Packer_write, 1);
-    rb_define_alias(cMessagePack_Packer_nodoc, "pack", "write");
+    rb_define_alias(cMessagePack_Packer, "pack", "write");
     rb_define_method(cMessagePack_Packer, "write_nil", Packer_write_nil, 0);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
@@ -497,6 +504,6 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
 
     /* MessagePack.pack(x) */
     rb_define_module_function(mMessagePack, "pack", MessagePack_pack_module_method, -1);
-    rb_define_module_function(mMessagePack_nodoc, "dump", MessagePack_pack_module_method, -1);
+    rb_define_module_function(mMessagePack, "dump", MessagePack_dump_module_method, -1);
 }
 
