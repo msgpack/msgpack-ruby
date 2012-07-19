@@ -412,50 +412,6 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
     return Unpacker_each(self);
 }
 
-//VALUE MessagePack_Unpacker_create(int argc, VALUE* argv)
-//{
-//    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
-//        return Unpacker_alloc(cMessagePack_Unpacker);
-//    }
-//
-//    if(argc != 1) {
-//        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
-//    }
-//    VALUE io = argv[0];
-//
-//    VALUE klass = rb_class_of(io);
-//    if(klass == cMessagePack_Unpacker) {
-//        return io;
-//    }
-//
-//    if(klass == rb_cString) {
-//        VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
-//        UNPACKER(self, uk);
-//        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), io);
-//        return self;
-//    }
-//
-//    ID read_method;
-//
-//    if(rb_respond_to(io, s_readpartial)) {
-//        read_method = s_readpartial;
-//    } else if(rb_respond_to(io, s_read)) {
-//        read_method = s_read;
-//    } else {
-//        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", rb_obj_classname(io));
-//    }
-//
-//    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
-//    UNPACKER(self, uk);
-//    msgpack_unpacker_set_io(uk, io, read_method);
-//    return self;
-//}
-//
-//static VALUE MessagePack_Unpacker(VALUE mod, VALUE arg)
-//{
-//    return MessagePack_Unpacker_create(1, &arg);
-//}
-
 VALUE MessagePack_unpack(int argc, VALUE* argv)
 {
     VALUE src;
@@ -569,9 +525,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
-
-    /* MessagePack::Unpacker(x) */
-    //rb_define_module_function(mMessagePack, "Unpacker", MessagePack_Unpacker, 1);
 
     /* MessagePack.unpack(x) */
     rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);

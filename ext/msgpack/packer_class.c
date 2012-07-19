@@ -370,42 +370,6 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 //    return self;
 //}
 
-//VALUE MessagePack_Packer_create(int argc, VALUE* args)
-//{
-//    if(argc == 0 || (argc == 1 && args[0] == Qnil)) {
-//        return Packer_alloc(cMessagePack_Packer);
-//    }
-//
-//    if(argc != 1) {
-//        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
-//    }
-//    VALUE io = args[0];
-//
-//    VALUE klass = rb_class_of(io);
-//    if(klass == cMessagePack_Packer) {
-//        return io;
-//    }
-//
-//    if(klass == rb_cString) {
-//        VALUE self = Packer_alloc(cMessagePack_Packer);
-//        PACKER(self, pk);
-//        msgpack_buffer_append_string(PACKER_BUFFER_(pk), io);
-//        return self;
-//    }
-//
-//    ID write_method = write_method_of(io);
-//
-//    VALUE self = Packer_alloc(cMessagePack_Packer);
-//    PACKER(self, pk);
-//    msgpack_packer_set_io(pk, io, write_method);
-//    return self;
-//}
-
-//static VALUE MessagePack_Packer(VALUE mod, VALUE arg)
-//{
-//    return MessagePack_Packer_create(1, &arg);
-//}
-
 VALUE MessagePack_pack(int argc, VALUE* argv)
 {
     VALUE v;
@@ -498,9 +462,6 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "to_a", Packer_to_a, 0);
     //rb_define_method(cMessagePack_Packer, "append", Packer_append, 1);
     //rb_define_alias(cMessagePack_Packer, "<<", "append");
-
-    /* MessagePack::Packer(x) */
-    //rb_define_module_function(mMessagePack, "Packer", MessagePack_Packer, 1);
 
     /* MessagePack.pack(x) */
     rb_define_module_function(mMessagePack, "pack", MessagePack_pack_module_method, -1);
