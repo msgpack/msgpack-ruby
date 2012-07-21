@@ -432,7 +432,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         }
     }
 
-    // TODO reuse pre-allocated instance?
+    // TODO is reusing pre-allocated instance valid?
     //VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
     //UNPACKER(self, uk);
     msgpack_unpacker_reset(&s_unpacker);
@@ -450,7 +450,10 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         raise_unpacker_error(r);
     }
 
-    // FIXME raise if extra bytes follow
+    /* raise if extra bytes follow */
+    if(msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(&s_unpacker)) >= 0) {
+        rb_raise(eMalformedFormatError, "extra bytes follow after a deserialized object");
+    }
 
     return msgpack_unpacker_get_last_object(&s_unpacker);
 }
