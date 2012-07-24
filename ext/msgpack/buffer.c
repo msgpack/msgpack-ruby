@@ -302,16 +302,16 @@ bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* 
     if(msgpack_buffer_top_readable_size(b) < length) {
         return false;
     }
-    if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
-#ifdef DISABLE_STR_NEW_MOVE
-            && b->head->mapped_string != NO_MAPPED_STRING
-#endif
-            ) {
-        size_t read_offset = b->read_buffer - b->head->first;
-        *dest = _msgpack_buffer_chunk_as_string(b, b->head, read_offset);
-    } else {
-        *dest = rb_str_new(b->head->first, length);
-    }
+//    if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
+//#ifdef DISABLE_STR_NEW_MOVE
+//            && b->head->mapped_string != NO_MAPPED_STRING
+//#endif
+//            ) {
+//        size_t read_offset = b->read_buffer - b->head->first;
+//        *dest = _msgpack_buffer_chunk_as_string(b, b->head, read_offset);
+//    } else {
+        *dest = rb_str_new(b->read_buffer, length);
+//    }
 
     _msgpack_buffer_consumed(b, length);
     return true;
