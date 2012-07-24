@@ -39,6 +39,9 @@ static ID s_to_msgpack;
 static ID s_append;
 static ID s_write;
 
+//static VALUE s_packer_value;
+//static msgpack_packer_t* s_packer;
+
 #define PACKER(from, name) \
     msgpack_packer_t* name; \
     Data_Get_Struct(from, msgpack_packer_t, name); \
@@ -392,6 +395,7 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 
     VALUE self = Packer_alloc(cMessagePack_Packer);
     PACKER(self, pk);
+    //msgpack_packer_reset(s_packer);
 
     if(io != Qnil) {
         msgpack_packer_set_io(pk, io, write_method);
@@ -462,6 +466,10 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "to_a", Packer_to_a, 0);
     //rb_define_method(cMessagePack_Packer, "append", Packer_append, 1);
     //rb_define_alias(cMessagePack_Packer, "<<", "append");
+
+    //s_packer_value = Packer_alloc(cMessagePack_Packer);
+    //rb_gc_register_address(&s_packer_value);
+    //Data_Get_Struct(s_packer_value, msgpack_packer_t, s_packer);
 
     /* MessagePack.pack(x) */
     rb_define_module_function(mMessagePack, "pack", MessagePack_pack_module_method, -1);

@@ -215,12 +215,12 @@ static void read_all_data_from_io_to_string(msgpack_unpacker_t* uk, VALUE string
 
 static int read_raw_body_cont(msgpack_unpacker_t* uk)
 {
-    /* try zero-copy */
+    /* try optimized read */
     if(uk->reading_raw == Qnil/* || RSTRING_LEN(uk->reading_raw) == 0*/) {
         VALUE string;
         if(msgpack_buffer_try_refer_string(UNPACKER_BUFFER_(uk), uk->reading_raw_remaining, &string)) {
             object_complete(uk, string);
-            uk->reading_raw = Qnil;
+            //uk->reading_raw = Qnil;
             uk->reading_raw_remaining = 0;
             return PRIMITIVE_OBJECT_COMPLETE;
         }

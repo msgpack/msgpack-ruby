@@ -36,7 +36,8 @@ VALUE cMessagePack_Unpacker;
 static ID s_read;
 static ID s_readpartial;
 
-static msgpack_unpacker_t s_unpacker;
+static VALUE s_unpacker_value;
+static msgpack_unpacker_t* s_unpacker;
 
 static VALUE eUnpackError;
 static VALUE eMalformedFormatError;
@@ -432,30 +433,29 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         }
     }
 
-    // TODO is reusing pre-allocated instance valid?
     //VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
     //UNPACKER(self, uk);
-    msgpack_unpacker_reset(&s_unpacker);
+    msgpack_unpacker_reset(s_unpacker);
 
     if(read_method == 0) {
         // TODO change buffer reference threshold instead of calling _msgpack_buffer_append_reference
-        msgpack_buffer_append_string(UNPACKER_BUFFER_(&s_unpacker), src);
-        //_msgpack_buffer_append_reference(UNPACKER_BUFFER_(&s_unpacker), RSTRING_PTR(src), RSTRING_LEN(src), src);
+        msgpack_buffer_append_string(UNPACKER_BUFFER_(s_unpacker), src);
+        //_msgpack_buffer_append_reference(UNPACKER_BUFFER_(s_unpacker), RSTRING_PTR(src), RSTRING_LEN(src), src);
     } else {
-        msgpack_unpacker_set_io(&s_unpacker, src, read_method);
+        msgpack_unpacker_set_io(s_unpacker, src, read_method);
     }
 
-    int r = msgpack_unpacker_read(&s_unpacker, 0);
+    int r = msgpack_unpacker_read(s_unpacker, 0);
     if(r < 0) {
         raise_unpacker_error(r);
     }
 
     /* raise if extra bytes follow */
-    if(msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(&s_unpacker)) >= 0) {
+    if(msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(s_unpacker)) > 0) {
         rb_raise(eMalformedFormatError, "extra bytes follow after a deserialized object");
     }
 
-    return msgpack_unpacker_get_last_object(&s_unpacker);
+    return msgpack_unpacker_get_last_object(s_unpacker);
 }
 
 /**
@@ -490,7 +490,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
     s_read = rb_intern("read");
     s_readpartial = rb_intern("readpartial");
-    msgpack_unpacker_init(&s_unpacker);
 
     cMessagePack_Unpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
@@ -528,6 +527,10 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
+
+    s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
+    rb_gc_register_address(&s_unpacker_value);
+    Data_Get_Struct(s_unpacker_value, msgpack_unpacker_t, s_unpacker);
 
     /* MessagePack.unpack(x) */
     rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);
