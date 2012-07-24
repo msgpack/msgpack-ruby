@@ -310,7 +310,14 @@ bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* 
 //        size_t read_offset = b->read_buffer - b->head->first;
 //        *dest = _msgpack_buffer_chunk_as_string(b, b->head, read_offset);
 //    } else {
+//#ifndef DISABLE_STR_NEW_MOVE
         *dest = rb_str_new(b->read_buffer, length);
+//#else
+//        size_t allocated_size;
+//        void* mem = msgpack_postmem_alloc(&msgpack_pool_static_instance.postmem, length, &allocated_size);
+//        memcpy(mem, b->read_buffer, length);
+//        *dest = msgpack_postmem_move_to_string(&msgpack_pool_static_instance.postmem, mem, length);
+//#endif
 //    }
 
     _msgpack_buffer_consumed(b, length);
