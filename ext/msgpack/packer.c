@@ -41,6 +41,15 @@ void msgpack_packer_mark(msgpack_packer_t* pk)
     rb_gc_mark(pk->buffer_ref);
 }
 
+void msgpack_packer_reset(msgpack_packer_t* pk)
+{
+    msgpack_buffer_clear(PACKER_BUFFER_(pk));
+
+    pk->io = Qnil;
+    pk->io_write_all_method = 0;
+    pk->buffer_ref = Qnil;
+}
+
 
 void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t require)
 {

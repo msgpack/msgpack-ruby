@@ -60,6 +60,8 @@ static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_w
     pk->io_write_all_method = io_write_all_method;
 }
 
+void msgpack_packer_reset(msgpack_packer_t* pk);
+
 
 void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t require);
 
