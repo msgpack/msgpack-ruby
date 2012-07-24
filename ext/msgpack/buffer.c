@@ -299,20 +299,22 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
 
 bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest)
 {
+    if(msgpack_buffer_top_readable_size(b) < length) {
+        return false;
+    }
     if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
-            && msgpack_buffer_top_readable_size(b) >= length
 #ifdef DISABLE_STR_NEW_MOVE
             && b->head->mapped_string != NO_MAPPED_STRING
 #endif
             ) {
         size_t read_offset = b->read_buffer - b->head->first;
         *dest = _msgpack_buffer_chunk_as_string(b, b->head, read_offset);
-
-        _msgpack_buffer_consumed(b, length);
-        return true;
+    } else {
+        *dest = rb_str_new(b->head->first, length);
     }
 
-    return false;
+    _msgpack_buffer_consumed(b, length);
+    return true;
 }
 
 size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t length)
