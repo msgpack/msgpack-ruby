@@ -297,11 +297,12 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
     return rb_str_dup(string);
 }
 
-bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest)
-{
-    if(msgpack_buffer_top_readable_size(b) < length) {
-        return false;
-    }
+//bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest)
+//{
+//    if(msgpack_buffer_top_readable_size(b) < length) {
+//        return false;
+//    }
+//
 //    if(length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
 //#ifdef DISABLE_STR_NEW_MOVE
 //            && b->head->mapped_string != NO_MAPPED_STRING
@@ -310,18 +311,33 @@ bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* 
 //        size_t read_offset = b->read_buffer - b->head->first;
 //        *dest = _msgpack_buffer_chunk_as_string(b, b->head, read_offset);
 //    } else {
-//#ifndef DISABLE_STR_NEW_MOVE
-        *dest = rb_str_new(b->read_buffer, length);
-//#else
-//        size_t allocated_size;
-//        void* mem = msgpack_postmem_alloc(&msgpack_pool_static_instance.postmem, length, &allocated_size);
-//        memcpy(mem, b->read_buffer, length);
-//        *dest = msgpack_postmem_move_to_string(&msgpack_pool_static_instance.postmem, mem, length);
-//#endif
+//        *dest = rb_str_new(b->read_buffer, length);
 //    }
+//
+//    _msgpack_buffer_consumed(b, length);
+//    return true;
+//}
+
+
+VALUE msgpack_buffer_refer_top_string(msgpack_buffer_t* b, size_t length, bool prefer_zerocopy)
+{
+    VALUE result;
+
+    if(prefer_zerocopy &&
+            length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
+#ifdef DISABLE_STR_NEW_MOVE
+            && b->head->mapped_string != NO_MAPPED_STRING
+#endif
+            ) {
+        size_t read_offset = b->read_buffer - b->head->first;
+        result = _msgpack_buffer_chunk_as_string(b, b->head, read_offset);
+    } else {
+        result = rb_str_new(b->read_buffer, length);
+    }
 
     _msgpack_buffer_consumed(b, length);
-    return true;
+
+    return result;
 }
 
 size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t length)

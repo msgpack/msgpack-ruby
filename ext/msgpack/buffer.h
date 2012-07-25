@@ -270,7 +270,9 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b);
 
 VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b);
 
-bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest);
+//bool msgpack_buffer_try_refer_string(msgpack_buffer_t* b, size_t length, VALUE* dest);
+
+VALUE msgpack_buffer_refer_top_string(msgpack_buffer_t* b, size_t length, bool prefer_zerocopy);
 
 
 void msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method);

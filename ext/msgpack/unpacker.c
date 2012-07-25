@@ -217,14 +217,27 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
 {
     /* try optimized read */
     if(uk->reading_raw == Qnil/* || RSTRING_LEN(uk->reading_raw) == 0*/) {
-        VALUE string;
-        if(msgpack_buffer_try_refer_string(UNPACKER_BUFFER_(uk), uk->reading_raw_remaining, &string)) {
+        size_t length = uk->reading_raw_remaining;
+        if(length < msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
+            bool prefer_zerocopy = true;
+            if(uk->stack_depth > 0) {
+                /* don't use zerocopy for hash keys because rb_hash_aset freezes keys and causes copying */
+                msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
+                if(top->type == STACK_TYPE_MAP && top->count % 2 == 0) {
+                    prefer_zerocopy = false;
+                }
+            }
+            VALUE string = msgpack_buffer_refer_top_string(UNPACKER_BUFFER_(uk), length, prefer_zerocopy);
             object_complete(uk, string);
-            //uk->reading_raw = Qnil;
             uk->reading_raw_remaining = 0;
             return PRIMITIVE_OBJECT_COMPLETE;
         }
-        uk->reading_raw = rb_str_buf_new(uk->reading_raw_remaining);
+        //if(msgpack_buffer_try_refer_string(UNPACKER_BUFFER_(uk), length, &string)) {
+        //    object_complete(uk, string);
+        //    uk->reading_raw_remaining = 0;
+        //    return PRIMITIVE_OBJECT_COMPLETE;
+        //}
+        uk->reading_raw = rb_str_buf_new(length);
     }
 
     if(uk->io != Qnil) {
