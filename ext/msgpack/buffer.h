@@ -26,12 +26,20 @@
 #define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD (1024*1024)
 #endif
 
+#ifndef MSGPACK_BUFFER_STRING_REFERENCE_MINIMUM_SIZE
+#define MSGPACK_BUFFER_STRING_REFERENCE_MINIMUM_SIZE 256
+#endif
+
 #ifndef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
 #define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD 256
 #endif
 
-#if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD <= 191
-#error MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD must be > RSTRING_EMBED_LEN_MAX which is 95 or 191
+#if MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD <= 23
+#error MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD must be > RSTRING_EMBED_LEN_MAX which is 11 or 23
+#endif
+
+#if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD <= 23
+#error MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD must be > RSTRING_EMBED_LEN_MAX which is 11 or 23
 #endif
 
 #define NO_MAPPED_STRING ((VALUE)0)
@@ -101,6 +109,8 @@ struct msgpack_buffer_t {
 
     union msgpack_buffer_cast_block_t cast_block;
 
+    size_t append_reference_threshold;
+
     VALUE owner;
 };
 
@@ -118,6 +128,15 @@ void msgpack_buffer_destroy(msgpack_buffer_t* b);
 void msgpack_buffer_mark(msgpack_buffer_t* b);
 
 void msgpack_buffer_clear(msgpack_buffer_t* b);
+
+static inline void msgpack_buffer_set_append_reference_threshold(msgpack_buffer_t* b, size_t length)
+{
+    if(length < MSGPACK_BUFFER_STRING_REFERENCE_MINIMUM_SIZE) {
+        b->append_reference_threshold = MSGPACK_BUFFER_STRING_REFERENCE_MINIMUM_SIZE;
+    } else {
+        b->append_reference_threshold = length;
+    }
+}
 
 
 /*
@@ -177,7 +196,7 @@ void _msgpack_buffer_append_reference(msgpack_buffer_t* b, const char* data, siz
 static inline void msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE string)
 {
     size_t length = RSTRING_LEN(string);
-    if(length >= MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD && !STR_DUP_LIKELY_DOES_COPY(string)) {
+    if(length >= b->append_reference_threshold && !STR_DUP_LIKELY_DOES_COPY(string)) {
         VALUE mapped_string = rb_str_dup(string);
 #ifdef COMPAT_HAVE_ENCODING
         ENCODING_SET(mapped_string, s_enc_ascii8bit);

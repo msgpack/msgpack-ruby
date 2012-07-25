@@ -438,9 +438,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
     msgpack_unpacker_reset(s_unpacker);
 
     if(read_method == 0) {
-        // TODO change buffer reference threshold instead of calling _msgpack_buffer_append_reference
         msgpack_buffer_append_string(UNPACKER_BUFFER_(s_unpacker), src);
-        //_msgpack_buffer_append_reference(UNPACKER_BUFFER_(s_unpacker), RSTRING_PTR(src), RSTRING_LEN(src), src);
     } else {
         msgpack_unpacker_set_io(s_unpacker, src, read_method);
     }
@@ -531,6 +529,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
     rb_gc_register_address(&s_unpacker_value);
     Data_Get_Struct(s_unpacker_value, msgpack_unpacker_t, s_unpacker);
+    msgpack_buffer_set_append_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);  /* always prefer reference */
 
     /* MessagePack.unpack(x) */
     rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);
