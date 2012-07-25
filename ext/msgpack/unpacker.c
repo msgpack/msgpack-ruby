@@ -219,15 +219,15 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
     if(uk->reading_raw == Qnil/* || RSTRING_LEN(uk->reading_raw) == 0*/) {
         size_t length = uk->reading_raw_remaining;
         if(length < msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
-            bool prefer_zerocopy = true;
+            bool suppress_reference = false;
             if(uk->stack_depth > 0) {
                 /* don't use zerocopy for hash keys because rb_hash_aset freezes keys and causes copying */
                 msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
                 if(top->type == STACK_TYPE_MAP && top->count % 2 == 0) {
-                    prefer_zerocopy = false;
+                    suppress_reference = true;
                 }
             }
-            VALUE string = msgpack_buffer_refer_top_string(UNPACKER_BUFFER_(uk), length, prefer_zerocopy);
+            VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, suppress_reference);
             object_complete(uk, string);
             uk->reading_raw_remaining = 0;
             return PRIMITIVE_OBJECT_COMPLETE;
