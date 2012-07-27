@@ -36,8 +36,8 @@ extern VALUE s_enc_utf8_value;
 #endif
 
 
-/* Rubinius */
-#if defined(RUBINIUS)
+/* Rubinius and JRuby */
+#if defined(RUBINIUS) || defined(JRUBY)
 #define DISABLE_STR_NEW_MOVE
 #endif
 
@@ -47,7 +47,8 @@ extern VALUE s_enc_utf8_value;
 /* if FL_ALL(str, FL_USER1|FL_USER3) == STR_ASSOC_P(str) returns true, rb_str_dup will copy the string */
 #define STR_DUP_LIKELY_DOES_COPY(str) FL_ALL(str, FL_USER1|FL_USER3)
 
-#elif defined(RUBINIUS)
+/* Rubinius and JRuby */
+#elif defined(RUBINIUS) || defined(JRUBY)
 #define STR_DUP_LIKELY_DOES_COPY(str) (1)
 
 #else

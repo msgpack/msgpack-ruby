@@ -67,11 +67,11 @@ task :default => :gem
 
 desc "Create gem package"
 task "gem" do
-  if RUBY_PLATFORM =~ /java/
-    Rake::Task["gem:java"].invoke
-  else
+  #if RUBY_PLATFORM =~ /java/
+  #  Rake::Task["gem:java"].invoke
+  #else
     create_gem(nil, ["lib/msgpack/**/*.{so,bundle}"], ["ext/**/*"])
-  end
+  #end
 end
 
 desc "Create precompiled gem package"
@@ -107,44 +107,44 @@ task "gem:build" do
   end
 end
 
-task "gem:java" do
-  Rake::Task["compile:java"].invoke
-
-  begin
-    FileUtils.mkdir_p 'lib/msgpack/java'
-    FileUtils.cp Dir["ext/java/*.jar"], "lib/"
-    FileUtils.cp "ext/java/msgpack.jar", "lib/msgpack"
-
-    create_gem('java', [], ["ext/msgpack/**/*"])
-  ensure
-    FileUtils.rm_rf "ext/java/build"
-    FileUtils.rm_rf "lib/msgpack/java"
-    FileUtils.rm_rf Dir["lib/*.jar"]
-  end
-end
+#task "gem:java" do
+#  Rake::Task["compile:java"].invoke
+#
+#  begin
+#    FileUtils.mkdir_p 'lib/msgpack/java'
+#    FileUtils.cp Dir["ext/java/*.jar"], "lib/"
+#    FileUtils.cp "ext/java/msgpack.jar", "lib/msgpack"
+#
+#    create_gem('java', [], ["ext/msgpack/**/*"])
+#  ensure
+#    FileUtils.rm_rf "ext/java/build"
+#    FileUtils.rm_rf "lib/msgpack/java"
+#    FileUtils.rm_rf Dir["lib/*.jar"]
+#  end
+#end
 
 task "compile" do
-  if RUBY_PLATFORM =~ /java/
-    Rake::Task["compile:java"].invoke
-  else
+  #if RUBY_PLATFORM =~ /java/
+  #  Rake::Task["compile:java"].invoke
+  #else
     ruby = 'ruby'  # TODO use self
     run_command "cd ext/msgpack && '#{ruby}' extconf.rb && make clean && make"
-  end
+  #end
 end
 
-task "compile:java" do
-  Dir.chdir('ext/java')
-  begin
-    jruby_home = RbConfig::CONFIG['prefix']
-    classpath = ["#{jruby_home}/lib/jruby.jar"] + Dir['*.jar']
-    files = Dir['msgpack/**/*.java']
-
-    FileUtils.rm_rf "ext/java/build"
-    FileUtils.mkdir_p 'build'
-    run_command "javac -cp '#{classpath.join(':')}' -d build #{files.join(' ')}"
-    run_command "jar cvf msgpack.jar -C build/ ."
-  ensure
-    Dir.chdir('../..')
-  end
-end
+#task "compile:java" do
+#  Dir.chdir('ext/java')
+#  begin
+#    jruby_home = RbConfig::CONFIG['prefix']
+#    classpath = ["#{jruby_home}/lib/jruby.jar"] + Dir['*.jar']
+#    files = Dir['msgpack/**/*.java']
+#
+#    FileUtils.rm_rf "ext/java/build"
+#    FileUtils.mkdir_p 'build'
+#    run_command "javac -cp '#{classpath.join(':')}' -d build #{files.join(' ')}"
+#    run_command "jar cvf msgpack.jar -C build/ ."
+#  ensure
+#    Dir.chdir('../..')
+#  end
+#end
 
