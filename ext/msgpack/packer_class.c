@@ -377,14 +377,10 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 {
     VALUE v;
     VALUE io = Qnil;
-    ID write_method;
 
     switch(argc) {
     case 2:
         io = argv[1];
-        if(io != Qnil) {
-            write_method = write_method_of(io);
-        }
         /* pass-through */
     case 1:
         v = argv[0];
@@ -398,6 +394,7 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
     //msgpack_packer_reset(s_packer);
 
     if(io != Qnil) {
+        ID write_method = write_method_of(io);
         msgpack_packer_set_io(pk, io, write_method);
         msgpack_packer_write_value(pk, v);
         Packer_flush(self);
