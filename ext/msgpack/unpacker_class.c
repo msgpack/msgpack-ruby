@@ -361,6 +361,7 @@ static VALUE Unpacker_each_impl(VALUE self)
 
 static VALUE Unpacker_rescue_EOFError(VALUE self)
 {
+    UNUSED(self);
     return Qnil;
 }
 
@@ -469,6 +470,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
  */
 static VALUE MessagePack_load_module_method(int argc, VALUE* argv, VALUE mod)
 {
+    UNUSED(mod);
     return MessagePack_unpack(argc, argv);
 }
 
@@ -481,6 +483,7 @@ static VALUE MessagePack_load_module_method(int argc, VALUE* argv, VALUE mod)
  */
 static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
 {
+    UNUSED(mod);
     return MessagePack_unpack(argc, argv);
 }
 

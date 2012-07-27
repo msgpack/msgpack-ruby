@@ -38,6 +38,8 @@ typedef unsigned __int64 uint64_t;
 #include <stdbool.h>
 #endif
 
+#define UNUSED(var) ((void)var)
+
 #ifndef _WIN32 /* arpa/inet.h requires an extra dll on win32 */
 #include <arpa/inet.h>  /* __BYTE_ORDER */
 #endif

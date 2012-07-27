@@ -422,6 +422,7 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
  */
 static VALUE MessagePack_dump_module_method(int argc, VALUE* argv, VALUE mod)
 {
+    UNUSED(mod);
     return MessagePack_pack(argc, argv);
 }
 
@@ -434,6 +435,7 @@ static VALUE MessagePack_dump_module_method(int argc, VALUE* argv, VALUE mod)
  */
 static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
 {
+    UNUSED(mod);
     return MessagePack_pack(argc, argv);
 }
 

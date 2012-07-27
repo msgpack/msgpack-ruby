@@ -148,6 +148,7 @@ static VALUE rb_str_new_move(char* data, size_t length)
 VALUE msgpack_postmem_move_to_string(msgpack_postmem_t* pm,
         void* ptr, size_t size)
 {
+    UNUSED(pm);
     return rb_str_new_move(ptr, size);
 }
 #endif
