@@ -44,14 +44,19 @@ typedef unsigned __int64 uint64_t;
 #include <arpa/inet.h>  /* __BYTE_ORDER */
 #endif
 
+
 #if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-#define __LITTLE_ENDIAN__
-#elif __BYTE_ORDER == __BIG_ENDIAN
-#define __BIG_ENDIAN__
-#elif _WIN32
-#define __LITTLE_ENDIAN__
-#endif
+#  if defined(_LITTLE_ENDIAN) \
+        || (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN) \
+        || (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#    define __LITTLE_ENDIAN__
+#  elif defined(_BIG_ENDIAN) \
+        || (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && __BYTE_ORDER == __BIG_ENDIAN) \
+        || (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#    define __BIG_ENDIAN__
+#  elif _WIN32
+#    define __LITTLE_ENDIAN__
+#  endif
 #endif
 
 
