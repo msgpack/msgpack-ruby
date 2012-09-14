@@ -18,46 +18,11 @@
 #ifndef MSGPACK_RUBY_SYSDEP_H__
 #define MSGPACK_RUBY_SYSDEP_H__
 
-#include <string.h>
+#include "sysdep_types.h"
+#include "sysdep_endian.h"
 
-#include <stdlib.h>
-#include <stddef.h>
-#if defined(_MSC_VER) && _MSC_VER < 1600
-typedef __int8 int8_t;
-typedef unsigned __int8 uint8_t;
-typedef __int16 int16_t;
-typedef unsigned __int16 uint16_t;
-typedef __int32 int32_t;
-typedef unsigned __int32 uint32_t;
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
-#elif defined(_MSC_VER)  // && _MSC_VER >= 1600
-#include <stdint.h>
-#else
-#include <stdint.h>
-#include <stdbool.h>
-#endif
 
 #define UNUSED(var) ((void)var)
-
-#ifndef _WIN32 /* arpa/inet.h requires an extra dll on win32 */
-#include <arpa/inet.h>  /* __BYTE_ORDER */
-#endif
-
-
-#if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
-#  if defined(_LITTLE_ENDIAN) \
-        || (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN) \
-        || (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-#    define __LITTLE_ENDIAN__
-#  elif defined(_BIG_ENDIAN) \
-        || (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && __BYTE_ORDER == __BIG_ENDIAN) \
-        || (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
-#    define __BIG_ENDIAN__
-#  elif _WIN32
-#    define __LITTLE_ENDIAN__
-#  endif
-#endif
 
 
 #ifdef __LITTLE_ENDIAN__
