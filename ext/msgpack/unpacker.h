@@ -29,7 +29,8 @@ typedef struct msgpack_unpacker_t msgpack_unpacker_t;
 
 enum stack_type_t {
     STACK_TYPE_ARRAY,
-    STACK_TYPE_MAP,
+    STACK_TYPE_MAP_KEY,
+    STACK_TYPE_MAP_VALUE,
 };
 
 typedef struct {

@@ -6,6 +6,7 @@ have_header("st.h")
 $CFLAGS << %[ -I.. -Wall -O3 -g -std=c99]
 #$CFLAGS << %[ -DDISABLE_STR_NEW_MOVE]
 #$CFLAGS << %[ -DDISABLE_PREMEM]
+#$CFLAGS << %[ -DDISABLE_BUFFER_READ_REFERENCE_OPTIMIZE]
 
 if warnflags = CONFIG['warnflags']
   warnflags.slice!(/ -Wdeclaration-after-statement/)
