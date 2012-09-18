@@ -17,6 +17,7 @@
  */
 
 #include "buffer.h"
+#include "rb_ext.h"
 
 #ifdef RUBY_VM
 #define HAVE_RB_STR_REPLACE
@@ -31,13 +32,10 @@ void msgpack_buffer_static_init()
 #ifndef HAVE_RB_STR_REPLACE
     s_replace = rb_intern("replace");
 #endif
-    msgpack_pool_static_init_default();
 }
 
 void msgpack_buffer_static_destroy()
-{
-    msgpack_pool_static_destroy();
-}
+{ }
 
 void msgpack_buffer_init(msgpack_buffer_t* b)
 {
@@ -50,7 +48,7 @@ void msgpack_buffer_init(msgpack_buffer_t* b)
 static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
 {
     if(c->mapped_string == NO_MAPPED_STRING) {
-        msgpack_pool_static_free(c->first, c->last - c->first);
+        free(c->first);
     } else {
         c->mapped_string = NO_MAPPED_STRING;
     }
@@ -244,18 +242,11 @@ size_t msgpack_buffer_read(msgpack_buffer_t* b, char* buffer, size_t length)
 }
 
 #ifndef DISABLE_STR_NEW_MOVE
-static inline bool _msgpack_buffer_chunk_try_move_to_string(
+static inline void _msgpack_buffer_chunk_buffer_to_mapping_string(
         msgpack_buffer_t* b, msgpack_buffer_chunk_t* c)
 {
-    if(msgpack_pool_static_try_move_to_string(
-                c->first, c->last - c->first, &c->mapped_string)) {
-        if(b->head == &b->tail) {
-            /* the tail buffer is not appendable if it's mapped string */
-            b->tail_buffer_end = b->tail.last;
-        }
-        return true;
-    }
-    return false;
+    UNUSED(b);
+    c->mapped_string = rb_str_new_move(c->first, c->last - c->first);
 }
 #endif
 
@@ -272,12 +263,47 @@ static VALUE _msgpack_buffer_chunk_as_string(
     }
 
 #ifndef DISABLE_STR_NEW_MOVE
-    if(_msgpack_buffer_chunk_try_move_to_string(b, c)) {
-        return rb_str_dup(c->mapped_string);
+    _msgpack_buffer_chunk_buffer_to_mapping_string(b, c);
+    return rb_str_dup(c->mapped_string);
+#else
+    return rb_str_new(c->first, chunk_size);
+#endif
+}
+
+static inline void* _msgpack_buffer_chunk_malloc(
+        size_t required_size, size_t* allocated_size)
+{
+    *allocated_size = required_size;
+#ifndef DISABLE_STR_NEW_MOVE
+    /* +1 for rb_str_new_move */
+    required_size += 1;
+#endif
+    return malloc(required_size);
+}
+
+static inline void* _msgpack_buffer_chunk_realloc(void* ptr,
+        size_t required_size, size_t* current_size)
+{
+    if(*current_size <= 0) {
+        return _msgpack_buffer_chunk_malloc(required_size, current_size);
     }
+
+#ifndef DISABLE_STR_NEW_MOVE
+    /* +1 for rb_str_new_move */
+    required_size += 1;
 #endif
 
-    return rb_str_new(c->first, chunk_size);
+    size_t next_size = *current_size * 2;
+    while(next_size < required_size) {
+        next_size *= 2;
+    }
+
+#ifndef DISABLE_STR_NEW_MOVE
+    *current_size = next_size - 1;
+#else
+    *current_size = next_size;
+#endif
+    return realloc(ptr, next_size);
 }
 
 static VALUE _msgpack_buffer_chunk_as_string_substr(
@@ -293,12 +319,11 @@ static VALUE _msgpack_buffer_chunk_as_string_substr(
     }
 
 #ifndef DISABLE_STR_NEW_MOVE
-    if(_msgpack_buffer_chunk_try_move_to_string(b, c)) {
-        return rb_str_substr(c->mapped_string, offset, length);
-    }
-#endif
-
+    _msgpack_buffer_chunk_buffer_to_mapping_string(b, c);
+    return rb_str_substr(c->mapped_string, offset, length);
+#else
     return rb_str_new(c->first + offset, length);
+#endif
 }
 
 static inline VALUE _msgpack_buffer_head_chunk_as_string(msgpack_buffer_t* b)
@@ -493,7 +518,7 @@ void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t lengt
     if(b->tail.mapped_string == NO_MAPPED_STRING) {
         /* realloc */
         size_t capacity = b->tail_buffer_end - b->tail.first;
-        char* mem = msgpack_pool_static_realloc(b->tail.first, tail_filled+length, &capacity);
+        char* mem = _msgpack_buffer_chunk_realloc(b->tail.first, tail_filled+length, &capacity);
 //printf("realloc %lu tail filled=%lu\n", capacity, tail_filled);
 
         char* last = mem + tail_filled;
@@ -516,7 +541,7 @@ void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t lengt
     } else {
         /* allocate new chunk */
         size_t capacity;
-        char* mem = msgpack_pool_static_alloc(length, &capacity);
+        char* mem = _msgpack_buffer_chunk_malloc(length, &capacity);
 
         char* last = mem;
         if(data != NULL) {

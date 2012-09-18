@@ -20,7 +20,6 @@
 
 #include "compat.h"
 #include "sysdep.h"
-#include "pool.h"
 
 #ifndef MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD
 #define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD (1024*1024)
