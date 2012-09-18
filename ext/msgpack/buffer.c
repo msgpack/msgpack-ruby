@@ -42,7 +42,7 @@ void msgpack_buffer_init(msgpack_buffer_t* b)
     memset(b, 0, sizeof(msgpack_buffer_t));
 
     b->head = &b->tail;
-    b->append_reference_threshold = MSGPACK_BUFFER_STRING_APPEND_REFERENCE_THRESHOLD;
+    b->append_reference_threshold = MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT;
 }
 
 static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
