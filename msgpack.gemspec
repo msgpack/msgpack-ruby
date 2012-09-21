@@ -10,13 +10,9 @@ Gem::Specification.new do |s|
   s.email = "frsyuki@users.sourceforge.jp"
   s.homepage = "http://msgpack.org/"
   s.rubyforge_project = "msgpack"
-  s.has_rdoc = true
-  s.rdoc_options = ["ext"]
-
-  files = `git ls-files`.split("\n")
-
+  s.has_rdoc = false
+  s.files = `git ls-files`.split("\n")
   s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
-
   s.require_paths = ["lib"]
 
   s.add_development_dependency 'bundler', ['>= 1.0.0']

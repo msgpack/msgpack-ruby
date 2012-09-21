@@ -22,17 +22,6 @@
 #include "packer_class.h"
 #include "buffer_class.h"
 
-/*
- * Document-class: MessagePack::Packer
- *
- * MessagePack::Packer is an interface to serialize objects into MessagePack::Buffer.
- * It has an internal buffer which is an instance of the MessagePack::Buffer.
- *
- */
-#if 0
-VALUE mMessagePack = rb_define_module("MessagePack");  /* dummy for rdoc */
-#endif
-
 VALUE cMessagePack_Packer;
 
 static ID s_to_msgpack;
@@ -91,21 +80,6 @@ static ID write_method_of(VALUE io)
     return m;
 }
 
-/**
- * Document-method: initialize
- *
- * call-seq:
- *   initialize(options={})
- *   initialize(io, options={})
- *
- * Creates an instance of the MessagePack::Packer.
- *
- * If the optional _io_ argument is given, it writes serialzied objects into the IO when the internal buffer is filled.
- * _io_ must respond to _write(string)_ or _append(string)_ method.
- *
- * Currently, no options are supported.
- *
- */
 static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
 {
     if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
@@ -147,34 +121,12 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
     return self;
 }
 
-/**
- * Document-method: buffer
- *
- * call-seq:
- *   buffer -> #<MessagePack::Buffer>
- *
- * Returns internal buffer.
- *
- */
 static VALUE Packer_buffer(VALUE self)
 {
     PACKER(self, pk);
     return pk->buffer_ref;
 }
 
-/**
- * Document-method: write
- *
- * call-seq:
- *   write(obj) -> self
- *   pack(obj) -> self
- *
- * Serializes the given object to the internal buffer.
- *
- * If it could not serialize the object, it raises
- * NoMethodError: undefined method `to_msgpack' for #<the_object>.
- *
- */
 static VALUE Packer_write(VALUE self, VALUE v)
 {
     PACKER(self, pk);
@@ -182,15 +134,6 @@ static VALUE Packer_write(VALUE self, VALUE v)
     return self;
 }
 
-/**
- * Document-method: write_nil
- *
- * call-seq:
- *   write_nil -> self
- *
- * Same as _write(nil)_.
- *
- */
 static VALUE Packer_write_nil(VALUE self)
 {
     PACKER(self, pk);
@@ -198,17 +141,6 @@ static VALUE Packer_write_nil(VALUE self)
     return self;
 }
 
-/**
- * Document-method: write_array_header
- *
- * call-seq:
- *   write_array_header(n) -> self
- *
- * Write a header of an array whose size is _n_.
- *
- * For example, _write_array_header(1).write(true)_ is same as _write([ true ])_.
- *
- */
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
@@ -216,17 +148,6 @@ static VALUE Packer_write_array_header(VALUE self, VALUE n)
     return self;
 }
 
-/**
- * Document-method: write_map_header
- *
- * call-seq:
- *   write_map_header(n) -> self
- *
- * Write a header of a map whose size is _n_.
- *
- * For example, _write_map_header(1).write('key').write(true)_ is same as _write('key'=>true)_.
- *
- */
 static VALUE Packer_write_map_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
@@ -234,17 +155,6 @@ static VALUE Packer_write_map_header(VALUE self, VALUE n)
     return self;
 }
 
-/**
- * Document-method: flush
- *
- * call-seq:
- *   flush -> self
- *
- * Flushes data in the internal buffer to the internal IO.
- *
- * If internal IO is not set, it doesn nothing.
- *
- */
 static VALUE Packer_flush(VALUE self)
 {
     PACKER(self, pk);
@@ -256,15 +166,6 @@ static VALUE Packer_flush(VALUE self)
     return self;
 }
 
-/**
- * Document-method: clear
- *
- * call-seq:
- *   clear
- *
- * Makes the internal buffer empty. Same as _buffer.clear_.
- *
- */
 static VALUE Packer_clear(VALUE self)
 {
     PACKER(self, pk);
@@ -272,15 +173,6 @@ static VALUE Packer_clear(VALUE self)
     return Qnil;
 }
 
-/**
- * Document-method: size
- *
- * call-seq:
- *   size -> integer
- *
- * Returns size of the internal buffer. Same as _buffer.size_.
- *
- */
 static VALUE Packer_size(VALUE self)
 {
     PACKER(self, pk);
@@ -288,15 +180,6 @@ static VALUE Packer_size(VALUE self)
     return SIZET2NUM(size);
 }
 
-/**
- * Document-method: empty?
- *
- * call-seq:
- *   empty? -> bool
- *
- * Returns _true_ if the internal buffer is empty. Same as _buffer.empty?_.
- *
- */
 static VALUE Packer_empty_p(VALUE self)
 {
     PACKER(self, pk);
@@ -307,45 +190,18 @@ static VALUE Packer_empty_p(VALUE self)
     }
 }
 
-/**
- * Document-method: to_str
- *
- * call-seq:
- *   to_str -> string
- *
- * Returns all data in the buffer as a string. Same as _buffer.to_str_.
- *
- */
 static VALUE Packer_to_str(VALUE self)
 {
     PACKER(self, pk);
     return msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
 }
 
-/**
- * Document-method: to_a
- *
- * call-seq:
- *   to_a -> array_of_strings
- *
- * Returns content of the internal buffer as an array of strings. Same as _buffer.to_a_.
- *
- */
 static VALUE Packer_to_a(VALUE self)
 {
     PACKER(self, pk);
     return msgpack_buffer_all_as_string_array(PACKER_BUFFER_(pk));
 }
 
-/**
- * Document-method: write_to
- *
- * call-seq:
- *   write_to(io)
- *
- * Writes all of data in the internal buffer into the given IO. Same as _buffer.write_to(io)_.
- *
- */
 static VALUE Packer_write_to(VALUE self, VALUE io)
 {
     PACKER(self, pk);
@@ -406,30 +262,12 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
     }
 }
 
-/**
- * call-seq:
- *   dump(obj) -> string
- *   dump(obj, io) -> nil
- *
- * Serializes the given _object_ and returns the serialized data as a string.
- *
- * If the optional _io_ argument is given, it writes serialzied objects into the IO and returns nil.
- * _io_ must respond to _readpartial(length,string)_ or _read(length,string)_ method.
- *
- */
 static VALUE MessagePack_dump_module_method(int argc, VALUE* argv, VALUE mod)
 {
     UNUSED(mod);
     return MessagePack_pack(argc, argv);
 }
 
-/**
- * call-seq:
- *   pack(obj) -> string
- *   pack(obj, io) -> nil
- *
- * Alias of dump
- */
 static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
 {
     UNUSED(mod);

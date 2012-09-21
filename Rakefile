@@ -23,7 +23,7 @@ end
 
 desc 'Generate YARD document'
 YARD::Rake::YardocTask.new(:doc) do |t|
-  t.files   = ['ext/msgpack/**/*.c','lib/**/*.rb']
+  t.files   = ['lib/msgpack/version.rb','doclib/**/*.rb']
   t.options = []
   t.options << '--debug' << '--verbose' if $trace
 end

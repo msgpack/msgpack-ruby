@@ -68,12 +68,6 @@ static VALUE Buffer_alloc(VALUE klass)
     return Data_Wrap_Struct(klass, msgpack_buffer_mark, Buffer_free, b);
 }
 
-/**
- * Document-method: initialize
- *
- * Creates an instance of the MessagePack::Buffer.
- *
- */
 static VALUE Buffer_initialize(VALUE self)
 {
     return self;
@@ -87,15 +81,6 @@ VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
 }
 
 
-/**
- * Document-method: clear
- *
- * call-seq:
- *   clear
- *
- * Makes the buffer empty
- *
- */
 static VALUE Buffer_clear(VALUE self)
 {
     BUFFER(self, b);
@@ -103,15 +88,6 @@ static VALUE Buffer_clear(VALUE self)
     return Qnil;
 }
 
-/**
- * Document-method: size
- *
- * call-seq:
- *   size -> integer
- *
- * Returns size of the buffer.
- *
- */
 static VALUE Buffer_size(VALUE self)
 {
     BUFFER(self, b);
@@ -119,16 +95,6 @@ static VALUE Buffer_size(VALUE self)
     return SIZET2NUM(size);
 }
 
-/**
- * Document-method: empty?
- *
- * call-seq:
- *   empty? -> bool
- *
- * Returns _true_ if the buffer is empty.
- * This method is slightly faster than _size_.
- *
- */
 static VALUE Buffer_empty_p(VALUE self)
 {
     BUFFER(self, b);
@@ -139,16 +105,6 @@ static VALUE Buffer_empty_p(VALUE self)
     }
 }
 
-/**
- * Document-method: append
- *
- * call-seq:
- *   append(string) -> self
- *   <<(string) -> self
- *
- * Appends the given string to the buffer.
- *
- */
 static VALUE Buffer_append(VALUE self, VALUE string_or_buffer)
 {
     BUFFER(self, b);
@@ -163,19 +119,6 @@ static VALUE Buffer_append(VALUE self, VALUE string_or_buffer)
     return self;
 }
 
-/**
- * Document-method: skip
- *
- * call-seq:
- *   skip(n) -> integer
- *
- * Consumes _n_ bytes from the head of the buffer.
- *
- * If the size of the buffer is less than _n_, it skips all of data in the buffer and returns integer less than _n_.
- *
- * If _n_ is 0, it does nothing and returns _0_.
- *
- */
 static VALUE Buffer_skip(VALUE self, VALUE n)
 {
     BUFFER(self, b);
@@ -198,19 +141,6 @@ static VALUE Buffer_skip(VALUE self, VALUE n)
     return LONG2FIX(sn);
 }
 
-/**
- * Document-method: skip_all
- *
- * call-seq:
- *   skip_all(n) -> self
- *
- * Consumes _n_ bytes from the head of the buffer.
- *
- * If the size of the buffer is less than _n_, it does nothing and raises EOFError.
- *
- * If _n_ is 0, it does nothing.
- *
- */
 static VALUE Buffer_skip_all(VALUE self, VALUE n)
 {
     BUFFER(self, b);
@@ -230,23 +160,6 @@ static VALUE Buffer_skip_all(VALUE self, VALUE n)
     return self;
 }
 
-/**
- * Document-method: read_all
- *
- * call-seq:
- *   read_all -> string
- *   read_all(n) -> string
- *   read_all(n, string) -> string
- *
- * Consumes _n_ bytes from the head of the buffer and returns consumed data.
- *
- * If the size of the buffer is less than _n_, it does nothing and raises EOFError.
- *
- * If _n_ is 0, it does nothing and returns an empty string.
- *
- * If the optional _string_ argument is given, the content of the string will be replaced with the consumed data.
- *
- */
 static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
 {
     VALUE out = Qnil;
@@ -326,23 +239,6 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
     return out;
 }
 
-/**
- * Document-method: read
- *
- * call-seq:
- *   read -> string
- *   read(n) -> string
- *   read(n, string) -> string
- *
- * Consumes _n_ bytes from the head of the buffer and returns consumed data.
- *
- * If the size of the buffer is less than _n_, it reads all of data in the buffer.
- *
- * If _n_ is 0, it does nothing and returns an empty string.
- *
- * If the optional _string_ argument is given, the content of the string will be replaced with the consumed data.
- *
- */
 static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
 {
     VALUE out = Qnil;
@@ -422,50 +318,18 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
     return out;
 }
 
-/**
- * Document-method: to_str
- *
- * call-seq:
- *   to_str -> string
- *
- * Returns all data in the buffer as a string.
- *
- * Destructive update to the returned string does NOT effect the buffer.
- *
- */
 static VALUE Buffer_to_str(VALUE self)
 {
     BUFFER(self, b);
     return msgpack_buffer_all_as_string(b);
 }
 
-/**
- * Document-method: to_a
- *
- * call-seq:
- *   to_a -> array_of_strings
- *
- * Returns content of the buffer as an array of strings.
- *
- * This method is sometimes faster than to_s because the internal
- * structure of the buffer is a queue of buffer chunks.
- *
- */
 static VALUE Buffer_to_a(VALUE self)
 {
     BUFFER(self, b);
     return msgpack_buffer_all_as_string_array(b);
 }
 
-/**
- * Document-method: write_to
- *
- * call-seq:
- *   write_to(io)
- *
- * Writes all of data in the buffer into the given IO.
- *
- */
 static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
     BUFFER(self, b);
