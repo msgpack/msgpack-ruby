@@ -27,43 +27,83 @@ void msgpack_rmem_init(msgpack_rmem_t* pm)
 
 void msgpack_rmem_destroy(msgpack_rmem_t* pm)
 {
-    msgpack_rmem_chunk_t* c = &pm->head;
-    for(; c != NULL; c = c->next) {
+    msgpack_rmem_chunk_t* c = pm->array_first;
+    msgpack_rmem_chunk_t* cend = pm->array_last;
+    for(; c != cend; c++) {
         free(c->pages);
     }
+    free(pm->head.pages);
+    free(pm->array_first);
 }
 
 void* _msgpack_rmem_alloc2(msgpack_rmem_t* pm)
 {
-    msgpack_rmem_chunk_t* c = pm->head.next;
-    for(; c != NULL; c = c->next) {
-        _msgpack_rmem_chunk_try_alloc(c);
+    msgpack_rmem_chunk_t* c = pm->array_first;
+    msgpack_rmem_chunk_t* last = pm->array_last;
+    for(; c != last; c++) {
+        if(_msgpack_rmem_chunk_available(c)) {
+            void* mem = _msgpack_rmem_chunk_alloc(c);
+
+            /* move to head */
+            msgpack_rmem_chunk_t tmp = pm->head;
+            pm->head = *c;
+            *c = tmp;
+            return mem;
+        }
+    }
+
+    if(c == pm->array_end) {
+        size_t capacity = c - pm->array_first;
+        size_t length = last - pm->array_first;
+        capacity = (capacity == 0) ? 8 : capacity * 2;
+        msgpack_rmem_chunk_t* array = realloc(pm->array_first, capacity * sizeof(msgpack_rmem_chunk_t));
+        pm->array_first = array;
+        pm->array_last = array + length;
+        pm->array_end = array + capacity;
     }
 
     /* allocate new chunk */
-    c = calloc(1, sizeof(msgpack_rmem_chunk_t));
-    *c = pm->head;
+    c = pm->array_last++;
+
+    /* move to head */
+    msgpack_rmem_chunk_t tmp = pm->head;
+    pm->head = *c;
+    *c = tmp;
+
     pm->head.mask = 0xffffffff & (~1);  /* first chunk is already allocated */
     pm->head.pages = malloc(MSGPACK_RMEM_PAGE_SIZE * 32);
-    pm->head.next = c;
 
     return pm->head.pages;
 }
 
-bool _msgpack_rmem_free2(msgpack_rmem_t* pm, void* mem)
+static inline void handle_empty_chunk(msgpack_rmem_t* pm, msgpack_rmem_chunk_t* c)
 {
-    msgpack_rmem_chunk_t* c = pm->head.next;
-    for(; c != NULL; c = c->next) {
-        _msgpack_rmem_chunk_try_free(c, mem);
+    if(pm->array_first->mask == 0xffffffff) {
+        /* free and move to last */
+        pm->array_last--;
+        free(c->pages);
+        *c = *pm->array_last;
+        return;
     }
-    return false;
+
+    /* move to first */
+    msgpack_rmem_chunk_t tmp = *pm->array_first;
+    *pm->array_first = *c;
+    *c = tmp;
 }
 
-bool msgpack_rmem_check(msgpack_rmem_t* pm, void* mem)
+bool _msgpack_rmem_free2(msgpack_rmem_t* pm, void* mem)
 {
-    msgpack_rmem_chunk_t* c = &pm->head;
-    for(; c != NULL; c = c->next) {
-        _msgpack_rmem_chunk_try_check(c, mem);
+    /* search from last */
+    msgpack_rmem_chunk_t* c = pm->array_last - 1;
+    msgpack_rmem_chunk_t* before_first = pm->array_first - 1;
+    for(; c != before_first; c--) {
+        if(_msgpack_rmem_chunk_try_free(c, mem)) {
+            if(c != pm->array_first && c->mask == 0xffffffff) {
+                handle_empty_chunk(pm, c);
+            }
+            return true;
+        }
     }
     return false;
 }

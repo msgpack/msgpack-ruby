@@ -85,16 +85,6 @@ void msgpack_buffer_destroy(msgpack_buffer_t* b)
         c = n;
     }
     _msgpack_buffer_chunk_destroy(c);
-    //while(c != &b->tail) {
-    //    _msgpack_buffer_chunk_destroy(c);
-    //    msgpack_buffer_chunk_t* n = c->next;
-    //    free(c);
-    //    c = n;
-    //}
-    //if(c->first != NULL) {
-    //    /* tail may not be initialized */
-    //    _msgpack_buffer_chunk_destroy(c);
-    //}
 
     c = b->free_list;
     while(c != NULL) {

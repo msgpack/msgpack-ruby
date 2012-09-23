@@ -254,11 +254,14 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
         msgpack_packer_set_io(pk, io, write_method);
         msgpack_packer_write_value(pk, v);
         Packer_flush(self);
+        msgpack_buffer_clear(PACKER_BUFFER_(pk)); /* to free rmem before GC */
         return Qnil;
 
     } else {
         msgpack_packer_write_value(pk, v);
-        return msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
+        VALUE v = msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
+        msgpack_buffer_clear(PACKER_BUFFER_(pk));  /* to free rmem before GC */
+        return v;
     }
 }
 
