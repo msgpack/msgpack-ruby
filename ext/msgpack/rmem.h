@@ -89,6 +89,9 @@ static inline bool msgpack_rmem_free(msgpack_rmem_t* pm, void* mem)
     if(_msgpack_rmem_chunk_try_free(&pm->head, mem)) {
         return true;
     }
+    if(pm->array_last == pm->array_end) {
+        return false;
+    }
     return _msgpack_rmem_free2(pm, mem);
 }
 

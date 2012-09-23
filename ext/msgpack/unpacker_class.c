@@ -277,11 +277,11 @@ static VALUE Unpacker_each(VALUE self)
 #endif
 
     if(uk->io == Qnil) {
-	    return Unpacker_each_impl(self);
+        return Unpacker_each_impl(self);
     } else {
         /* rescue EOFError if io is set */
-	    return rb_rescue2(Unpacker_each_impl, self,
-			    Unpacker_rescue_EOFError, self,
+        return rb_rescue2(Unpacker_each_impl, self,
+                Unpacker_rescue_EOFError, self,
                 rb_eEOFError, NULL);
     }
 }

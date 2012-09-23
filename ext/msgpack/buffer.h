@@ -22,7 +22,7 @@
 #include "sysdep.h"
 
 #ifndef MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT
-#define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT (1024*1024)
+#define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT (512*1024)
 #endif
 
 #ifndef MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM
@@ -176,10 +176,10 @@ static inline void msgpack_buffer_append(msgpack_buffer_t* b, const char* data, 
 
 void _msgpack_buffer_append_reference(msgpack_buffer_t* b, const char* data, size_t length, VALUE mapped_string);
 
-static inline void msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE string)
+static inline size_t msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE string)
 {
     size_t length = RSTRING_LEN(string);
-    if(length >= b->append_reference_threshold && !STR_DUP_LIKELY_DOES_COPY(string)) {
+    if(length > b->append_reference_threshold && !STR_DUP_LIKELY_DOES_COPY(string)) {
         VALUE mapped_string = rb_str_dup(string);
 #ifdef COMPAT_HAVE_ENCODING
         ENCODING_SET(mapped_string, s_enc_ascii8bit);
@@ -188,6 +188,7 @@ static inline void msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE strin
     } else {
         msgpack_buffer_append(b, RSTRING_PTR(string), length);
     }
+    return length;
 }
 
 

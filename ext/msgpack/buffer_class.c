@@ -105,13 +105,23 @@ static VALUE Buffer_empty_p(VALUE self)
     }
 }
 
+static VALUE Buffer_write(VALUE self, VALUE string_or_buffer)
+{
+    BUFFER(self, b);
+
+    VALUE string = string_or_buffer;  // TODO optimize if string_or_buffer is a Buffer
+    StringValue(string);
+
+    size_t length = msgpack_buffer_append_string(b, string);
+
+    return SIZET2NUM(length);
+}
+
 static VALUE Buffer_append(VALUE self, VALUE string_or_buffer)
 {
     BUFFER(self, b);
 
-    // TODO if string_or_buffer is a Buffer
-    VALUE string = string_or_buffer;
-
+    VALUE string = string_or_buffer;  // TODO optimize if string_or_buffer is a Buffer
     StringValue(string);
 
     msgpack_buffer_append_string(b, string);
@@ -359,8 +369,8 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Buffer, "clear", Buffer_clear, 0);
     rb_define_method(cMessagePack_Buffer, "size", Buffer_size, 0);
     rb_define_method(cMessagePack_Buffer, "empty?", Buffer_empty_p, 0);
-    rb_define_method(cMessagePack_Buffer, "append", Buffer_append, 1);
-    rb_define_alias(cMessagePack_Buffer, "<<", "append");
+    rb_define_method(cMessagePack_Buffer, "write", Buffer_write, 1);
+    rb_define_method(cMessagePack_Buffer, "<<", Buffer_append, 1);
     rb_define_method(cMessagePack_Buffer, "skip", Buffer_skip, 1);
     rb_define_method(cMessagePack_Buffer, "skip_all", Buffer_skip_all, 1);
     rb_define_method(cMessagePack_Buffer, "read", Buffer_read, -1);
