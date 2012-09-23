@@ -33,8 +33,8 @@
 #define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD 256
 #endif
 
-#if MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT <= 23
-#error MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT must be > RSTRING_EMBED_LEN_MAX which is 11 or 23
+#if MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM <= 23
+#error MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM must be > RSTRING_EMBED_LEN_MAX which is 11 or 23
 #endif
 
 #if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD <= 23
@@ -59,8 +59,9 @@ typedef struct msgpack_buffer_t msgpack_buffer_t;
 struct msgpack_buffer_chunk_t {
     char* first;
     char* last;
-    VALUE mapped_string;  /* RBString or NO_MAPPED_STRING */
+    void* mem;
     msgpack_buffer_chunk_t* next;
+    VALUE mapped_string;  /* RBString or NO_MAPPED_STRING */
 };
 
 union msgpack_buffer_cast_block_t {
@@ -77,27 +78,6 @@ union msgpack_buffer_cast_block_t {
     double d;
 };
 
-/*
- * head
- * +----------------+
- * | filled  | free |
- * +---------+------+
- * ^ first   ^ last
- *     ^ read_buffer -> read()
- *     +-----+
- *     last - read_buffer = top_readable_size
- * +---+
- * read_buffer - first = read_offset
- *
- * tail
- * +----------------+
- * | filled  | free |
- * +---------+------+
- * ^ first   ^ last -> write()
- *                  ^ tail_buffer_end
- *           +------+
- *           tail_buffer_end - last = writable_size
- */
 struct msgpack_buffer_t {
     char* read_buffer;
     char* tail_buffer_end;
@@ -105,6 +85,10 @@ struct msgpack_buffer_t {
     msgpack_buffer_chunk_t tail;
     msgpack_buffer_chunk_t* head;
     msgpack_buffer_chunk_t* free_list;
+
+    char* rmem_last;
+    char* rmem_end;
+    void** rmem_owner;
 
     union msgpack_buffer_cast_block_t cast_block;
 
@@ -137,12 +121,9 @@ static inline void msgpack_buffer_set_append_reference_threshold(msgpack_buffer_
     }
 }
 
-
 /*
  * writer functions
  */
-
-void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b);
 
 static inline size_t msgpack_buffer_writable_size(const msgpack_buffer_t* b)
 {
@@ -170,8 +151,11 @@ static inline void msgpack_buffer_write_byte_and_data(msgpack_buffer_t* b, int b
 
 void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t length);
 
-static inline void msgpack_buffer_expand(msgpack_buffer_t* b, size_t require)
+static inline void msgpack_buffer_ensure_sequential(msgpack_buffer_t* b, size_t require)
 {
+    if(require == 0) {
+        return;
+    }
     _msgpack_buffer_append2(b, NULL, require);
 }
 
@@ -181,13 +165,13 @@ static inline void msgpack_buffer_append(msgpack_buffer_t* b, const char* data, 
         return;
     }
 
-    if(msgpack_buffer_writable_size(b) < length) {
-        _msgpack_buffer_append2(b, data, length);
+    if(length <= msgpack_buffer_writable_size(b)) {
+        memcpy(b->tail.last, data, length);
+        b->tail.last += length;
         return;
     }
 
-    memcpy(b->tail.last, data, length);
-    b->tail.last += length;
+    _msgpack_buffer_append2(b, data, length);
 }
 
 void _msgpack_buffer_append_reference(msgpack_buffer_t* b, const char* data, size_t length, VALUE mapped_string);
@@ -218,7 +202,7 @@ static inline size_t msgpack_buffer_top_readable_size(const msgpack_buffer_t* b)
 
 size_t msgpack_buffer_all_readable_size(const msgpack_buffer_t* b);
 
-bool _msgpack_buffer_pop_chunk(msgpack_buffer_t* b);
+bool _msgpack_buffer_shift_chunk(msgpack_buffer_t* b);
 
 static inline void _msgpack_buffer_consumed(msgpack_buffer_t* b, size_t length)
 {
@@ -230,8 +214,8 @@ static inline void _msgpack_buffer_consumed(msgpack_buffer_t* b, size_t length)
 //    c = c->next;
 //    i++;
 //}
-        _msgpack_buffer_pop_chunk(b);
-//printf("pop %d tail_filled=%lu\n", i, b->tail.last - b->tail.first);
+        _msgpack_buffer_shift_chunk(b);
+//printf("shift %d tail_filled=%lu\n", i, b->tail.last - b->tail.first);
     }
 }
 
@@ -239,8 +223,6 @@ static inline int msgpack_buffer_peek_1(msgpack_buffer_t* b)
 {
     return (int) (unsigned char) b->read_buffer[0];
 }
-
-union msgpack_buffer_cast_block_t* _msgpack_buffer_build_cast_block(msgpack_buffer_t* b, size_t n);
 
 static inline int msgpack_buffer_read_1(msgpack_buffer_t* b)
 {
@@ -267,7 +249,10 @@ static inline union msgpack_buffer_cast_block_t* msgpack_buffer_refer_cast_block
 
 bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length);
 
-bool msgpack_buffer_skip_all(msgpack_buffer_t* b, size_t length);
+static inline bool msgpack_buffer_skip_all(msgpack_buffer_t* b, size_t length)
+{
+    return msgpack_buffer_read_all(b, NULL, length);
+}
 
 static inline union msgpack_buffer_cast_block_t* msgpack_buffer_read_cast_block(msgpack_buffer_t* b, size_t n)
 {
@@ -288,7 +273,26 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b);
 
 VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b);
 
-VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool suppress_reference);
+static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b, size_t length)
+{
+    size_t offset = b->read_buffer - b->head->first;
+    return rb_str_substr(b->head->mapped_string, offset, length);
+}
+
+static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool suppress_reference)
+{
+    VALUE result;
+    if(!suppress_reference &&
+            b->head->mapped_string != NO_MAPPED_STRING &&
+            length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD) {
+        result = _msgpack_buffer_refer_head_mapped_string(b, length);
+    } else {
+        result = rb_str_new(b->read_buffer, length);
+    }
+
+    _msgpack_buffer_consumed(b, length);
+    return result;
+}
 
 
 void msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method);

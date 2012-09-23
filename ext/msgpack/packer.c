@@ -59,7 +59,7 @@ void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t requir
             return;
         }
     }
-    msgpack_buffer_expand(PACKER_BUFFER_(pk), require);
+    msgpack_buffer_ensure_sequential(PACKER_BUFFER_(pk), require);
 }
 
 void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)
@@ -92,7 +92,7 @@ static int write_hash_foreach(VALUE key, VALUE value, VALUE pk_value)
 
 void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 {
-    size_t len =  RHASH_SIZE(v);
+    size_t len = RHASH_SIZE(v);
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of array is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
