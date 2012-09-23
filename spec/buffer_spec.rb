@@ -180,11 +180,11 @@ describe Buffer do
     }
   end
 
-  it 'short append increments size' do
+  it 'short write increments size' do
     case_keys.each {|k|
       sz = examples[k].size
       10.times do |i|
-        cases[k].append 'short'
+        cases[k].write 'short'
         sz += 'short'.size
         cases[k].size.should == sz
       end
@@ -320,28 +320,28 @@ describe Buffer do
     }
   end
 
-  it 'big append and modify reference' do
+  it 'big write and modify reference' do
     big2 = "a" * (1024*1024 + 2)
 
     case_keys.each {|k|
       big1 = "a" * (1024*1024 + 2)
-      cases[k].append(big1)
+      cases[k].write(big1)
       big1 << 'x'
       cases[k].read.should == examples[k] + big2
     }
   end
 
-  it 'big append -> short append' do
+  it 'big write -> short write' do
     biglen = 1024*1024 + 2
     big1 = "a" * (1024*1024 + 2)
 
     case_keys.each {|k|
       sz = examples[k].size
 
-      cases[k].append big1
+      cases[k].write big1
       cases[k].size.should == sz + big1.size
 
-      cases[k].append("c")
+      cases[k].write("c")
       cases[k].size.should == sz + big1.size + 1
 
       cases[k].read_all.should == examples[k] + big1 + "c"
@@ -350,15 +350,15 @@ describe Buffer do
     }
   end
 
-  it 'big append 2'do
+  it 'big write 2'do
     big1 = "a" * (1024*1024 + 2)
     big2 = "b" * (1024*1024 + 2)
 
     case_keys.each {|k|
       sz = examples[k].size
 
-      cases[k].append big1
-      cases[k].append big2
+      cases[k].write big1
+      cases[k].write big2
       cases[k].size.should == sz + big1.size + big2.size
 
       cases[k].read_all(sz + big1.size).should == examples[k] + big1

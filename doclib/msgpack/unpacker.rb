@@ -16,7 +16,7 @@ module MessagePack
     #   @param io [IO]
     #   @param options [Hash]
     #   This unpacker reads data from the _io_ to fill the internal buffer.
-    #   _io_ must respond to readpartial(length,string) or read(length,string) method.
+    #   _io_ must respond to readpartial(length[,string]) or read(length[,string]) method.
     #
     def initialize(*args)
     end
@@ -24,12 +24,16 @@ module MessagePack
     #
     # Internal buffer
     #
-    # @return MessagePack::Unpacker
+    # @return [MessagePack::Unpacker]
     #
     attr_reader :buffer
 
     #
     # Deserializes an object from internal buffer and returns it.
+    #
+    # If there're not enough buffer, this method raises EOFError.
+    # If data format is invalid, this method raises MessagePack::MalformedFormatError.
+    # If the stack is too deep, this method raises MessagePack::StackError.
     #
     # @return [Object] deserialized object
     #
@@ -41,6 +45,8 @@ module MessagePack
     #
     # Deserializes an object and ignores it. This method is faster than _read_.
     #
+    # This method could raise same errors with _read_.
+    #
     # @return nil
     #
     def skip
@@ -48,11 +54,14 @@ module MessagePack
 
     #
     # Deserializes a nil value if it exists and returns _true_.
-    # Otherwise, if a byte exists but the byte is not nil value or the internal buffer is empty, returns _false_.
+    # Otherwise, if a byte exists but the byte doesn't represent nil value,
+    # returns _false_.
+    #
+    # If there're not enough buffer, this method raises EOFError.
     #
     # @return [Boolean]
     #
-    def skip
+    def skip_nil
     end
 
     #
@@ -60,6 +69,7 @@ module MessagePack
     # It converts a serialized array into a stream of elements.
     #
     # If the serialized object is not an array, it raises MessagePack::TypeError.
+    # If there're not enough buffer, this method raises EOFError.
     #
     # @return [Integer] size of the array
     #
@@ -71,6 +81,7 @@ module MessagePack
     # It converts a serialized map into a stream of key-value pairs.
     #
     # If the serialized object is not a map, it raises MessagePack::TypeError.
+    # If there're not enough buffer, this method raises EOFError.
     #
     # @return [Integer] size of the map
     #
@@ -82,6 +93,7 @@ module MessagePack
     # This method calls buffer.append(data).
     #
     # @param data [String]
+    # @return [Unpacker] self
     #
     def feed(data)
     end
@@ -91,8 +103,10 @@ module MessagePack
     #
     # It repeats until the internal buffer does not include any complete objects.
     #
-    # If the internal IO was set, it reads data from the IO when the buffer becomes empty,
-    # and returns when the IO raised EOFError.
+    # If the an IO is set, it repeats to read data from the IO when the buffer
+    # becomes empty until the IO raises EOFError.
+    #
+    # This method could raise same errors with _read_ excepting EOFError.
     #
     # @yieldparam object [Object] deserialized object
     # @return nil

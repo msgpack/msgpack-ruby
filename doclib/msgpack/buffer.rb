@@ -37,12 +37,19 @@ module MessagePack
     # Appends the given data to the buffer.
     #
     # @param data [String]
-    # @return [Buffer] self
+    # @return [Integer] byte size written
     #
-    def append(data)
+    def write(data)
     end
 
-    alias << append
+    #
+    # Appends the given data to the buffer.
+    #
+    # @param data [String]
+    # @return [Buffer] self
+    #
+    def <<(data)
+    end
 
     # Consumes _n_ bytes from the head of the buffer and returns consumed data.
     # If the size of the buffer is less than _n_, it reads all of data in the buffer.
@@ -87,7 +94,6 @@ module MessagePack
 
     #
     # Consumes _n_ bytes from the head of the buffer.
-    #
     # If the size of the buffer is less than _n_, it skips all of data in the buffer and returns integer less than _n_.
     #
     # If _n_ is 0, it does nothing and returns _0_.
