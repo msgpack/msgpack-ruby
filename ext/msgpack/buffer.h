@@ -151,9 +151,9 @@ static inline void msgpack_buffer_write_byte_and_data(msgpack_buffer_t* b, int b
 
 void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t length);
 
-static inline void msgpack_buffer_ensure_sequential(msgpack_buffer_t* b, size_t require)
+static inline void msgpack_buffer_ensure_sequential_writable(msgpack_buffer_t* b, size_t require)
 {
-    if(require == 0) {
+    if(require <= 0) {
         return;
     }
     _msgpack_buffer_append2(b, NULL, require);
@@ -220,12 +220,12 @@ static inline void _msgpack_buffer_consumed(msgpack_buffer_t* b, size_t length)
     }
 }
 
-static inline int msgpack_buffer_peek_1(msgpack_buffer_t* b)
+static inline int msgpack_buffer_peek_top_1(msgpack_buffer_t* b)
 {
     return (int) (unsigned char) b->read_buffer[0];
 }
 
-static inline int msgpack_buffer_read_1(msgpack_buffer_t* b)
+static inline int msgpack_buffer_read_top_1(msgpack_buffer_t* b)
 {
     int r = (int) (unsigned char) b->read_buffer[0];
 

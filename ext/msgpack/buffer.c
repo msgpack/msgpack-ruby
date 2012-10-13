@@ -163,8 +163,8 @@ bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length)
         return true;
     }
 
-    size_t chunk_size = msgpack_buffer_top_readable_size(b);
-    if(length <= chunk_size) {
+    size_t avail = msgpack_buffer_top_readable_size(b);
+    if(length <= avail) {
         if(buffer != NULL) {
             memcpy(buffer, b->read_buffer, length);
         }
@@ -176,17 +176,17 @@ bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length)
     }
 
     if(buffer != NULL) {
-        memcpy(buffer, b->read_buffer, chunk_size);
-        buffer += chunk_size;
+        memcpy(buffer, b->read_buffer, avail);
+        buffer += avail;
     }
-    length -= chunk_size;
+    length -= avail;
 
     size_t consumed_chunk = 1;
     msgpack_buffer_chunk_t* c = b->head->next;
 
     while(true) {
-        chunk_size = c->last - c->first;
-        if(length <= chunk_size) {
+        avail = c->last - c->first;
+        if(length <= avail) {
             if(buffer != NULL) {
                 memcpy(buffer, c->first, length);
             }
@@ -197,10 +197,10 @@ bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length)
         }
 
         if(buffer != NULL) {
-            memcpy(buffer, c->first, chunk_size);
-            buffer += chunk_size;
+            memcpy(buffer, c->first, avail);
+            buffer += avail;
         }
-        length -= chunk_size;
+        length -= avail;
         consumed_chunk++;
 
         c = c->next;
@@ -220,18 +220,18 @@ size_t msgpack_buffer_read(msgpack_buffer_t* b, char* buffer, size_t length)
     size_t const length_orig = length;
 
     while(true) {
-        size_t chunk_size = msgpack_buffer_top_readable_size(b);
+        size_t avail = msgpack_buffer_top_readable_size(b);
 
-        if(length <= chunk_size) {
+        if(length <= avail) {
             memcpy(buffer, b->read_buffer, length);
 
             _msgpack_buffer_consumed(b, length);
-            return length;
+            return length_orig;
         }
 
-        memcpy(buffer, b->read_buffer, chunk_size);
-        buffer += chunk_size;
-        length -= chunk_size;
+        memcpy(buffer, b->read_buffer, avail);
+        buffer += avail;
+        length -= avail;
 
         if(!_msgpack_buffer_shift_chunk(b)) {
             return length_orig - length;
@@ -377,16 +377,16 @@ static inline void* _msgpack_buffer_chunk_realloc(
 
 void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t length)
 {
-    /* data == NULL means ensure_sequential */
+    /* data == NULL means ensure_sequential_writable */
     if(data != NULL) {
-        size_t tail_avail = b->tail_buffer_end - b->tail.last;
+        size_t tail_avail = msgpack_buffer_writable_size(b);
         memcpy(b->tail.last, data, tail_avail);
         b->tail.last += tail_avail;
         data += tail_avail;
         length -= tail_avail;
     }
 
-    size_t capacity = b->tail_buffer_end - b->tail.first;
+    size_t capacity = b->tail.last - b->tail.first;
 
     /* can't realloc mapped chunk or rmem page */
     if(b->tail.mapped_string != NO_MAPPED_STRING
@@ -475,14 +475,14 @@ static inline VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c)
 
 size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t length)
 {
-    size_t chunk_size = msgpack_buffer_top_readable_size(b);
-    if(chunk_size == 0) {
+    size_t avail = msgpack_buffer_top_readable_size(b);
+    if(avail == 0) {
         return 0;
     }
 
 #ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
     /* optimize */
-    if(length <= chunk_size &&
+    if(length <= avail &&
             b->head->mapped_string != NO_MAPPED_STRING &&
             length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD &&
             RSTRING_LEN(string) == 0) {
@@ -501,9 +501,9 @@ size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t l
     size_t const length_orig = length;
 
     while(true) {
-//printf("chunk size: %lu\n", chunk_size);
+//printf("avail: %lu\n", avail);
 //printf("length: %lu\n", length);
-        if(length <= chunk_size) {
+        if(length <= avail) {
 //printf("read_buffer: %p\n", b->read_buffer);
             rb_str_buf_cat(string, b->read_buffer, length);
 
@@ -511,14 +511,14 @@ size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t l
             return length;
         }
 
-        rb_str_buf_cat(string, b->read_buffer, chunk_size);
-        length -= chunk_size;
+        rb_str_buf_cat(string, b->read_buffer, avail);
+        length -= avail;
 
         if(!_msgpack_buffer_shift_chunk(b)) {
             return length_orig - length;
         }
 
-        chunk_size = msgpack_buffer_top_readable_size(b);
+        avail = msgpack_buffer_top_readable_size(b);
     }
 }
 
@@ -532,22 +532,22 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
     VALUE string = rb_str_new(NULL, length);
     char* buffer = RSTRING_PTR(string);
 
-    size_t chunk_size = msgpack_buffer_top_readable_size(b);
-    memcpy(buffer, b->read_buffer, chunk_size);
-    buffer += chunk_size;
-    length -= chunk_size;
+    size_t avail = msgpack_buffer_top_readable_size(b);
+    memcpy(buffer, b->read_buffer, avail);
+    buffer += avail;
+    length -= avail;
 
     msgpack_buffer_chunk_t* c = b->head->next;
 
     while(true) {
-        chunk_size = c->last - c->first;
-        memcpy(buffer, c->first, chunk_size);
+        avail = c->last - c->first;
+        memcpy(buffer, c->first, avail);
 
-        if(length <= chunk_size) {
+        if(length <= avail) {
             return string;
         }
-        buffer += chunk_size;
-        length -= chunk_size;
+        buffer += avail;
+        length -= avail;
 
         c = c->next;
     }

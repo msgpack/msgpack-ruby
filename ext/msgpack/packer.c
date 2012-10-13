@@ -59,7 +59,7 @@ void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t requir
             return;
         }
     }
-    msgpack_buffer_ensure_sequential(PACKER_BUFFER_(pk), require);
+    msgpack_buffer_ensure_sequential_writable(PACKER_BUFFER_(pk), require);
 }
 
 void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)

@@ -16,7 +16,7 @@ module MessagePack
     #   @param io [IO]
     #   @param options [Hash]
     #   This unpacker reads data from the _io_ to fill the internal buffer.
-    #   _io_ must respond to readpartial(length[,string]) or read(length[,string]) method.
+    #   _io_ must respond to readpartial(length [,string]) or read(length [,string]) method.
     #
     def initialize(*args)
     end

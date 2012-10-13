@@ -89,7 +89,7 @@ module MessagePack
     #
     # @return [String]
     #
-    def read_all
+    def read_all(n, buffer=nil)
     end
 
     #

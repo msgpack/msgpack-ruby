@@ -119,7 +119,7 @@ static int read_head_byte(msgpack_unpacker_t* uk)
         feed_buffer_from_io(uk);
     }
 //printf("%lu\n", msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)));
-    return uk->head_byte = msgpack_buffer_read_1(UNPACKER_BUFFER_(uk));
+    return uk->head_byte = msgpack_buffer_read_top_1(UNPACKER_BUFFER_(uk));
 }
 
 static inline int get_head_byte(msgpack_unpacker_t* uk)
