@@ -68,6 +68,7 @@ module MessagePack
     def <<(data)
     end
 
+    #
     # Consumes _n_ bytes from the head of the buffer and returns consumed data.
     # If the size of the buffer is less than _n_, it reads all of data in the buffer.
     #
@@ -150,6 +151,15 @@ module MessagePack
     # @return [Array] array of strings
     #
     def to_a
+    end
+
+    #
+    # Flushes data in the internal buffer to the internal IO.
+    # If internal IO is not set, it doesn nothing.
+    #
+    # @return [Buffer] self
+    #
+    def flush
     end
 
     #

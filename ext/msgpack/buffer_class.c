@@ -443,6 +443,13 @@ static VALUE Buffer_to_a(VALUE self)
     return msgpack_buffer_all_as_string_array(b);
 }
 
+static VALUE Buffer_flush(VALUE self)
+{
+    BUFFER(self, b);
+    msgpack_buffer_flush(b);
+    return self;
+}
+
 static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
     BUFFER(self, b);
@@ -473,6 +480,7 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Buffer, "skip_all", Buffer_skip_all, 1);
     rb_define_method(cMessagePack_Buffer, "read", Buffer_read, -1);
     rb_define_method(cMessagePack_Buffer, "read_all", Buffer_read_all, -1);
+    rb_define_method(cMessagePack_Buffer, "flush", Buffer_flush, 0);
     rb_define_method(cMessagePack_Buffer, "write_to", Buffer_write_to, 1);
     rb_define_method(cMessagePack_Buffer, "to_str", Buffer_to_str, 0);
     rb_define_alias(cMessagePack_Buffer, "to_s", "to_str");
