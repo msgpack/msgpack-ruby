@@ -2,31 +2,58 @@ require 'spec_helper'
 require 'random_compat'
 
 describe Buffer do
-  EXAMPLES = {}
-  EXAMPLES[:empty01] = ''
-  EXAMPLES[:empty02] = ''
-  EXAMPLES[:copy01] = 'short'
-  EXAMPLES[:copy02] = 'short'*2
-  EXAMPLES[:ref01] = 'short'*128
-  EXAMPLES[:ref02] = 'short'*128*2
-  EXAMPLES[:ref03] = 'a'*((1024*1024+2)*2)
-  EXAMPLES[:refcopy01] = 'short'*128
-  EXAMPLES[:expand01] = 'short'*1024
-  EXAMPLES[:expand02] = 'short'*(127+1024)
-  EXAMPLES[:offset01] = 'ort'+'short'
-  EXAMPLES[:offset02] = 'ort'+'short'*127
-  EXAMPLES[:offset03] = 'ort'+'short'*(126+1024)
+  STATIC_EXAMPLES = {}
+  STATIC_EXAMPLES[:empty01] = ''
+  STATIC_EXAMPLES[:empty02] = ''
+  STATIC_EXAMPLES[:copy01] = 'short'
+  STATIC_EXAMPLES[:copy02] = 'short'*2
+  STATIC_EXAMPLES[:ref01] = 'short'*128
+  STATIC_EXAMPLES[:ref02] = 'short'*128*2
+  STATIC_EXAMPLES[:ref03] = 'a'*((1024*1024+2)*2)
+  STATIC_EXAMPLES[:refcopy01] = 'short'*128
+  STATIC_EXAMPLES[:expand01] = 'short'*1024
+  STATIC_EXAMPLES[:expand02] = 'short'*(127+1024)
+  STATIC_EXAMPLES[:offset01] = 'ort'+'short'
+  STATIC_EXAMPLES[:offset02] = 'ort'+'short'*127
+  STATIC_EXAMPLES[:offset03] = 'ort'+'short'*(126+1024)
 
   if ''.respond_to?(:force_encoding)
-    EXAMPLES.each_value {|v| v.force_encoding('ASCII-8BIT') }
+    STATIC_EXAMPLES.each_value {|v| v.force_encoding('ASCII-8BIT') }
   end
-  EXAMPLES.each_value {|v| v.freeze }
+  STATIC_EXAMPLES.each_value {|v| v.freeze }
 
-  let :examples do
-    EXAMPLES
+  r = Random.new #0xb6f43619478d4eab70bb2a31bf9c7f88
+  RANDOM_SEED = r.seed
+  puts "random seed: 0x#{RANDOM_SEED.to_s(16)}"
+
+  let :random_cases_examples do
+    r = Random.new(RANDOM_SEED)
+    cases = {}
+    examples = {}
+
+    10.times do |i|
+      b = Buffer.new
+      s = r.bytes(0)
+      r.rand(3).times do
+        n = r.rand(1024*1400)
+        x = r.bytes(n)
+        s << x
+        b << x
+      end
+      r.rand(2).times do
+        n = r.rand(1024*1400)
+        b.read(n)
+        s.slice!(0, n)
+      end
+      key = :"random#{"%02d"%i}"
+      cases[key] = b
+      examples[key] = s
+    end
+
+    [cases, examples]
   end
 
-  let :cases do
+  let :static_cases do
     map = {}
     map[:empty01] = empty01
     map[:empty02] = empty02
@@ -42,6 +69,26 @@ describe Buffer do
     map[:offset02] = offset02
     map[:offset03] = offset03
     map
+  end
+
+  let :static_examples do
+    STATIC_EXAMPLES
+  end
+
+  let :random_cases do
+    random_cases_examples[0]
+  end
+
+  let :random_examples do
+    random_cases_examples[1]
+  end
+
+  let :cases do
+    static_cases.merge(random_cases)
+  end
+
+  let :examples do
+    static_examples.merge(random_examples)
   end
 
   let :case_keys do
@@ -398,15 +445,23 @@ describe Buffer do
     }
   end
 
+  it 'write_to' do
+    case_keys.each {|k|
+      sio = StringIO.new
+      cases[k].write_to(sio).should == examples[k].size
+      cases[k].size.should == 0
+      sio.string.should == examples[k]
+    }
+  end
+
   it 'random read/write' do
-    r = Random.new#(0x7ae1a8b4042fd9d589281dbb081caf37)
+    r = Random.new(RANDOM_SEED)
     s = r.bytes(0)
     b = Buffer.new
 
-    puts "random read/write seed: 0x#{r.seed.to_s(16)}"
-    100.times {
+    10.times {
       # write
-      r.rand(3).times do
+      r.rand(4).times do
         n = r.rand(1024*1400)
         x = r.bytes(n)
         s << x
@@ -414,7 +469,7 @@ describe Buffer do
       end
 
       # read
-      r.rand(2).times do
+      r.rand(3).times do
         n = r.rand(1024*1400)
         ex = s.slice!(0, n)
         ex = nil if ex.empty?
@@ -426,15 +481,47 @@ describe Buffer do
     }
   end
 
-  it 'random skip write' do
-    r = Random.new
+  it 'random read_all/write' do
+    r = Random.new(RANDOM_SEED)
     s = r.bytes(0)
     b = Buffer.new
 
-    puts "random skip/write seed: 0x#{r.seed.to_s(16)}"
-    100.times {
+    10.times {
       # write
+      r.rand(4).times do
+        n = r.rand(1024*1400)
+        x = r.bytes(n)
+        s << x
+        b << x
+      end
+
+      # read_all
       r.rand(3).times do
+        n = r.rand(1024*1400)
+        begin
+          x = b.read_all(n)
+          ex = s.slice!(0, n)
+          x.size == n
+          x.should == ex
+          b.size.should == s.size
+        rescue EOFError
+          b.size.should == s.size
+          b.read.should == s
+          s.clear
+          break
+        end
+      end
+    }
+  end
+
+  it 'random skip write' do
+    r = Random.new(RANDOM_SEED)
+    s = r.bytes(0)
+    b = Buffer.new
+
+    10.times {
+      # write
+      r.rand(4).times do
         n = r.rand(1024*1400)
         x = r.bytes(n)
         s << x
@@ -442,11 +529,42 @@ describe Buffer do
       end
 
       # skip
-      r.rand(2).times do
+      r.rand(3).times do
         n = r.rand(1024*1400)
         ex = s.slice!(0, n)
         b.skip(n).should == ex.size
         b.size.should == s.size
+      end
+    }
+  end
+
+  it 'random skip_all write' do
+    r = Random.new(RANDOM_SEED)
+    s = r.bytes(0)
+    b = Buffer.new
+
+    10.times {
+      # write
+      r.rand(4).times do
+        n = r.rand(1024*1400)
+        x = r.bytes(n)
+        s << x
+        b << x
+      end
+
+      # skip_all
+      r.rand(3).times do
+        n = r.rand(1024*1400)
+        begin
+          b.skip_all(n)
+          ex = s.slice!(0, n)
+          b.size.should == s.size
+        ensure EOFError
+          b.size.should == s.size
+          b.read.should == s
+          s.clear
+          break
+        end
       end
     }
   end
