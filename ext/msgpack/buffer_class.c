@@ -214,9 +214,9 @@ static VALUE read_until_eof_rescue(VALUE args)
         size_t rl;
         if(max == 0) {
             if(out == Qnil) {
-                rl = msgpack_buffer_skip_nonblock(b, ULONG_MAX);
+                rl = msgpack_buffer_skip(b, b->io_buffer_size);
             } else {
-                rl = msgpack_buffer_read_to_string_nonblock(b, out, ULONG_MAX);
+                rl = msgpack_buffer_read_to_string(b, out, b->io_buffer_size);
             }
             if(rl == 0) {
                 break;
@@ -225,9 +225,9 @@ static VALUE read_until_eof_rescue(VALUE args)
 
         } else {
             if(out == Qnil) {
-                rl = msgpack_buffer_skip_nonblock(b, max);
+                rl = msgpack_buffer_skip(b, max);
             } else {
-                rl = msgpack_buffer_read_to_string_nonblock(b, out, max);
+                rl = msgpack_buffer_read_to_string(b, out, max);
             }
             if(rl == 0) {
                 break;
@@ -263,7 +263,7 @@ static inline size_t read_until_eof(msgpack_buffer_t* b, VALUE out, unsigned lon
 
     } else {
         if(max == 0) {
-            max = ULONG_MAX;  // TODO ULONG_MAX?
+            max = ULONG_MAX;
         }
         if(out == Qnil) {
             return msgpack_buffer_skip_nonblock(b, max);
@@ -284,7 +284,7 @@ static inline VALUE read_all(msgpack_buffer_t* b, VALUE out)
     }
 #endif
     MAKE_EMPTY_STRING(out);
-    read_until_eof(b, out, ULONG_MAX);  // TODO ULONG_MAX?
+    read_until_eof(b, out, 0);
     return out;
 }
 
@@ -364,7 +364,7 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
     }
 
     MAKE_EMPTY_STRING(out);
-    msgpack_buffer_read_to_string_nonblock(b, out, n);
+    size_t sz = msgpack_buffer_read_to_string_nonblock(b, out, n);
 
     return out;
 }
@@ -372,7 +372,6 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
 static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
 {
     VALUE out = Qnil;
-    bool length_spec = false;
     unsigned long n = -1;
     bool all = false;
 

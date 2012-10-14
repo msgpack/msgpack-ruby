@@ -406,9 +406,9 @@ static inline void* _msgpack_buffer_chunk_realloc(
     return mem;
 }
 
-void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length)
+void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length, bool flush_to_io)
 {
-    if(b->io != Qnil) {
+    if(flush_to_io && b->io != Qnil) {
         msgpack_buffer_flush(b);
         if(msgpack_buffer_writable_size(b) >= length) {
             /* data == NULL means ensure_writable */
@@ -630,7 +630,7 @@ size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b)
     }
 
     /* TODO zero-copy optimize? */
-    msgpack_buffer_append(b, RSTRING_PTR(b->io_buffer), len);
+    msgpack_buffer_append_nonblock(b, RSTRING_PTR(b->io_buffer), len);
 
     return len;
 }

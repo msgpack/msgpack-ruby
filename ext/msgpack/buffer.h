@@ -194,7 +194,7 @@ static inline void msgpack_buffer_write_byte_and_data(msgpack_buffer_t* b, int b
     b->tail.last += length;
 }
 
-void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length);
+void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length, bool use_flush);
 
 size_t msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method, bool consume);
 
@@ -209,11 +209,11 @@ static inline size_t msgpack_buffer_flush(msgpack_buffer_t* b)
 static inline void msgpack_buffer_ensure_writable(msgpack_buffer_t* b, size_t require)
 {
     if(msgpack_buffer_writable_size(b) < require) {
-        _msgpack_buffer_expand(b, NULL, require);
+        _msgpack_buffer_expand(b, NULL, require, true);
     }
 }
 
-static inline void msgpack_buffer_append(msgpack_buffer_t* b, const char* data, size_t length)
+static inline void _msgpack_buffer_append_impl(msgpack_buffer_t* b, const char* data, size_t length, bool flush_to_io)
 {
     if(length == 0) {
         return;
@@ -225,7 +225,17 @@ static inline void msgpack_buffer_append(msgpack_buffer_t* b, const char* data, 
         return;
     }
 
-    _msgpack_buffer_expand(b, data, length);
+    _msgpack_buffer_expand(b, data, length, flush_to_io);
+}
+
+static inline void msgpack_buffer_append(msgpack_buffer_t* b, const char* data, size_t length)
+{
+    _msgpack_buffer_append_impl(b, data, length, true);
+}
+
+static inline void msgpack_buffer_append_nonblock(msgpack_buffer_t* b, const char* data, size_t length)
+{
+    _msgpack_buffer_append_impl(b, data, length, false);
 }
 
 void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string);

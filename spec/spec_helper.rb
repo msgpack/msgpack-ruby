@@ -13,7 +13,6 @@ if ENV['GC_STRESS']
   GC.stress = true
 end
 
-require 'stringio'
 require 'msgpack'
 
 Packer = MessagePack::Packer

@@ -1,9 +1,8 @@
 # encoding: ascii-8bit
 require 'spec_helper'
-require 'stringio'
 
+require 'stringio'
 if defined?(Encoding)
-  Encoding.default_internal = 'ASCII-8BIT'
   Encoding.default_external = 'ASCII-8BIT'
 end
 

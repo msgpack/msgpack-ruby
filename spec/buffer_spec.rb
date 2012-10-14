@@ -22,12 +22,12 @@ describe Buffer do
   end
   STATIC_EXAMPLES.each_value {|v| v.freeze }
 
-  r = Random.new #0xb6f43619478d4eab70bb2a31bf9c7f88
-  RANDOM_SEED = r.seed
-  puts "random seed: 0x#{RANDOM_SEED.to_s(16)}"
+  r = Random.new
+  random_seed = r.seed
+  puts "buffer random seed: 0x#{random_seed.to_s(16)}"
 
   let :random_cases_examples do
-    r = Random.new(RANDOM_SEED)
+    r = Random.new(random_seed)
     cases = {}
     examples = {}
 
@@ -455,7 +455,7 @@ describe Buffer do
   end
 
   it 'random read/write' do
-    r = Random.new(RANDOM_SEED)
+    r = Random.new(random_seed)
     s = r.bytes(0)
     b = Buffer.new
 
@@ -465,7 +465,7 @@ describe Buffer do
         n = r.rand(1024*1400)
         x = r.bytes(n)
         s << x
-        b << x
+        b.write(x)
       end
 
       # read
@@ -482,7 +482,7 @@ describe Buffer do
   end
 
   it 'random read_all/write' do
-    r = Random.new(RANDOM_SEED)
+    r = Random.new(random_seed)
     s = r.bytes(0)
     b = Buffer.new
 
@@ -492,7 +492,7 @@ describe Buffer do
         n = r.rand(1024*1400)
         x = r.bytes(n)
         s << x
-        b << x
+        b.write(x)
       end
 
       # read_all
@@ -515,7 +515,7 @@ describe Buffer do
   end
 
   it 'random skip write' do
-    r = Random.new(RANDOM_SEED)
+    r = Random.new(random_seed)
     s = r.bytes(0)
     b = Buffer.new
 
@@ -525,7 +525,7 @@ describe Buffer do
         n = r.rand(1024*1400)
         x = r.bytes(n)
         s << x
-        b << x
+        b.write(x)
       end
 
       # skip
@@ -539,7 +539,7 @@ describe Buffer do
   end
 
   it 'random skip_all write' do
-    r = Random.new(RANDOM_SEED)
+    r = Random.new(random_seed)
     s = r.bytes(0)
     b = Buffer.new
 
@@ -549,7 +549,7 @@ describe Buffer do
         n = r.rand(1024*1400)
         x = r.bytes(n)
         s << x
-        b << x
+        b.write(x)
       end
 
       # skip_all
