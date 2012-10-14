@@ -200,6 +200,9 @@ size_t msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method
 
 static inline size_t msgpack_buffer_flush(msgpack_buffer_t* b)
 {
+    if(b->io == Qnil) {
+        return 0;
+    }
     return msgpack_buffer_flush_to_io(b, b->io, b->io_write_all_method, true);
 }
 

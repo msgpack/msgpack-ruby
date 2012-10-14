@@ -67,7 +67,7 @@ module MessagePack
     end
 
     #
-    # Flushes data in the internal buffer to the internal IO.
+    # Flushes data in the internal buffer to the internal IO. Same as _buffer.flush.
     # If internal IO is not set, it doesn nothing.
     #
     # @return [Packer] self
