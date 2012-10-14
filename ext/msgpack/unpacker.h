@@ -54,10 +54,6 @@ struct msgpack_unpacker_t {
     VALUE reading_raw;
     size_t reading_raw_remaining;
 
-    VALUE io;
-    VALUE io_buffer;
-    ID io_partial_read_method;
-
     VALUE buffer_ref;
 };
 
@@ -79,14 +75,7 @@ void msgpack_unpacker_destroy(msgpack_unpacker_t* uk);
 
 void msgpack_unpacker_mark(msgpack_unpacker_t* uk);
 
-static inline void msgpack_unpacker_set_io(msgpack_unpacker_t* uk, VALUE io, ID io_partial_read_method)
-{
-    uk->io = io;
-    uk->io_partial_read_method = io_partial_read_method;
-}
-
 void msgpack_unpacker_reset(msgpack_unpacker_t* uk);
-
 
 
 /* error codes */

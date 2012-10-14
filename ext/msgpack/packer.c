@@ -51,17 +51,6 @@ void msgpack_packer_reset(msgpack_packer_t* pk)
 }
 
 
-void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t require)
-{
-    if(pk->io != Qnil) {
-        msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
-        if(msgpack_buffer_writable_size(PACKER_BUFFER_(pk)) >= require) {
-            return;
-        }
-    }
-    msgpack_buffer_ensure_sequential_writable(PACKER_BUFFER_(pk), require);
-}
-
 void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)
 {
     size_t len = RARRAY_LEN(v);

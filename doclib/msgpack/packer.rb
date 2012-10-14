@@ -66,6 +66,7 @@ module MessagePack
     def write_map_header(size)
     end
 
+    # FIXME changed
     #
     # Flushes data in the internal buffer to the internal IO.
     # If internal IO is not set, it doesn nothing.
@@ -119,10 +120,11 @@ module MessagePack
 
     #
     # Writes all of data in the internal buffer into the given IO. Same as buffer.write_to(io).
+    # This method consumes and removes data from the internal buffer.
     # _io_ must respond to write(data) method.
     #
     # @param io [IO]
-    # @return nil
+    # @return [Integer] byte size of written data
     #
     def write_to(io)
     end

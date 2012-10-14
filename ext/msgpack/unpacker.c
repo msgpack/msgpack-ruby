@@ -30,8 +30,6 @@ void msgpack_unpacker_init(msgpack_unpacker_t* uk)
 
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
-    uk->io = Qnil;
-    uk->io_buffer = Qnil;
 
     uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_t));
     uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
@@ -47,8 +45,6 @@ void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
 {
     rb_gc_mark(uk->last_object);
     rb_gc_mark(uk->reading_raw);
-    rb_gc_mark(uk->io);
-    rb_gc_mark(uk->io_buffer);
 
     msgpack_unpacker_stack_t* s = uk->stack;
     msgpack_unpacker_stack_t* send = uk->stack + uk->stack_depth;
@@ -74,52 +70,19 @@ void msgpack_unpacker_reset(msgpack_unpacker_t* uk)
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
     uk->reading_raw_remaining = 0;
-    uk->io = Qnil;
-    uk->io_buffer = Qnil;
-    uk->io_partial_read_method = 0;
     uk->buffer_ref = Qnil;
-}
-
-#ifndef MSGPACK_UNPACKER_IO_READ_SIZE
-#define MSGPACK_UNPACKER_IO_READ_SIZE (64*1024)
-#endif
-
-/* read at least 1 byte */
-static size_t feed_buffer_from_io(msgpack_unpacker_t* uk)
-{
-    if(uk->io_buffer == Qnil) {
-        uk->io_buffer = rb_funcall(uk->io, uk->io_partial_read_method, 1, LONG2FIX(MSGPACK_UNPACKER_IO_READ_SIZE));
-        if(uk->io_buffer == Qnil) {
-            rb_raise(rb_eEOFError, "IO reached end of file");
-        }
-        StringValue(uk->io_buffer);
-    } else {
-        rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(MSGPACK_UNPACKER_IO_READ_SIZE), uk->io_buffer);
-    }
-
-    size_t len = RSTRING_LEN(uk->io_buffer);
-    if(len == 0) {
-        rb_raise(rb_eEOFError, "IO reached end of file");
-    }
-
-    /* TODO zero-copy optimize? */
-    msgpack_buffer_append(UNPACKER_BUFFER_(uk), RSTRING_PTR(uk->io_buffer), len);
-
-    return len;
 }
 
 
 /* head byte functions */
 static int read_head_byte(msgpack_unpacker_t* uk)
 {
-    if(msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)) <= 0) {
-        if(uk->io == Qnil) {
-            return PRIMITIVE_EOF;
-        }
-        feed_buffer_from_io(uk);
-    }
 //printf("%lu\n", msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)));
-    return uk->head_byte = msgpack_buffer_read_top_1(UNPACKER_BUFFER_(uk));
+    int r = msgpack_buffer_read_1(UNPACKER_BUFFER_(uk));
+    if(r == -1) {
+        return PRIMITIVE_EOF;
+    }
+    return uk->head_byte = r;
 }
 
 static inline int get_head_byte(msgpack_unpacker_t* uk)
@@ -194,21 +157,6 @@ static inline bool msgpack_unpacker_stack_is_empty(msgpack_unpacker_t* uk)
 
 #endif
 
-static void read_all_data_from_io_to_string(msgpack_unpacker_t* uk, VALUE string, size_t length)
-{
-    if(RSTRING_LEN(string) == 0) {
-        rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(length), string);
-    } else if(uk->io_buffer != Qnil) {
-        if(uk->io_buffer == Qnil) {
-            uk->io_buffer = rb_funcall(uk->io, uk->io_partial_read_method, 1, LONG2FIX(length));
-            StringValue(uk->io_buffer);
-        } else {
-            rb_funcall(uk->io, uk->io_partial_read_method, 2, LONG2FIX(length), uk->io_buffer);
-        }
-        rb_str_buf_cat(string, (const void*)RSTRING_PTR(uk->io_buffer), RSTRING_LEN(uk->io_buffer));
-    }
-}
-
 
 #define READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, n) \
     union msgpack_buffer_cast_block_t* cb = msgpack_buffer_read_cast_block(UNPACKER_BUFFER_(uk), n); \
@@ -235,39 +183,19 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
         uk->reading_raw = rb_str_buf_new(length);
     }
 
-    if(uk->io != Qnil) {
-        if(msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)) > 0) {
-            /* read from buffer */
-            size_t n = msgpack_buffer_read_to_string(UNPACKER_BUFFER_(uk), uk->reading_raw, length);
-            uk->reading_raw_remaining -= n;
-
-            if(uk->reading_raw_remaining == 0) {
-                object_complete(uk, uk->reading_raw);
-                uk->reading_raw = Qnil;
-                return PRIMITIVE_OBJECT_COMPLETE;
-            }
-        }
-
-        /* read from io */
-        read_all_data_from_io_to_string(uk, uk->reading_raw, length);
-        uk->reading_raw_remaining = 0;
-
-        object_complete(uk, uk->reading_raw);
-        uk->reading_raw = Qnil;
-        return PRIMITIVE_OBJECT_COMPLETE;
-
-    } else {
+    do {
         size_t n = msgpack_buffer_read_to_string(UNPACKER_BUFFER_(uk), uk->reading_raw, length);
-        uk->reading_raw_remaining -= n;
-
-        if(uk->reading_raw_remaining > 0) {
+        if(n == 0) {
             return PRIMITIVE_EOF;
         }
+        /* update reading_raw_remaining everytime because
+         * msgpack_buffer_read_to_string raises IOError */
+        uk->reading_raw_remaining = length = length - n;
+    } while(length > 0);
 
-        object_complete(uk, uk->reading_raw);
-        uk->reading_raw = Qnil;
-        return PRIMITIVE_OBJECT_COMPLETE;
-    }
+    object_complete(uk, uk->reading_raw);
+    uk->reading_raw = Qnil;
+    return PRIMITIVE_OBJECT_COMPLETE;
 }
 
 static inline int read_raw_body_begin(msgpack_unpacker_t* uk)

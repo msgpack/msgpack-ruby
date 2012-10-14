@@ -35,7 +35,10 @@ VALUE mMessagePack = rb_define_module("MessagePack");  /* dummy for rdoc */
 
 VALUE cMessagePack_Buffer;
 
+static ID s_read;
+static ID s_readpartial;
 static ID s_write;
+static ID s_append;
 
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
@@ -68,11 +71,38 @@ static VALUE Buffer_alloc(VALUE klass)
     return Data_Wrap_Struct(klass, msgpack_buffer_mark, Buffer_free, b);
 }
 
-static VALUE Buffer_initialize(VALUE self)
+static ID get_partial_read_method(VALUE io)
 {
-    return self;
+    if(rb_respond_to(io, s_readpartial)) {
+        return s_readpartial;
+    } else if(rb_respond_to(io, s_read)) {
+        return s_read;
+    } else {
+        return s_read;
+    }
 }
 
+static ID get_write_all_method(VALUE io)
+{
+    if(rb_respond_to(io, s_write)) {
+        return s_write;
+    } else if(rb_respond_to(io, s_append)) {
+        return s_append;
+    } else {
+        return s_write;
+    }
+}
+
+void MessagePack_Buffer_initialize(msgpack_buffer_t* b, VALUE io, VALUE options)
+{
+    b->io = io;
+    b->io_partial_read_method = get_partial_read_method(io);
+    b->io_write_all_method = get_write_all_method(io);
+
+    // TODO options
+    // TODO reference threshold
+    UNUSED(options);
+}
 
 VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
 {
@@ -80,6 +110,39 @@ VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
     return Data_Wrap_Struct(cMessagePack_Buffer, msgpack_buffer_mark, NULL, b);
 }
 
+static VALUE Buffer_initialize(int argc, VALUE* argv, VALUE self)
+{
+    VALUE io = Qnil;
+    VALUE options = Qnil;
+
+    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
+        /* Qnil */
+
+    } else if(argc == 1) {
+        VALUE v = argv[0];
+        if(rb_type(v) == T_HASH) {
+            options = v;
+        } else {
+            io = v;
+        }
+
+    } else if(argc == 2) {
+        io = argv[0];
+        options = argv[1];
+        if(rb_type(options) != T_HASH) {
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(io));
+        }
+
+    } else {
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
+    }
+
+    BUFFER(self, b);
+
+    MessagePack_Buffer_initialize(b, io, options);
+
+    return self;
+}
 
 static VALUE Buffer_clear(VALUE self)
 {
@@ -129,43 +192,130 @@ static VALUE Buffer_append(VALUE self, VALUE string_or_buffer)
     return self;
 }
 
-static VALUE Buffer_skip(VALUE self, VALUE n)
+
+#define MAKE_EMPTY_STRING(orig) \
+    if(orig == Qnil) { \
+        orig = rb_str_buf_new(0); \
+    } else { \
+        rb_str_resize(orig, 0); \
+    }
+
+static VALUE read_until_eof_rescue(VALUE args)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t* b = (void*) ((VALUE*) args)[0];
+    VALUE out = ((VALUE*) args)[1];
+    unsigned long max = ((VALUE*) args)[2];
+    size_t* sz = (void*) ((VALUE*) args)[3];
 
-    unsigned long sn = FIX2ULONG(n);
+    while(true) {
+        size_t rl;
+        if(max == 0) {
+            if(out == Qnil) {
+                rl = msgpack_buffer_skip_nonblock(b, ULONG_MAX);
+            } else {
+                rl = msgpack_buffer_read_to_string_nonblock(b, out, ULONG_MAX);
+            }
+            if(rl == 0) {
+                break;
+            }
+            *sz += rl;
 
-    /* do nothing */
-    if(sn == 0) {
-        return LONG2FIX(0);
+        } else {
+            if(out == Qnil) {
+                rl = msgpack_buffer_skip_nonblock(b, max);
+            } else {
+                rl = msgpack_buffer_read_to_string_nonblock(b, out, max);
+            }
+            if(rl == 0) {
+                break;
+            }
+            *sz += rl;
+            if(max <= rl) {
+                break;
+            } else {
+                max -= rl;
+            }
+        }
     }
 
-    size_t sz = msgpack_buffer_all_readable_size(b);
-
-    if(sz < sn) {
-        sn = sz;
-    }
-
-    msgpack_buffer_skip_all(b, sn);
-
-    return LONG2FIX(sn);
+    return Qnil;
 }
 
-static VALUE Buffer_skip_all(VALUE self, VALUE n)
+static VALUE read_until_eof_error(VALUE args)
+{
+    /* ignore EOFError */
+    UNUSED(args);
+    return Qnil;
+}
+
+static inline size_t read_until_eof(msgpack_buffer_t* b, VALUE out, unsigned long max)
+{
+    if(msgpack_buffer_has_io(b)) {
+        size_t sz = 0;
+        VALUE args[4] = { (VALUE)(void*) b, out, (VALUE) max, (VALUE)(void*) &sz };
+        rb_rescue2(read_until_eof_rescue, (VALUE)(void*) args,
+                read_until_eof_error, (VALUE)(void*) args,
+                rb_eEOFError, NULL);
+        return sz;
+
+    } else {
+        if(max == 0) {
+            max = ULONG_MAX;  // TODO ULONG_MAX?
+        }
+        if(out == Qnil) {
+            return msgpack_buffer_skip_nonblock(b, max);
+        } else {
+            return msgpack_buffer_read_to_string_nonblock(b, out, max);
+        }
+    }
+}
+
+static inline VALUE read_all(msgpack_buffer_t* b, VALUE out)
+{
+#ifndef DISABLE_BUFFER_READ_TO_S_OPTIMIZE
+    if(out == Qnil && !msgpack_buffer_has_io(b)) {
+        /* same as to_s && clear; optimize */
+        VALUE str = msgpack_buffer_all_as_string(b);
+        msgpack_buffer_clear(b);
+        return str;
+    }
+#endif
+    MAKE_EMPTY_STRING(out);
+    read_until_eof(b, out, ULONG_MAX);  // TODO ULONG_MAX?
+    return out;
+}
+
+static VALUE Buffer_skip(VALUE self, VALUE sn)
 {
     BUFFER(self, b);
 
-    unsigned long sn = FIX2ULONG(n);
+    unsigned long n = FIX2ULONG(sn);
 
     /* do nothing */
-    if(sn == 0) {
+    if(n == 0) {
+        return ULONG2NUM(0);
+    }
+
+    size_t sz = read_until_eof(b, Qnil, n);
+    return ULONG2NUM(sz);
+}
+
+static VALUE Buffer_skip_all(VALUE self, VALUE sn)
+{
+    BUFFER(self, b);
+
+    unsigned long n = FIX2ULONG(sn);
+
+    /* do nothing */
+    if(n == 0) {
         return self;
     }
 
-    /* skip all or raise */
-    if(!msgpack_buffer_skip_all(b, sn)) {
+    if(!msgpack_buffer_ensure_readable(b, n)) {
         rb_raise(rb_eEOFError, "end of buffer reached");
     }
+
+    msgpack_buffer_skip_nonblock(b, n);
 
     return self;
 }
@@ -173,21 +323,18 @@ static VALUE Buffer_skip_all(VALUE self, VALUE n)
 static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
 {
     VALUE out = Qnil;
-    bool length_spec = false;
     unsigned long n = 0;
+    bool all = false;
 
     switch(argc) {
     case 2:
         out = argv[1];
         /* pass through */
     case 1:
-        if(argv[0] != Qnil) {
-            n = FIX2ULONG(argv[0]);
-            length_spec = true;
-            break;
-        }
-        /* pass through */
+        n = FIX2ULONG(argv[0]);
+        break;
     case 0:
+        all = true;
         break;
     default:
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
@@ -199,52 +346,22 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
         CHECK_STRING_TYPE(out);
     }
 
-    /* do nothing */
-    if(length_spec && n == 0) {
-        if(out == Qnil) {
-            out = rb_str_buf_new(0);
-        } else {
-            rb_str_resize(out, 0);
-        }
+    if(all) {
+        return read_all(b, out);
+    }
+
+    if(n == 0) {
+        /* do nothing */
+        MAKE_EMPTY_STRING(out);
         return out;
     }
 
-    size_t sz = msgpack_buffer_all_readable_size(b);
-
-    if(length_spec) {
-        if(sz < n) {
-            /* read all or raise */
-            rb_raise(rb_eEOFError, "end of buffer reached");
-        }
-
-    } else {
-        /* read all available */
-        if(sz == 0) {
-            if(out == Qnil) {
-                out = rb_str_buf_new(0);
-            } else {
-                rb_str_resize(out, 0);
-            }
-            return out;
-        }
-        n = sz;
+    if(!msgpack_buffer_ensure_readable(b, n)) {
+        rb_raise(rb_eEOFError, "end of buffer reached");
     }
 
-#ifndef DISABLE_BUFFER_READ_TO_S_OPTIMIZE
-    /* same as to_s; optimize */
-    if(sz == n && out == Qnil) {
-        VALUE str = msgpack_buffer_all_as_string(b);
-        msgpack_buffer_clear(b);
-        return str;
-    }
-#endif
-
-    if(out == Qnil) {
-        out = rb_str_buf_new(n);
-    } else {
-        rb_str_resize(out, 0);
-    }
-    msgpack_buffer_read_to_string(b, out, n);
+    MAKE_EMPTY_STRING(out);
+    msgpack_buffer_read_to_string_nonblock(b, out, n);
 
     return out;
 }
@@ -254,19 +371,17 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
     VALUE out = Qnil;
     bool length_spec = false;
     unsigned long n = -1;
+    bool all = false;
 
     switch(argc) {
     case 2:
         out = argv[1];
         /* pass through */
     case 1:
-        if(argv[0] != Qnil) {
-            n = FIX2LONG(argv[0]);
-            length_spec = true;
-            break;
-        }
-        /* pass through */
+        n = FIX2ULONG(argv[0]);
+        break;
     case 0:
+        all = true;
         break;
     default:
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
@@ -278,54 +393,39 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
         CHECK_STRING_TYPE(out);
     }
 
-    /* do nothing */
-    if(length_spec && n == 0) {
-        if(out == Qnil) {
-            out = rb_str_buf_new(0);
-        } else {
-            rb_str_resize(out, 0);
-        }
+    if(all) {
+        return read_all(b, out);
+    }
+
+    if(n == 0) {
+        /* do nothing */
+        MAKE_EMPTY_STRING(out);
         return out;
     }
 
-    size_t sz = msgpack_buffer_all_readable_size(b);
-
-    if(sz == 0) {
-        if(length_spec) {
-            /* EOF => nil */
-            return Qnil;
-        } else {
-            /* read zero or more bytes */
-            if(out == Qnil) {
-                out = rb_str_buf_new(0);
-            } else {
-                rb_str_resize(out, 0);
-            }
-            return out;
-        }
-    }
-
-    if(!length_spec || sz < n) {
-        n = sz;
-    }
-
 #ifndef DISABLE_BUFFER_READ_TO_S_OPTIMIZE
-    /* same as to_s; optimize */
-    if(sz == n && out == Qnil) {
+    if(!msgpack_buffer_has_io(b) && out == Qnil &&
+            msgpack_buffer_all_readable_size(b) <= n) {
+        /* same as to_s && clear; optimize */
         VALUE str = msgpack_buffer_all_as_string(b);
         msgpack_buffer_clear(b);
-        return str;
+
+        if(RSTRING_LEN(str) == 0) {
+            return Qnil;
+        } else {
+            return str;
+        }
     }
 #endif
 
-    if(out == Qnil) {
-        out = rb_str_buf_new(n);
-    } else {
-        rb_str_resize(out, 0);
-    }
-    msgpack_buffer_read_to_string(b, out, n);
+    MAKE_EMPTY_STRING(out);
+    read_until_eof(b, out, n);
 
-    return out;
+    if(RSTRING_LEN(out) == 0) {
+        return Qnil;
+    } else {
+        return out;
+    }
 }
 
 static VALUE Buffer_to_str(VALUE self)
@@ -343,21 +443,16 @@ static VALUE Buffer_to_a(VALUE self)
 static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
     BUFFER(self, b);
-    VALUE ary = msgpack_buffer_all_as_string_array(b);
-
-    unsigned int len = (unsigned int)RARRAY_LEN(ary);
-    unsigned int i;
-    for(i=0; i < len; ++i) {
-        VALUE e = rb_ary_entry(ary, i);
-        rb_funcall(io, s_write, 1, e);
-    }
-
-    return Qnil;
+    size_t sz = msgpack_buffer_flush_to_io(b, io, s_write, true);
+    return ULONG2NUM(sz);
 }
 
 void MessagePack_Buffer_module_init(VALUE mMessagePack)
 {
+    s_read = rb_intern("read");
+    s_readpartial = rb_intern("readpartial");
     s_write = rb_intern("write");
+    s_append = rb_intern("<<");
 
     msgpack_buffer_static_init();
 
@@ -365,7 +460,7 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
 
     rb_define_alloc_func(cMessagePack_Buffer, Buffer_alloc);
 
-    rb_define_method(cMessagePack_Buffer, "initialize", Buffer_initialize, 0);
+    rb_define_method(cMessagePack_Buffer, "initialize", Buffer_initialize, -1);
     rb_define_method(cMessagePack_Buffer, "clear", Buffer_clear, 0);
     rb_define_method(cMessagePack_Buffer, "size", Buffer_size, 0);
     rb_define_method(cMessagePack_Buffer, "empty?", Buffer_empty_p, 0);

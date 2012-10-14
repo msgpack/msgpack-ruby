@@ -25,7 +25,6 @@
 VALUE cMessagePack_Packer;
 
 static ID s_to_msgpack;
-static ID s_append;
 static ID s_write;
 
 //static VALUE s_packer_value;
@@ -60,36 +59,15 @@ static VALUE Packer_alloc(VALUE klass)
     return self;
 }
 
-static ID get_write_method(VALUE io)
-{
-    if(rb_respond_to(io, s_write)) {
-        return s_write;
-    } else if(rb_respond_to(io, s_append)) {
-        return s_append;
-    } else {
-        return 0;
-    }
-}
-
-static ID write_method_of(VALUE io)
-{
-    ID m = get_write_method(io);
-    if(m == 0) {
-        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", rb_obj_classname(io));
-    }
-    return m;
-}
-
 static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
 {
-    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
-        return self;
-    }
-
     VALUE io = Qnil;
     VALUE options = Qnil;
 
-    if(argc == 1) {
+    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
+        /* Qnil */
+
+    } else if(argc == 1) {
         VALUE v = argv[0];
         if(rb_type(v) == T_HASH) {
             options = v;
@@ -109,14 +87,11 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
     }
 
     PACKER(self, pk);
+    if(io != Qnil || options != Qnil) {
+        MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, options);
+    }
 
     // TODO options
-    // TODO reference threshold
-
-    if(io != Qnil) {
-        ID write_method = write_method_of(io);
-        msgpack_packer_set_io(pk, io, write_method);
-    }
 
     return self;
 }
@@ -158,11 +133,7 @@ static VALUE Packer_write_map_header(VALUE self, VALUE n)
 static VALUE Packer_flush(VALUE self)
 {
     PACKER(self, pk);
-
-    if(pk->io != Qnil) {
-        msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
-    }
-
+    msgpack_buffer_flush(PACKER_BUFFER_(pk));
     return self;
 }
 
@@ -205,16 +176,8 @@ static VALUE Packer_to_a(VALUE self)
 static VALUE Packer_write_to(VALUE self, VALUE io)
 {
     PACKER(self, pk);
-    VALUE ary = msgpack_buffer_all_as_string_array(PACKER_BUFFER_(pk));
-
-    unsigned int len = (unsigned int)RARRAY_LEN(ary);
-    unsigned int i;
-    for(i=0; i < len; ++i) {
-        VALUE e = rb_ary_entry(ary, i);
-        rb_funcall(io, s_write, 1, e);
-    }
-
-    return Qnil;
+    size_t sz = msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), io, s_write, true);
+    return ULONG2NUM(sz);
 }
 
 //static VALUE Packer_append(VALUE self, VALUE string_or_buffer)
@@ -231,6 +194,8 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 
 VALUE MessagePack_pack(int argc, VALUE* argv)
 {
+    // TODO options
+
     VALUE v;
     VALUE io = Qnil;
 
@@ -248,21 +213,24 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
     VALUE self = Packer_alloc(cMessagePack_Packer);
     PACKER(self, pk);
     //msgpack_packer_reset(s_packer);
+    //msgpack_buffer_reset_io(PACKER_BUFFER_(s_packer));
 
     if(io != Qnil) {
-        ID write_method = write_method_of(io);
-        msgpack_packer_set_io(pk, io, write_method);
-        msgpack_packer_write_value(pk, v);
-        Packer_flush(self);
-        msgpack_buffer_clear(PACKER_BUFFER_(pk)); /* to free rmem before GC */
-        return Qnil;
-
-    } else {
-        msgpack_packer_write_value(pk, v);
-        VALUE v = msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
-        msgpack_buffer_clear(PACKER_BUFFER_(pk));  /* to free rmem before GC */
-        return v;
+        MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, Qnil);
     }
+
+    msgpack_packer_write_value(pk, v);
+
+    VALUE retval;
+    if(io != Qnil) {
+        msgpack_buffer_flush(PACKER_BUFFER_(pk));
+        retval = Qnil;
+    } else {
+        retval = msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
+    }
+
+    msgpack_buffer_clear(PACKER_BUFFER_(pk)); /* to free rmem before GC */
+    return retval;
 }
 
 static VALUE MessagePack_dump_module_method(int argc, VALUE* argv, VALUE mod)
@@ -280,7 +248,6 @@ static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
 void MessagePack_Packer_module_init(VALUE mMessagePack)
 {
     s_to_msgpack = rb_intern("to_msgpack");
-    s_append = rb_intern("<<");
     s_write = rb_intern("write");
 
     cMessagePack_Packer = rb_define_class_under(mMessagePack, "Packer", rb_cObject);

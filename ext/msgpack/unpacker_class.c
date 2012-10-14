@@ -22,9 +22,6 @@
 
 VALUE cMessagePack_Unpacker;
 
-static ID s_read;
-static ID s_readpartial;
-
 static VALUE s_unpacker_value;
 static msgpack_unpacker_t* s_unpacker;
 
@@ -61,36 +58,15 @@ static VALUE Unpacker_alloc(VALUE klass)
     return self;
 }
 
-static ID get_read_method(VALUE io)
-{
-    if(rb_respond_to(io, s_readpartial)) {
-        return s_readpartial;
-    } else if(rb_respond_to(io, s_read)) {
-        return s_read;
-    } else {
-        return 0;
-    }
-}
-
-static ID read_method_of(VALUE io)
-{
-    ID m = get_read_method(io);
-    if(m == 0) {
-        rb_raise(rb_eArgError, "expected String or IO-like but found %s.", rb_obj_classname(io));
-    }
-    return m;
-}
-
 static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 {
-    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
-        return self;
-    }
-
     VALUE io = Qnil;
     VALUE options = Qnil;
 
-    if(argc == 1) {
+    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
+        /* Qnil */
+
+    } else if(argc == 1) {
         VALUE v = argv[0];
         if(rb_type(v) == T_HASH) {
             options = v;
@@ -110,11 +86,11 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
     }
 
     UNPACKER(self, uk);
-
-    if(io != Qnil) {
-        ID read_method = read_method_of(io);
-        msgpack_unpacker_set_io(uk, io, read_method);
+    if(io != Qnil || options != Qnil) {
+        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, options);
     }
+
+    // TODO options
 
     return self;
 }
@@ -190,7 +166,7 @@ static VALUE Unpacker_read_array_header(VALUE self)
         raise_unpacker_error(r);
     }
 
-    return LONG2NUM(size);
+    return ULONG2NUM(size);
 }
 
 static VALUE Unpacker_read_map_header(VALUE self)
@@ -203,7 +179,7 @@ static VALUE Unpacker_read_map_header(VALUE self)
         raise_unpacker_error((int)r);
     }
 
-    return LONG2NUM(size);
+    return ULONG2NUM(size);
 }
 
 static VALUE Unpacker_peek_next_type(VALUE self)
@@ -276,10 +252,10 @@ static VALUE Unpacker_each(VALUE self)
     RETURN_ENUMERATOR(self, 0, 0);
 #endif
 
-    if(uk->io == Qnil) {
+    if(msgpack_buffer_has_io(UNPACKER_BUFFER_(uk))) {
         return Unpacker_each_impl(self);
     } else {
-        /* rescue EOFError if io is set */
+        /* rescue EOFError only if io is set */
         return rb_rescue2(Unpacker_each_impl, self,
                 Unpacker_rescue_EOFError, self,
                 rb_eEOFError, NULL);
@@ -296,7 +272,6 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 VALUE MessagePack_unpack(int argc, VALUE* argv)
 {
     VALUE src;
-    ID read_method = 0;
 
     switch(argc) {
     case 1:
@@ -306,21 +281,25 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
     }
 
+    VALUE io = Qnil;
     if(rb_type(src) != T_STRING) {
-        read_method = get_read_method(src);
-        if(read_method == 0) {
-            src = StringValue(src);
-        }
+        io = src;
+        src = Qnil;
     }
 
+    // TODO create an instance if io is set?; thread safety
     //VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
     //UNPACKER(self, uk);
     msgpack_unpacker_reset(s_unpacker);
+    msgpack_buffer_reset_io(UNPACKER_BUFFER_(s_unpacker));
 
-    if(read_method == 0) {
+    if(io != Qnil) {
+        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(s_unpacker), io, Qnil);
+    }
+
+    if(src != Qnil) {
+        // TODO prefer zero-copy?
         msgpack_buffer_append_string(UNPACKER_BUFFER_(s_unpacker), src);
-    } else {
-        msgpack_unpacker_set_io(s_unpacker, src, read_method);
     }
 
     int r = msgpack_unpacker_read(s_unpacker, 0);
@@ -350,9 +329,6 @@ static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
 
 void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
-    s_read = rb_intern("read");
-    s_readpartial = rb_intern("readpartial");
-
     cMessagePack_Unpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
     eUnpackError = rb_define_class_under(mMessagePack, "UnpackError", rb_eStandardError);

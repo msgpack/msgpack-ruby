@@ -21,6 +21,11 @@
 #include "compat.h"
 #include "sysdep.h"
 
+// TODO configurable
+#ifndef MSGPACK_BUFFER_IO_READ_BUFFER_SIZE
+#define MSGPACK_BUFFER_IO_READ_BUFFER_SIZE (64*1024)
+#endif
+
 #ifndef MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT
 #define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT (512*1024)
 #endif
@@ -92,6 +97,11 @@ struct msgpack_buffer_t {
 
     union msgpack_buffer_cast_block_t cast_block;
 
+    VALUE io;
+    VALUE io_buffer;
+    ID io_write_all_method;
+    ID io_partial_read_method;
+
     size_t append_reference_threshold;
 
     VALUE owner;
@@ -121,6 +131,23 @@ static inline void msgpack_buffer_set_append_reference_threshold(msgpack_buffer_
     }
 }
 
+static inline void msgpack_buffer_reset_io(msgpack_buffer_t* b)
+{
+    b->io = Qnil;
+}
+
+static inline bool msgpack_buffer_has_io(msgpack_buffer_t* b)
+{
+    return b->io != Qnil;
+}
+
+static inline void msgpack_buffer_reset(msgpack_buffer_t* b)
+{
+    msgpack_buffer_clear(b);
+    msgpack_buffer_reset_io(b);
+}
+
+
 /*
  * writer functions
  */
@@ -149,14 +176,20 @@ static inline void msgpack_buffer_write_byte_and_data(msgpack_buffer_t* b, int b
     b->tail.last += length;
 }
 
-void _msgpack_buffer_append2(msgpack_buffer_t* b, const char* data, size_t length);
+void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length);
 
-static inline void msgpack_buffer_ensure_sequential_writable(msgpack_buffer_t* b, size_t require)
+size_t msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method, bool consume);
+
+static inline size_t msgpack_buffer_flush(msgpack_buffer_t* b)
 {
-    if(require <= 0) {
-        return;
+    return msgpack_buffer_flush_to_io(b, b->io, b->io_write_all_method, true);
+}
+
+static inline void msgpack_buffer_ensure_writable(msgpack_buffer_t* b, size_t require)
+{
+    if(msgpack_buffer_writable_size(b) < require) {
+        _msgpack_buffer_expand(b, NULL, require);
     }
-    _msgpack_buffer_append2(b, NULL, require);
 }
 
 static inline void msgpack_buffer_append(msgpack_buffer_t* b, const char* data, size_t length)
@@ -171,25 +204,34 @@ static inline void msgpack_buffer_append(msgpack_buffer_t* b, const char* data, 
         return;
     }
 
-    _msgpack_buffer_append2(b, data, length);
+    _msgpack_buffer_expand(b, data, length);
 }
 
-void _msgpack_buffer_append_reference(msgpack_buffer_t* b, const char* data, size_t length, VALUE mapped_string);
+void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string);
 
 static inline size_t msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE string)
 {
     size_t length = RSTRING_LEN(string);
-    if(length > b->append_reference_threshold && !STR_DUP_LIKELY_DOES_COPY(string)) {
-        VALUE mapped_string = rb_str_dup(string);
-#ifdef COMPAT_HAVE_ENCODING
-        ENCODING_SET(mapped_string, s_enc_ascii8bit);
-#endif
-        _msgpack_buffer_append_reference(b, RSTRING_PTR(mapped_string), length, mapped_string);
+
+    if(length > b->append_reference_threshold) {
+        _msgpack_buffer_append_long_string(b, string);
+
     } else {
         msgpack_buffer_append(b, RSTRING_PTR(string), length);
     }
+
     return length;
 }
+
+
+/*
+ * IO functions
+ */
+size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b);
+
+size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string, size_t length);
+
+size_t _msgpack_buffer_skip_from_io(msgpack_buffer_t* b, size_t length);
 
 
 /*
@@ -234,13 +276,19 @@ static inline int msgpack_buffer_read_top_1(msgpack_buffer_t* b)
     return r;
 }
 
-static inline union msgpack_buffer_cast_block_t* msgpack_buffer_refer_cast_block(msgpack_buffer_t* b, size_t n)
+static inline int msgpack_buffer_read_1(msgpack_buffer_t* b)
 {
-    memcpy(b->cast_block.buffer, b->read_buffer, n);
+    if(msgpack_buffer_top_readable_size(b) <= 0) {
+        if(b->io == Qnil) {
+            return -1;
+        }
+        _msgpack_buffer_feed_from_io(b);
+    }
 
-    _msgpack_buffer_consumed(b, n);
+    int r = (int) (unsigned char) b->read_buffer[0];
+    _msgpack_buffer_consumed(b, 1);
 
-    return &b->cast_block;
+    return r;
 }
 
 
@@ -248,27 +296,91 @@ static inline union msgpack_buffer_cast_block_t* msgpack_buffer_refer_cast_block
  * bulk read / skip functions
  */
 
-bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length);
+size_t msgpack_buffer_read_nonblock(msgpack_buffer_t* b, char* buffer, size_t length);
 
-static inline bool msgpack_buffer_skip_all(msgpack_buffer_t* b, size_t length)
+static inline bool msgpack_buffer_ensure_readable(msgpack_buffer_t* b, size_t require)
 {
-    return msgpack_buffer_read_all(b, NULL, length);
+    if(msgpack_buffer_top_readable_size(b) < require) {
+        size_t sz = msgpack_buffer_all_readable_size(b);
+        if(sz < require) {
+            if(b->io == Qnil) {
+                return false;
+            }
+            do {
+                size_t rl = _msgpack_buffer_feed_from_io(b);
+                sz += rl;
+            } while(sz < require);
+        }
+    }
+    return true;
+}
+
+bool _msgpack_buffer_read_all2(msgpack_buffer_t* b, char* buffer, size_t length);
+
+static inline bool msgpack_buffer_read_all(msgpack_buffer_t* b, char* buffer, size_t length)
+{
+    size_t avail = msgpack_buffer_top_readable_size(b);
+    if(avail < length) {
+        return _msgpack_buffer_read_all2(b, buffer, length);
+    }
+
+    memcpy(buffer, b->read_buffer, length);
+    _msgpack_buffer_consumed(b, length);
+    return true;
+}
+
+static inline size_t msgpack_buffer_skip_nonblock(msgpack_buffer_t* b, size_t length)
+{
+    size_t avail = msgpack_buffer_top_readable_size(b);
+    if(avail < length) {
+        return msgpack_buffer_read_nonblock(b, NULL, length);
+    }
+    _msgpack_buffer_consumed(b, length);
+    return length;
 }
 
 static inline union msgpack_buffer_cast_block_t* msgpack_buffer_read_cast_block(msgpack_buffer_t* b, size_t n)
 {
-    if(msgpack_buffer_top_readable_size(b) < n) {
-        if(msgpack_buffer_read_all(b, b->cast_block.buffer, n)) {
-            return &b->cast_block;
-        }
+    if(!msgpack_buffer_read_all(b, b->cast_block.buffer, n)) {
         return NULL;
     }
-    return msgpack_buffer_refer_cast_block(b, n);
+    return &b->cast_block;
 }
 
-size_t msgpack_buffer_read(msgpack_buffer_t* b, char* buffer, size_t length);
+size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string, size_t length);
 
-size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t length);
+static inline size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t length)
+{
+    if(length == 0) {
+        return 0;
+    }
+
+    size_t avail = msgpack_buffer_top_readable_size(b);
+    if(avail > 0) {
+        return msgpack_buffer_read_to_string_nonblock(b, string, length);
+    } else if(b->io != Qnil) {
+        return _msgpack_buffer_read_from_io_to_string(b, string, length);
+    } else {
+        return 0;
+    }
+}
+
+static inline size_t msgpack_buffer_skip(msgpack_buffer_t* b, size_t length)
+{
+    if(length == 0) {
+        return 0;
+    }
+
+    size_t avail = msgpack_buffer_top_readable_size(b);
+    if(avail > 0) {
+        return msgpack_buffer_skip_nonblock(b, length);
+    } else if(b->io != Qnil) {
+        return _msgpack_buffer_skip_from_io(b, length);
+    } else {
+        return 0;
+    }
+}
+
 
 VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b);
 
@@ -294,9 +406,6 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
     _msgpack_buffer_consumed(b, length);
     return result;
 }
-
-
-void msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method);
 
 
 #endif
