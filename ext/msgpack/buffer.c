@@ -53,7 +53,9 @@ void msgpack_buffer_init(msgpack_buffer_t* b)
     memset(b, 0, sizeof(msgpack_buffer_t));
 
     b->head = &b->tail;
-    b->append_reference_threshold = MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT;
+    b->write_reference_threshold = MSGPACK_BUFFER_STRING_WRITE_REFERENCE_DEFAULT;
+    b->read_reference_threshold = MSGPACK_BUFFER_STRING_READ_REFERENCE_DEFAULT;
+    b->io_buffer_size = MSGPACK_BUFFER_IO_BUFFER_SIZE_DEFAULT;
     b->io = Qnil;
     b->io_buffer = Qnil;
 }
@@ -150,7 +152,7 @@ size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string,
     /* optimize */
     if(length <= avail && RSTRING_LEN(string) == 0 &&
             b->head->mapped_string != NO_MAPPED_STRING &&
-            length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD) {
+            length >= b->read_reference_threshold) {
         VALUE s = _msgpack_buffer_refer_head_mapped_string(b, length);
 #ifndef HAVE_RB_STR_REPLACE
         /* TODO MRI 1.8 */
@@ -613,13 +615,13 @@ size_t msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method
 size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b)
 {
     if(b->io_buffer == Qnil) {
-        b->io_buffer = rb_funcall(b->io, b->io_partial_read_method, 1, LONG2FIX(MSGPACK_BUFFER_IO_READ_BUFFER_SIZE));
+        b->io_buffer = rb_funcall(b->io, b->io_partial_read_method, 1, LONG2FIX(b->io_buffer_size));
         if(b->io_buffer == Qnil) {
             rb_raise(rb_eEOFError, "IO reached end of file");
         }
         StringValue(b->io_buffer);
     } else {
-        rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(MSGPACK_BUFFER_IO_READ_BUFFER_SIZE), b->io_buffer);
+        rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(b->io_buffer_size), b->io_buffer);
     }
 
     size_t len = RSTRING_LEN(b->io_buffer);

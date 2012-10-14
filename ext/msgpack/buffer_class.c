@@ -21,18 +21,6 @@
 #include "buffer.h"
 #include "buffer_class.h"
 
-/*
- * Document-class: MessagePack::Buffer
- *
- * MessagePack::Buffer is a byte-array buffer which is intended to handle
- * large binary objects efficiently. It suppresses copying data when appending
- * or reading them if it's possible. (this technique is know as Copy-on-Write)
- *
- */
-#if 0
-VALUE mMessagePack = rb_define_module("MessagePack");  /* dummy for rdoc */
-#endif
-
 VALUE cMessagePack_Buffer;
 
 static ID s_read;
@@ -99,9 +87,24 @@ void MessagePack_Buffer_initialize(msgpack_buffer_t* b, VALUE io, VALUE options)
     b->io_partial_read_method = get_partial_read_method(io);
     b->io_write_all_method = get_write_all_method(io);
 
-    // TODO options
-    // TODO reference threshold
-    UNUSED(options);
+    if(options != Qnil) {
+        VALUE v;
+
+        v = rb_hash_aref(options, ID2SYM(rb_intern("read_reference_threshold")));
+        if(v != Qnil) {
+            msgpack_buffer_set_read_reference_threshold(b, NUM2ULONG(v));
+        }
+
+        v = rb_hash_aref(options, ID2SYM(rb_intern("write_reference_threshold")));
+        if(v != Qnil) {
+            msgpack_buffer_set_write_reference_threshold(b, NUM2ULONG(v));
+        }
+
+        v = rb_hash_aref(options, ID2SYM(rb_intern("io_buffer_size")));
+        if(v != Qnil) {
+            msgpack_buffer_set_io_buffer_size(b, NUM2ULONG(v));
+        }
+    }
 }
 
 VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)

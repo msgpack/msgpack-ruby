@@ -7,7 +7,6 @@ module MessagePack
   class Unpacker
     #
     # Creates a MessagePack::Unpacker instance.
-    # Currently, no options are supported.
     #
     # @overload initialize(options={})
     #   @param options [Hash]
@@ -17,6 +16,8 @@ module MessagePack
     #   @param options [Hash]
     #   This unpacker reads data from the _io_ to fill the internal buffer.
     #   _io_ must respond to readpartial(length [,string]) or read(length [,string]) method.
+    #
+    # See Buffer#initialize for supported options.
     #
     def initialize(*args)
     end

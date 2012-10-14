@@ -21,29 +21,30 @@
 #include "compat.h"
 #include "sysdep.h"
 
-// TODO configurable
-#ifndef MSGPACK_BUFFER_IO_READ_BUFFER_SIZE
-#define MSGPACK_BUFFER_IO_READ_BUFFER_SIZE (64*1024)
+#ifndef MSGPACK_BUFFER_STRING_WRITE_REFERENCE_DEFAULT
+#define MSGPACK_BUFFER_STRING_WRITE_REFERENCE_DEFAULT (512*1024)
 #endif
 
-#ifndef MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT
-#define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_DEFAULT (512*1024)
+/* at least 23 (RSTRING_EMBED_LEN_MAX) bytes */
+#ifndef MSGPACK_BUFFER_STRING_WRITE_REFERENCE_MINIMUM
+#define MSGPACK_BUFFER_STRING_WRITE_REFERENCE_MINIMUM 256
 #endif
 
-#ifndef MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM
-#define MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM 256
+#ifndef MSGPACK_BUFFER_STRING_READ_REFERENCE_DEFAULT
+#define MSGPACK_BUFFER_STRING_READ_REFERENCE_DEFAULT 256
 #endif
 
-#ifndef MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD
-#define MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD 256
+/* at least 23 (RSTRING_EMBED_LEN_MAX) bytes */
+#ifndef MSGPACK_BUFFER_STRING_READ_REFERENCE_MINIMUM
+#define MSGPACK_BUFFER_STRING_READ_REFERENCE_MINIMUM 256
 #endif
 
-#if MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM <= 23
-#error MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM must be > RSTRING_EMBED_LEN_MAX which is 11 or 23
+#ifndef MSGPACK_BUFFER_IO_BUFFER_SIZE_DEFAULT
+#define MSGPACK_BUFFER_IO_BUFFER_SIZE_DEFAULT (32*1024)
 #endif
 
-#if MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD <= 23
-#error MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD must be > RSTRING_EMBED_LEN_MAX which is 11 or 23
+#ifndef MSGPACK_BUFFER_IO_BUFFER_SIZE_MINIMUM
+#define MSGPACK_BUFFER_IO_BUFFER_SIZE_MINIMUM (1024)
 #endif
 
 #define NO_MAPPED_STRING ((VALUE)0)
@@ -102,7 +103,9 @@ struct msgpack_buffer_t {
     ID io_write_all_method;
     ID io_partial_read_method;
 
-    size_t append_reference_threshold;
+    size_t write_reference_threshold;
+    size_t read_reference_threshold;
+    size_t io_buffer_size;
 
     VALUE owner;
 };
@@ -122,13 +125,28 @@ void msgpack_buffer_mark(msgpack_buffer_t* b);
 
 void msgpack_buffer_clear(msgpack_buffer_t* b);
 
-static inline void msgpack_buffer_set_append_reference_threshold(msgpack_buffer_t* b, size_t length)
+static inline void msgpack_buffer_set_write_reference_threshold(msgpack_buffer_t* b, size_t length)
 {
-    if(length < MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM) {
-        b->append_reference_threshold = MSGPACK_BUFFER_STRING_APPEND_REFERENCE_MINIMUM;
-    } else {
-        b->append_reference_threshold = length;
+    if(length < MSGPACK_BUFFER_STRING_WRITE_REFERENCE_MINIMUM) {
+        length = MSGPACK_BUFFER_STRING_WRITE_REFERENCE_MINIMUM;
     }
+    b->write_reference_threshold = length;
+}
+
+static inline void msgpack_buffer_set_read_reference_threshold(msgpack_buffer_t* b, size_t length)
+{
+    if(length < MSGPACK_BUFFER_STRING_READ_REFERENCE_MINIMUM) {
+        length = MSGPACK_BUFFER_STRING_READ_REFERENCE_MINIMUM;
+    }
+    b->read_reference_threshold = length;
+}
+
+static inline void msgpack_buffer_set_io_buffer_size(msgpack_buffer_t* b, size_t length)
+{
+    if(length < MSGPACK_BUFFER_IO_BUFFER_SIZE_MINIMUM) {
+        length = MSGPACK_BUFFER_IO_BUFFER_SIZE_MINIMUM;
+    }
+    b->io_buffer_size = length;
 }
 
 static inline void msgpack_buffer_reset_io(msgpack_buffer_t* b)
@@ -213,7 +231,7 @@ static inline size_t msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE str
 {
     size_t length = RSTRING_LEN(string);
 
-    if(length > b->append_reference_threshold) {
+    if(length > b->write_reference_threshold) {
         _msgpack_buffer_append_long_string(b, string);
 
     } else {
@@ -251,12 +269,6 @@ static inline void _msgpack_buffer_consumed(msgpack_buffer_t* b, size_t length)
 {
     b->read_buffer += length;
     if(b->read_buffer >= b->head->last) {
-//size_t i = 0;
-//msgpack_buffer_chunk_t* c = b->head;
-//while(c != &b->tail) {
-//    c = c->next;
-//    i++;
-//}
         _msgpack_buffer_shift_chunk(b);
 //printf("shift %d tail_filled=%lu\n", i, b->tail.last - b->tail.first);
     }
@@ -394,15 +406,17 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
 
 static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool suppress_reference)
 {
-    VALUE result;
+#ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
     if(!suppress_reference &&
             b->head->mapped_string != NO_MAPPED_STRING &&
-            length >= MSGPACK_BUFFER_READ_STRING_REFERENCE_THRESHOLD) {
-        result = _msgpack_buffer_refer_head_mapped_string(b, length);
-    } else {
-        result = rb_str_new(b->read_buffer, length);
+            length >= b->read_reference_threshold) {
+        VALUE result = _msgpack_buffer_refer_head_mapped_string(b, length);
+        _msgpack_buffer_consumed(b, length);
+        return result;
     }
+#endif
 
+    VALUE result = rb_str_new(b->read_buffer, length);
     _msgpack_buffer_consumed(b, length);
     return result;
 }

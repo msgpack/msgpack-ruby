@@ -7,7 +7,7 @@ module MessagePack
   class Packer
     #
     # Creates a MessagePack::Packer instance.
-    # Currently, no options are supported.
+    # See Buffer#initialize for supported options.
     #
     # @overload initialize(options={})
     #   @param options [Hash]
@@ -16,7 +16,7 @@ module MessagePack
     #   @param io [IO]
     #   @param options [Hash]
     #   This packer writes serialzied objects into the IO when the internal buffer is filled.
-    # _io_ must respond to _write(string)_ or _append(string)_ method.
+    #   _io_ must respond to write(string) or append(string) method.
     #
     def initialize(*args)
     end
@@ -66,7 +66,6 @@ module MessagePack
     def write_map_header(size)
     end
 
-    # FIXME changed
     #
     # Flushes data in the internal buffer to the internal IO.
     # If internal IO is not set, it doesn nothing.

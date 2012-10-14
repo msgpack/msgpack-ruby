@@ -1,11 +1,28 @@
 module MessagePack
 
   class Buffer
-
     #
-    # Creates an instance of the MessagePack::Buffer.
+    # Creates a MessagePack::Buffer instance.
     #
-    def initialize
+    # @overload initialize(options={})
+    #   @param options [Hash]
+    #
+    # @overload initialize(io, options={})
+    #   @param io [IO]
+    #   @param options [Hash]
+    #   This buffer writes written data into the IO when it is filled.
+    #   This buffer reads data from the IO when it is empty.
+    #
+    # _io_ must respond to readpartial(length, [,string]) or read(string) method and
+    # write(string) or append(string) method.
+    #
+    # Supported options:
+    #
+    # * *:io_buffer_size* buffer size to read data from the internal IO. (default: 32768)
+    # * *:read_reference_threshold* the threshold size to enable zero-copy deserialize optimization. Read strings longer than this threshold will refer the original string instead of copying it. (default: 256) (supported in MRI only)
+    # * *:write_reference_threshold* the threshold size to enable zero-copy serialize optimization. The buffer refers written strings longer than this threshold instead of copying it. (default: 524288) (supported in MRI only)
+    #
+    def initialize(*args)
     end
 
     #

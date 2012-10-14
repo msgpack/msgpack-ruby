@@ -357,7 +357,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
     rb_gc_register_address(&s_unpacker_value);
     Data_Get_Struct(s_unpacker_value, msgpack_unpacker_t, s_unpacker);
-    msgpack_buffer_set_append_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);  /* always prefer reference */
+    msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);  /* always prefer reference */
 
     /* MessagePack.unpack(x) */
     rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);
