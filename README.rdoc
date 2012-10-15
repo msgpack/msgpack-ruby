@@ -1,37 +1,26 @@
 
 = MessagePack
 
-== Description
+MessagePack is an efficient binary serialization format.
+It lets you exchange data among multiple languages like JSON but it's faster and smaller.
+For example, small integers (like flags or error code) are encoded into a single byte,
+and typical short strings only require an extra byte in addition to the strings themselves.
 
-MessagePack is a binary-based efficient object serialization library.
-It enables to exchange structured objects between many languages like JSON.
-But unlike JSON, it is very fast and small.
+If you ever wished to use JSON for convenience (storing an image with metadata) but could
+not for technical reasons (encoding, size, speed...), MessagePack is a perfect replacement.
 
-Simple usage is as follows:
+    require 'msgpack'
+    msg = [1,2,3].to_msgpack  #=> "\x93\x01\x02\x03"
+    MessagePack.unpack(msg)   #=> [1,2,3]
 
-  require 'msgpack'
-  msg = [1,2,3].to_msgpack  #=> "\x93\x01\x02\x03"
-  MessagePack.unpack(msg)   #=> [1,2,3]
+Use RubyGems to install:
 
-Use MessagePack::Unpacker for streaming deserialization.
-
-
-== Installation
-
-=== Archive Installation
-
-  ruby extconf.rb
-  make
-  make install
-
-=== Gem Installation
-
-  gem install msgpack
+    gem install msgpack
 
 
 == Copyright
 
-Author::    frsyuki <frsyuki@users.sourceforge.jp>
-Copyright:: Copyright (c) 2008-2011 FURUHASHI Sadayuki
+Author::    FURUHASHI Sadayuki <frsyuki@gmail.com>
+Copyright:: Copyright (c) 2008-2012 FURUHASHI Sadayuki
 License::   Apache License, Version 2.0
 
