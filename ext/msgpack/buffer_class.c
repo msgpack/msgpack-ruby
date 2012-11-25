@@ -364,7 +364,7 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
     }
 
     MAKE_EMPTY_STRING(out);
-    size_t sz = msgpack_buffer_read_to_string_nonblock(b, out, n);
+    msgpack_buffer_read_to_string_nonblock(b, out, n);
 
     return out;
 }

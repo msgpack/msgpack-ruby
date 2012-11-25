@@ -69,6 +69,10 @@ enum msgpack_unpacker_object_type {
     TYPE_MAP,
 };
 
+void msgpack_unpacker_static_init();
+
+void msgpack_unpacker_static_destroy();
+
 void msgpack_unpacker_init(msgpack_unpacker_t* uk);
 
 void msgpack_unpacker_destroy(msgpack_unpacker_t* uk);

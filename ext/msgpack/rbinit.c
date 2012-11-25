@@ -21,23 +21,8 @@
 #include "unpacker_class.h"
 #include "core_ext.h"
 
-#ifdef COMPAT_HAVE_ENCODING
-/* see compat.h*/
-int s_enc_utf8;
-int s_enc_ascii8bit;
-int s_enc_usascii;
-VALUE s_enc_utf8_value;
-#endif
-
 void Init_msgpack(void)
 {
-#ifdef COMPAT_HAVE_ENCODING
-    s_enc_ascii8bit = rb_ascii8bit_encindex();
-    s_enc_utf8 = rb_utf8_encindex();
-    s_enc_usascii = rb_usascii_encindex();
-    s_enc_utf8_value = rb_enc_from_encoding(rb_utf8_encoding());
-#endif
-
     VALUE mMessagePack = rb_define_module("MessagePack");
 
     MessagePack_Buffer_module_init(mMessagePack);

@@ -19,6 +19,10 @@
 #include "buffer.h"
 #include "rmem.h"
 
+#ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
+int s_enc_ascii8bit;
+#endif
+
 #ifdef RUBY_VM
 #define HAVE_RB_STR_REPLACE
 #endif
@@ -38,6 +42,10 @@ void msgpack_buffer_static_init()
 #endif
 #ifndef HAVE_RB_STR_REPLACE
     s_replace = rb_intern("replace");
+#endif
+
+#ifdef COMPAT_HAVE_ENCODING
+    s_enc_ascii8bit = rb_ascii8bit_encindex();
 #endif
 }
 
@@ -306,7 +314,7 @@ static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE s
     _msgpack_buffer_add_new_chunk(b);
 
     char* data = RSTRING_PTR(string);
-    size_t length =RSTRING_LEN(string);
+    size_t length = RSTRING_LEN(string);
 
     b->tail.first = (char*) data;
     b->tail.last = (char*) data + length;
@@ -552,8 +560,7 @@ VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b)
 {
     if(b->head == &b->tail) {
         VALUE s = msgpack_buffer_all_as_string(b);
-        VALUE ary = rb_ary_new();  /* TODO capacity = 1 */
-        rb_ary_push(ary, s);
+        VALUE ary = rb_ary_new3(1, s);
         return ary;
     }
 

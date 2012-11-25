@@ -329,6 +329,8 @@ static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
 
 void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
+    msgpack_unpacker_static_init();
+
     cMessagePack_Unpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
     eUnpackError = rb_define_class_under(mMessagePack, "UnpackError", rb_eStandardError);

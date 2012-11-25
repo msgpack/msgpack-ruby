@@ -29,10 +29,6 @@
 #ifdef HAVE_RUBY_ENCODING_H
 #include "ruby/encoding.h"
 #define COMPAT_HAVE_ENCODING
-extern int s_enc_utf8;
-extern int s_enc_ascii8bit;
-extern int s_enc_usascii;
-extern VALUE s_enc_utf8_value;
 #endif
 
 
