@@ -1,13 +1,13 @@
 
 = MessagePack
 
-MessagePack is an efficient binary serialization format.
+MessagePack[http://msgpack.org] is an efficient binary serialization format.
 It lets you exchange data among multiple languages like JSON but it's faster and smaller.
 For example, small integers (like flags or error code) are encoded into a single byte,
 and typical short strings only require an extra byte in addition to the strings themselves.
 
 If you ever wished to use JSON for convenience (storing an image with metadata) but could
-not for technical reasons (encoding, size, speed...), MessagePack is a perfect replacement.
+not for technical reasons (binary data, size, speed...), MessagePack is a perfect replacement.
 
     require 'msgpack'
     msg = [1,2,3].to_msgpack  #=> "\x93\x01\x02\x03"
@@ -18,7 +18,83 @@ Use RubyGems to install:
     gem install msgpack
 
 
-== Copyright
+= Use cases
+
+* Store objects efficiently serialized by msgpack on memcached or Redis
+  * In fact Redis supports msgpack in EVAL-scripts[http://redis.io/commands/eval]
+* Upload data in efficient format from mobile devices such as smartphones
+  * MessagePack works on iPhone/iPad and Android. See also Objective-C[https://github.com/msgpack/msgpack-objectivec] and Java[https://github.com/msgpack/msgpack-java] implementations
+* Design a portable protocol to communicate with embedded devices
+  * Check also Fluentd[http://fluentd.org/] which is a log collector which uses msgpack for the log format (they say it uses JSON but actually it's msgpack, which is compatible with JSON)
+* Exchange objects between software components written in different languages
+  * You'll need a flexible but efficient format so that components exchange objects while keeping compatibility
+
+
+= Portability
+
+MessagePack for Ruby should run on x86, ARM, PowerPC, SPARC and other CPU architectures.
+
+And it works with MRI (CRuby) and Rubinius.
+Patches to improve portability is highly welcomed.
+
+
+= Serializing objects
+
+Use *MessagePack.pack* or *to_msgpack*:
+
+    require 'msgpack'
+    msg = MessagePack.pack(obj)  # or
+    msg = obj.to_msgpack
+
+== Streaming serialization
+
+Packer provides advanced API to serialize objects in streaming style:
+
+    # serialize a 2-element array [e1, e2]
+    pk = MessagePack::Packer.new(io)
+    pk.write_array_header(2).write(e1).write(e2).flush
+
+See API reference for details.
+
+= Deserializing objects
+
+Use *MessagePack.unpack*:
+
+    require 'msgpack'
+    obj = MessagePack.unpack(msg)
+
+== Streaming deserialization
+
+Unpacker provides advanced API to deserialize objects in streaming style:
+
+    # deserialize objects from an IO
+    u = MessagePack::Unpacker.new(io)
+    u.each do |obj|
+      # ...
+    end
+
+or event-driven style which works well with EventMachine:
+
+    # event-driven deserialization
+    def on_read(data)
+      @u ||= MessagePack::Unpacker.new
+      @u.feed_each(data) {|obj|
+         # ...
+      }
+    end
+
+See API reference for details.
+
+
+= Buffer API
+
+MessagePack for Ruby provides a buffer API so that you can read or write data by hand, not via Packer or Unpacker API.
+
+This MessagePack::Buffer API is backed with a fixed-length shared memory pool which is very fast for small data (<= 4KB),
+and has zero-copy capability which significantly affects performance to handle large binary data.
+
+
+= Copyright
 
 Author::    FURUHASHI Sadayuki <frsyuki@gmail.com>
 Copyright:: Copyright (c) 2008-2012 FURUHASHI Sadayuki
