@@ -84,7 +84,6 @@ void msgpack_unpacker_reset(msgpack_unpacker_t* uk)
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
     uk->reading_raw_remaining = 0;
-    uk->buffer_ref = Qnil;
 }
 
 
@@ -126,6 +125,7 @@ static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
     // rb_ivar_set(...);
     // rb_define_method_id(singleton_class, s_b, VALUE (*func)(ANYARGS), int argc);
 #ifdef COMPAT_HAVE_ENCODING
+    //str_modifiable(str);
     ENCODING_SET(str, s_enc_utf8);
 #endif
     return object_complete(uk, str);

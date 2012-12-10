@@ -414,6 +414,7 @@ VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b);
 static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b, size_t length)
 {
     size_t offset = b->read_buffer - b->head->first;
+
     return rb_str_substr(b->head->mapped_string, offset, length);
 }
 
