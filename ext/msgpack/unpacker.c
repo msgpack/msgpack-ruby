@@ -230,10 +230,10 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk)
     /* try optimized read */
     size_t length = uk->reading_raw_remaining;
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
-        /* don't use zerocopy for hash keys because
-         * rb_hash_aset freezes keys and causes copying */
-        bool suppress_reference = is_reading_map_key(uk);
-        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, suppress_reference);
+        /* don't use zerocopy for hash keys and gets frozen string directly
+         * because rb_hash_aset freezes keys and it causes copying */
+        bool frozen = is_reading_map_key(uk);
+        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, frozen);
         object_complete_string(uk, string);
         uk->reading_raw_remaining = 0;
         return PRIMITIVE_OBJECT_COMPLETE;
