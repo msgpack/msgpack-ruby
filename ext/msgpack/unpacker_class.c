@@ -234,7 +234,14 @@ static VALUE Unpacker_each_impl(VALUE self)
             }
             raise_unpacker_error(r);
         }
-        rb_yield(msgpack_unpacker_get_last_object(uk));
+        VALUE v = msgpack_unpacker_get_last_object(uk);
+#ifdef JRUBY
+        /* TODO JRuby's rb_yield behaves differently from Ruby 1.9.3 or Rubinius. */
+        if(rb_type(v) == T_ARRAY) {
+            v = rb_ary_new3(1, v);
+        }
+#endif
+        rb_yield(v);
     }
 }
 
