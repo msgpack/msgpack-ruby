@@ -621,7 +621,10 @@ size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b)
         }
         StringValue(b->io_buffer);
     } else {
-        rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(b->io_buffer_size), b->io_buffer);
+        VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(b->io_buffer_size), b->io_buffer);
+        if(ret == Qnil) {
+            rb_raise(rb_eEOFError, "IO reached end of file");
+        }
     }
 
     size_t len = RSTRING_LEN(b->io_buffer);
@@ -639,7 +642,10 @@ size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string,
 {
     if(RSTRING_LEN(string) == 0) {
         /* direct read */
-        rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), string);
+        VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), string);
+        if(ret == Qnil) {
+            return 0;
+        }
         return RSTRING_LEN(string);
     }
 
@@ -648,7 +654,10 @@ size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string,
         b->io_buffer = rb_str_buf_new(0);
     }
 
-    rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), b->io_buffer);
+    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), b->io_buffer);
+    if(ret == Qnil) {
+        return 0;
+    }
     size_t rl = RSTRING_LEN(b->io_buffer);
 
     rb_str_buf_cat(string, (const void*)RSTRING_PTR(b->io_buffer), rl);
@@ -661,7 +670,10 @@ size_t _msgpack_buffer_skip_from_io(msgpack_buffer_t* b, size_t length)
         b->io_buffer = rb_str_buf_new(0);
     }
 
-    rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), b->io_buffer);
+    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), b->io_buffer);
+    if(ret == Qnil) {
+        return 0;
+    }
     return RSTRING_LEN(b->io_buffer);
 }
 
