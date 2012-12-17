@@ -21,102 +21,90 @@
 #include "ruby.h"
 
 #if defined(HAVE_RUBY_ST_H)
-#include "ruby/st.h"  // ruby hash on Ruby 1.9
+#  include "ruby/st.h"  /* ruby hash on Ruby 1.9 */
 #elif defined(HAVE_ST_H)
-#include "st.h"       // ruby hash on Ruby 1.8
+#  include "st.h"       /* ruby hash on Ruby 1.8 */
 #endif
 
+
+/*
+ * COMPAT_HAVE_ENCODING
+ */
 #ifdef HAVE_RUBY_ENCODING_H
-#include "ruby/encoding.h"
-#define COMPAT_HAVE_ENCODING
+#  include "ruby/encoding.h"
+#  define COMPAT_HAVE_ENCODING
+#endif
+
+#if defined(__MACRUBY__)  /* MacRuby */
+#  undef COMPAT_HAVE_ENCODING
 #endif
 
 
-/* Rubinius and JRuby */
-#if defined(RUBINIUS) || defined(JRUBY)
-#define DISABLE_STR_NEW_MOVE
+/*
+ * define STR_DUP_LIKELY_DOES_COPY
+ */
+#if defined(RUBY_VM)  /* MRI 1.9 */
+   /* if FL_ALL(str, FL_USER1|FL_USER3) == STR_ASSOC_P(str) returns true,
+    * rb_str_dup will copy the string */
+#  define STR_DUP_LIKELY_DOES_COPY(str) FL_ALL(str, FL_USER1|FL_USER3)
+
+#elif defined(RUBINIUS) || defined(JRUBY)  /* Rubinius and JRuby */
+#  define STR_DUP_LIKELY_DOES_COPY(str) (1)
+
+#else  /* MRI 1.8 */
+#  define STR_DUP_LIKELY_DOES_COPY(str) (!FL_TEST(str, ELTS_SHARED))
 #endif
 
 
-/* MRI 1.9 */
-#if defined(RUBY_VM)
-/* if FL_ALL(str, FL_USER1|FL_USER3) == STR_ASSOC_P(str) returns true, rb_str_dup will copy the string */
-#define STR_DUP_LIKELY_DOES_COPY(str) FL_ALL(str, FL_USER1|FL_USER3)
-
-/* Rubinius and JRuby */
-#elif defined(RUBINIUS) || defined(JRUBY)
-#define STR_DUP_LIKELY_DOES_COPY(str) (1)
-
-#else
-/* MRI 1.8 */
-#define STR_DUP_LIKELY_DOES_COPY(str) (!FL_TEST(str, ELTS_SHARED))
+/*
+ * SIZET2NUM
+ */
+#ifndef SIZET2NUM   /* MRI 1.8 */
+#  define SIZET2NUM(v) ULL2NUM(v)
 #endif
 
 
-/* MacRuby */
-#if defined(__MACRUBY__)
-#undef COMPAT_HAVE_ENCODING
+/*
+ * rb_errinfo()
+ */
+#if defined(RUBY_VM)  /* MRI 1.9 */
+#  define COMPAT_RERAISE rb_exc_raise(rb_errinfo())
+
+#elif defined(JRUBY)  /* JRuby */
+#  define COMPAT_RERAISE rb_exc_raise(rb_gv_get("$!"))
+
+#else  /* MRI 1.8 and Rubinius */
+#  define COMPAT_RERAISE rb_exc_raise(ruby_errinfo)
 #endif
 
 
-/* MRI 1.8 */
-#ifndef SIZET2NUM
-#define SIZET2NUM(v) ULL2NUM(v)
-#endif
-
-
-/* MRI 1.9 */
-#if defined(RUBY_VM)
-#define COMPAT_RERAISE rb_exc_raise(rb_errinfo())
-
-/* JRuby */
-#elif defined(JRUBY)
-#define COMPAT_RERAISE rb_exc_raise(rb_gv_get("$!"))
-
-/* MRI 1.8 and Rubinius */
-#else
-#define COMPAT_RERAISE rb_exc_raise(ruby_errinfo)
-#endif
-
-
+/*
+ * RBIGNUM_POSITIVE_P
+ */
 #ifndef RBIGNUM_POSITIVE_P
+#  if defined(RUBINIUS)  /* Rubinius <= v1.2.3 */
+#    define RBIGNUM_POSITIVE_P(b) (rb_funcall(b, rb_intern(">="), 1, INT2FIX(0)) == Qtrue)
 
-/* Rubinius */
-#if defined(RUBINIUS)
-#define RBIGNUM_POSITIVE_P(b) (rb_funcall(b, rb_intern(">="), 1, INT2FIX(0)) == Qtrue)
+#  elif defined(JRUBY)  /* JRuby */
+#    define RBIGNUM_POSITIVE_P(b) (rb_funcall(b, rb_intern(">="), 1, INT2FIX(0)) == Qtrue)
+#    define rb_big2ull(b) rb_num2ull(b)
+     /*#define rb_big2ll(b) rb_num2ll(b)*/
 
-/* JRuby */
-#elif defined(JRUBY)
-#define RBIGNUM_POSITIVE_P(b) (rb_funcall(b, rb_intern(">="), 1, INT2FIX(0)) == Qtrue)
-#define rb_big2ull(b) rb_num2ull(b)
-/*#define rb_big2ll(b) rb_num2ll(b)*/
-
-/* MRI 1.8 */
-#else
-#define RBIGNUM_POSITIVE_P(b) (RBIGNUM(b)->sign)
-
-#endif
+#  else  /* MRI 1.8 */
+#    define RBIGNUM_POSITIVE_P(b) (RBIGNUM(b)->sign)
+#  endif
 #endif
 
 
-/* MRI 1.8.5 */
-#ifndef RSTRING_PTR
-#define RSTRING_PTR(s) (RSTRING(s)->ptr)
+/*
+ * RSTRING_PTR, RSTRING_LEN
+ */
+#ifndef RSTRING_PTR  /* MRI 1.8.5 */
+#  define RSTRING_PTR(s) (RSTRING(s)->ptr)
 #endif
 
-/* MRI 1.8.5 */
-#ifndef RSTRING_LEN
-#define RSTRING_LEN(s) (RSTRING(s)->len)
-#endif
-
-/* MRI 1.8.5 */
-#ifndef RARRAY_PTR
-#define RARRAY_PTR(s) (RARRAY(s)->ptr)
-#endif
-
-/* MRI 1.8.5 */
-#ifndef RARRAY_LEN
-#define RARRAY_LEN(s) (RARRAY(s)->len)
+#ifndef RSTRING_LEN  /* MRI 1.8.5 */
+#  define RSTRING_LEN(s) (RSTRING(s)->len)
 #endif
 
 

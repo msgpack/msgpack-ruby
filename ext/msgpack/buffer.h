@@ -283,7 +283,6 @@ static inline void _msgpack_buffer_consumed(msgpack_buffer_t* b, size_t length)
     b->read_buffer += length;
     if(b->read_buffer >= b->head->last) {
         _msgpack_buffer_shift_chunk(b);
-//printf("shift %d tail_filled=%lu\n", i, b->tail.last - b->tail.first);
     }
 }
 
@@ -420,6 +419,7 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
 static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool frozen)
 {
 #ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
+    /* optimize */
     if(!frozen &&
             b->head->mapped_string != NO_MAPPED_STRING &&
             length >= b->read_reference_threshold) {

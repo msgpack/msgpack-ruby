@@ -63,15 +63,6 @@ static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_w
 void msgpack_packer_reset(msgpack_packer_t* pk);
 
 
-//void _msgpack_packer_allocate_writable_space(msgpack_packer_t* pk, size_t require);
-
-//static inline void _msgpack_packer_ensure_writable(msgpack_packer_t* pk, size_t require)
-//{
-//    if(msgpack_buffer_writable_size(PACKER_BUFFER_(pk)) < require) {
-//        _msgpack_packer_allocate_writable_space(pk, require);
-//    }
-//}
-
 static inline void msgpack_packer_write_nil(msgpack_packer_t* pk)
 {
     msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
@@ -212,7 +203,7 @@ static inline void msgpack_packer_write_double(msgpack_packer_t* pk, double v)
         uint64_t u64;
         char mem[8];
     } castbuf = { v };
-    castbuf.u64 = _msgpack_be_double(castbuf.u64); /* FIXME _msgpack_be_double */
+    castbuf.u64 = _msgpack_be_double(castbuf.u64);
     msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xcb, castbuf.mem, 8);
 }
 
@@ -272,7 +263,7 @@ void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
-    /* TODO encoding conversion */
+    /* TODO encoding conversion? */
     size_t len = RSTRING_LEN(v);
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?
@@ -280,12 +271,6 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
     }
     msgpack_packer_write_raw_header(pk, (unsigned int)len);
     msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
-    //if(pk->io != Qnil && RSTRING_LEN(v) > MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY) {
-    //    msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), pk->io, pk->io_write_all_method);
-    //    rb_funcall(pk->io, pk->io_write_all_method, 1, v);
-    //} else {
-    //    msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
-    //}
 }
 
 static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)
@@ -314,7 +299,7 @@ static inline void msgpack_packer_write_bignum_value(msgpack_packer_t* pk, VALUE
     if(RBIGNUM_POSITIVE_P(v)) {
         msgpack_packer_write_u64(pk, rb_big2ull(v));
     } else {
-        msgpack_packer_write_long(pk, rb_big2ll(v));  /* FIXME long long? */
+        msgpack_packer_write_long(pk, rb_big2ll(v));  /* TODO long long? */
     }
 }
 

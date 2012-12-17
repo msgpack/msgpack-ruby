@@ -70,7 +70,7 @@ void* _msgpack_rmem_alloc2(msgpack_rmem_t* pm)
     pm->head = *c;
     *c = tmp;
 
-    pm->head.mask = 0xffffffff & (~1);  /* first chunk is already allocated */
+    pm->head.mask = 0xffffffff & (~1);  /* "& (~1)" means first chunk is already allocated */
     pm->head.pages = malloc(MSGPACK_RMEM_PAGE_SIZE * 32);
 
     return pm->head.pages;

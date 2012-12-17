@@ -86,13 +86,16 @@
 #endif
 
 
+/* _msgpack_be_float */
 #define _msgpack_be_float(x) _msgpack_be32(x)
 
+/* _msgpack_be_double */
 #if defined(__arm__) && !(__ARM_EABI__)
 /* ARM OABI */
 #define _msgpack_be_double(x) \
     ( (((x) & 0xFFFFFFFFUL) << 32UL) | ((x) >> 32UL) )
 #else
+/* the other ABI */
 #define _msgpack_be_double(x) _msgpack_be64(x)
 #endif
 
@@ -104,7 +107,7 @@
 #else
 #define _msgpack_bsp32(name, val) \
     int name = __builtin_ctz(val)
-/* TODO default impl */
+/* TODO default impl for _msgpack_bsp32 */
 #endif
 
 

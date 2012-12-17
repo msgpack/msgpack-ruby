@@ -176,10 +176,7 @@ size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string,
     size_t const length_orig = length;
 
     while(true) {
-//printf("avail: %lu\n", avail);
-//printf("length: %lu\n", length);
         if(length <= avail) {
-//printf("read_buffer: %p\n", b->read_buffer);
             rb_str_buf_cat(string, b->read_buffer, length);
             _msgpack_buffer_consumed(b, length);
             return length_orig;
@@ -450,7 +447,6 @@ void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length
         _msgpack_buffer_add_new_chunk(b);
 
         char* mem = _msgpack_buffer_chunk_malloc(b, &b->tail, length, &capacity);
-        //printf("tail malloc()ed capacity %lu\n", capacity);
 
         char* last = mem;
         if(data != NULL) {
@@ -474,7 +470,6 @@ void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length
         size_t tail_filled = b->tail.last - b->tail.first;
         char* mem = _msgpack_buffer_chunk_realloc(b, &b->tail,
                 b->tail.first, tail_filled+length, &capacity);
-        //printf("tail realloc()ed capacity %lu filled=%lu\n", capacity, tail_filled);
 
         char* last = mem + tail_filled;
         if(data != NULL) {
@@ -485,7 +480,6 @@ void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length
         /* consider read_buffer */
         if(b->head == &b->tail) {
             size_t read_offset = b->read_buffer - b->head->first;
-            //printf("relink read_buffer read_offset %lu\n", read_offset);
             b->read_buffer = mem + read_offset;
         }
 
@@ -493,7 +487,6 @@ void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length
         b->tail.first = mem;
         b->tail.last = last;
         b->tail_buffer_end = mem + capacity;
-        //printf("alloced chunk size: %lu\n", msgpack_buffer_top_readable_size(b));
     }
 }
 

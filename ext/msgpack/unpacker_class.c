@@ -287,7 +287,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         src = Qnil;
     }
 
-    // TODO create an instance if io is set?; thread safety
+    // TODO create an instance if io is set for thread safety?
     //VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
     //UNPACKER(self, uk);
     msgpack_unpacker_reset(s_unpacker);
@@ -298,7 +298,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
     }
 
     if(src != Qnil) {
-        // TODO prefer zero-copy?
+        /* prefer reference than copying; see MessagePack_Unpacker_module_init */
         msgpack_buffer_append_string(UNPACKER_BUFFER_(s_unpacker), src);
     }
 
@@ -351,7 +351,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cMessagePack_Unpacker, "read_array_header", Unpacker_read_array_header, 0);
     rb_define_method(cMessagePack_Unpacker, "read_map_header", Unpacker_read_map_header, 0);
-    //rb_define_method(cMessagePack_Unpacker, "peek_next_type", Unpacker_peek_next_type, 0);
+    //rb_define_method(cMessagePack_Unpacker, "peek_next_type", Unpacker_peek_next_type, 0);  // TODO
     rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
@@ -359,7 +359,8 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
     rb_gc_register_address(&s_unpacker_value);
     Data_Get_Struct(s_unpacker_value, msgpack_unpacker_t, s_unpacker);
-    msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);  /* always prefer reference */
+    /* prefer reference than copying */
+    msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);
 
     /* MessagePack.unpack(x) */
     rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);

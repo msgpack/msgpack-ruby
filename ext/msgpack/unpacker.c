@@ -90,7 +90,6 @@ void msgpack_unpacker_reset(msgpack_unpacker_t* uk)
 /* head byte functions */
 static int read_head_byte(msgpack_unpacker_t* uk)
 {
-//printf("%lu\n", msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)));
     int r = msgpack_buffer_read_1(UNPACKER_BUFFER_(uk));
     if(r == -1) {
         return PRIMITIVE_EOF;
@@ -121,9 +120,7 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 
 static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 {
-    // VALUE singleton_class = rb_singleton_class(str);
-    // rb_ivar_set(...);
-    // rb_define_method_id(singleton_class, s_b, VALUE (*func)(ANYARGS), int argc);
+    // TODO ruby 2.0 has String#b method
 #ifdef COMPAT_HAVE_ENCODING
     //str_modifiable(str);
     ENCODING_SET(str, s_enc_utf8);
@@ -151,7 +148,6 @@ static inline int _msgpack_unpacker_stack_push(msgpack_unpacker_t* uk, enum stac
     next->object = object;
     next->key = Qnil;
 
-//printf("push count: %d depth:%d type:%d\n", count, uk->stack_depth, type);
     uk->stack_depth++;
     return PRIMITIVE_CONTAINER_START;
 }
@@ -230,7 +226,7 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk)
     /* try optimized read */
     size_t length = uk->reading_raw_remaining;
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
-        /* don't use zerocopy for hash keys and gets frozen string directly
+        /* don't use zerocopy for hash keys but get a frozen string directly
          * because rb_hash_aset freezes keys and it causes copying */
         bool frozen = is_reading_map_key(uk);
         VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, frozen);
@@ -265,7 +261,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         if(count == 0) {
             return object_complete_string(uk, rb_str_buf_new(0));
         }
-        //uk->reading_raw = rb_str_buf_new(count);
+        /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
         return read_raw_body_begin(uk);
 
@@ -274,7 +270,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
         if(count == 0) {
             return object_complete(uk, rb_ary_new());
         }
-//printf("fix array %d\n", count);
         return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(count));
 
     SWITCH_RANGE(b, 0x80, 0x8f)  // FixMap
@@ -282,7 +277,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
         if(count == 0) {
             return object_complete(uk, rb_hash_new());
         }
-//printf("fix map %d %x\n", count, b);
         return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new());
 
     SWITCH_RANGE(b, 0xc0, 0xdf)  // Variable
@@ -319,7 +313,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 return object_complete(uk, rb_float_new(cb->d));
             }
 
-            //int n = 1 << (((unsigned int)*p) & 0x03)
         case 0xcc:  // unsigned int  8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
@@ -383,7 +376,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
         //case 0xd8:  // big float 16
         //case 0xd9:  // big float 32
 
-            //int n = 2 << (((unsigned int)*p) & 0x01);
         case 0xda:  // raw 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
@@ -391,7 +383,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete_string(uk, rb_str_buf_new(0));
                 }
-                //uk->reading_raw = rb_str_buf_new(count);
+                /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk);
             }
@@ -403,7 +395,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete_string(uk, rb_str_buf_new(0));
                 }
-                //uk->reading_raw = rb_str_buf_new(count);
+                /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk);
             }
@@ -449,12 +441,10 @@ static int read_primitive(msgpack_unpacker_t* uk)
             }
 
         default:
-            //printf("invalid byte: %x\n", b);
             return PRIMITIVE_INVALID_BYTE;
         }
 
     SWITCH_RANGE_DEFAULT
-        //printf("invalid byte: %x\n", b);
         return PRIMITIVE_INVALID_BYTE;
 
     SWITCH_RANGE_END
@@ -522,7 +512,6 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
             return r;
         }
         if(r == PRIMITIVE_CONTAINER_START) {
-//printf("container start count=%lu\n", _msgpack_unpacker_stack_top(uk)->count);
             continue;
         }
         /* PRIMITIVE_OBJECT_COMPLETE */
@@ -548,7 +537,6 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
                 break;
             }
             size_t count = --top->count;
-//printf("calc count: %lu  depth=%lu\n", count, uk->stack_depth);
 
             if(count == 0) {
                 object_complete(uk, top->object);
@@ -580,8 +568,10 @@ int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth)
         container_completed:
         {
             msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
-            /* deleted section */
-            /* TODO optimize: #define SKIP and #include unpacker_incl.h */
+
+            /* this section optimized out */
+            // TODO object_complete still creates objects which should be optimized out
+
             size_t count = --top->count;
 
             if(count == 0) {
