@@ -1,12 +1,10 @@
-require 'msgpack/version'
-
 here = File.expand_path(File.dirname(__FILE__))
-
-require 'rbconfig'
-prebuilt = File.join(here, RUBY_PLATFORM, RbConfig::CONFIG['ruby_version'])
-if File.directory?(prebuilt)
-  require File.join(prebuilt, "msgpack")
-else
-  require File.join(here, '..', 'ext', 'msgpack', 'msgpack')
+require File.join(here, 'msgpack', 'version')
+begin
+  m = /(\d+.\d+)/.match(RUBY_VERSION)
+  ver = m[1]
+  ver = '1.9' if ver == '2.0'
+  require File.join(here, 'msgpack', ver, 'msgpack')
+rescue LoadError
+  require File.join(here, 'msgpack', 'msgpack')
 end
-
