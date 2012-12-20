@@ -1,0 +1,7 @@
+Gemfile*
+.bundle
+.rbenv-version
+.DS_Store
+*~
+/msgpack-ruby
+/vendor
