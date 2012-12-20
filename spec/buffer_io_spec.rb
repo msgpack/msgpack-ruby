@@ -27,6 +27,15 @@ describe Buffer do
     Buffer.new(io)
   end
 
+  it 'io returns internal io' do
+    buffer.io.should == io
+  end
+
+  it 'close closes internal io' do
+    io.should_receive(:close)
+    buffer.close
+  end
+
   it 'short feed and read all' do
     set_source 'aa'
     buffer.read.should == 'aa'

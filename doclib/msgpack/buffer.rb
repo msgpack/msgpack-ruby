@@ -154,12 +154,28 @@ module MessagePack
     end
 
     #
+    # Internal io
+    #
+    # @return IO
+    #
+    attr_reader :io
+
+    #
     # Flushes data in the internal buffer to the internal IO.
-    # If internal IO is not set, it doesn nothing.
+    # If internal IO is not set, it does nothing.
     #
     # @return [Buffer] self
     #
     def flush
+    end
+
+    #
+    # Closes internal IO if its set.
+    # If internal IO is not set, it does nothing
+    #
+    # @return nil
+    #
+    def close
     end
 
     #

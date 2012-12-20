@@ -27,6 +27,7 @@ static ID s_read;
 static ID s_readpartial;
 static ID s_write;
 static ID s_append;
+static ID s_close;
 
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
@@ -449,6 +450,21 @@ static VALUE Buffer_flush(VALUE self)
     return self;
 }
 
+static VALUE Buffer_io(VALUE self)
+{
+    BUFFER(self, b);
+    return b->io;
+}
+
+static VALUE Buffer_close(VALUE self)
+{
+    BUFFER(self, b);
+    if(b->io != Qnil) {
+        return rb_funcall(b->io, s_close, 0);
+    }
+    return Qnil;
+}
+
 static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
     BUFFER(self, b);
@@ -462,6 +478,7 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
     s_readpartial = rb_intern("readpartial");
     s_write = rb_intern("write");
     s_append = rb_intern("<<");
+    s_close = rb_intern("close");
 
     msgpack_buffer_static_init();
 
@@ -479,7 +496,9 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Buffer, "skip_all", Buffer_skip_all, 1);
     rb_define_method(cMessagePack_Buffer, "read", Buffer_read, -1);
     rb_define_method(cMessagePack_Buffer, "read_all", Buffer_read_all, -1);
+    rb_define_method(cMessagePack_Buffer, "io", Buffer_io, 0);
     rb_define_method(cMessagePack_Buffer, "flush", Buffer_flush, 0);
+    rb_define_method(cMessagePack_Buffer, "close", Buffer_close, 0);
     rb_define_method(cMessagePack_Buffer, "write_to", Buffer_write_to, 1);
     rb_define_method(cMessagePack_Buffer, "to_str", Buffer_to_str, 0);
     rb_define_alias(cMessagePack_Buffer, "to_s", "to_str");
