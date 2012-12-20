@@ -54,7 +54,7 @@ Packer provides advanced API to serialize objects in streaming style:
     pk = MessagePack::Packer.new(io)
     pk.write_array_header(2).write(e1).write(e2).flush
 
-See API reference for details.
+See {API reference}[http://ruby.msgpack.org/MessagePack/Packer.html] for details.
 
 = Deserializing objects
 
@@ -83,14 +83,14 @@ or event-driven style which works well with EventMachine:
       }
     end
 
-See API reference for details.
+See {API reference}[http://ruby.msgpack.org/MessagePack/Unpacker.html] for details.
 
 
 = Buffer API
 
 MessagePack for Ruby provides a buffer API so that you can read or write data by hand, not via Packer or Unpacker API.
 
-This MessagePack::Buffer API is backed with a fixed-length shared memory pool which is very fast for small data (<= 4KB),
+This {MessagePack::Buffer}[http://ruby.msgpack.org/MessagePack/Buffer.html] is backed with a fixed-length shared memory pool which is very fast for small data (<= 4KB),
 and has zero-copy capability which significantly affects performance to handle large binary data.
 
 
