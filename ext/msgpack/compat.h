@@ -42,17 +42,18 @@
 
 /*
  * define STR_DUP_LIKELY_DOES_COPY
+ * check rb_str_dup actually copies the string or not
  */
-#if defined(RUBY_VM)  /* MRI 1.9 */
-   /* if FL_ALL(str, FL_USER1|FL_USER3) == STR_ASSOC_P(str) returns true,
-    * rb_str_dup will copy the string */
-#  define STR_DUP_LIKELY_DOES_COPY(str) FL_ALL(str, FL_USER1|FL_USER3)
+#if defined(RUBY_VM) && defined(FL_ALL) && defined(FL_USER1) && defined(FL_USER3)  /* MRI 1.9 */
+#  define STR_DUP_LIKELY_DOES_COPY(str) FL_ALL(str, FL_USER1|FL_USER3)  /* same as STR_ASSOC_P(str) */
 
-#elif defined(RUBINIUS) || defined(JRUBY)  /* Rubinius and JRuby */
+#elif defined(FL_TEST) && defined(ELTS_SHARED)  /* MRI 1.8 */
+#  define STR_DUP_LIKELY_DOES_COPY(str) (!FL_TEST(str, ELTS_SHARED))
+
+//#elif defined(RUBINIUS) || defined(JRUBY)  /* Rubinius and JRuby */
+#else
 #  define STR_DUP_LIKELY_DOES_COPY(str) (1)
 
-#else  /* MRI 1.8 */
-#  define STR_DUP_LIKELY_DOES_COPY(str) (!FL_TEST(str, ELTS_SHARED))
 #endif
 
 

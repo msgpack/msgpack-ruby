@@ -41,6 +41,10 @@ struct msgpack_packer_t {
 
 #define PACKER_BUFFER_(pk) (&(pk)->buffer)
 
+void msgpack_packer_static_init();
+
+void msgpack_packer_static_destroy();
+
 void msgpack_packer_init(msgpack_packer_t* pk);
 
 void msgpack_packer_destroy(msgpack_packer_t* pk);

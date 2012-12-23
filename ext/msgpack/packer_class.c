@@ -250,6 +250,8 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     s_to_msgpack = rb_intern("to_msgpack");
     s_write = rb_intern("write");
 
+    msgpack_packer_static_init();
+
     cMessagePack_Packer = rb_define_class_under(mMessagePack, "Packer", rb_cObject);
 
     rb_define_alloc_func(cMessagePack_Packer, Packer_alloc);
