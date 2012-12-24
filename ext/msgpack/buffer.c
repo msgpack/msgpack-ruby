@@ -23,10 +23,6 @@
 int s_enc_ascii8bit;
 #endif
 
-#ifdef RUBY_VM
-#define HAVE_RB_STR_REPLACE
-#endif
-
 #ifndef HAVE_RB_STR_REPLACE
 static ID s_replace;
 #endif

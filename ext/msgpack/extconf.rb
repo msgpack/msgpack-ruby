@@ -2,6 +2,7 @@ require 'mkmf'
 
 have_header("ruby/st.h")
 have_header("st.h")
+have_func("rb_str_replace", ["ruby.h"])
 
 $CFLAGS << %[ -I.. -Wall -O3 -g -std=c99]
 #$CFLAGS << %[ -DDISABLE_RMEM]
