@@ -92,9 +92,11 @@ struct msgpack_buffer_t {
     msgpack_buffer_chunk_t* head;
     msgpack_buffer_chunk_t* free_list;
 
+#ifndef DISABLE_RMEM
     char* rmem_last;
     char* rmem_end;
     void** rmem_owner;
+#endif
 
     union msgpack_buffer_cast_block_t cast_block;
 
