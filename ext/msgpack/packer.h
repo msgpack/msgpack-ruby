@@ -322,7 +322,8 @@ void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
     /* TODO encoding conversion? */
-    size_t len = RSTRING_LEN(v);
+    /* actual return type of RSTRING_LEN is long */
+    unsigned long len = RSTRING_LEN(v);
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
@@ -334,7 +335,8 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
 static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)
 {
     const char* name = rb_id2name(SYM2ID(v));
-    size_t len = strlen(name);
+    /* actual return type of strlen is size_t */
+    unsigned long len = strlen(name);
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
