@@ -145,7 +145,7 @@ static inline void _msgpack_packer_write_int64(msgpack_packer_t* pk, int64_t v)
     msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xd3, (const void*)&be, 8);
 }
 
-static inline void msgpack_packer_write_int32(msgpack_packer_t* pk, long v)
+static inline void _msgpack_packer_write_long32(msgpack_packer_t* pk, long v)
 {
     if(v < -0x20L) {
         if(v < -0x8000L) {
@@ -168,33 +168,33 @@ static inline void msgpack_packer_write_int32(msgpack_packer_t* pk, long v)
     }
 }
 
-static inline void msgpack_packer_write_int64(msgpack_packer_t* pk, long v)
+static inline void _msgpack_packer_write_long_long64(msgpack_packer_t* pk, long long v)
 {
-    if(v < -0x20L) {
-        if(v < -0x8000L) {
-            if(v < -0x80000000L) {
+    if(v < -0x20LL) {
+        if(v < -0x8000LL) {
+            if(v < -0x80000000LL) {
                 _msgpack_packer_write_int64(pk, (int64_t) v);
             } else {
                 _msgpack_packer_write_int32(pk, (int32_t) v);
             }
         } else {
-            if(v < -0x80L) {
+            if(v < -0x80LL) {
                 _msgpack_packer_write_int16(pk, (int16_t) v);
             } else {
                 _msgpack_packer_write_int8(pk, (int8_t) v);
             }
         }
-    } else if(v <= 0x7fL) {
+    } else if(v <= 0x7fLL) {
         _msgpack_packer_write_fixint(pk, (int8_t) v);
     } else {
-        if(v <= 0xffffL) {
-            if(v <= 0xffL) {
+        if(v <= 0xffffLL) {
+            if(v <= 0xffLL) {
                 _msgpack_packer_write_uint8(pk, (uint8_t) v);
             } else {
                 _msgpack_packer_write_uint16(pk, (uint16_t) v);
             }
         } else {
-            if(v <= 0xffffffffL) {
+            if(v <= 0xffffffffLL) {
                 _msgpack_packer_write_uint32(pk, (uint32_t) v);
             } else {
                 _msgpack_packer_write_uint64(pk, (uint64_t) v);
@@ -207,26 +207,31 @@ static inline void msgpack_packer_write_long(msgpack_packer_t* pk, long v)
 {
 #if defined(SIZEOF_LONG)
 #  if SIZEOF_LONG <= 4
-    msgpack_packer_write_int32(pk, v);
+    _msgpack_packer_write_long32(pk, v);
 #  else
-    msgpack_packer_write_int64(pk, v);
+    _msgpack_packer_write_long_long64(pk, v);
 #  endif
 
 #elif defined(LONG_MAX)
-#  if LONG_MAX <= 0x7fffL
-#  elif LONG_MAX == 0x7fffffffL
-    msgpack_packer_write_int32(pk, v);
+#  if LONG_MAX <= 0x7fffffffL
+    _msgpack_packer_write_long32(pk, v);
 #  else
-    msgpack_packer_write_int64(pk, v);
+    _msgpack_packer_write_long_long64(pk, v);
 #  endif
 
 #else
     if(sizeof(long) <= 4) {
-        msgpack_packer_write_int32(pk, v);
+        _msgpack_packer_write_long32(pk, v);
     } else {
-        msgpack_packer_write_int64(pk, v);
+        _msgpack_packer_write_long_long64(pk, v);
     }
 #endif
+}
+
+static inline void msgpack_packer_write_long_long(msgpack_packer_t* pk, long long v)
+{
+    /* assuming sizeof(long long) == 8 */
+    _msgpack_packer_write_long_long64(pk, v);
 }
 
 static inline void msgpack_packer_write_u64(msgpack_packer_t* pk, uint64_t v)
@@ -352,7 +357,7 @@ static inline void msgpack_packer_write_bignum_value(msgpack_packer_t* pk, VALUE
     if(RBIGNUM_POSITIVE_P(v)) {
         msgpack_packer_write_u64(pk, rb_big2ull(v));
     } else {
-        msgpack_packer_write_long(pk, rb_big2ll(v));  /* TODO long long? */
+        msgpack_packer_write_long_long(pk, rb_big2ll(v));
     }
 }
 
