@@ -1,6 +1,7 @@
 #!/bin/sh
 
 mkdir -p ext
+mkdir -p lib/msgpack
 mkdir -p msgpack
 cp extconf.rb   ext/
 cp pack.c       ext/
@@ -9,7 +10,7 @@ cp rbinit.c     ext/
 cp unpack.c     ext/
 cp unpack.h     ext/
 cp compat.h     ext/
-cp version.rb   ext/
+cp version.rb   lib/msgpack/
 cp ../msgpack/pack_define.h     msgpack/
 cp ../msgpack/pack_template.h   msgpack/
 cp ../msgpack/unpack_define.h   msgpack/
