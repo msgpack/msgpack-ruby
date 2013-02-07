@@ -1,4 +1,10 @@
 
+2012-02-07 version 0.5.2:
+
+* Fixed invalid pack/unpack on 32bit architecture such as Win32
+* Disable rmem on Rubinius because rmem is not thread safe
+
+
 2012-12-23 version 0.5.1:
 
 * Fixed compile error with Rubinius 2.0.0-dev
