@@ -611,13 +611,13 @@ size_t msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method
 size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b)
 {
     if(b->io_buffer == Qnil) {
-        b->io_buffer = rb_funcall(b->io, b->io_partial_read_method, 1, LONG2FIX(b->io_buffer_size));
+        b->io_buffer = rb_funcall(b->io, b->io_partial_read_method, 1, LONG2NUM(b->io_buffer_size));
         if(b->io_buffer == Qnil) {
             rb_raise(rb_eEOFError, "IO reached end of file");
         }
         StringValue(b->io_buffer);
     } else {
-        VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(b->io_buffer_size), b->io_buffer);
+        VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(b->io_buffer_size), b->io_buffer);
         if(ret == Qnil) {
             rb_raise(rb_eEOFError, "IO reached end of file");
         }
@@ -638,7 +638,7 @@ size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string,
 {
     if(RSTRING_LEN(string) == 0) {
         /* direct read */
-        VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), string);
+        VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(length), string);
         if(ret == Qnil) {
             return 0;
         }
@@ -650,7 +650,7 @@ size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string,
         b->io_buffer = rb_str_buf_new(0);
     }
 
-    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), b->io_buffer);
+    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(length), b->io_buffer);
     if(ret == Qnil) {
         return 0;
     }
@@ -666,7 +666,7 @@ size_t _msgpack_buffer_skip_from_io(msgpack_buffer_t* b, size_t length)
         b->io_buffer = rb_str_buf_new(0);
     }
 
-    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2FIX(length), b->io_buffer);
+    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(length), b->io_buffer);
     if(ret == Qnil) {
         return 0;
     }

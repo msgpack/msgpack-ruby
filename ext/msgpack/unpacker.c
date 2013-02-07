@@ -251,10 +251,10 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
     SWITCH_RANGE_BEGIN(b)
     SWITCH_RANGE(b, 0x00, 0x7f)  // Positive Fixnum
-        return object_complete(uk, INT2FIX(b));
+        return object_complete(uk, INT2NUM(b));
 
     SWITCH_RANGE(b, 0xe0, 0xff)  // Negative Fixnum
-        return object_complete(uk, INT2FIX((int8_t)b));
+        return object_complete(uk, INT2NUM((int8_t)b));
 
     SWITCH_RANGE(b, 0xa0, 0xbf)  // FixRaw
         int count = b & 0x1f;
@@ -317,14 +317,14 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
                 uint8_t u8 = cb->u8;
-                return object_complete(uk, INT2FIX((int)u8));
+                return object_complete(uk, INT2NUM((int)u8));
             }
 
         case 0xcd:  // unsigned int 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint16_t u16 = _msgpack_be16(cb->u16);
-                return object_complete(uk, INT2FIX((int)u16));
+                return object_complete(uk, INT2NUM((int)u16));
             }
 
         case 0xce:  // unsigned int 32
@@ -345,21 +345,21 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
                 int8_t i8 = cb->i8;
-                return object_complete(uk, INT2FIX((int)i8));
+                return object_complete(uk, INT2NUM((int)i8));
             }
 
         case 0xd1:  // signed int 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 int16_t i16 = _msgpack_be16(cb->i16);
-                return object_complete(uk, INT2FIX((int)i16));
+                return object_complete(uk, INT2NUM((int)i16));
             }
 
         case 0xd2:  // signed int 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 int32_t i32 = _msgpack_be32(cb->i32);
-                return object_complete(uk, LONG2FIX((long)i32));
+                return object_complete(uk, LONG2NUM((long)i32));
             }
 
         case 0xd3:  // signed int 64
