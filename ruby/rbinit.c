@@ -52,7 +52,7 @@ void Init_msgpack(void)
 {
 	mMessagePack = rb_define_module("MessagePack");
 
-	rb_define_const(mMessagePack, "VERSION", rb_str_new2(MESSAGEPACK_VERSION));
+	rb_require("msgpack/version");
 
 #ifdef COMPAT_HAVE_ENCODING
 	s_enc_ascii8bit = rb_ascii8bit_encindex();
