@@ -238,10 +238,10 @@ describe Buffer do
     r = Random.new(random_seed)
     b = Buffer.new
 
-    500.times {
+    50.times {
       s = r.bytes(0)
 
-      r.rand(4*10*10).times do
+      r.rand(4).times do
         n = r.rand(1024*1400)
         x = r.bytes(n)
         s << x
