@@ -82,17 +82,26 @@ static inline void* msgpack_rmem_alloc(msgpack_rmem_t* pm)
     return _msgpack_rmem_alloc2(pm);
 }
 
-bool _msgpack_rmem_free2(msgpack_rmem_t* pm, void* mem);
+void _msgpack_rmem_chunk_free(msgpack_rmem_t* pm, msgpack_rmem_chunk_t* c);
 
 static inline bool msgpack_rmem_free(msgpack_rmem_t* pm, void* mem)
 {
     if(_msgpack_rmem_chunk_try_free(&pm->head, mem)) {
         return true;
     }
-    if(pm->array_last == pm->array_end) {
-        return false;
+
+    /* search from last */
+    msgpack_rmem_chunk_t* c = pm->array_last - 1;
+    msgpack_rmem_chunk_t* before_first = pm->array_first - 1;
+    for(; c != before_first; c--) {
+        if(_msgpack_rmem_chunk_try_free(c, mem)) {
+            if(c != pm->array_first && c->mask == 0xffffffff) {
+                _msgpack_rmem_chunk_free(pm, c);
+            }
+            return true;
+        }
     }
-    return _msgpack_rmem_free2(pm, mem);
+    return false;
 }
 
 
