@@ -72,7 +72,8 @@ static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
             free(c->mem);
         }
         /* no needs to update rmem_owner because chunks will not be
-         * free()ed and thus *rmem_owner = NULL is always valid. */
+         * free()ed (left in free_list) and thus *rmem_owner is
+         * always valid. */
 #else
         free(c->mem);
 #endif
@@ -282,8 +283,8 @@ static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
 
 #ifndef DISABLE_RMEM
 #ifndef DISABLE_RMEM_REUSE_INTERNAL_FRAGMENT
-        if(b->rmem_owner == &b->tail.mem) {
-            /* reuse unused rmem */
+        if(b->rmem_last == b->tail_buffer_end) {
+            /* reuse unused rmem space */
             size_t unused = b->tail_buffer_end - b->tail.last;
             b->rmem_last -= unused;
         }

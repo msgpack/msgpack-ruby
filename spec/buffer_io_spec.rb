@@ -210,7 +210,7 @@ describe Buffer do
     }
   end
 
-  it 'random write' do
+  it 'random write and flush' do
     r = Random.new(random_seed)
 
     50.times {
@@ -231,6 +231,25 @@ describe Buffer do
 
       io.string.size.should == s.size
       io.string.should == s
+    }
+  end
+
+  it 'random write and clear' do
+    r = Random.new(random_seed)
+    b = Buffer.new
+
+    500.times {
+      s = r.bytes(0)
+
+      r.rand(4*10*10).times do
+        n = r.rand(1024*1400)
+        x = r.bytes(n)
+        s << x
+        b.write(x)
+      end
+
+      b.size.should == s.size
+      b.clear
     }
   end
 end
