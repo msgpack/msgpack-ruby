@@ -1,4 +1,10 @@
 
+2012-02-14 version 0.5.3:
+
+* Fixed segfault problem on Buffer#clear (reuse rmem internal fragment optimization)
+* Fixed segfault problem on Buffer (rmem free code)
+
+
 2012-02-07 version 0.5.2:
 
 * Fixed invalid pack/unpack on 32bit architecture such as Win32
