@@ -121,6 +121,7 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 {
     // TODO ruby 2.0 has String#b method
+    // TODO use uk->reading_raw_string_hint
 #ifdef COMPAT_HAVE_ENCODING
     //str_modifiable(str);
     ENCODING_SET(str, s_enc_utf8);
@@ -219,9 +220,10 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
     return PRIMITIVE_OBJECT_COMPLETE;
 }
 
-static inline int read_raw_body_begin(msgpack_unpacker_t* uk)
+static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool string_hint)
 {
     /* assuming uk->reading_raw == Qnil */
+    uk->reading_raw_string_hint = string_hint;
 
     /* try optimized read */
     size_t length = uk->reading_raw_remaining;
@@ -263,7 +265,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
         }
         /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
-        return read_raw_body_begin(uk);
+        bool string_hint = count < 16;
+        return read_raw_body_begin(uk, string_hint);
 
     SWITCH_RANGE(b, 0x90, 0x9f)  // FixArray
         int count = b & 0x0f;
@@ -371,10 +374,54 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         //case 0xd4:
         //case 0xd5:
-        //case 0xd6:  // big integer 16
-        //case 0xd7:  // big integer 32
-        //case 0xd8:  // big float 16
-        //case 0xd9:  // big float 32
+
+        case 0xd6:  // string 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                uint8_t count = cb->u8;
+                if(count == 0) {
+                    return object_complete_string(uk, rb_str_buf_new(0));
+                }
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                return read_raw_body_begin(uk, true);
+            }
+
+        case 0xd7:  // string 16
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
+                uint16_t count = _msgpack_be16(cb->u16);
+                if(count == 0) {
+                    return object_complete_string(uk, rb_str_buf_new(0));
+                }
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                return read_raw_body_begin(uk, true);
+            }
+
+        case 0xd8:  // string 32
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
+                uint32_t count = _msgpack_be32(cb->u32);
+                if(count == 0) {
+                    return object_complete_string(uk, rb_str_buf_new(0));
+                }
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                return read_raw_body_begin(uk, true);
+            }
+
+        case 0xd9:  // raw 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                uint8_t count = cb->u8;
+                if(count == 0) {
+                    return object_complete_string(uk, rb_str_buf_new(0));
+                }
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                return read_raw_body_begin(uk, false);
+            }
 
         case 0xda:  // raw 16
             {
@@ -385,7 +432,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk);
+                return read_raw_body_begin(uk, false);
             }
 
         case 0xdb:  // raw 32
@@ -397,7 +444,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk);
+                return read_raw_body_begin(uk, false);
             }
 
         case 0xdc:  // array 16
