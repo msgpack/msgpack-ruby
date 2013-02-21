@@ -1,4 +1,8 @@
 
+2013-02-20 version 0.4.8:
+
+  * Fixed require problem for Ruby 2.0.0
+
 2012-05-05 version 0.4.7:
 
   * Fixed serialization of double values on ARM OABI architectures
