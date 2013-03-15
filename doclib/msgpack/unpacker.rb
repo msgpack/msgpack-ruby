@@ -78,7 +78,7 @@ module MessagePack
     end
 
     #
-    # Read a header of an map and returns its size.
+    # Reads a header of an map and returns its size.
     # It converts a serialized map into a stream of key-value pairs.
     #
     # If the serialized object is not a map, it raises MessagePack::TypeError.
@@ -124,6 +124,14 @@ module MessagePack
     # @return nil
     #
     def feed_each(data, &block)
+    end
+
+    #
+    # Resets deserialization state of the unpacker and clears the internal buffer.
+    #
+    # @return nil
+    #
+    def reset
     end
   end
 

@@ -276,6 +276,15 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
     return Unpacker_each(self);
 }
 
+static VALUE Unpacker_reset(VALUE self)
+{
+    UNPACKER(self, uk);
+
+    msgpack_unpacker_reset(uk);
+
+    return Qnil;
+}
+
 VALUE MessagePack_unpack(int argc, VALUE* argv)
 {
     VALUE src;
@@ -362,6 +371,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
+    rb_define_method(cMessagePack_Unpacker, "reset", Unpacker_reset, 0);
 
     s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
     rb_gc_register_address(&s_unpacker_value);

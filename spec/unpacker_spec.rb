@@ -48,10 +48,30 @@ describe Unpacker do
     }.should raise_error(EOFError)
   end
 
-  # TODO skip methods
+  # TODO skip
   # TODO feed
   # TODO each
   # TODO feed_each
+
+  it 'reset clears internal buffer' do
+    # 1-element array
+    unpacker.feed("\x91")
+    unpacker.reset
+    unpacker.feed("\x01")
+
+    unpacker.each.map {|x| x }.should == [1]
+  end
+
+  it 'reset clears internal state' do
+    # 1-element array
+    unpacker.feed("\x91")
+    unpacker.each.map {|x| x }.should == []
+
+    unpacker.reset
+
+    unpacker.feed("\x01")
+    unpacker.each.map {|x| x }.should == [1]
+  end
 
   it 'buffer' do
     o1 = unpacker.buffer.object_id
