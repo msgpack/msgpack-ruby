@@ -1,4 +1,9 @@
 
+2012-03-15 version 0.5.4:
+
+* Added missing MessagePack::Unpacker#reset method
+
+
 2012-02-14 version 0.5.3:
 
 * Fixed segfault problem on Buffer#clear (reuse rmem internal fragment optimization)
