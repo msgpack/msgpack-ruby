@@ -326,7 +326,32 @@ internal buffer, which is a MessagePack::Buffer.</p>
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Read a header of an map and returns its size.</p>
+<p>Reads a header of an map and returns its size.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#reset-instance_method" title="#reset (instance method)">- (Object) <strong>reset</strong> </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Resets deserialization state of the unpacker and clears the internal
+buffer.</p>
 </div></span>
   
 </li>
@@ -967,7 +992,7 @@ If there're not enough buffer, this method raises EOFError.</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Read a header of an map and returns its size. It converts a serialized map
+<p>Reads a header of an map and returns its size. It converts a serialized map
 into a stream of key-value pairs.</p>
 
 <p>If the serialized object is not a map, it raises MessagePack::TypeError. If
@@ -1010,6 +1035,64 @@ there're not enough buffer, this method raises EOFError.</p>
       <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 89</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read_map_header'>read_map_header</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="reset-instance_method">
+  
+    - (<tt>Object</tt>) <strong>reset</strong> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Resets deserialization state of the unpacker and clears the internal
+buffer.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'></span>
+      
+      
+      
+        
+        <div class='inline'>
+<p>nil</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+134
+135</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 134</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_reset'>reset</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -1137,7 +1220,7 @@ if a byte exists but the byte doesn't represent nil value, returns
 </div>
 
     <div id="footer">
-  Generated on Thu Dec 20 11:15:13 2012 by
+  Generated on Fri Mar 15 11:27:20 2013 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.8.3 (ruby-1.9.3).
 </div>

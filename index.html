@@ -135,7 +135,8 @@ is highly welcomed.</p>
 </span><span class='id identifier rubyid_pk'>pk</span> <span class='op'>=</span> <span class='const'>MessagePack</span><span class='op'>::</span><span class='const'>Packer</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_io'>io</span><span class='rparen'>)</span>
 <span class='id identifier rubyid_pk'>pk</span><span class='period'>.</span><span class='id identifier rubyid_write_array_header'>write_array_header</span><span class='lparen'>(</span><span class='int'>2</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span><span class='lparen'>(</span><span class='id identifier rubyid_e1'>e1</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span><span class='lparen'>(</span><span class='id identifier rubyid_e2'>e2</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_flush'>flush</span></code></pre>
 
-<p>See API reference for details.</p>
+<p>See <a href="http://ruby.msgpack.org/MessagePack/Packer.html">API
+reference</a> for details.</p>
 
 <h1>Deserializing objects</h1>
 
@@ -164,17 +165,19 @@ is highly welcomed.</p>
 </span>  <span class='rbrace'>}</span>
 <span class='kw'>end</span></code></pre>
 
-<p>See API reference for details.</p>
+<p>See <a href="http://ruby.msgpack.org/MessagePack/Unpacker.html">API
+reference</a> for details.</p>
 
 <h1>Buffer API</h1>
 
 <p>MessagePack for Ruby provides a buffer API so that you can read or write
 data by hand, not via Packer or Unpacker API.</p>
 
-<p>This MessagePack::Buffer API is backed with a fixed-length shared memory
-pool which is very fast for small data (&lt;= 4KB), and has zero-copy
-capability which significantly affects performance to handle large binary
-data.</p>
+<p>This <a
+href="http://ruby.msgpack.org/MessagePack/Buffer.html">MessagePack::Buffer</a>
+is backed with a fixed-length shared memory pool which is very fast for
+small data (&lt;= 4KB), and has zero-copy capability which significantly
+affects performance to handle large binary data.</p>
 
 <h1>Copyright</h1>
 <table class="rdoc-list"><tr><td class="rdoc-term"><p>Author</p></td>
@@ -190,7 +193,7 @@ data.</p>
 </div></div>
 
     <div id="footer">
-  Generated on Thu Dec 20 11:15:12 2012 by
+  Generated on Fri Mar 15 11:27:20 2013 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.8.3 (ruby-1.9.3).
 </div>
