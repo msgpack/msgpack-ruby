@@ -24,7 +24,7 @@ module MessagePack
     #
     # Internal buffer
     #
-    # @return MessagePack::Unpacker
+    # @return MessagePack::Buffer
     #
     attr_reader :buffer
 
@@ -54,7 +54,7 @@ module MessagePack
     #
     # @return [Packer] self
     #
-    def write_array_header(size)
+    def write_array_header(n)
     end
 
     #
@@ -63,12 +63,12 @@ module MessagePack
     #
     # @return [Packer] self
     #
-    def write_map_header(size)
+    def write_map_header(n)
     end
 
     #
     # Flushes data in the internal buffer to the internal IO. Same as _buffer.flush.
-    # If internal IO is not set, it doesn nothing.
+    # If internal IO is not set, it does nothing.
     #
     # @return [Packer] self
     #
@@ -107,6 +107,8 @@ module MessagePack
     #
     def to_str
     end
+
+    alias to_s to_str
 
     #
     # Returns content of the internal buffer as an array of strings. Same as buffer.to_a.

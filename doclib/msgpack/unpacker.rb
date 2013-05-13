@@ -25,7 +25,7 @@ module MessagePack
     #
     # Internal buffer
     #
-    # @return [MessagePack::Unpacker]
+    # @return [MessagePack::Buffer]
     #
     attr_reader :buffer
 
