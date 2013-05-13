@@ -230,6 +230,13 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
     }
 
     msgpack_buffer_clear(PACKER_BUFFER_(pk)); /* to free rmem before GC */
+
+#ifdef RB_GC_GUARD
+    /* This prevents compilers from optimizing out the `self` variable
+     * from stack. Otherwise GC free()s it. */
+    RB_GC_GUARD(self);
+#endif
+
     return retval;
 }
 
