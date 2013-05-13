@@ -17,6 +17,16 @@
  */
 
 #include "unpacker.h"
+#include "rmem.h"
+
+#if !defined(DISABLE_RMEM) && !defined(DISABLE_UNPACKER_STACK_RMEM) && \
+        MSGPACK_UNPACKER_STACK_CAPACITY * MSGPACK_UNPACKER_STACK_SIZE <= MSGPACK_RMEM_PAGE_SIZE
+#define UNPACKER_STACK_RMEM
+#endif
+
+#ifdef UNPACKER_STACK_RMEM
+static msgpack_rmem_t s_stack_rmem;
+#endif
 
 #ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
 static int s_enc_utf8;
@@ -24,13 +34,21 @@ static int s_enc_utf8;
 
 void msgpack_unpacker_static_init()
 {
+#ifdef UNPACKER_STACK_RMEM
+    msgpack_rmem_init(&s_stack_rmem);
+#endif
+
 #ifdef COMPAT_HAVE_ENCODING
     s_enc_utf8 = rb_utf8_encindex();
 #endif
 }
 
 void msgpack_unpacker_static_destroy()
-{ }
+{
+#ifdef UNPACKER_STACK_RMEM
+    msgpack_rmem_destroy(&s_stack_rmem);
+#endif
+}
 
 #define HEAD_BYTE_REQUIRED 0xc6
 
@@ -45,13 +63,24 @@ void msgpack_unpacker_init(msgpack_unpacker_t* uk)
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
 
-    uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_t));
+#ifdef UNPACKER_STACK_RMEM
+    uk->stack = msgpack_rmem_alloc(&s_stack_rmem);
+    /*memset(uk->stack, 0, MSGPACK_UNPACKER_STACK_CAPACITY);*/
+#else
+    /*uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_t));*/
+    uk->stack = malloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_t));
+#endif
     uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
 }
 
 void msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 {
+#ifdef UNPACKER_STACK_RMEM
+    msgpack_rmem_free(&s_stack_rmem, uk->stack);
+#else
     free(uk->stack);
+#endif
+
     msgpack_buffer_destroy(UNPACKER_BUFFER_(uk));
 }
 
@@ -78,7 +107,7 @@ void msgpack_unpacker_reset(msgpack_unpacker_t* uk)
 
     uk->head_byte = HEAD_BYTE_REQUIRED;
 
-    memset(uk->stack, 0, sizeof(msgpack_unpacker_t) * uk->stack_depth);
+    /*memset(uk->stack, 0, sizeof(msgpack_unpacker_t) * uk->stack_depth);*/
     uk->stack_depth = 0;
 
     uk->last_object = Qnil;

@@ -40,6 +40,8 @@ typedef struct {
     VALUE key;
 } msgpack_unpacker_stack_t;
 
+#define MSGPACK_UNPACKER_STACK_SIZE (8+4+8+8)  /* assumes size_t <= 64bit, enum <= 32bit, VALUE <= 64bit */
+
 struct msgpack_unpacker_t {
     msgpack_buffer_t buffer;
 

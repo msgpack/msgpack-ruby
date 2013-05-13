@@ -22,8 +22,8 @@
 
 VALUE cMessagePack_Unpacker;
 
-static VALUE s_unpacker_value;
-static msgpack_unpacker_t* s_unpacker;
+//static VALUE s_unpacker_value;
+//static msgpack_unpacker_t* s_unpacker;
 
 static VALUE eUnpackError;
 static VALUE eMalformedFormatError;
@@ -303,32 +303,40 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         src = Qnil;
     }
 
-    // TODO create an instance if io is set for thread safety?
-    //VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
-    //UNPACKER(self, uk);
-    msgpack_unpacker_reset(s_unpacker);
-    msgpack_buffer_reset_io(UNPACKER_BUFFER_(s_unpacker));
+    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
+    UNPACKER(self, uk);
+    //msgpack_unpacker_reset(s_unpacker);
+    //msgpack_buffer_reset_io(UNPACKER_BUFFER_(s_unpacker));
+
+    /* prefer reference than copying */
+    msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(uk), 0);
 
     if(io != Qnil) {
-        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(s_unpacker), io, Qnil);
+        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, Qnil);
     }
 
     if(src != Qnil) {
         /* prefer reference than copying; see MessagePack_Unpacker_module_init */
-        msgpack_buffer_append_string(UNPACKER_BUFFER_(s_unpacker), src);
+        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
     }
 
-    int r = msgpack_unpacker_read(s_unpacker, 0);
+    int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
         raise_unpacker_error(r);
     }
 
     /* raise if extra bytes follow */
-    if(msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(s_unpacker)) > 0) {
+    if(msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)) > 0) {
         rb_raise(eMalformedFormatError, "extra bytes follow after a deserialized object");
     }
 
-    return msgpack_unpacker_get_last_object(s_unpacker);
+#ifdef RB_GC_GUARD
+    /* This prevents compilers from optimizing out the `self` variable
+     * from stack. Otherwise GC free()s it. */
+    RB_GC_GUARD(self);
+#endif
+
+    return msgpack_unpacker_get_last_object(uk);
 }
 
 static VALUE MessagePack_load_module_method(int argc, VALUE* argv, VALUE mod)
@@ -373,11 +381,11 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
     rb_define_method(cMessagePack_Unpacker, "reset", Unpacker_reset, 0);
 
-    s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
-    rb_gc_register_address(&s_unpacker_value);
-    Data_Get_Struct(s_unpacker_value, msgpack_unpacker_t, s_unpacker);
+    //s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
+    //rb_gc_register_address(&s_unpacker_value);
+    //Data_Get_Struct(s_unpacker_value, msgpack_unpacker_t, s_unpacker);
     /* prefer reference than copying */
-    msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);
+    //msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);
 
     /* MessagePack.unpack(x) */
     rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);
