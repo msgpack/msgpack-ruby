@@ -1,16 +1,23 @@
 
-2012-03-15 version 0.5.4:
+2013-05-12 version 0.5.5:
+
+* Fixed SEGV problem in to_msgpack
+* Fixed a possible race condition in MessagePack.load when it loads data from IO
+* mingw32 package includes binary for ruby-2.0.0
+
+
+2013-03-15 version 0.5.4:
 
 * Added missing MessagePack::Unpacker#reset method
 
 
-2012-02-14 version 0.5.3:
+2013-02-14 version 0.5.3:
 
 * Fixed segfault problem on Buffer#clear (reuse rmem internal fragment optimization)
 * Fixed segfault problem on Buffer (rmem free code)
 
 
-2012-02-07 version 0.5.2:
+2013-02-07 version 0.5.2:
 
 * Fixed invalid pack/unpack on 32bit architecture such as Win32
 * Disable rmem on Rubinius because rmem is not thread safe
