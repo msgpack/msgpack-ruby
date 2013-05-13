@@ -70,6 +70,11 @@ task :default => :build
 # echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
 # exec $SHELL -l
 #
+### install cross-compiled ruby 2.0.0
+# rbenv install 2.0.0-p0
+# gem install rake-compiler
+# rake-compiler cross-ruby VERSION=2.0.0-p0
+#
 ### install cross-compiled ruby 1.9.3
 # rbenv install 1.9.3-p327
 # gem install rake-compiler
@@ -83,6 +88,6 @@ task :default => :build
 ### build gem
 # rbenv shell 1.8.7-p371
 # gem install bundler && bundle
-# rake cross native gem RUBY_CC_VERSION=1.8.7:1.9.3
+# rake cross native gem RUBY_CC_VERSION=1.8.7:1.9.3:2.0.0
 #
 
