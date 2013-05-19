@@ -6,5 +6,9 @@ begin
   ver = '1.9' if ver == '2.0'
   require File.join(here, 'msgpack', ver, 'msgpack')
 rescue LoadError
-  require File.join(here, 'msgpack', 'msgpack')
+  begin
+    require File.join(here, 'msgpack', 'msgpack')
+  rescue LoadError
+    require 'msgpack/msgpack'
+  end
 end
