@@ -56,6 +56,55 @@ describe Packer do
     packer.to_s.should == "\x81"
   end
 
+  it 'write_ext_header 1 1' do
+    packer.write_ext_header(1, 1)
+    packer.to_s.should == "\xd4\x01"
+  end
+
+  it 'write_ext_header 2 1' do
+    packer.write_ext_header(2, 1)
+    packer.to_s.should == "\xd5\x01"
+  end
+
+  it 'write_ext_header 4 1' do
+    packer.write_ext_header(4, 1)
+    packer.to_s.should == "\xd6\x01"
+  end
+
+  it 'write_ext_header 8 1' do
+    packer.write_ext_header(8, 1)
+    packer.to_s.should == "\xd7\x01"
+  end
+
+  it 'write_ext_header 16 1' do
+    packer.write_ext_header(16, 1)
+    packer.to_s.should == "\xd8\x01"
+  end
+
+  # (2^8) - 1 bytes
+  it 'write_ext_header ((1 << 8) -1), 1' do
+    packer.write_ext_header((1 << 8) - 1, 1)
+    packer.to_s.should == "\xc7\xff\x01"
+  end
+
+  # (2^8)
+  it 'write_ext_header ((1 << 8), 1' do
+    packer.write_ext_header((1 << 8), 1)
+    packer.to_s.should == "\xc8\x01\x00\x01"
+  end
+
+  # (2^16) - 1 bytes
+  it 'write_ext_header ((1 << 16) -1), 1' do
+    packer.write_ext_header((1 << 16) - 1, 1)
+    packer.to_s.should == "\xc8\xff\xff\x01"
+  end
+
+  # 2^16 bytes
+  it 'write_ext_header 1 << 16, 1' do
+    packer.write_ext_header((1 << 16), 1)
+    packer.to_s.should == "\xc9\x00\x01\x00\x00\x01"
+  end
+
   it 'flush' do
     io = StringIO.new
     pk = Packer.new(io)

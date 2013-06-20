@@ -316,6 +316,39 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
     }
 }
 
+static inline void msgpack_packer_write_ext_header(msgpack_packer_t* pk, unsigned int n, int8_t type)
+{
+    if(n == 1) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd4, type);
+    } else if(n == 2) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd5, type);
+    } else if(n == 4) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd6, type);
+    } else if(n == 8) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd7, type);
+    } else if(n == 16) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd8, type);
+    } else if(n < 256) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xc7, (uint8_t)n);
+        msgpack_buffer_write_1(PACKER_BUFFER_(pk), type);
+    } else if (n < 65536) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 4);
+        uint16_t be = _msgpack_be16(n);
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc8, (const void*)&be, 2);
+        msgpack_buffer_write_1(PACKER_BUFFER_(pk), type);
+    } else {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 6);
+        uint32_t be = _msgpack_be32(n);
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc9, (const void*)&be, 4);
+        msgpack_buffer_write_1(PACKER_BUFFER_(pk), type);
+    }
+}
 
 void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
 

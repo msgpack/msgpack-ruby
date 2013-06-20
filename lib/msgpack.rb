@@ -11,3 +11,5 @@ else
     require "msgpack/msgpack"
   end
 end
+
+require 'msgpack/extended'
