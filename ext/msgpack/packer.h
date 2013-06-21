@@ -383,6 +383,23 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
 #endif
 }
 
+static inline void msgpack_packer_write_ext_value(msgpack_packer_t* pk, VALUE v)
+{
+    int8_t type = NUM2INT(rb_ivar_get(v, rb_intern("type")));
+    VALUE data  = rb_ivar_get(v, rb_intern("data"));
+
+    /* actual return type of RSTRING_LEN is long */
+    unsigned long len = RSTRING_LEN(data);
+    if(len > 0xffffffffUL) {
+        // TODO rb_eArgError?
+        rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
+    }
+
+    msgpack_packer_write_ext_header(pk, (unsigned int)len, type);
+    msgpack_buffer_append_string(PACKER_BUFFER_(pk), data);
+}
+
+
 static inline void msgpack_packer_write_fixnum_value(msgpack_packer_t* pk, VALUE v)
 {
 #ifdef JRUBY
