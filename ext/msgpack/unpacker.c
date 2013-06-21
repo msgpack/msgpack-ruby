@@ -323,9 +323,92 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc3:  // true
             return object_complete(uk, Qtrue);
 
-        //case 0xc7: // ext 8
-        //case 0xc8: // ext 16
-        //case 0xc9: // ext 32
+        case 0xc7: // ext 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
+                int head      = _msgpack_be16(cb->i16);
+                uint8_t count = (head >> 8) & 0x00FF;
+                int8_t type   = head & 0x00FF;
+
+                /*if(count == 0) {*/
+                    /*return object_complete_string(uk, rb_str_buf_new(0));*/
+                /*}*/
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                read_raw_body_begin(uk);
+
+                /* create extended object */
+                ID sym_msgpack_mod = rb_intern("MessagePack");
+                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
+
+                ID sym_extended_klass = rb_intern("Extended");
+                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
+
+                VALUE argv[2];
+                argv[0] = INT2FIX(type);
+                argv[1] = uk->last_object;
+
+                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+            }
+
+        case 0xc8: // ext 16
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
+                int head       = _msgpack_be32(cb->i32);
+                uint16_t count = (head >> 16) & 0x0000FFFF;
+                int8_t type    = (head >> 8) & 0x0000FF;
+
+                /*if(count == 0) {*/
+                    /*return object_complete_string(uk, rb_str_buf_new(0));*/
+                /*}*/
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                read_raw_body_begin(uk);
+
+                /* create extended object */
+                ID sym_msgpack_mod = rb_intern("MessagePack");
+                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
+
+                ID sym_extended_klass = rb_intern("Extended");
+                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
+
+                VALUE argv[2];
+                argv[0] = INT2FIX(type);
+                argv[1] = uk->last_object;
+
+                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+            }
+
+        case 0xc9: // ext 32
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
+                long head      = _msgpack_be64(cb->i64);
+                uint32_t count = (head >> 32) & 0x00FFFFFFFF;
+                int8_t type    = (head >> 24) &   0x00000000FF;
+
+                /*if(count == 0) {*/
+                    /*return object_complete_string(uk, rb_str_buf_new(0));*/
+                /*}*/
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                read_raw_body_begin(uk);
+
+                /* create extended object */
+                ID sym_msgpack_mod = rb_intern("MessagePack");
+                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
+
+                ID sym_extended_klass = rb_intern("Extended");
+                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
+
+                VALUE argv[2];
+                argv[0] = INT2FIX(type);
+                argv[1] = uk->last_object;
+
+                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+            }
 
         case 0xca:  // float
             {
@@ -397,11 +480,120 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 return object_complete(uk, rb_ll2inum(i64));
             }
 
-        //case 0xd4:  // fixext 1
-        //case 0xd5:  // fixext 2
-        //case 0xd6:  // fixext 4
-        //case 0xd7:  // fixext 8
-        //case 0xd8:  // fixext 16
+        case 0xd4: // fixext 1
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int8_t type = cb->i8;
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = 1;
+                read_raw_body_begin(uk);
+
+                /* create extended object */
+                ID sym_msgpack_mod = rb_intern("MessagePack");
+                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
+
+                ID sym_extended_klass = rb_intern("Extended");
+                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
+
+                VALUE argv[2];
+                argv[0] = INT2FIX(type);
+                argv[1] = uk->last_object;
+
+                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+            }
+
+        case 0xd5: // fixext 2
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int8_t type = cb->i8;
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = 2;
+                read_raw_body_begin(uk);
+
+                /* create extended object */
+                ID sym_msgpack_mod = rb_intern("MessagePack");
+                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
+
+                ID sym_extended_klass = rb_intern("Extended");
+                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
+
+                VALUE argv[2];
+                argv[0] = INT2FIX(type);
+                argv[1] = uk->last_object;
+
+                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+            }
+
+        case 0xd6:  // fixext 4
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int8_t type = cb->i8;
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = 4;
+                read_raw_body_begin(uk);
+
+                /* create extended object */
+                ID sym_msgpack_mod = rb_intern("MessagePack");
+                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
+
+                ID sym_extended_klass = rb_intern("Extended");
+                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
+
+                VALUE argv[2];
+                argv[0] = INT2FIX(type);
+                argv[1] = uk->last_object;
+
+                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+            }
+
+        case 0xd7:  // fixext 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int8_t type = cb->i8;
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = 8;
+                read_raw_body_begin(uk);
+
+                /* create extended object */
+                ID sym_msgpack_mod = rb_intern("MessagePack");
+                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
+
+                ID sym_extended_klass = rb_intern("Extended");
+                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
+
+                VALUE argv[2];
+                argv[0] = INT2FIX(type);
+                argv[1] = uk->last_object;
+
+                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+            }
+
+        case 0xd8:  // fixext 16
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int8_t type = cb->i8;
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = 16;
+                read_raw_body_begin(uk);
+
+                /* create extended object */
+                ID sym_msgpack_mod = rb_intern("MessagePack");
+                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
+
+                ID sym_extended_klass = rb_intern("Extended");
+                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
+
+                VALUE argv[2];
+                argv[0] = INT2FIX(type);
+                argv[1] = uk->last_object;
+
+                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+            }
 
         case 0xd9:  // raw 8 / str 8
             {

@@ -108,6 +108,56 @@ describe MessagePack do
     #check_array 5, (1 << 32)-1  # memory error
   end
 
+  it "fixext 1" do
+    check_ext 2, 1, -128
+    check_ext 2, 1, 1
+    check_ext 2, 1, 127
+  end
+
+  it "fixext 2" do
+    check_ext 2, 2, -128
+    check_ext 2, 2, 1
+    check_ext 2, 2, 127
+  end
+
+  it "fixext 4" do
+    check_ext 2, 4, -128
+    check_ext 2, 4, 1
+    check_ext 2, 4, 127
+  end
+
+  it "fixext 8" do
+    check_ext 2, 8, -128
+    check_ext 2, 8, 1
+    check_ext 2, 8, 127
+  end
+
+  it "fixext 16" do
+    check_ext 2, 16, -128
+    check_ext 2, 16, 1
+    check_ext 2, 16, 127
+  end
+
+
+  it "ext 8" do
+    check_ext 3, (1<<8) - 1, -128
+    check_ext 3, (1<<8) - 1, 1
+    check_ext 3, (1<<8) - 2, 127
+  end
+
+  it "ext 16" do
+    check_ext 4, (1<<16) - 1, -128
+    check_ext 4, (1<<8), 1
+    check_ext 4, (1<<16) - 2, 127
+  end
+
+  it "ext 32" do
+    check_ext 6, (1<<20), -128
+    check_ext 6, (1<<16), 1
+    check_ext 6, (1<<16), 127
+  end
+
+
   it "nil" do
     match nil, "\xc0"
   end
@@ -217,6 +267,10 @@ describe MessagePack do
 
   def check_array(overhead, num)
     check num+overhead, Array.new(num)
+  end
+
+  def check_ext(overhead, num, type)
+    check num+overhead, MessagePack::Extended.new(type, "a" * num)
   end
 
   def match(obj, buf)
