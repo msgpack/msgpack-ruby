@@ -226,6 +226,26 @@ describe MessagePack do
     match obj, "\x80"
   end
 
+  it "extended type 1 with payload aa" do
+    obj = MessagePack::Extended.new(1, "aa")
+    match obj, "\xd5\x01aa"
+  end
+
+  it "extended type 1 with payload aaaa" do
+    obj = MessagePack::Extended.new(1, "aaaa")
+    match obj, "\xd6\x01aaaa"
+  end
+
+  it "extended type 1 with payload aaaa" do
+    obj = MessagePack::Extended.new(1, "aaaa")
+    match obj, "\xd6\x01aaaa"
+  end
+
+  it "extended type 1 with payload aaaaaaaa" do
+    obj = MessagePack::Extended.new(1, "aaaaaaaa")
+    match obj, "\xd7\x01aaaaaaaa"
+  end
+
 ## FIXME
 #  it "{0=>0, 1=>1, ..., 14=>14}" do
 #    a = (0..14).to_a;

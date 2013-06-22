@@ -49,7 +49,9 @@ static VALUE Extended_alloc(VALUE klass)
 static VALUE Extended_initialize(VALUE self, VALUE type, VALUE data)
 {
     EXTENDED(self, ext);
-    ext->type = FIXNUM_P(type);
+    Check_Type(type, T_FIXNUM);
+
+    ext->type = type;
     ext->data = StringValue(data);
 
     return self;
