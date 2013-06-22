@@ -246,6 +246,37 @@ describe MessagePack do
     match obj, "\xd7\x01aaaaaaaa"
   end
 
+  it "extended type 1 with a payload of 2^8 - 1 bytes" do
+    size = (1<<8) - 1
+    obj = MessagePack::Extended.new(1, "a" * size)
+    match obj, "\xc7\xff\x01" << ("a" * size)
+  end
+
+  it "extended type 1 with a payload of 2^16 - 1 bytes" do
+    size = (1<<16) - 1
+    obj = MessagePack::Extended.new(1, "a" * size)
+    match obj, "\xc8\xff\xff\x01" << ("a" * size)
+  end
+
+  it "extended type 1 with a payload of 2^16 - 2 bytes" do
+    size = (1<<16) - 2
+    obj = MessagePack::Extended.new(1, "a" * size)
+    match obj, "\xc8\xff\xfe\x01" << ("a" * size)
+  end
+
+  it "extended type 1 with a payload of 2^16" do
+    size = (1<<16)
+    obj = MessagePack::Extended.new(1, "a" * size)
+    match obj, "\xc9\x00\x01\x00\x00\x01" << ("a" * size)
+  end
+
+  it "extended type 1 with a payload of 2^16 + 1" do
+    size = (1<<16) + 1
+    obj = MessagePack::Extended.new(1, "a" * size)
+    match obj, "\xc9\x00\x01\x00\x01\x01" << ("a" * size)
+  end
+
+
 ## FIXME
 #  it "{0=>0, 1=>1, ..., 14=>14}" do
 #    a = (0..14).to_a;
