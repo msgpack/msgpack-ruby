@@ -270,6 +270,15 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
     return read_raw_body_cont(uk);
 }
 
+static inline int read_extended_body_begin(msgpack_unpacker_t* uk, int8_t type)
+{
+    read_raw_body_begin(uk);
+
+    VALUE argv[2] = { INT2FIX(type), uk->last_object };
+
+    return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
+}
+
 static int read_primitive(msgpack_unpacker_t* uk)
 {
     if(uk->reading_raw_remaining > 0) {
@@ -316,16 +325,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
         int8_t type = cb->i8;
 
-        /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
-        read_raw_body_begin(uk);
-
-        /* create extended object */
-        VALUE argv[2];
-        argv[0] = INT2FIX(type);
-        argv[1] = uk->last_object;
-
-        return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
+        return read_extended_body_begin(uk, type);
 
     SWITCH_RANGE(b, 0xc0, 0xdf)  // Variable
         switch(b) {
@@ -347,16 +348,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint8_t count = (head >> 8) & 0x00FF;
                 int8_t type   = head & 0x00FF;
 
-                /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                read_raw_body_begin(uk);
-
-                /* create extended object */
-                VALUE argv[2];
-                argv[0] = INT2FIX(type);
-                argv[1] = uk->last_object;
-
-                return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
+                return read_extended_body_begin(uk, type);
             }
 
         case 0xc8: // ext 16
@@ -364,18 +357,10 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
                 int head       = _msgpack_be32(cb->i32);
                 uint16_t count = (head >> 16) & 0x0000FFFF;
-                int8_t type    = (head >> 8) & 0x0000FF;
+                int8_t type    = (head >> 8) & 0x000000FF;
 
-                /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                read_raw_body_begin(uk);
-
-                /* create extended object */
-                VALUE argv[2];
-                argv[0] = INT2FIX(type);
-                argv[1] = uk->last_object;
-
-                return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
+                return read_extended_body_begin(uk, type);
             }
 
         case 0xc9: // ext 32
@@ -383,18 +368,10 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
                 long head      = _msgpack_be64(cb->i64);
                 uint32_t count = (head >> 32) & 0x00FFFFFFFF;
-                int8_t type    = (head >> 24) &   0x00000000FF;
+                int8_t type    = (head >> 24) & 0x00000000FF;
 
-                /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                read_raw_body_begin(uk);
-
-                /* create extended object */
-                VALUE argv[2];
-                argv[0] = INT2FIX(type);
-                argv[1] = uk->last_object;
-
-                return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
+                return read_extended_body_begin(uk, type);
             }
 
         case 0xca:  // float
