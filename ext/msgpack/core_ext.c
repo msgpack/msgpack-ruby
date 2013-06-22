@@ -20,29 +20,6 @@
 #include "packer.h"
 #include "packer_class.h"
 
-static inline VALUE delegete_to_pack(int argc, VALUE* argv, VALUE self)
-{
-    if(argc == 0) {
-        return MessagePack_pack(1, &self);
-    } else if(argc == 1) {
-        /* write to io */
-        VALUE argv2[2];
-        argv2[0] = self;
-        argv2[1] = argv[0];
-        return MessagePack_pack(2, argv2);
-    } else {
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
-    }
-}
-
-#define ENSURE_PACKER(argc, argv, packer, pk) \
-    if(argc != 1 || rb_class_of(argv[0]) != cMessagePack_Packer) { \
-        return delegete_to_pack(argc, argv, self); \
-    } \
-    VALUE packer = argv[0]; \
-    msgpack_packer_t *pk; \
-    Data_Get_Struct(packer, msgpack_packer_t, pk);
-
 static VALUE NilClass_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);

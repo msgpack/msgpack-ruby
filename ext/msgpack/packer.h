@@ -385,8 +385,8 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
 
 static inline void msgpack_packer_write_ext_value(msgpack_packer_t* pk, VALUE v)
 {
-    int8_t type = NUM2INT(rb_ivar_get(v, rb_intern("type")));
-    VALUE data  = rb_ivar_get(v, rb_intern("data"));
+    int8_t type = NUM2INT(rb_funcall(v, rb_intern("type"), 0));
+    VALUE data  = rb_funcall(v, rb_intern("data"), 0);
 
     /* actual return type of RSTRING_LEN is long */
     unsigned long len = RSTRING_LEN(data);

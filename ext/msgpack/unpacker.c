@@ -17,6 +17,7 @@
  */
 
 #include "unpacker.h"
+#include "extended_class.h"
 #include "rmem.h"
 
 #if !defined(DISABLE_RMEM) && !defined(DISABLE_UNPACKER_STACK_RMEM) && \
@@ -320,17 +321,11 @@ static int read_primitive(msgpack_unpacker_t* uk)
         read_raw_body_begin(uk);
 
         /* create extended object */
-        ID sym_msgpack_mod = rb_intern("MessagePack");
-        VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
-
-        ID sym_extended_klass = rb_intern("Extended");
-        VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
-
         VALUE argv[2];
         argv[0] = INT2FIX(type);
         argv[1] = uk->last_object;
 
-        return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+        return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
 
     SWITCH_RANGE(b, 0xc0, 0xdf)  // Variable
         switch(b) {
@@ -352,26 +347,16 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint8_t count = (head >> 8) & 0x00FF;
                 int8_t type   = head & 0x00FF;
 
-                /*if(count == 0) {*/
-                    /*return object_complete_string(uk, rb_str_buf_new(0));*/
-                /*}*/
-
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 read_raw_body_begin(uk);
 
                 /* create extended object */
-                ID sym_msgpack_mod = rb_intern("MessagePack");
-                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
-
-                ID sym_extended_klass = rb_intern("Extended");
-                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
-
                 VALUE argv[2];
                 argv[0] = INT2FIX(type);
                 argv[1] = uk->last_object;
 
-                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+                return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
             }
 
         case 0xc8: // ext 16
@@ -381,26 +366,16 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint16_t count = (head >> 16) & 0x0000FFFF;
                 int8_t type    = (head >> 8) & 0x0000FF;
 
-                /*if(count == 0) {*/
-                    /*return object_complete_string(uk, rb_str_buf_new(0));*/
-                /*}*/
-
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 read_raw_body_begin(uk);
 
                 /* create extended object */
-                ID sym_msgpack_mod = rb_intern("MessagePack");
-                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
-
-                ID sym_extended_klass = rb_intern("Extended");
-                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
-
                 VALUE argv[2];
                 argv[0] = INT2FIX(type);
                 argv[1] = uk->last_object;
 
-                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+                return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
             }
 
         case 0xc9: // ext 32
@@ -410,26 +385,16 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint32_t count = (head >> 32) & 0x00FFFFFFFF;
                 int8_t type    = (head >> 24) &   0x00000000FF;
 
-                /*if(count == 0) {*/
-                    /*return object_complete_string(uk, rb_str_buf_new(0));*/
-                /*}*/
-
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 read_raw_body_begin(uk);
 
                 /* create extended object */
-                ID sym_msgpack_mod = rb_intern("MessagePack");
-                VALUE msgpack_mod  = rb_const_get(rb_cObject, sym_msgpack_mod);
-
-                ID sym_extended_klass = rb_intern("Extended");
-                VALUE extended_klass  = rb_const_get(msgpack_mod, sym_extended_klass);
-
                 VALUE argv[2];
                 argv[0] = INT2FIX(type);
                 argv[1] = uk->last_object;
 
-                return object_complete(uk, rb_class_new_instance(2, argv, extended_klass));
+                return object_complete(uk, rb_class_new_instance(2, argv, cMessagePack_Extended));
             }
 
         case 0xca:  // float
