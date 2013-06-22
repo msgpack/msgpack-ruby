@@ -8,4 +8,12 @@ describe MessagePack do
     expect(MessagePack.unpack(packed))
       .to eql data
   end
+
+  it "raises an error when type type is out of range" do
+    expect { MessagePack::Extended.new(128, "") }
+      .to raise_error
+
+    expect { MessagePack::Extended.new(-129, "") }
+      .to raise_error
+  end
 end

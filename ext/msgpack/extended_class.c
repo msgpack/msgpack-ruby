@@ -51,6 +51,10 @@ static VALUE Extended_initialize(VALUE self, VALUE type, VALUE data)
     EXTENDED(self, ext);
     Check_Type(type, T_FIXNUM);
 
+    if ((FIX2INT(type) < INT8_MIN) || (FIX2INT(type) > INT8_MAX)) {
+        rb_raise(rb_eRangeError, "type should be <= %d and >= %d", INT8_MIN, INT8_MAX);
+    }
+
     ext->type = type;
     ext->data = StringValue(data);
 
