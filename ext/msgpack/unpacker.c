@@ -321,7 +321,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new());
 
     SWITCH_RANGE(b, 0xd4, 0xd8) // FixExt
-        int count = 1 << (b - 4 & 0x0f);
+        int count = 1 << ((b - 4) & 0x0f);
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
         int8_t type = cb->i8;
 
