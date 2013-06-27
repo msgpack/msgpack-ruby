@@ -80,7 +80,7 @@ static VALUE Extended_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
-static VALUE Extended_to_eql(VALUE self, VALUE other)
+static VALUE Extended_eql(VALUE self, VALUE other)
 {
     EXTENDED(self, ext);
     EXTENDED(other, other_ext);
@@ -114,7 +114,7 @@ void MessagePack_Extended_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Extended, "type", Extended_type, 0);
     rb_define_method(cMessagePack_Extended, "data", Extended_data, 0);
     rb_define_method(cMessagePack_Extended, "to_msgpack", Extended_to_msgpack, -1);
-    rb_define_method(cMessagePack_Extended, "==", Extended_to_eql, 1);
-    rb_define_method(cMessagePack_Extended, "eql?", Extended_to_eql, 1);
+    rb_define_method(cMessagePack_Extended, "==", Extended_eql, 1);
+    rb_define_method(cMessagePack_Extended, "eql?", Extended_eql, 1);
 }
 
