@@ -16,4 +16,47 @@ describe MessagePack do
     expect { MessagePack::Extended.new(-129, "") }
       .to raise_error
   end
+
+  describe ".eql?" do
+    context "comparison with another object" do
+      it "returns false" do
+        a = MessagePack::Extended.new(1, "foo")
+        b = "foo"
+
+        expect(a).
+          to_not eql b
+      end
+    end
+
+    context "same type and data" do
+      it "returns true" do
+        a = MessagePack::Extended.new(1, "foo")
+        b = MessagePack::Extended.new(1, "foo")
+
+        expect(a).
+          to eql b
+      end
+    end
+
+    context "same type but different data" do
+      it "returns false" do
+        a = MessagePack::Extended.new(1, "foo")
+        b = MessagePack::Extended.new(1, "bar")
+
+        expect(a).
+          to_not eql b
+      end
+    end
+
+    context "different type but same data" do
+      it "returns true" do
+        a = MessagePack::Extended.new(1, "foo")
+        b = MessagePack::Extended.new(2, "foo")
+
+        expect(a).
+          to_not eql b
+      end
+    end
+
+  end
 end

@@ -82,6 +82,10 @@ static VALUE Extended_to_msgpack(int argc, VALUE* argv, VALUE self)
 
 static VALUE Extended_eql(VALUE self, VALUE other)
 {
+    if(rb_class_of(self) != rb_class_of(other)) {
+        return Qfalse;
+    }
+
     EXTENDED(self, ext);
     EXTENDED(other, other_ext);
 
