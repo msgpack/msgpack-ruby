@@ -17,6 +17,12 @@ Use RubyGems to install:
 
     gem install msgpack
 
+or build msgpack-ruby and install:
+
+    bundle
+    rake
+    gem install --local pkg/msgpack
+
 
 = Use cases
 
