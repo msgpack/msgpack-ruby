@@ -93,6 +93,26 @@ MessagePack for Ruby provides a buffer API so that you can read or write data by
 This {MessagePack::Buffer}[http://ruby.msgpack.org/MessagePack/Buffer.html] is backed with a fixed-length shared memory pool which is very fast for small data (<= 4KB),
 and has zero-copy capability which significantly affects performance to handle large binary data.
 
+= How to build and run tests
+
+Before building msgpack, you need to install bundler and dependencies.
+
+    gem install bundler
+    bundle install
+
+Then, you can run the tasks as follows:
+
+* Build
+
+    bundle exec rake build
+
+* Run tests
+
+    bundle exec rake spec
+
+* Generating docs
+
+    bundle exec rake doc
 
 = Copyright
 
