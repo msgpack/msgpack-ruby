@@ -61,6 +61,15 @@ static VALUE Extended_initialize(VALUE self, VALUE type, VALUE data)
     return self;
 }
 
+static VALUE Extended_create(VALUE klass, VALUE type, VALUE data)
+{
+    VALUE obj = rb_obj_alloc(klass);
+    VALUE argv[2] = { type, data };
+    rb_obj_call_init(obj, 2, argv);
+
+    return obj;
+}
+
 static VALUE Extended_data(VALUE self)
 {
     EXTENDED(self, ext);
@@ -113,6 +122,8 @@ void MessagePack_Extended_module_init(VALUE mMessagePack)
     cMessagePack_Extended = rb_define_class_under(mMessagePack, "Extended", rb_cObject);
 
     rb_define_alloc_func(cMessagePack_Extended, Extended_alloc);
+
+    rb_define_singleton_method(cMessagePack_Extended, "create", Extended_create, 2);
 
     rb_define_method(cMessagePack_Extended, "initialize", Extended_initialize, 2);
     rb_define_method(cMessagePack_Extended, "type", Extended_type, 0);
