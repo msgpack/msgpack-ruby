@@ -347,7 +347,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc7: // ext 8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                int head      = _msgpack_be16(cb->i16);
+                uint16_t head = _msgpack_be16(cb->i16);
                 uint8_t count = (head >> 8) & 0x00FF;
                 int8_t type   = head & 0x00FF;
 
@@ -358,7 +358,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc8: // ext 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
-                int head       = _msgpack_be32(cb->i32);
+                uint32_t head  = _msgpack_be32(cb->i32);
                 uint16_t count = (head >> 16) & 0x0000FFFF;
                 int8_t type    = (head >> 8) & 0x000000FF;
 
@@ -369,7 +369,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc9: // ext 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
-                long head      = _msgpack_be64(cb->i64);
+                uint64_t head  = _msgpack_be64(cb->i64);
                 uint32_t count = (head >> 32) & 0x00FFFFFFFF;
                 int8_t type    = (head >> 24) & 0x00000000FF;
 
