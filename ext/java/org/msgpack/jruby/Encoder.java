@@ -102,11 +102,11 @@ public class Encoder {
       ensureRemainingCapacity(9);
       buffer.put(INT64);
       buffer.putLong(value);
-    } else if (value < -0x7fffL) {
+    } else if (value < Short.MIN_VALUE) {
       ensureRemainingCapacity(5);
       buffer.put(INT32);
       buffer.putInt((int) value);
-    } else if (value < -0x7fL) {
+    } else if (value < Byte.MIN_VALUE) {
       ensureRemainingCapacity(3);
       buffer.put(INT16);
       buffer.putShort((short) value);
