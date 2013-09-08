@@ -27,6 +27,10 @@ import static org.msgpack.jruby.Types.*;
 
 
 public class Encoder {
+
+  private static final int CACHE_LINE_SIZE = 64;
+  private static final int ARRAY_HEADER_SIZE = 24;
+
   private final Ruby runtime;
   private final Encoding binaryEncoding;
   private final Encoding utf8Encoding;
@@ -35,7 +39,7 @@ public class Encoder {
 
   public Encoder(Ruby runtime) {
     this.runtime = runtime;
-    this.buffer = ByteBuffer.allocate(65535);
+    this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
   }
@@ -43,6 +47,7 @@ public class Encoder {
   private void ensureRemainingCapacity(int c) {
     if (buffer.remaining() < c) {
       int newLength = Math.max(buffer.capacity() + (buffer.capacity() >> 1), buffer.capacity() + c);
+      newLength += CACHE_LINE_SIZE - ((ARRAY_HEADER_SIZE + newLength) % CACHE_LINE_SIZE);
       buffer = ByteBuffer.allocate(newLength).put(buffer.array(), 0, buffer.position());
     }
   }
