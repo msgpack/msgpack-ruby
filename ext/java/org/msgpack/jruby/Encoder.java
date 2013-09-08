@@ -135,7 +135,7 @@ public class Encoder {
       buffer.putInt((int) value);
     } else {
       ensureRemainingCapacity(9);
-      buffer.put(UINT64);
+      buffer.put(INT64);
       buffer.putLong(value);
     }
   }
