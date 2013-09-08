@@ -17,6 +17,8 @@ public class MessagePackLibrary implements Library {
   public void load(Ruby runtime, boolean wrap) {
     RubyModule msgpackModule = runtime.defineModule("MessagePack");
     msgpackModule.defineAnnotatedMethods(MessagePackModule.class);
+    RubyClass extensionValueClass = msgpackModule.defineClassUnder("ExtensionValue", runtime.getObject(), new ExtensionValue.ExtensionValueAllocator());
+    extensionValueClass.defineAnnotatedMethods(ExtensionValue.class);
   }
 
   @JRubyModule(name = "MessagePack")
