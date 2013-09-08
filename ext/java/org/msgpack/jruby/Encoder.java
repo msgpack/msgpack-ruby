@@ -42,7 +42,7 @@ public class Encoder {
 
   private void ensureRemainingCapacity(int c) {
     if (buffer.remaining() < c) {
-      int newLength = Math.max(buffer.capacity() * 2, buffer.capacity() + c);
+      int newLength = Math.max(buffer.capacity() + (buffer.capacity() >> 1), buffer.capacity() + c);
       buffer = ByteBuffer.allocate(newLength).put(buffer.array(), 0, buffer.position());
     }
   }
