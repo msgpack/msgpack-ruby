@@ -73,51 +73,55 @@ public class Decoder {
   }
 
   public IRubyObject next() {
-    int b = buffer.get() & 0xff;
-    switch ((byte) b) {
-    case NIL:      return runtime.getNil();
-    case FALSE:    return runtime.getFalse();
-    case TRUE:     return runtime.getTrue();
-    case BIN8:     return consumeString(buffer.get() & 0xff, binaryEncoding);
-    case BIN16:    return consumeString(buffer.getShort() & 0xffff, binaryEncoding);
-    case BIN32:    return consumeString(buffer.getInt(), binaryEncoding);
-    case VAREXT8:  return consumeExtension(buffer.get());
-    case VAREXT16: return consumeExtension(buffer.getShort());
-    case VAREXT32: return consumeExtension(buffer.getInt());
-    case FLOAT32:  return runtime.newFloat(buffer.getFloat());
-    case FLOAT64:  return runtime.newFloat(buffer.getDouble());
-    case UINT8:    return runtime.newFixnum(buffer.get() & 0xffL);
-    case UINT16:   return runtime.newFixnum(buffer.getShort() & 0xffffL);
-    case UINT32:   return runtime.newFixnum(buffer.getInt() & 0xffffffffL);
-    case UINT64:   return consumeUnsignedLong();
-    case INT8:     return runtime.newFixnum(buffer.get());
-    case INT16:    return runtime.newFixnum(buffer.getShort());
-    case INT32:    return runtime.newFixnum(buffer.getInt());
-    case INT64:    return runtime.newFixnum(buffer.getLong());
-    case FIXEXT1:  return consumeExtension(1);
-    case FIXEXT2:  return consumeExtension(2);
-    case FIXEXT4:  return consumeExtension(4);
-    case FIXEXT8:  return consumeExtension(8);
-    case FIXEXT16: return consumeExtension(16);
-    case STR8:     return consumeString(buffer.get() & 0xff, utf8Encoding);
-    case STR16:    return consumeString(buffer.getShort() & 0xffff, utf8Encoding);
-    case STR32:    return consumeString(buffer.getInt(), utf8Encoding);
-    case ARY16:    return consumeArray(buffer.getShort() & 0xffff);
-    case ARY32:    return consumeArray(buffer.getInt());
-    case MAP16:    return consumeHash(buffer.getShort() & 0xffff);
-    case MAP32:    return consumeHash(buffer.getInt());
-    default:
-      if (b <= 0x7f) {
-        return runtime.newFixnum(b);
-      } else if ((b & 0xe0) == 0xe0) {
-        return runtime.newFixnum(b - 0x100);
-      } else if ((b & 0xe0) == 0xa0) {
-        return consumeString(b & 0x1f, utf8Encoding);
-      } else if ((b & 0xf0) == 0x90) {
-        return consumeArray(b & 0x0f);
-      } else if ((b & 0xf0) == 0x80) {
-        return consumeHash(b & 0x0f);
+    byte b = buffer.get();
+outer:
+    switch ((b >> 4) & 0xf) {
+    case 0x8: return consumeHash(b & 0x0f);
+    case 0x9: return consumeArray(b & 0x0f);
+    case 0xa:
+    case 0xb: return consumeString(b & 0x1f, utf8Encoding);
+    case 0xc:
+      switch (b) {
+      case NIL:      return runtime.getNil();
+      case FALSE:    return runtime.getFalse();
+      case TRUE:     return runtime.getTrue();
+      case BIN8:     return consumeString(buffer.get() & 0xff, binaryEncoding);
+      case BIN16:    return consumeString(buffer.getShort() & 0xffff, binaryEncoding);
+      case BIN32:    return consumeString(buffer.getInt(), binaryEncoding);
+      case VAREXT8:  return consumeExtension(buffer.get());
+      case VAREXT16: return consumeExtension(buffer.getShort());
+      case VAREXT32: return consumeExtension(buffer.getInt());
+      case FLOAT32:  return runtime.newFloat(buffer.getFloat());
+      case FLOAT64:  return runtime.newFloat(buffer.getDouble());
+      case UINT8:    return runtime.newFixnum(buffer.get() & 0xffL);
+      case UINT16:   return runtime.newFixnum(buffer.getShort() & 0xffffL);
+      case UINT32:   return runtime.newFixnum(buffer.getInt() & 0xffffffffL);
+      case UINT64:   return consumeUnsignedLong();
+      default: break outer;
       }
+    case 0xd:
+      switch (b) {
+      case INT8:     return runtime.newFixnum(buffer.get());
+      case INT16:    return runtime.newFixnum(buffer.getShort());
+      case INT32:    return runtime.newFixnum(buffer.getInt());
+      case INT64:    return runtime.newFixnum(buffer.getLong());
+      case FIXEXT1:  return consumeExtension(1);
+      case FIXEXT2:  return consumeExtension(2);
+      case FIXEXT4:  return consumeExtension(4);
+      case FIXEXT8:  return consumeExtension(8);
+      case FIXEXT16: return consumeExtension(16);
+      case STR8:     return consumeString(buffer.get() & 0xff, utf8Encoding);
+      case STR16:    return consumeString(buffer.getShort() & 0xffff, utf8Encoding);
+      case STR32:    return consumeString(buffer.getInt(), utf8Encoding);
+      case ARY16:    return consumeArray(buffer.getShort() & 0xffff);
+      case ARY32:    return consumeArray(buffer.getInt());
+      case MAP16:    return consumeHash(buffer.getShort() & 0xffff);
+      case MAP32:    return consumeHash(buffer.getInt());
+      default: break outer;
+      }
+    case 0xe:
+    case 0xf: return runtime.newFixnum((0x1f & b) - 0x20);
+    default: return runtime.newFixnum(b);
     }
     throw runtime.newRaiseException(unpackErrorClass, String.format("Illegal byte sequence"));
   }
