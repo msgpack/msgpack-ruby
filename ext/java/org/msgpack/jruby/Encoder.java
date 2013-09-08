@@ -86,13 +86,12 @@ public class Encoder {
   }
 
   private void encodeBignum(RubyBignum object) {
-    ensureRemainingCapacity(9);
     BigInteger value = ((RubyBignum) object).getBigIntegerValue();
-    if (value.compareTo(BigInteger.ZERO) == -1) {
-      buffer.put(INT64);
-    } else {
-      buffer.put(UINT64);
+    if (value.bitLength() > 64 || (value.bitLength() > 63 && value.signum() < 0)) {
+      throw runtime.newArgumentError(String.format("Cannot pack big integer: %s", value));
     }
+    ensureRemainingCapacity(9);
+    buffer.put(value.signum() < 0 ? INT64 : UINT64);
     byte[] b = value.toByteArray();
     buffer.put(b, b.length - 8, 8);
   }
