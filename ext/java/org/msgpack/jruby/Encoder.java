@@ -23,32 +23,10 @@ import org.jruby.util.ByteList;
 import org.jcodings.Encoding;
 import org.jcodings.specific.UTF8Encoding;
 
+import static org.msgpack.jruby.Types.*;
+
 
 public class Encoder {
-  private static final byte NIL     = (byte) 0xc0;
-  private static final byte FALSE   = (byte) 0xc2;
-  private static final byte TRUE    = (byte) 0xc3;
-  private static final byte BIN8    = (byte) 0xc4;
-  private static final byte BIN16   = (byte) 0xc5;
-  private static final byte BIN32   = (byte) 0xc6;
-  private static final byte FLOAT32 = (byte) 0xca;
-  private static final byte FLOAT64 = (byte) 0xcb;
-  private static final byte UINT8   = (byte) 0xcc;
-  private static final byte UINT16  = (byte) 0xcd;
-  private static final byte UINT32  = (byte) 0xce;
-  private static final byte UINT64  = (byte) 0xcf;
-  private static final byte INT8    = (byte) 0xd0;
-  private static final byte INT16   = (byte) 0xd1;
-  private static final byte INT32   = (byte) 0xd2;
-  private static final byte INT64   = (byte) 0xd3;
-  private static final byte STR8    = (byte) 0xd9;
-  private static final byte STR16   = (byte) 0xda;
-  private static final byte STR32   = (byte) 0xdb;
-  private static final byte ARY16   = (byte) 0xdc;
-  private static final byte ARY32   = (byte) 0xdd;
-  private static final byte MAP16   = (byte) 0xde;
-  private static final byte MAP32   = (byte) 0xdf;
-
   private final Ruby runtime;
   private final Encoding binaryEncoding;
   private final Encoding utf8Encoding;
@@ -102,6 +80,8 @@ public class Encoder {
       encodeArray((RubyArray) object);
     } else if (object instanceof RubyHash) {
       encodeHash((RubyHash) object);
+    } else if (object.respondsTo("to_msgpack")) {
+      appendCustom(object);
     } else {
       throw runtime.newArgumentError(String.format("Cannot pack type: %s", object.getClass().getName()));
     }
@@ -243,5 +223,13 @@ public class Encoder {
       encodeObject(keys.entry(i));
       encodeObject(values.entry(i));
     }
+  }
+
+  private void appendCustom(IRubyObject object) {
+    RubyString string = (RubyString) object.callMethod(runtime.getCurrentContext(), "to_msgpack");
+    ByteList bytes = string.getByteList();
+    int length = bytes.length();
+    ensureCapacity(length);
+    buffer.put(bytes.unsafeBytes(), bytes.begin(), length);
   }
 }
