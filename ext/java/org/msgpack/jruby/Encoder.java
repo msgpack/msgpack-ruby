@@ -103,6 +103,7 @@ public class Encoder {
     } else if (object instanceof RubyHash) {
       encodeHash((RubyHash) object);
     } else {
+      throw runtime.newArgumentError(String.format("Cannot pack type: %s", object.getClass().getName()));
     }
   }
 
