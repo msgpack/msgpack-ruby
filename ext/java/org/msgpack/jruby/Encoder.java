@@ -222,11 +222,25 @@ public class Encoder {
       buffer.put(MAP32);
       buffer.putInt(size);
     }
-    RubyArray keys = object.keys();
-    RubyArray values = object.rb_values();
-    for (int i = 0; i < size; i++) {
-      encodeObject(keys.entry(i));
-      encodeObject(values.entry(i));
+    HashVisitor visitor = new HashVisitor(size);
+    object.visitAll(visitor);
+    if (visitor.remain != 0) {
+      object.getRuntime().newConcurrencyError("Hash size changed while packing");
+    }
+  }
+
+  private class HashVisitor extends RubyHash.Visitor {
+    public int remain;
+
+    public HashVisitor(int size) {
+      remain = size;
+    }
+
+    public void visit(IRubyObject key, IRubyObject value) {
+      if (remain-- > 0) {
+        encodeObject(key);
+        encodeObject(value);
+      }
     }
   }
 
