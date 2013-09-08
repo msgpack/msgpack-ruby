@@ -31,32 +31,25 @@ public class Encoder {
   private final Encoding binaryEncoding;
   private final Encoding utf8Encoding;
 
-  private byte[] bytes;
   private ByteBuffer buffer;
 
   public Encoder(Ruby runtime) {
     this.runtime = runtime;
-    this.bytes = new byte[65535];
-    this.buffer = ByteBuffer.wrap(bytes);
+    this.buffer = ByteBuffer.allocate(65535);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
   }
 
   private void ensureCapacity(int c) {
     if (buffer.remaining() < c) {
-      byte[] oldBytes = bytes;
-      int oldPosition = buffer.position();
-      int newLength = Math.max(oldBytes.length * 2, oldBytes.length + c);
-      bytes = new byte[newLength];
-      System.arraycopy(oldBytes, 0, bytes, 0, oldBytes.length);
-      buffer = ByteBuffer.wrap(bytes);
-      buffer.position(oldPosition);
+      int newLength = Math.max(buffer.capacity() * 2, buffer.capacity() + c);
+      buffer = ByteBuffer.allocate(newLength).put(buffer.array(), 0, buffer.position());
     }
   }
 
   public IRubyObject encode(IRubyObject object) {
     encodeObject(object);
-    return runtime.newString(new ByteList(bytes, 0, buffer.position(), binaryEncoding, false));
+    return runtime.newString(new ByteList(buffer.array(), 0, buffer.position(), binaryEncoding, false));
   }
 
   private void encodeObject(IRubyObject object) {
