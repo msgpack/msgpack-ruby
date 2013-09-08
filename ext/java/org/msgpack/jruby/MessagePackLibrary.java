@@ -17,8 +17,13 @@ public class MessagePackLibrary implements Library {
   public void load(Ruby runtime, boolean wrap) {
     RubyModule msgpackModule = runtime.defineModule("MessagePack");
     msgpackModule.defineAnnotatedMethods(MessagePackModule.class);
+    RubyClass standardErrorClass = runtime.getStandardError();
+    RubyClass unpackErrorClass = msgpackModule.defineClassUnder("UnpackError", standardErrorClass, standardErrorClass.getAllocator());
+    RubyClass underflowErrorClass = msgpackModule.defineClassUnder("UnderflowError", unpackErrorClass, unpackErrorClass.getAllocator());
     RubyClass extensionValueClass = msgpackModule.defineClassUnder("ExtensionValue", runtime.getObject(), new ExtensionValue.ExtensionValueAllocator());
     extensionValueClass.defineAnnotatedMethods(ExtensionValue.class);
+    RubyClass unpackerClass = msgpackModule.defineClassUnder("Unpacker", runtime.getObject(), new Unpacker.UnpackerAllocator());
+    unpackerClass.defineAnnotatedMethods(Unpacker.class);
   }
 
   @JRubyModule(name = "MessagePack")
