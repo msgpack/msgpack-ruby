@@ -204,7 +204,7 @@ public class Encoder {
       buffer.putInt(size);
     }
     for (int i = 0; i < size; i++) {
-      encodeObject(object.entry(i));
+      encodeObject(object.eltOk(i));
     }
   }
 
