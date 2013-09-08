@@ -98,45 +98,53 @@ public class Encoder {
 
   private void encodeInteger(RubyInteger object) {
     long value = ((RubyInteger) object).getLongValue();
-    if (value < Integer.MIN_VALUE) {
-      ensureRemainingCapacity(9);
-      buffer.put(INT64);
-      buffer.putLong(value);
-    } else if (value < Short.MIN_VALUE) {
-      ensureRemainingCapacity(5);
-      buffer.put(INT32);
-      buffer.putInt((int) value);
-    } else if (value < Byte.MIN_VALUE) {
-      ensureRemainingCapacity(3);
-      buffer.put(INT16);
-      buffer.putShort((short) value);
-    } else if (value < -0x20L) {
-      ensureRemainingCapacity(2);
-      buffer.put(INT8);
-      buffer.put((byte) value);
-    } else if (value < 0L) {
-      ensureRemainingCapacity(1);
-      byte b = (byte) (value | 0xe0);
-      buffer.put(b);
-    } else if (value < 128L) {
-      ensureRemainingCapacity(1);
-      buffer.put((byte) value);
-    } else if (value < 0x100L) {
-      ensureRemainingCapacity(2);
-      buffer.put(UINT8);
-      buffer.put((byte) value);
-    } else if (value < 0x10000L) {
-      ensureRemainingCapacity(3);
-      buffer.put(UINT16);
-      buffer.putShort((short) value);
-    } else if (value < 0x100000000L) {
-      ensureRemainingCapacity(5);
-      buffer.put(UINT32);
-      buffer.putInt((int) value);
+    if (value < 0) {
+      if (value < Short.MIN_VALUE) {
+        if (value < Integer.MIN_VALUE) {
+          ensureRemainingCapacity(9);
+          buffer.put(INT64);
+          buffer.putLong(value);
+        } else {
+          ensureRemainingCapacity(5);
+          buffer.put(INT32);
+          buffer.putInt((int) value);
+        }
+      } else if (value >= -0x20L) {
+        ensureRemainingCapacity(1);
+        byte b = (byte) (value | 0xe0);
+        buffer.put(b);
+      } else if (value < Byte.MIN_VALUE) {
+        ensureRemainingCapacity(3);
+        buffer.put(INT16);
+        buffer.putShort((short) value);
+      } else {
+        ensureRemainingCapacity(2);
+        buffer.put(INT8);
+        buffer.put((byte) value);
+      }
     } else {
-      ensureRemainingCapacity(9);
-      buffer.put(INT64);
-      buffer.putLong(value);
+      if (value < 0x10000L) {
+        if (value < 128L) {
+          ensureRemainingCapacity(1);
+          buffer.put((byte) value);
+        } else if (value < 0x100L) {
+          ensureRemainingCapacity(2);
+          buffer.put(UINT8);
+          buffer.put((byte) value);
+        } else {
+          ensureRemainingCapacity(3);
+          buffer.put(UINT16);
+          buffer.putShort((short) value);
+        }
+      } else if (value < 0x100000000L) {
+        ensureRemainingCapacity(5);
+        buffer.put(UINT32);
+        buffer.putInt((int) value);
+      } else {
+        ensureRemainingCapacity(9);
+        buffer.put(INT64);
+        buffer.putLong(value);
+      }
     }
   }
 
