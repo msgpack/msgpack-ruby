@@ -40,7 +40,7 @@ public class Encoder {
     this.utf8Encoding = UTF8Encoding.INSTANCE;
   }
 
-  private void ensureCapacity(int c) {
+  private void ensureRemainingCapacity(int c) {
     if (buffer.remaining() < c) {
       int newLength = Math.max(buffer.capacity() * 2, buffer.capacity() + c);
       buffer = ByteBuffer.allocate(newLength).put(buffer.array(), 0, buffer.position());
@@ -54,10 +54,10 @@ public class Encoder {
 
   private void encodeObject(IRubyObject object) {
     if (object == null || object instanceof RubyNil) {
-      ensureCapacity(1);
+      ensureRemainingCapacity(1);
       buffer.put(NIL);
     } else if (object instanceof RubyBoolean) {
-      ensureCapacity(1);
+      ensureRemainingCapacity(1);
       buffer.put(((RubyBoolean) object).isTrue() ? TRUE : FALSE);
     } else if (object instanceof RubyBignum) {
       encodeBignum((RubyBignum) object);
@@ -81,7 +81,7 @@ public class Encoder {
   }
 
   private void encodeBignum(RubyBignum object) {
-    ensureCapacity(9);
+    ensureRemainingCapacity(9);
     BigInteger value = ((RubyBignum) object).getBigIntegerValue();
     if (value.compareTo(BigInteger.ZERO) == -1) {
       buffer.put(INT64);
@@ -95,42 +95,42 @@ public class Encoder {
   private void encodeInteger(RubyInteger object) {
     long value = ((RubyInteger) object).getLongValue();
     if (value < Integer.MIN_VALUE) {
-      ensureCapacity(9);
+      ensureRemainingCapacity(9);
       buffer.put(INT64);
       buffer.putLong(value);
     } else if (value < -0x7fffL) {
-      ensureCapacity(5);
+      ensureRemainingCapacity(5);
       buffer.put(INT32);
       buffer.putInt((int) value);
     } else if (value < -0x7fL) {
-      ensureCapacity(3);
+      ensureRemainingCapacity(3);
       buffer.put(INT16);
       buffer.putShort((short) value);
     } else if (value < -0x20L) {
-      ensureCapacity(2);
+      ensureRemainingCapacity(2);
       buffer.put(INT8);
       buffer.put((byte) value);
     } else if (value < 0L) {
-      ensureCapacity(1);
+      ensureRemainingCapacity(1);
       byte b = (byte) (value | 0xe0);
       buffer.put(b);
     } else if (value < 128L) {
-      ensureCapacity(1);
+      ensureRemainingCapacity(1);
       buffer.put((byte) value);
     } else if (value < 0x100L) {
-      ensureCapacity(2);
+      ensureRemainingCapacity(2);
       buffer.put(UINT8);
       buffer.put((byte) value);
     } else if (value < 0x10000L) {
-      ensureCapacity(3);
+      ensureRemainingCapacity(3);
       buffer.put(UINT16);
       buffer.putShort((short) value);
     } else if (value < 0x100000000L) {
-      ensureCapacity(5);
+      ensureRemainingCapacity(5);
       buffer.put(UINT32);
       buffer.putInt((int) value);
     } else {
-      ensureCapacity(9);
+      ensureRemainingCapacity(9);
       buffer.put(UINT64);
       buffer.putLong(value);
     }
@@ -140,11 +140,11 @@ public class Encoder {
     double value = object.getDoubleValue();
     float f = (float) value;
     if (Double.compare(f, value) == 0) {
-      ensureCapacity(5);
+      ensureRemainingCapacity(5);
       buffer.put(FLOAT32);
       buffer.putFloat(f);
     } else {
-      ensureCapacity(9);
+      ensureRemainingCapacity(9);
       buffer.put(FLOAT64);
       buffer.putDouble(value);
     }
@@ -159,18 +159,18 @@ public class Encoder {
     ByteList bytes = object.getByteList();
     int length = bytes.length();
     if (length < 32 && !binary) {
-      ensureCapacity(1 + length);
+      ensureRemainingCapacity(1 + length);
       buffer.put((byte) (length | 0xa0));
     } else if (length < 0xff) {
-      ensureCapacity(2 + length);
+      ensureRemainingCapacity(2 + length);
       buffer.put(binary ? BIN8 : STR8);
       buffer.put((byte) length);
     } else if (length < 0xffff) {
-      ensureCapacity(3 + length);
+      ensureRemainingCapacity(3 + length);
       buffer.put(binary ? BIN16 : STR16);
       buffer.putShort((short) length);
     } else {
-      ensureCapacity(5 + length);
+      ensureRemainingCapacity(5 + length);
       buffer.put(binary ? BIN32 : STR32);
       buffer.putInt((int) length);
     }
@@ -180,14 +180,14 @@ public class Encoder {
   private void encodeArray(RubyArray object) {
     int size = object.size();
     if (size < 16) {
-      ensureCapacity(1);
+      ensureRemainingCapacity(1);
       buffer.put((byte) (size | 0x90));
     } else if (size < 0x10000) {
-      ensureCapacity(3);
+      ensureRemainingCapacity(3);
       buffer.put(ARY16);
       buffer.putShort((short) size);
     } else {
-      ensureCapacity(5);
+      ensureRemainingCapacity(5);
       buffer.put(ARY32);
       buffer.putInt(size);
     }
@@ -199,14 +199,14 @@ public class Encoder {
   private void encodeHash(RubyHash object) {
     int size = object.size();
     if (size < 16) {
-      ensureCapacity(1);
+      ensureRemainingCapacity(1);
       buffer.put((byte) (size | 0x80));
     } else if (size < 0x10000) {
-      ensureCapacity(3);
+      ensureRemainingCapacity(3);
       buffer.put(MAP16);
       buffer.putShort((short) size);
     } else {
-      ensureCapacity(5);
+      ensureRemainingCapacity(5);
       buffer.put(MAP32);
       buffer.putInt(size);
     }
@@ -222,7 +222,7 @@ public class Encoder {
     RubyString string = (RubyString) object.callMethod(runtime.getCurrentContext(), "to_msgpack");
     ByteList bytes = string.getByteList();
     int length = bytes.length();
-    ensureCapacity(length);
+    ensureRemainingCapacity(length);
     buffer.put(bytes.unsafeBytes(), bytes.begin(), length);
   }
 }
