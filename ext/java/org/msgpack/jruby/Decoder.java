@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 
 import org.jruby.Ruby;
 import org.jruby.RubyObject;
+import org.jruby.RubyClass;
 import org.jruby.RubyBignum;
 import org.jruby.RubyHash;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -20,12 +21,14 @@ public class Decoder {
   private final ByteBuffer buffer;
   private final Encoding binaryEncoding;
   private final Encoding utf8Encoding;
+  private final RubyClass unpackErrorClass;
 
   public Decoder(Ruby runtime, byte[] buffer) {
     this.runtime = runtime;
     this.buffer = ByteBuffer.wrap(buffer);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
+    this.unpackErrorClass = runtime.getModule("MessagePack").getClass("UnpackError");
   }
 
   private IRubyObject consumeUnsignedLong() {
@@ -99,6 +102,6 @@ public class Decoder {
         return consumeHash(b & 0x0f);
       }
     }
-    return runtime.getNil();
+    throw runtime.newRaiseException(unpackErrorClass, String.format("Illegal byte sequence"));
   }
 }
