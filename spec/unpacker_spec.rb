@@ -138,6 +138,20 @@ describe Unpacker do
     unpacker.buffer.object_id.should == o1
   end
 
+  it 'frozen short strings' do
+    raw = sample_object.to_msgpack.to_s.force_encoding('UTF-8')
+    lambda {
+      unpacker.feed_each(raw.freeze) { }
+    }.should_not raise_error
+  end
+
+  it 'frozen short strings' do
+    raw = (sample_object.to_msgpack.to_s * 10240).force_encoding('UTF-8')
+    lambda {
+      unpacker.feed_each(raw.freeze) { }
+    }.should_not raise_error
+  end
+
   it 'read raises level stack too deep error' do
     512.times { packer.write_array_header(1) }
     packer.write(nil)

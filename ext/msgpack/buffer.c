@@ -307,8 +307,8 @@ static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE s
 
     _msgpack_buffer_add_new_chunk(b);
 
-    char* data = RSTRING_PTR(string);
-    size_t length = RSTRING_LEN(string);
+    char* data = RSTRING_PTR(mapped_string);
+    size_t length = RSTRING_LEN(mapped_string);
 
     b->tail.first = (char*) data;
     b->tail.last = (char*) data + length;
