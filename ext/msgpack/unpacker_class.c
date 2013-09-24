@@ -260,12 +260,12 @@ static VALUE Unpacker_each(VALUE self)
 #endif
 
     if(msgpack_buffer_has_io(UNPACKER_BUFFER_(uk))) {
-        return Unpacker_each_impl(self);
-    } else {
         /* rescue EOFError only if io is set */
         return rb_rescue2(Unpacker_each_impl, self,
                 Unpacker_rescue_EOFError, self,
                 rb_eEOFError, NULL);
+    } else {
+        return Unpacker_each_impl(self);
     }
 }
 
