@@ -145,7 +145,7 @@ describe Unpacker do
     }.should_not raise_error
   end
 
-  it 'frozen short strings' do
+  it 'frozen long strings' do
     raw = (sample_object.to_msgpack.to_s * 10240).force_encoding('UTF-8')
     lambda {
       unpacker.feed_each(raw.freeze) { }
