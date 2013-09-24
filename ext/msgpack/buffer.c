@@ -165,6 +165,8 @@ size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string,
 #else
         rb_str_replace(string, s);
 #endif
+        /* here doesn't have to call ENCODING_SET because
+         * encoding of s is always ASCII-8BIT */
         _msgpack_buffer_consumed(b, length);
         return length;
     }

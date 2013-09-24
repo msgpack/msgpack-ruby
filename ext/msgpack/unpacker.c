@@ -149,9 +149,8 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 
 static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 {
-    // TODO ruby 2.0 has String#b method
 #ifdef COMPAT_HAVE_ENCODING
-    //str_modifiable(str);
+    // TODO ruby 2.0 has String#b method
     ENCODING_SET(str, s_enc_utf8);
 #endif
     return object_complete(uk, str);
@@ -257,9 +256,12 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk)
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
         /* don't use zerocopy for hash keys but get a frozen string directly
          * because rb_hash_aset freezes keys and it causes copying */
-        bool frozen = is_reading_map_key(uk);
-        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, frozen);
+        bool will_freeze = is_reading_map_key(uk);
+        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
         object_complete_string(uk, string);
+        if(will_freeze) {
+            rb_obj_freeze(string);
+        }
         uk->reading_raw_remaining = 0;
         return PRIMITIVE_OBJECT_COMPLETE;
     }
