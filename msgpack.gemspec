@@ -6,8 +6,9 @@ Gem::Specification.new do |s|
   s.version = MessagePack::VERSION
   s.summary = "MessagePack, a binary-based efficient data interchange format."
   s.description = %q{MessagePack is a binary-based efficient object serialization library. It enables to exchange structured objects between many languages like JSON. But unlike JSON, it is very fast and small.}
-  s.author = "FURUHASHI Sadayuki"
+  s.author = "Sadayuki Furuhashi"
   s.email = "frsyuki@gmail.com"
+  s.license = "Apache 2.0"
   s.homepage = "http://msgpack.org/"
   s.rubyforge_project = "msgpack"
   s.has_rdoc = false

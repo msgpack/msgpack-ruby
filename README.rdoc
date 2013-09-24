@@ -122,7 +122,7 @@ Then, you can run the tasks as follows:
 
 = Copyright
 
-Author::    FURUHASHI Sadayuki <frsyuki@gmail.com>
-Copyright:: Copyright (c) 2008-2012 FURUHASHI Sadayuki
+Author::    Sadayuki Furuhashi <frsyuki@gmail.com>
+Copyright:: Copyright (c) 2008-2013 Sadayuki Furuhashi
 License::   Apache License, Version 2.0
 

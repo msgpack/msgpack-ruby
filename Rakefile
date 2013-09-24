@@ -61,8 +61,9 @@ task :default => :build
 ## Ubuntu Ubuntu 10.04.1 LTS
 ##
 #
-### install mingw32 cross compiler
+### install mingw32 cross compiler with w64 support
 # sudo apt-get install gcc-mingw32
+# sudo apt-get install mingw-w64
 #
 ### install rbenv
 # git clone git://github.com/sstephenson/rbenv.git ~/.rbenv
