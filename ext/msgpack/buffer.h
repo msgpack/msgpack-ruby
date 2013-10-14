@@ -70,8 +70,9 @@ struct msgpack_buffer_chunk_t {
     VALUE mapped_string;  /* RBString or NO_MAPPED_STRING */
 };
 
+/* NOTE(eslavich): Added 1 to buffer length to accomodate fixext8 (1 byte type + 8 bytes data) */
 union msgpack_buffer_cast_block_t {
-    char buffer[8];
+    char buffer[9];
     uint8_t u8;
     uint16_t u16;
     uint32_t u32;

@@ -224,30 +224,6 @@ static inline bool is_reading_map_key(msgpack_unpacker_t* uk)
     return false;
 }
 
-/* NOTE(eslavich): Added function that is a symbol analogue to read_raw_body_cont. */
-static int read_symbol_body_cont(msgpack_unpacker_t* uk)
-{
-    size_t length = uk->reading_raw_remaining;
-
-    if(uk->reading_raw == Qnil) {
-        uk->reading_raw = rb_str_buf_new(length);
-    }
-
-    do {
-        size_t n = msgpack_buffer_read_to_string(UNPACKER_BUFFER_(uk), uk->reading_raw, length);
-        if(n == 0) {
-            return PRIMITIVE_EOF;
-        }
-        /* update reading_raw_remaining everytime because
-         * msgpack_buffer_read_to_string raises IOError */
-        uk->reading_raw_remaining = length = length - n;
-    } while(length > 0);
-
-    object_complete(uk, rb_str_intern(uk->reading_raw));
-    uk->reading_raw = Qnil;
-    return PRIMITIVE_OBJECT_COMPLETE;
-}
-
 static int read_raw_body_cont(msgpack_unpacker_t* uk)
 {
     size_t length = uk->reading_raw_remaining;
@@ -266,26 +242,14 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
         uk->reading_raw_remaining = length = length - n;
     } while(length > 0);
 
-    object_complete_string(uk, uk->reading_raw);
+    /* NOTE(eslavich): Added conditional behavior for symbols versus strings. */
+    if(uk->is_symbol) {
+        object_complete(uk, rb_str_intern(uk->reading_raw));
+    } else {
+        object_complete_string(uk, uk->reading_raw);
+    }
     uk->reading_raw = Qnil;
     return PRIMITIVE_OBJECT_COMPLETE;
-}
-
-/* NOTE(eslavich): Added function which is a symbol analogue to read_raw_body_begin. */
-static inline int read_symbol_body_begin(msgpack_unpacker_t* uk)
-{
-    /* assuming uk->reading_raw == Qnil */
-
-    /* try optimized read */
-    size_t length = uk->reading_raw_remaining;
-    if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
-        VALUE symbol = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length);
-        object_complete(uk, symbol);
-        uk->reading_raw_remaining = 0;
-        return PRIMITIVE_OBJECT_COMPLETE;
-    }
-
-    return read_symbol_body_cont(uk);
 }
 
 static inline int read_raw_body_begin(msgpack_unpacker_t* uk)
@@ -295,13 +259,19 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk)
     /* try optimized read */
     size_t length = uk->reading_raw_remaining;
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
-        /* don't use zerocopy for hash keys but get a frozen string directly
-         * because rb_hash_aset freezes keys and it causes copying */
-        bool will_freeze = is_reading_map_key(uk);
-        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
-        object_complete_string(uk, string);
-        if(will_freeze) {
-            rb_obj_freeze(string);
+        /* NOTE(eslavich): Added conditional behavior for symbols versus strings. */
+        if (uk->is_symbol) {
+            VALUE symbol = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length);
+            object_complete(uk, symbol);
+        } else {
+            /* don't use zerocopy for hash keys but get a frozen string directly
+             * because rb_hash_aset freezes keys and it causes copying */
+            bool will_freeze = is_reading_map_key(uk);
+            VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
+            object_complete_string(uk, string);
+            if(will_freeze) {
+                rb_obj_freeze(string);
+            }
         }
         uk->reading_raw_remaining = 0;
         return PRIMITIVE_OBJECT_COMPLETE;
@@ -335,6 +305,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
         }
         /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
+        /* NOTE(eslavich): Set flag to indicate that this is a string. */
+        uk->is_symbol = false;
         return read_raw_body_begin(uk);
 
     SWITCH_RANGE(b, 0x90, 0x9f)  // FixArray
@@ -384,7 +356,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
                     {
                         /* read_raw_body_begin sets uk->reading_raw */
                         uk->reading_raw_remaining = count;
-                        return read_symbol_body_begin(uk);
+                        uk->is_symbol = true;
+                        return read_raw_body_begin(uk);
                     }
                 default:
                     return PRIMITIVE_INVALID_BYTE;
@@ -403,7 +376,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
                     {
                         /* read_raw_body_begin sets uk->reading_raw */
                         uk->reading_raw_remaining = count;
-                        return read_symbol_body_begin(uk);
+                        uk->is_symbol = true;
+                        return read_raw_body_begin(uk);
                     }
                 default:
                     return PRIMITIVE_INVALID_BYTE;
@@ -422,7 +396,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
                     {
                         /* read_raw_body_begin sets uk->reading_raw */
                         uk->reading_raw_remaining = count;
-                        return read_symbol_body_begin(uk);
+                        uk->is_symbol = true;
+                        return read_raw_body_begin(uk);
                     }
                 default:
                     return PRIMITIVE_INVALID_BYTE;
@@ -510,13 +485,13 @@ static int read_primitive(msgpack_unpacker_t* uk)
            nanosecond component. */
         case 0xd7:  // fixext 8
             {
-                uint8_t ext_type = read_head_byte(uk);
-                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 8);
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 9);
+                uint8_t ext_type = cb->u8;
                 switch(ext_type) {
                 case 0x13:
                     {
-                        uint32_t secs = _msgpack_be32(cb->u32);
-                        uint32_t nsecs = _msgpack_be32(*(uint32_t *)&cb->buffer[4]);
+                        uint32_t secs = _msgpack_be32(*(uint32_t *)&cb->buffer[1]);
+                        uint32_t nsecs = _msgpack_be32(*(uint32_t *)&cb->buffer[5]);
                         VALUE time_obj = rb_time_nano_new(secs, nsecs);
                         rb_funcall(time_obj, rb_intern("utc"), 0);
                         return object_complete(uk, time_obj);
@@ -538,6 +513,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
+                /* NOTE(eslavich): Set flag to indicate that this is a string. */
+                uk->is_symbol = false;
                 return read_raw_body_begin(uk);
             }
 
@@ -550,6 +527,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
+                /* NOTE(eslavich): Set flag to indicate that this is a string. */
+                uk->is_symbol = false;
                 return read_raw_body_begin(uk);
             }
 

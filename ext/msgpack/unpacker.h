@@ -55,6 +55,9 @@ struct msgpack_unpacker_t {
 
     VALUE reading_raw;
     size_t reading_raw_remaining;
+    /* NOTE(eslavich): Added boolean is_symbol to indicate whether raw read is a string
+       or a symbol. */
+    bool is_symbol;
 
     VALUE buffer_ref;
 };
