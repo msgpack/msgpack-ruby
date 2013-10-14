@@ -418,6 +418,13 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
     return rb_str_substr(b->head->mapped_string, offset, length);
 }
 
+static inline VALUE msgpack_buffer_read_top_as_symbol(msgpack_buffer_t* b, size_t length)
+{
+    VALUE result = ID2SYM(rb_intern2(b->read_buffer, length));
+    _msgpack_buffer_consumed(b, length);
+    return result;
+}
+
 static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool will_be_frozen)
 {
 #ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
