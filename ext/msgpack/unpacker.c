@@ -224,6 +224,7 @@ static inline bool is_reading_map_key(msgpack_unpacker_t* uk)
     return false;
 }
 
+/* NOTE(eslavich): Added function that is a symbol analogue to read_raw_body_cont. */
 static int read_symbol_body_cont(msgpack_unpacker_t* uk)
 {
     size_t length = uk->reading_raw_remaining;
@@ -242,7 +243,7 @@ static int read_symbol_body_cont(msgpack_unpacker_t* uk)
         uk->reading_raw_remaining = length = length - n;
     } while(length > 0);
 
-    object_complete(uk, ID2SYM(rb_str_intern(uk->reading_raw)));
+    object_complete(uk, rb_str_intern(uk->reading_raw));
     uk->reading_raw = Qnil;
     return PRIMITIVE_OBJECT_COMPLETE;
 }
@@ -270,6 +271,7 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
     return PRIMITIVE_OBJECT_COMPLETE;
 }
 
+/* NOTE(eslavich): Added function which is a symbol analogue to read_raw_body_begin. */
 static inline int read_symbol_body_begin(msgpack_unpacker_t* uk)
 {
     /* assuming uk->reading_raw == Qnil */
@@ -366,9 +368,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
         //case 0xc5:
         //case 0xc6:
 
-        // NOTE(eslavich): Added support for ext 8, ext 16, and ext 32, which are
-        // variable-length formats for custom data.  We are using type 0x14 to
-        // indicate a serialized symbol.
+        /* NOTE(eslavich): Added support for ext 8, ext 16, and ext 32, which are
+           variable-length formats for custom data.  We are using type 0x14 to
+           indicate a serialized symbol. */
         case 0xc7:  // ext 8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
@@ -500,12 +502,12 @@ static int read_primitive(msgpack_unpacker_t* uk)
         //case 0xd5:
         //case 0xd6:  // big integer 16
             
-        // NOTE(eslavich): Added support for fixext 8, which is a one-byte
-        // type followed by 8 bytes of data.  We are using type 0x13 to
-        // indicate a serialized timestamp.  The first 4 bytes of data are an
-        // unsigned 32-bit integer representing the seconds since epoch, and 
-        // the last 4 bytes are an unsigned 32-bit integer representing the
-        // nanosecond component.
+        /* NOTE(eslavich): Added support for fixext 8, which is a one-byte
+           type followed by 8 bytes of data.  We are using type 0x13 to
+           indicate a serialized timestamp.  The first 4 bytes of data are an
+           unsigned 32-bit integer representing the seconds since epoch, and 
+           the last 4 bytes are an unsigned 32-bit integer representing the
+           nanosecond component. */
         case 0xd7:  // fixext 8
             {
                 uint8_t ext_type = read_head_byte(uk);
@@ -772,6 +774,12 @@ int msgpack_unpacker_peek_next_object_type(msgpack_unpacker_t* uk)
         case 0xcb:  // double
             return TYPE_FLOAT;
 
+        /* NOTE(eslavich): Added ext 8, ext 16, and ext 32. */
+        case 0xc7:  // ext 8
+        case 0xc8:  // ext 16
+        case 0xc9:  // ext 32
+            return TYPE_EXT;
+  
         case 0xcc:  // unsigned int  8
         case 0xcd:  // unsigned int 16
         case 0xce:  // unsigned int 32
@@ -784,6 +792,7 @@ int msgpack_unpacker_peek_next_object_type(msgpack_unpacker_t* uk)
         case 0xd3:  // signed int 64
             return TYPE_INTEGER;
 
+        /* NOTE(eslavich): Added fixext 8. */
         case 0xd7:  // fixext 8
             return TYPE_EXT;
 

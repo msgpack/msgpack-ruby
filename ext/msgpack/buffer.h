@@ -418,6 +418,7 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
     return rb_str_substr(b->head->mapped_string, offset, length);
 }
 
+/* NOTE(eslavich): Added function to read n bytes from the buffer as a symbol. */
 static inline VALUE msgpack_buffer_read_top_as_symbol(msgpack_buffer_t* b, size_t length)
 {
     VALUE result = ID2SYM(rb_intern2(b->read_buffer, length));

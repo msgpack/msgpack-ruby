@@ -265,6 +265,7 @@ static inline void msgpack_packer_write_double(msgpack_packer_t* pk, double v)
     msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xcb, castbuf.mem, 8);
 }
 
+/* NOTE(eslavich): Added function to write a symbol header as ext format with type 0x14. */
 static inline void msgpack_packer_write_raw_symbol_header(msgpack_packer_t* pk, unsigned int n)
 {
   if (n < 256) {
@@ -368,6 +369,8 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
     }
+    /* NOTE(eslavich): Changed the following function call to write an ext header
+       instead of the standard string header. */
     msgpack_packer_write_raw_symbol_header(pk, (unsigned int)len);
     msgpack_buffer_append(PACKER_BUFFER_(pk), name, len);
 }
@@ -395,9 +398,9 @@ static inline void msgpack_packer_write_float_value(msgpack_packer_t* pk, VALUE 
     msgpack_packer_write_double(pk, rb_num2dbl(v));
 }
 
-// NOTE(eslavich):  We are using type 0x13 to indicate a serialized timestamp.  The 
-// first 4 bytes of data represent the seconds since epoch, and the last 4 bytes
-// represent the nanosecond component.
+/* NOTE(eslavich):  We are using type 0x13 to indicate a serialized timestamp.  The 
+   first 4 bytes of data represent the seconds since epoch, and the last 4 bytes
+   represent the nanosecond component. */
 static inline void msgpack_packer_write_time_value(msgpack_packer_t* pk, VALUE v)
 {
     struct timespec ts;
