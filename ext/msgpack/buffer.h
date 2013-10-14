@@ -70,8 +70,9 @@ struct msgpack_buffer_chunk_t {
     VALUE mapped_string;  /* RBString or NO_MAPPED_STRING */
 };
 
+/* NOTE(eslavich): Added 1 to buffer length to accomodate fixext8 (1 byte type + 8 bytes data) */
 union msgpack_buffer_cast_block_t {
-    char buffer[8];
+    char buffer[9];
     uint8_t u8;
     uint16_t u16;
     uint32_t u32;
@@ -416,6 +417,14 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
 {
     size_t offset = b->read_buffer - b->head->first;
     return rb_str_substr(b->head->mapped_string, offset, length);
+}
+
+/* NOTE(eslavich): Added function to read n bytes from the buffer as a symbol. */
+static inline VALUE msgpack_buffer_read_top_as_symbol(msgpack_buffer_t* b, size_t length)
+{
+    VALUE result = ID2SYM(rb_intern2(b->read_buffer, length));
+    _msgpack_buffer_consumed(b, length);
+    return result;
 }
 
 static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool will_be_frozen)

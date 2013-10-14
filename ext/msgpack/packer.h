@@ -265,6 +265,26 @@ static inline void msgpack_packer_write_double(msgpack_packer_t* pk, double v)
     msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xcb, castbuf.mem, 8);
 }
 
+/* NOTE(eslavich): Added function to write a symbol header as ext format with type 0x14. */
+static inline void msgpack_packer_write_raw_symbol_header(msgpack_packer_t* pk, unsigned int n)
+{
+  if (n < 256) {
+    msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+    msgpack_buffer_write_1(PACKER_BUFFER_(pk), 0xc7);
+    msgpack_buffer_write_2(PACKER_BUFFER_(pk), n, 0x14);
+  } else if (n < 65536) {
+    msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 4);
+    uint16_t be = _msgpack_be16(n);
+    msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc8, (const void*)&be, 2);
+    msgpack_buffer_write_1(PACKER_BUFFER_(pk), 0x14);
+  } else {
+    msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 6);
+    uint32_t be = _msgpack_be32(n);
+    msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc9, (const void*)&be, 4);
+    msgpack_buffer_write_1(PACKER_BUFFER_(pk), 0x14);
+  }
+}
+
 static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigned int n)
 {
     if(n < 32) {
@@ -316,6 +336,14 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
     }
 }
 
+// NOTE(eslavich): Added support for fixext 8, which is a one-byte
+// type followed by 8 bytes of data.
+static inline void msgpack_packer_write_fixext8(msgpack_packer_t* pk, unsigned char ext_type, const void *data)
+{
+    msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 10);
+    msgpack_buffer_write_1(PACKER_BUFFER_(pk), 0xd7);
+    msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), ext_type, data, 8);    
+}
 
 void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
 
@@ -341,7 +369,9 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
     }
-    msgpack_packer_write_raw_header(pk, (unsigned int)len);
+    /* NOTE(eslavich): Changed the following function call to write an ext header
+       instead of the standard string header. */
+    msgpack_packer_write_raw_symbol_header(pk, (unsigned int)len);
     msgpack_buffer_append(PACKER_BUFFER_(pk), name, len);
 }
 
@@ -366,6 +396,21 @@ static inline void msgpack_packer_write_bignum_value(msgpack_packer_t* pk, VALUE
 static inline void msgpack_packer_write_float_value(msgpack_packer_t* pk, VALUE v)
 {
     msgpack_packer_write_double(pk, rb_num2dbl(v));
+}
+
+/* NOTE(eslavich):  We are using type 0x13 to indicate a serialized timestamp.  The 
+   first 4 bytes of data represent the seconds since epoch, and the last 4 bytes
+   represent the nanosecond component. */
+static inline void msgpack_packer_write_time_value(msgpack_packer_t* pk, VALUE v)
+{
+    struct timespec ts;
+    uint32_t timestamp[2];
+
+    ts = rb_time_timespec(v);
+    timestamp[0] = _msgpack_be32(ts.tv_sec);
+    timestamp[1] = _msgpack_be32(ts.tv_nsec);
+
+    msgpack_packer_write_fixext8(pk, 0x13, (const void*)&timestamp);
 }
 
 void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v);

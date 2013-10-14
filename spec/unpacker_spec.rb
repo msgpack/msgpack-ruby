@@ -81,7 +81,7 @@ describe Unpacker do
   end
 
   let :sample_object do
-    [1024, {["a","b"]=>["c","d"]}, ["e","f"], "d", 70000, 4.12, 1.5, 1.5, 1.5]
+    [1024, {["a","b"]=>["c","d"]}, ["e","f"], "d", 70000, 4.12, 1.5, 1.5, 1.5, :g, {:i => :j}, Time.now]
   end
 
   it 'feed and each continue internal state' do

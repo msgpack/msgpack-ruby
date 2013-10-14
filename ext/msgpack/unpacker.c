@@ -242,7 +242,12 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
         uk->reading_raw_remaining = length = length - n;
     } while(length > 0);
 
-    object_complete_string(uk, uk->reading_raw);
+    /* NOTE(eslavich): Added conditional behavior for symbols versus strings. */
+    if(uk->is_symbol) {
+        object_complete(uk, rb_str_intern(uk->reading_raw));
+    } else {
+        object_complete_string(uk, uk->reading_raw);
+    }
     uk->reading_raw = Qnil;
     return PRIMITIVE_OBJECT_COMPLETE;
 }
@@ -254,13 +259,19 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk)
     /* try optimized read */
     size_t length = uk->reading_raw_remaining;
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
-        /* don't use zerocopy for hash keys but get a frozen string directly
-         * because rb_hash_aset freezes keys and it causes copying */
-        bool will_freeze = is_reading_map_key(uk);
-        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
-        object_complete_string(uk, string);
-        if(will_freeze) {
-            rb_obj_freeze(string);
+        /* NOTE(eslavich): Added conditional behavior for symbols versus strings. */
+        if (uk->is_symbol) {
+            VALUE symbol = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length);
+            object_complete(uk, symbol);
+        } else {
+            /* don't use zerocopy for hash keys but get a frozen string directly
+             * because rb_hash_aset freezes keys and it causes copying */
+            bool will_freeze = is_reading_map_key(uk);
+            VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
+            object_complete_string(uk, string);
+            if(will_freeze) {
+                rb_obj_freeze(string);
+            }
         }
         uk->reading_raw_remaining = 0;
         return PRIMITIVE_OBJECT_COMPLETE;
@@ -294,6 +305,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
         }
         /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
+        /* NOTE(eslavich): Set flag to indicate that this is a string. */
+        uk->is_symbol = false;
         return read_raw_body_begin(uk);
 
     SWITCH_RANGE(b, 0x90, 0x9f)  // FixArray
@@ -326,10 +339,70 @@ static int read_primitive(msgpack_unpacker_t* uk)
         //case 0xc4:
         //case 0xc5:
         //case 0xc6:
-        //case 0xc7:
-        //case 0xc8:
-        //case 0xc9:
 
+        /* NOTE(eslavich): Added support for ext 8, ext 16, and ext 32, which are
+           variable-length formats for custom data.  We are using type 0x14 to
+           indicate a serialized symbol. */
+        case 0xc7:  // ext 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
+                uint8_t count = cb->u8;
+                uint8_t ext_type = cb->buffer[1];
+                if(count == 0) {
+                    return PRIMITIVE_INVALID_BYTE;
+                }
+                switch(ext_type) {
+                case 0x14:
+                    {
+                        /* read_raw_body_begin sets uk->reading_raw */
+                        uk->reading_raw_remaining = count;
+                        uk->is_symbol = true;
+                        return read_raw_body_begin(uk);
+                    }
+                default:
+                    return PRIMITIVE_INVALID_BYTE;
+                }
+            }
+        case 0xc8:  // ext 16
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
+                uint16_t count = _msgpack_be16(cb->u16);
+                uint8_t ext_type = cb->buffer[2];
+                if(count == 0) {
+                    return PRIMITIVE_INVALID_BYTE;
+                }
+                switch(ext_type) {
+                case 0x14:
+                    {
+                        /* read_raw_body_begin sets uk->reading_raw */
+                        uk->reading_raw_remaining = count;
+                        uk->is_symbol = true;
+                        return read_raw_body_begin(uk);
+                    }
+                default:
+                    return PRIMITIVE_INVALID_BYTE;
+                }
+            }
+        case 0xc9:  // ext 32
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
+                uint32_t count = _msgpack_be32(cb->u32);
+                uint8_t ext_type = cb->buffer[4];
+                if(count == 0) {
+                    return PRIMITIVE_INVALID_BYTE;
+                }
+                switch(ext_type) {
+                case 0x14:
+                    {
+                        /* read_raw_body_begin sets uk->reading_raw */
+                        uk->reading_raw_remaining = count;
+                        uk->is_symbol = true;
+                        return read_raw_body_begin(uk);
+                    }
+                default:
+                    return PRIMITIVE_INVALID_BYTE;
+                }
+            }
         case 0xca:  // float
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
@@ -403,7 +476,31 @@ static int read_primitive(msgpack_unpacker_t* uk)
         //case 0xd4:
         //case 0xd5:
         //case 0xd6:  // big integer 16
-        //case 0xd7:  // big integer 32
+            
+        /* NOTE(eslavich): Added support for fixext 8, which is a one-byte
+           type followed by 8 bytes of data.  We are using type 0x13 to
+           indicate a serialized timestamp.  The first 4 bytes of data are an
+           unsigned 32-bit integer representing the seconds since epoch, and 
+           the last 4 bytes are an unsigned 32-bit integer representing the
+           nanosecond component. */
+        case 0xd7:  // fixext 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 9);
+                uint8_t ext_type = cb->u8;
+                switch(ext_type) {
+                case 0x13:
+                    {
+                        uint32_t secs = _msgpack_be32(*(uint32_t *)&cb->buffer[1]);
+                        uint32_t nsecs = _msgpack_be32(*(uint32_t *)&cb->buffer[5]);
+                        VALUE time_obj = rb_time_nano_new(secs, nsecs);
+                        rb_funcall(time_obj, rb_intern("utc"), 0);
+                        return object_complete(uk, time_obj);
+                    }
+                default:
+                    return PRIMITIVE_INVALID_BYTE;
+                }
+            }
+         
         //case 0xd8:  // big float 16
         //case 0xd9:  // big float 32
 
@@ -416,6 +513,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
+                /* NOTE(eslavich): Set flag to indicate that this is a string. */
+                uk->is_symbol = false;
                 return read_raw_body_begin(uk);
             }
 
@@ -428,6 +527,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
+                /* NOTE(eslavich): Set flag to indicate that this is a string. */
+                uk->is_symbol = false;
                 return read_raw_body_begin(uk);
             }
 
@@ -652,6 +753,12 @@ int msgpack_unpacker_peek_next_object_type(msgpack_unpacker_t* uk)
         case 0xcb:  // double
             return TYPE_FLOAT;
 
+        /* NOTE(eslavich): Added ext 8, ext 16, and ext 32. */
+        case 0xc7:  // ext 8
+        case 0xc8:  // ext 16
+        case 0xc9:  // ext 32
+            return TYPE_EXT;
+  
         case 0xcc:  // unsigned int  8
         case 0xcd:  // unsigned int 16
         case 0xce:  // unsigned int 32
@@ -663,6 +770,10 @@ int msgpack_unpacker_peek_next_object_type(msgpack_unpacker_t* uk)
         case 0xd2:  // signed int 32
         case 0xd3:  // signed int 64
             return TYPE_INTEGER;
+
+        /* NOTE(eslavich): Added fixext 8. */
+        case 0xd7:  // fixext 8
+            return TYPE_EXT;
 
         case 0xda:  // raw 16
         case 0xdb:  // raw 32

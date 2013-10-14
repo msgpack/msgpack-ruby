@@ -81,6 +81,8 @@ describe Packer do
     "".to_msgpack.class.should == String
     Hash.new.to_msgpack.class.should == String
     Array.new.to_msgpack.class.should == String
+    Time.now.to_msgpack.class.should == String
+    :sym.to_msgpack.class.should == String
   end
 
   class CustomPack01

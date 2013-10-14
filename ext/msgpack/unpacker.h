@@ -55,12 +55,16 @@ struct msgpack_unpacker_t {
 
     VALUE reading_raw;
     size_t reading_raw_remaining;
+    /* NOTE(eslavich): Added boolean is_symbol to indicate whether raw read is a string
+       or a symbol. */
+    bool is_symbol;
 
     VALUE buffer_ref;
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)
 
+/* NOTE(eslavich): Added TYPE_EXT. */
 enum msgpack_unpacker_object_type {
     TYPE_NIL = 0,
     TYPE_BOOLEAN,
@@ -69,6 +73,7 @@ enum msgpack_unpacker_object_type {
     TYPE_RAW,
     TYPE_ARRAY,
     TYPE_MAP,
+    TYPE_EXT,
 };
 
 void msgpack_unpacker_static_init();

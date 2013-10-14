@@ -206,6 +206,9 @@ static VALUE Unpacker_peek_next_type(VALUE self)
         return rb_intern("array");
     case TYPE_MAP:
         return rb_intern("map");
+    /* NOTE(eslavich): Added "extension" type. */
+    case TYPE_EXT:
+        return rb_intern("extension");
     default:
         rb_raise(eUnpackError, "logically unknown type %d", r);
     }
