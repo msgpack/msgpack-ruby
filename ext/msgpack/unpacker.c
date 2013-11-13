@@ -50,7 +50,7 @@ void msgpack_unpacker_static_destroy()
 #endif
 }
 
-#define HEAD_BYTE_REQUIRED 0xc6
+#define HEAD_BYTE_REQUIRED 0xc1
 
 void msgpack_unpacker_init(msgpack_unpacker_t* uk)
 {
@@ -247,7 +247,7 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
     return PRIMITIVE_OBJECT_COMPLETE;
 }
 
-static inline int read_raw_body_begin(msgpack_unpacker_t* uk)
+static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
 {
     /* assuming uk->reading_raw == Qnil */
 
@@ -287,14 +287,14 @@ static int read_primitive(msgpack_unpacker_t* uk)
     SWITCH_RANGE(b, 0xe0, 0xff)  // Negative Fixnum
         return object_complete(uk, INT2NUM((int8_t)b));
 
-    SWITCH_RANGE(b, 0xa0, 0xbf)  // FixRaw
+    SWITCH_RANGE(b, 0xa0, 0xbf)  // FixRaw / fixstr
         int count = b & 0x1f;
         if(count == 0) {
             return object_complete_string(uk, rb_str_buf_new(0));
         }
         /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
-        return read_raw_body_begin(uk);
+        return read_raw_body_begin(uk, true);
 
     SWITCH_RANGE(b, 0x90, 0x9f)  // FixArray
         int count = b & 0x0f;
@@ -323,12 +323,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc3:  // true
             return object_complete(uk, Qtrue);
 
-        //case 0xc4:
-        //case 0xc5:
-        //case 0xc6:
-        //case 0xc7:
-        //case 0xc8:
-        //case 0xc9:
+        //case 0xc7: // ext 8
+        //case 0xc8: // ext 16
+        //case 0xc9: // ext 32
 
         case 0xca:  // float
             {
@@ -400,14 +397,25 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 return object_complete(uk, rb_ll2inum(i64));
             }
 
-        //case 0xd4:
-        //case 0xd5:
-        //case 0xd6:  // big integer 16
-        //case 0xd7:  // big integer 32
-        //case 0xd8:  // big float 16
-        //case 0xd9:  // big float 32
+        //case 0xd4:  // fixext 1
+        //case 0xd5:  // fixext 2
+        //case 0xd6:  // fixext 4
+        //case 0xd7:  // fixext 8
+        //case 0xd8:  // fixext 16
 
-        case 0xda:  // raw 16
+        case 0xd9:  // raw 8 / str 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                uint8_t count = cb->u8;
+                if(count == 0) {
+                    return object_complete_string(uk, rb_str_buf_new(0));
+                }
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                return read_raw_body_begin(uk, true);
+            }
+
+        case 0xda:  // raw 16 / str 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint16_t count = _msgpack_be16(cb->u16);
@@ -416,10 +424,10 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk);
+                return read_raw_body_begin(uk, true);
             }
 
-        case 0xdb:  // raw 32
+        case 0xdb:  // raw 32 / str 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
@@ -428,7 +436,43 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk);
+                return read_raw_body_begin(uk, true);
+            }
+
+        case 0xc4:  // bin 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                uint8_t count = cb->u8;
+                if(count == 0) {
+                    return object_complete_string(uk, rb_str_buf_new(0));
+                }
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                return read_raw_body_begin(uk, false);
+            }
+
+        case 0xc5:  // bin 16
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
+                uint16_t count = _msgpack_be16(cb->u16);
+                if(count == 0) {
+                    return object_complete_string(uk, rb_str_buf_new(0));
+                }
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                return read_raw_body_begin(uk, false);
+            }
+
+        case 0xc6:  // bin 32
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
+                uint32_t count = _msgpack_be32(cb->u32);
+                if(count == 0) {
+                    return object_complete_string(uk, rb_str_buf_new(0));
+                }
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count;
+                return read_raw_body_begin(uk, false);
             }
 
         case 0xdc:  // array 16
@@ -664,8 +708,14 @@ int msgpack_unpacker_peek_next_object_type(msgpack_unpacker_t* uk)
         case 0xd3:  // signed int 64
             return TYPE_INTEGER;
 
-        case 0xda:  // raw 16
-        case 0xdb:  // raw 32
+        case 0xd9:  // raw 8 / str 8
+        case 0xda:  // raw 16 / str 16
+        case 0xdb:  // raw 32 / str 32
+            return TYPE_RAW;
+
+        case 0xc4:  // bin 8
+        case 0xc5:  // bin 16
+        case 0xc6:  // bin 32
             return TYPE_RAW;
 
         case 0xdc:  // array 16
