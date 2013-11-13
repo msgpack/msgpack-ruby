@@ -72,23 +72,30 @@ task :default => :build
 # exec $SHELL -l
 #
 ### install cross-compiled ruby 2.0.0
-# rbenv install 2.0.0-p0
+# rbenv install 2.0.0-p247
+# rbenv shell 2.0.0-p247
+# gem update --system
 # gem install rake-compiler
-# rake-compiler cross-ruby VERSION=2.0.0-p0
+# rake-compiler cross-ruby VERSION=2.0.0-p247
 #
 ### install cross-compiled ruby 1.9.3
 # rbenv install 1.9.3-p327
+# rbenv shell 1.9.3-p327
+# gem update --system
 # gem install rake-compiler
 # rake-compiler cross-ruby VERSION=1.9.3-p327
 #
 ### install cross-compiled ruby 1.8.7
-# rbenv install 1.8.7-p371
+# rbenv install 1.8.7-p374
+# rbenv shell 1.8.7-p374
+# gem update --system
 # gem install rake-compiler
-# rake-compiler cross-ruby VERSION=1.8.7-p371
+# rake-compiler cross-ruby VERSION=1.8.7-p374
 #
 ### build gem
-# rbenv shell 1.8.7-p371
-# gem install bundler && bundle
+# rbenv shell 1.8.7-p374
+# gem install bundler
+# bundle
 # rake cross native gem RUBY_CC_VERSION=1.8.7:1.9.3:2.0.0
 #
 
