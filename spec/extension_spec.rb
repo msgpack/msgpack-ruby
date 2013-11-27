@@ -74,4 +74,23 @@ describe MessagePack do
         .to be_a MessagePack::Extended
     end
   end
+
+  describe "#type=" do
+    it "sets type" do
+      ext = MessagePack::Extended.new(1, "foo")
+
+      expect {
+        ext.type = 2
+      }.to change { ext.type }.from(1).to(2)
+    end
+
+    it "changed type is equal to initialized with same type" do
+      initialized = MessagePack::Extended.new(2, "foo")
+      changed     = MessagePack::Extended.new(1, "foo")
+
+      changed.type = 2
+
+      expect(initialized).to eql changed
+    end
+  end
 end

@@ -82,6 +82,13 @@ static VALUE Extended_type(VALUE self)
     return ext->type;
 }
 
+static VALUE Extended_type_setter(VALUE self, VALUE type)
+{
+    EXTENDED(self, ext);
+    ext->type = type;
+    return ext->type;
+}
+
 static VALUE Extended_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -127,6 +134,7 @@ void MessagePack_Extended_module_init(VALUE mMessagePack)
 
     rb_define_method(cMessagePack_Extended, "initialize", Extended_initialize, 2);
     rb_define_method(cMessagePack_Extended, "type", Extended_type, 0);
+    rb_define_method(cMessagePack_Extended, "type=", Extended_type_setter, 1);
     rb_define_method(cMessagePack_Extended, "data", Extended_data, 0);
     rb_define_method(cMessagePack_Extended, "to_msgpack", Extended_to_msgpack, -1);
     rb_define_method(cMessagePack_Extended, "==", Extended_eql, 1);
