@@ -1,9 +1,6 @@
-here = File.expand_path(File.dirname(__FILE__))
-require File.join(here, 'msgpack', 'version')
+require "msgpack/version"
 begin
-  m = /(\d+.\d+)/.match(RUBY_VERSION)
-  ver = m[1]
-  require File.join(here, 'msgpack', ver, 'msgpack')
+  require "msgpack/#{RUBY_VERSION[/\d+.\d+/]}/msgpack"
 rescue LoadError
-  require File.join(here, 'msgpack', 'msgpack')
+  require "msgpack/msgpack"
 end
