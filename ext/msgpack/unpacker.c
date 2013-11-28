@@ -274,7 +274,7 @@ static inline int read_extended_body_begin(msgpack_unpacker_t* uk, int8_t type)
 {
     VALUE s_create = rb_intern("create");
 
-    read_raw_body_begin(uk);
+    read_raw_body_begin(uk, false);
 
     VALUE argv[2] = { INT2FIX(type), uk->last_object };
 
