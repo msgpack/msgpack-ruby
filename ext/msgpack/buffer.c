@@ -121,6 +121,8 @@ void msgpack_buffer_mark(msgpack_buffer_t* b)
 
 bool _msgpack_buffer_shift_chunk(msgpack_buffer_t* b)
 {
+    msgpack_buffer_chunk_t* next_head;
+
     _msgpack_buffer_chunk_destroy(b->head);
 
     if(b->head == &b->tail) {
@@ -132,7 +134,7 @@ bool _msgpack_buffer_shift_chunk(msgpack_buffer_t* b)
     }
 
     /* add head to free_list */
-    msgpack_buffer_chunk_t* next_head = b->head->next;
+    next_head = b->head->next;
     b->head->next = b->free_list;
     b->free_list = b->head;
 
@@ -151,6 +153,7 @@ void msgpack_buffer_clear(msgpack_buffer_t* b)
 
 size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string, size_t length)
 {
+    size_t const length_orig = length;
     size_t avail = msgpack_buffer_top_readable_size(b);
 
 #ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
@@ -171,8 +174,6 @@ size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string,
         return length;
     }
 #endif
-
-    size_t const length_orig = length;
 
     while(true) {
         if(length <= avail) {
@@ -222,13 +223,14 @@ size_t msgpack_buffer_read_nonblock(msgpack_buffer_t* b, char* buffer, size_t le
 
 size_t msgpack_buffer_all_readable_size(const msgpack_buffer_t* b)
 {
+    msgpack_buffer_chunk_t* c;
     size_t sz = msgpack_buffer_top_readable_size(b);
 
     if(b->head == &b->tail) {
         return sz;
     }
 
-    msgpack_buffer_chunk_t* c = b->head->next;
+    c = b->head->next;
 
     while(true) {
         sz += c->last - c->first;
@@ -263,25 +265,29 @@ static inline msgpack_buffer_chunk_t* _msgpack_buffer_alloc_new_chunk(msgpack_bu
 static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
 {
     if(b->head == &b->tail) {
+        msgpack_buffer_chunk_t* nc;
+
         if(b->tail.first == NULL) {
             /* empty buffer */
             return;
         }
 
-        msgpack_buffer_chunk_t* nc = _msgpack_buffer_alloc_new_chunk(b);
+        nc = _msgpack_buffer_alloc_new_chunk(b);
 
         *nc = b->tail;
         b->head = nc;
         nc->next = &b->tail;
 
     } else {
+        msgpack_buffer_chunk_t* nc;
+
         /* search node before tail */
         msgpack_buffer_chunk_t* before_tail = b->head;
         while(before_tail->next != &b->tail) {
             before_tail = before_tail->next;
         }
 
-        msgpack_buffer_chunk_t* nc = _msgpack_buffer_alloc_new_chunk(b);
+        nc = _msgpack_buffer_alloc_new_chunk(b);
 
 #ifndef DISABLE_RMEM
 #ifndef DISABLE_RMEM_REUSE_INTERNAL_FRAGMENT
@@ -302,6 +308,8 @@ static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
 
 static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE string)
 {
+    char* data;
+    size_t length;
     VALUE mapped_string = rb_str_dup(string);
 #ifdef COMPAT_HAVE_ENCODING
     ENCODING_SET(mapped_string, s_enc_ascii8bit);
@@ -309,8 +317,8 @@ static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE s
 
     _msgpack_buffer_add_new_chunk(b);
 
-    char* data = RSTRING_PTR(mapped_string);
-    size_t length = RSTRING_LEN(mapped_string);
+    data = RSTRING_PTR(mapped_string);
+    length = RSTRING_LEN(mapped_string);
 
     b->tail.first = (char*) data;
     b->tail.last = (char*) data + length;
@@ -346,14 +354,16 @@ static inline void* _msgpack_buffer_chunk_malloc(
         msgpack_buffer_t* b, msgpack_buffer_chunk_t* c,
         size_t required_size, size_t* allocated_size)
 {
+    void* mem;
+
 #ifndef DISABLE_RMEM
     if(required_size <= MSGPACK_RMEM_PAGE_SIZE) {
 #ifndef DISABLE_RMEM_REUSE_INTERNAL_FRAGMENT
         if((size_t)(b->rmem_end - b->rmem_last) < required_size) {
 #endif
             /* alloc new rmem page */
-            *allocated_size = MSGPACK_RMEM_PAGE_SIZE;
             char* buffer = msgpack_rmem_alloc(&s_rmem);
+            *allocated_size = MSGPACK_RMEM_PAGE_SIZE;
             c->mem = buffer;
 
             /* update rmem owner */
@@ -365,8 +375,8 @@ static inline void* _msgpack_buffer_chunk_malloc(
 #ifndef DISABLE_RMEM_REUSE_INTERNAL_FRAGMENT
         } else {
             /* reuse unused rmem */
-            *allocated_size = (size_t)(b->rmem_end - b->rmem_last);
             char* buffer = b->rmem_last;
+            *allocated_size = (size_t)(b->rmem_end - b->rmem_last);
             b->rmem_last = b->rmem_end;
 
             /* update rmem owner */
@@ -386,7 +396,7 @@ static inline void* _msgpack_buffer_chunk_malloc(
 
     // TODO alignment?
     *allocated_size = required_size;
-    void* mem = malloc(required_size);
+    mem = malloc(required_size);
     c->mem = mem;
     return mem;
 }
@@ -395,11 +405,13 @@ static inline void* _msgpack_buffer_chunk_realloc(
         msgpack_buffer_t* b, msgpack_buffer_chunk_t* c,
         void* mem, size_t required_size, size_t* current_size)
 {
+    size_t next_size;
+
     if(mem == NULL) {
         return _msgpack_buffer_chunk_malloc(b, c, required_size, current_size);
     }
 
-    size_t next_size = *current_size * 2;
+    next_size = *current_size * 2;
     while(next_size < required_size) {
         next_size *= 2;
     }
@@ -412,6 +424,8 @@ static inline void* _msgpack_buffer_chunk_realloc(
 
 void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length, bool flush_to_io)
 {
+    size_t capacity;
+
     if(flush_to_io && b->io != Qnil) {
         msgpack_buffer_flush(b);
         if(msgpack_buffer_writable_size(b) >= length) {
@@ -434,7 +448,7 @@ void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length
         length -= tail_avail;
     }
 
-    size_t capacity = b->tail.last - b->tail.first;
+    capacity = b->tail.last - b->tail.first;
 
     /* can't realloc mapped chunk or rmem page */
     if(b->tail.mapped_string != NO_MAPPED_STRING
@@ -442,12 +456,15 @@ void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length
             || capacity <= MSGPACK_RMEM_PAGE_SIZE
 #endif
             ) {
+        char* mem;
+        char* last;
+
         /* allocate new chunk */
         _msgpack_buffer_add_new_chunk(b);
 
-        char* mem = _msgpack_buffer_chunk_malloc(b, &b->tail, length, &capacity);
+        mem = _msgpack_buffer_chunk_malloc(b, &b->tail, length, &capacity);
 
-        char* last = mem;
+        last = mem;
         if(data != NULL) {
             memcpy(mem, data, length);
             last += length;
@@ -519,20 +536,26 @@ static inline VALUE _msgpack_buffer_chunk_as_string(msgpack_buffer_chunk_t* c)
 
 VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
 {
+    size_t length;
+    VALUE string;
+    char* buffer;
+    size_t avail;
+    msgpack_buffer_chunk_t* c;
+
     if(b->head == &b->tail) {
         return _msgpack_buffer_head_chunk_as_string(b);
     }
 
-    size_t length = msgpack_buffer_all_readable_size(b);
-    VALUE string = rb_str_new(NULL, length);
-    char* buffer = RSTRING_PTR(string);
+    length = msgpack_buffer_all_readable_size(b);
+    string = rb_str_new(NULL, length);
+    buffer = RSTRING_PTR(string);
 
-    size_t avail = msgpack_buffer_top_readable_size(b);
+    avail = msgpack_buffer_top_readable_size(b);
     memcpy(buffer, b->read_buffer, avail);
     buffer += avail;
     length -= avail;
 
-    msgpack_buffer_chunk_t* c = b->head->next;
+    c = b->head->next;
 
     while(true) {
         avail = c->last - c->first;
@@ -550,6 +573,10 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
 
 VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b)
 {
+    VALUE ary;
+    VALUE s;
+    msgpack_buffer_chunk_t* c;
+
     if(b->head == &b->tail) {
         VALUE s = msgpack_buffer_all_as_string(b);
         VALUE ary = rb_ary_new3(1, s);
@@ -557,12 +584,12 @@ VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b)
     }
 
     /* TODO optimize ary construction */
-    VALUE ary = rb_ary_new();
+    ary = rb_ary_new();
 
-    VALUE s = _msgpack_buffer_head_chunk_as_string(b);
+    s = _msgpack_buffer_head_chunk_as_string(b);
     rb_ary_push(ary, s);
 
-    msgpack_buffer_chunk_t* c = b->head->next;
+    c = b->head->next;
 
     while(true) {
         s = _msgpack_buffer_chunk_as_string(c);
@@ -578,13 +605,16 @@ VALUE msgpack_buffer_all_as_string_array(msgpack_buffer_t* b)
 
 size_t msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method, bool consume)
 {
+    VALUE s;
+    size_t sz;
+
     if(msgpack_buffer_top_readable_size(b) == 0) {
         return 0;
     }
 
-    VALUE s = _msgpack_buffer_head_chunk_as_string(b);
+    s = _msgpack_buffer_head_chunk_as_string(b);
     rb_funcall(io, write_method, 1, s);
-    size_t sz = RSTRING_LEN(s);
+    sz = RSTRING_LEN(s);
 
     if(consume) {
         while(_msgpack_buffer_shift_chunk(b)) {
@@ -595,10 +625,12 @@ size_t msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method
         return sz;
 
     } else {
+        msgpack_buffer_chunk_t* c;
+
         if(b->head == &b->tail) {
             return sz;
         }
-        msgpack_buffer_chunk_t* c = b->head->next;
+        c = b->head->next;
         while(true) {
             s = _msgpack_buffer_chunk_as_string(c);
             rb_funcall(io, write_method, 1, s);
@@ -613,6 +645,8 @@ size_t msgpack_buffer_flush_to_io(msgpack_buffer_t* b, VALUE io, ID write_method
 
 size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b)
 {
+    size_t len;
+
     if(b->io_buffer == Qnil) {
         b->io_buffer = rb_funcall(b->io, b->io_partial_read_method, 1, LONG2NUM(b->io_buffer_size));
         if(b->io_buffer == Qnil) {
@@ -626,7 +660,7 @@ size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b)
         }
     }
 
-    size_t len = RSTRING_LEN(b->io_buffer);
+    len = RSTRING_LEN(b->io_buffer);
     if(len == 0) {
         rb_raise(rb_eEOFError, "IO reached end of file");
     }
@@ -639,6 +673,9 @@ size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b)
 
 size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string, size_t length)
 {
+    VALUE ret;
+    size_t rl;
+
     if(RSTRING_LEN(string) == 0) {
         /* direct read */
         VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(length), string);
@@ -653,11 +690,11 @@ size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string,
         b->io_buffer = rb_str_buf_new(0);
     }
 
-    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(length), b->io_buffer);
+    ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(length), b->io_buffer);
     if(ret == Qnil) {
         return 0;
     }
-    size_t rl = RSTRING_LEN(b->io_buffer);
+    rl = RSTRING_LEN(b->io_buffer);
 
     rb_str_buf_cat(string, (const void*)RSTRING_PTR(b->io_buffer), rl);
     return rl;
@@ -665,11 +702,13 @@ size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string,
 
 size_t _msgpack_buffer_skip_from_io(msgpack_buffer_t* b, size_t length)
 {
+    VALUE ret;
+
     if(b->io_buffer == Qnil) {
         b->io_buffer = rb_str_buf_new(0);
     }
 
-    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(length), b->io_buffer);
+    ret = rb_funcall(b->io, b->io_partial_read_method, 2, LONG2NUM(length), b->io_buffer);
     if(ret == Qnil) {
         return 0;
     }
