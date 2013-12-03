@@ -31,7 +31,6 @@ static ID s_write;
 //static msgpack_packer_t* s_packer;
 
 #define PACKER(from, name) \
-    msgpack_packer_t* name; \
     Data_Get_Struct(from, msgpack_packer_t, name); \
     if(name == NULL) { \
         rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
@@ -48,10 +47,11 @@ static void Packer_free(msgpack_packer_t* pk)
 
 static VALUE Packer_alloc(VALUE klass)
 {
+    VALUE self;
     msgpack_packer_t* pk = ALLOC_N(msgpack_packer_t, 1);
     msgpack_packer_init(pk);
 
-    VALUE self = Data_Wrap_Struct(klass, msgpack_packer_mark, Packer_free, pk);
+    self = Data_Wrap_Struct(klass, msgpack_packer_mark, Packer_free, pk);
 
     msgpack_packer_set_to_msgpack_method(pk, s_to_msgpack, self);
     pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
@@ -61,6 +61,7 @@ static VALUE Packer_alloc(VALUE klass)
 
 static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
 {
+    msgpack_packer_t* pk;
     VALUE io = Qnil;
     VALUE options = Qnil;
 
@@ -98,12 +99,14 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
 
 static VALUE Packer_buffer(VALUE self)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     return pk->buffer_ref;
 }
 
 static VALUE Packer_write(VALUE self, VALUE v)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     msgpack_packer_write_value(pk, v);
     return self;
@@ -111,6 +114,7 @@ static VALUE Packer_write(VALUE self, VALUE v)
 
 static VALUE Packer_write_nil(VALUE self)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     msgpack_packer_write_nil(pk);
     return self;
@@ -118,6 +122,7 @@ static VALUE Packer_write_nil(VALUE self)
 
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     msgpack_packer_write_array_header(pk, NUM2UINT(n));
     return self;
@@ -125,6 +130,7 @@ static VALUE Packer_write_array_header(VALUE self, VALUE n)
 
 static VALUE Packer_write_map_header(VALUE self, VALUE n)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     msgpack_packer_write_map_header(pk, NUM2UINT(n));
     return self;
@@ -132,6 +138,7 @@ static VALUE Packer_write_map_header(VALUE self, VALUE n)
 
 static VALUE Packer_flush(VALUE self)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     msgpack_buffer_flush(PACKER_BUFFER_(pk));
     return self;
@@ -139,6 +146,7 @@ static VALUE Packer_flush(VALUE self)
 
 static VALUE Packer_clear(VALUE self)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     msgpack_buffer_clear(PACKER_BUFFER_(pk));
     return Qnil;
@@ -146,13 +154,16 @@ static VALUE Packer_clear(VALUE self)
 
 static VALUE Packer_size(VALUE self)
 {
+    size_t size;
+    msgpack_packer_t* pk;
     PACKER(self, pk);
-    size_t size = msgpack_buffer_all_readable_size(PACKER_BUFFER_(pk));
+    size = msgpack_buffer_all_readable_size(PACKER_BUFFER_(pk));
     return SIZET2NUM(size);
 }
 
 static VALUE Packer_empty_p(VALUE self)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     if(msgpack_buffer_top_readable_size(PACKER_BUFFER_(pk)) == 0) {
         return Qtrue;
@@ -163,20 +174,24 @@ static VALUE Packer_empty_p(VALUE self)
 
 static VALUE Packer_to_str(VALUE self)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     return msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
 }
 
 static VALUE Packer_to_a(VALUE self)
 {
+    msgpack_packer_t* pk;
     PACKER(self, pk);
     return msgpack_buffer_all_as_string_array(PACKER_BUFFER_(pk));
 }
 
 static VALUE Packer_write_to(VALUE self, VALUE io)
 {
+    size_t sz;
+    msgpack_packer_t* pk;
     PACKER(self, pk);
-    size_t sz = msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), io, s_write, true);
+    sz = msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), io, s_write, true);
     return ULONG2NUM(sz);
 }
 
@@ -196,6 +211,9 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 {
     // TODO options
 
+    VALUE self;
+    msgpack_packer_t* pk;
+    VALUE retval;
     VALUE v;
     VALUE io = Qnil;
 
@@ -210,7 +228,7 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..2)", argc);
     }
 
-    VALUE self = Packer_alloc(cMessagePack_Packer);
+    self = Packer_alloc(cMessagePack_Packer);
     PACKER(self, pk);
     //msgpack_packer_reset(s_packer);
     //msgpack_buffer_reset_io(PACKER_BUFFER_(s_packer));
@@ -221,7 +239,6 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 
     msgpack_packer_write_value(pk, v);
 
-    VALUE retval;
     if(io != Qnil) {
         msgpack_buffer_flush(PACKER_BUFFER_(pk));
         retval = Qnil;

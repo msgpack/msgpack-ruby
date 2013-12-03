@@ -86,11 +86,14 @@ void msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 
 void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
 {
+    msgpack_unpacker_stack_t* s;
+    msgpack_unpacker_stack_t* send;
+
     rb_gc_mark(uk->last_object);
     rb_gc_mark(uk->reading_raw);
 
-    msgpack_unpacker_stack_t* s = uk->stack;
-    msgpack_unpacker_stack_t* send = uk->stack + uk->stack_depth;
+    s = uk->stack;
+    send = uk->stack + uk->stack_depth;
     for(; s < send; s++) {
         rb_gc_mark(s->object);
         rb_gc_mark(s->key);
@@ -164,13 +167,15 @@ static inline msgpack_unpacker_stack_t* _msgpack_unpacker_stack_top(msgpack_unpa
 
 static inline int _msgpack_unpacker_stack_push(msgpack_unpacker_t* uk, enum stack_type_t type, size_t count, VALUE object)
 {
+    msgpack_unpacker_stack_t* next;
+
     reset_head_byte(uk);
 
     if(uk->stack_capacity - uk->stack_depth <= 0) {
         return PRIMITIVE_STACK_TOO_DEEP;
     }
 
-    msgpack_unpacker_stack_t* next = &uk->stack[uk->stack_depth];
+    next = &uk->stack[uk->stack_depth];
     next->count = count;
     next->type = type;
     next->object = object;
@@ -271,11 +276,13 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
 
 static int read_primitive(msgpack_unpacker_t* uk)
 {
+    int b;
+
     if(uk->reading_raw_remaining > 0) {
         return read_raw_body_cont(uk);
     }
 
-    int b = get_head_byte(uk);
+    b = get_head_byte(uk);
     if(b < 0) {
         return b;
     }
@@ -343,57 +350,65 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xcc:  // unsigned int  8
             {
+                uint8_t u8;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                uint8_t u8 = cb->u8;
+                u8 = cb->u8;
                 return object_complete(uk, INT2NUM((int)u8));
             }
 
         case 0xcd:  // unsigned int 16
             {
+                uint16_t u16;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t u16 = _msgpack_be16(cb->u16);
+                u16 = _msgpack_be16(cb->u16);
                 return object_complete(uk, INT2NUM((int)u16));
             }
 
         case 0xce:  // unsigned int 32
             {
+                uint32_t u32;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t u32 = _msgpack_be32(cb->u32);
+                u32 = _msgpack_be32(cb->u32);
                 return object_complete(uk, ULONG2NUM((unsigned long)u32));
             }
 
         case 0xcf:  // unsigned int 64
             {
+                uint64_t u64;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 8);
-                uint64_t u64 = _msgpack_be64(cb->u64);
+                u64 = _msgpack_be64(cb->u64);
                 return object_complete(uk, rb_ull2inum(u64));
             }
 
         case 0xd0:  // signed int  8
             {
+                int8_t i8;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                int8_t i8 = cb->i8;
+                i8 = cb->i8;
                 return object_complete(uk, INT2NUM((int)i8));
             }
 
         case 0xd1:  // signed int 16
             {
+                int16_t i16;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                int16_t i16 = _msgpack_be16(cb->i16);
+                i16 = _msgpack_be16(cb->i16);
                 return object_complete(uk, INT2NUM((int)i16));
             }
 
         case 0xd2:  // signed int 32
             {
+                int32_t i32;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                int32_t i32 = _msgpack_be32(cb->i32);
+                i32 = _msgpack_be32(cb->i32);
                 return object_complete(uk, LONG2NUM((long)i32));
             }
 
         case 0xd3:  // signed int 64
             {
+                int64_t i64;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 8);
-                int64_t i64 = _msgpack_be64(cb->i64);
+                i64 = _msgpack_be64(cb->i64);
                 return object_complete(uk, rb_ll2inum(i64));
             }
 
@@ -405,8 +420,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xd9:  // raw 8 / str 8
             {
+                uint8_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                uint8_t count = cb->u8;
+                count = cb->u8;
                 if(count == 0) {
                     return object_complete_string(uk, rb_str_buf_new(0));
                 }
@@ -417,8 +433,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xda:  // raw 16 / str 16
             {
+                uint16_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t count = _msgpack_be16(cb->u16);
+                count = _msgpack_be16(cb->u16);
                 if(count == 0) {
                     return object_complete_string(uk, rb_str_buf_new(0));
                 }
@@ -429,8 +446,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xdb:  // raw 32 / str 16
             {
+                uint32_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t count = _msgpack_be32(cb->u32);
+                count = _msgpack_be32(cb->u32);
                 if(count == 0) {
                     return object_complete_string(uk, rb_str_buf_new(0));
                 }
@@ -441,8 +459,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xc4:  // bin 8
             {
+                uint8_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                uint8_t count = cb->u8;
+                count = cb->u8;
                 if(count == 0) {
                     return object_complete_string(uk, rb_str_buf_new(0));
                 }
@@ -453,8 +472,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xc5:  // bin 16
             {
+                uint16_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t count = _msgpack_be16(cb->u16);
+                count = _msgpack_be16(cb->u16);
                 if(count == 0) {
                     return object_complete_string(uk, rb_str_buf_new(0));
                 }
@@ -465,8 +485,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xc6:  // bin 32
             {
+                uint32_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t count = _msgpack_be32(cb->u32);
+                count = _msgpack_be32(cb->u32);
                 if(count == 0) {
                     return object_complete_string(uk, rb_str_buf_new(0));
                 }
@@ -477,8 +498,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xdc:  // array 16
             {
+                uint16_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t count = _msgpack_be16(cb->u16);
+                count = _msgpack_be16(cb->u16);
                 if(count == 0) {
                     return object_complete(uk, rb_ary_new());
                 }
@@ -487,8 +509,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xdd:  // array 32
             {
+                uint32_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t count = _msgpack_be32(cb->u32);
+                count = _msgpack_be32(cb->u32);
                 if(count == 0) {
                     return object_complete(uk, rb_ary_new());
                 }
@@ -497,8 +520,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xde:  // map 16
             {
+                uint16_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t count = _msgpack_be16(cb->u16);
+                count = _msgpack_be16(cb->u16);
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
@@ -507,8 +531,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         case 0xdf:  // map 32
             {
+                uint32_t count;
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t count = _msgpack_be32(cb->u32);
+                count = _msgpack_be32(cb->u32);
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
@@ -597,6 +622,7 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
 
         container_completed:
         {
+            size_t count;
             msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
             switch(top->type) {
             case STACK_TYPE_ARRAY:
@@ -611,7 +637,7 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
                 top->type = STACK_TYPE_MAP_KEY;
                 break;
             }
-            size_t count = --top->count;
+            count = --top->count;
 
             if(count == 0) {
                 object_complete(uk, top->object);

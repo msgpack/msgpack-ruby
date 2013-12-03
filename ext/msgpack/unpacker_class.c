@@ -31,7 +31,6 @@ static VALUE eStackError;
 static VALUE eTypeError;
 
 #define UNPACKER(from, name) \
-    msgpack_unpacker_t *name = NULL; \
     Data_Get_Struct(from, msgpack_unpacker_t, name); \
     if(name == NULL) { \
         rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
@@ -48,10 +47,11 @@ static void Unpacker_free(msgpack_unpacker_t* uk)
 
 static VALUE Unpacker_alloc(VALUE klass)
 {
+    VALUE self;
     msgpack_unpacker_t* uk = ALLOC_N(msgpack_unpacker_t, 1);
     msgpack_unpacker_init(uk);
 
-    VALUE self = Data_Wrap_Struct(klass, msgpack_unpacker_mark, Unpacker_free, uk);
+    self = Data_Wrap_Struct(klass, msgpack_unpacker_mark, Unpacker_free, uk);
 
     uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
 
@@ -60,6 +60,7 @@ static VALUE Unpacker_alloc(VALUE klass)
 
 static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 {
+    msgpack_unpacker_t *uk;
     VALUE io = Qnil;
     VALUE options = Qnil;
 
@@ -113,15 +114,18 @@ static void raise_unpacker_error(int r)
 
 static VALUE Unpacker_buffer(VALUE self)
 {
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
     return uk->buffer_ref;
 }
 
 static VALUE Unpacker_read(VALUE self)
 {
+    int r;
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
-    int r = msgpack_unpacker_read(uk, 0);
+    r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
         raise_unpacker_error(r);
     }
@@ -131,9 +135,11 @@ static VALUE Unpacker_read(VALUE self)
 
 static VALUE Unpacker_skip(VALUE self)
 {
+    int r;
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
-    int r = msgpack_unpacker_skip(uk, 0);
+    r = msgpack_unpacker_skip(uk, 0);
     if(r < 0) {
         raise_unpacker_error(r);
     }
@@ -143,9 +149,11 @@ static VALUE Unpacker_skip(VALUE self)
 
 static VALUE Unpacker_skip_nil(VALUE self)
 {
+    int r;
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
-    int r = msgpack_unpacker_skip_nil(uk);
+    r = msgpack_unpacker_skip_nil(uk);
     if(r < 0) {
         raise_unpacker_error(r);
     }
@@ -158,10 +166,12 @@ static VALUE Unpacker_skip_nil(VALUE self)
 
 static VALUE Unpacker_read_array_header(VALUE self)
 {
+    uint32_t size;
+    int r;
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
-    uint32_t size;
-    int r = msgpack_unpacker_read_array_header(uk, &size);
+    r = msgpack_unpacker_read_array_header(uk, &size);
     if(r < 0) {
         raise_unpacker_error(r);
     }
@@ -171,10 +181,12 @@ static VALUE Unpacker_read_array_header(VALUE self)
 
 static VALUE Unpacker_read_map_header(VALUE self)
 {
+    uint32_t size;
+    int r;
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
-    uint32_t size;
-    int r = msgpack_unpacker_read_map_header(uk, &size);
+    r = msgpack_unpacker_read_map_header(uk, &size);
     if(r < 0) {
         raise_unpacker_error((int)r);
     }
@@ -184,9 +196,11 @@ static VALUE Unpacker_read_map_header(VALUE self)
 
 static VALUE Unpacker_peek_next_type(VALUE self)
 {
+    int r;
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
-    int r = msgpack_unpacker_peek_next_object_type(uk);
+    r = msgpack_unpacker_peek_next_object_type(uk);
     if(r < 0) {
         raise_unpacker_error(r);
     }
@@ -213,6 +227,7 @@ static VALUE Unpacker_peek_next_type(VALUE self)
 
 static VALUE Unpacker_feed(VALUE self, VALUE data)
 {
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
     StringValue(data);
@@ -224,9 +239,11 @@ static VALUE Unpacker_feed(VALUE self, VALUE data)
 
 static VALUE Unpacker_each_impl(VALUE self)
 {
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
     while(true) {
+        VALUE v;
         int r = msgpack_unpacker_read(uk, 0);
         if(r < 0) {
             if(r == PRIMITIVE_EOF) {
@@ -234,7 +251,7 @@ static VALUE Unpacker_each_impl(VALUE self)
             }
             raise_unpacker_error(r);
         }
-        VALUE v = msgpack_unpacker_get_last_object(uk);
+        v = msgpack_unpacker_get_last_object(uk);
 #ifdef JRUBY
         /* TODO JRuby's rb_yield behaves differently from Ruby 1.9.3 or Rubinius. */
         if(rb_type(v) == T_ARRAY) {
@@ -253,6 +270,7 @@ static VALUE Unpacker_rescue_EOFError(VALUE self)
 
 static VALUE Unpacker_each(VALUE self)
 {
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
 #ifdef RETURN_ENUMERATOR
@@ -278,6 +296,7 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 
 static VALUE Unpacker_reset(VALUE self)
 {
+    msgpack_unpacker_t *uk;
     UNPACKER(self, uk);
 
     msgpack_unpacker_reset(uk);
@@ -287,6 +306,10 @@ static VALUE Unpacker_reset(VALUE self)
 
 VALUE MessagePack_unpack(int argc, VALUE* argv)
 {
+    int r;
+    VALUE io;
+    VALUE self;
+    msgpack_unpacker_t *uk;
     VALUE src;
 
     switch(argc) {
@@ -297,13 +320,13 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
     }
 
-    VALUE io = Qnil;
+    io = Qnil;
     if(rb_type(src) != T_STRING) {
         io = src;
         src = Qnil;
     }
 
-    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
+    self = Unpacker_alloc(cMessagePack_Unpacker);
     UNPACKER(self, uk);
     //msgpack_unpacker_reset(s_unpacker);
     //msgpack_buffer_reset_io(UNPACKER_BUFFER_(s_unpacker));
@@ -320,7 +343,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
     }
 
-    int r = msgpack_unpacker_read(uk, 0);
+    r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
         raise_unpacker_error(r);
     }

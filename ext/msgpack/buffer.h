@@ -304,6 +304,8 @@ static inline int msgpack_buffer_read_top_1(msgpack_buffer_t* b)
 
 static inline int msgpack_buffer_read_1(msgpack_buffer_t* b)
 {
+    int r;
+
     if(msgpack_buffer_top_readable_size(b) <= 0) {
         if(b->io == Qnil) {
             return -1;
@@ -311,7 +313,7 @@ static inline int msgpack_buffer_read_1(msgpack_buffer_t* b)
         _msgpack_buffer_feed_from_io(b);
     }
 
-    int r = (int) (unsigned char) b->read_buffer[0];
+    r = (int) (unsigned char) b->read_buffer[0];
     _msgpack_buffer_consumed(b, 1);
 
     return r;
@@ -377,11 +379,13 @@ size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string,
 
 static inline size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE string, size_t length)
 {
+    size_t avail;
+
     if(length == 0) {
         return 0;
     }
 
-    size_t avail = msgpack_buffer_top_readable_size(b);
+    avail = msgpack_buffer_top_readable_size(b);
     if(avail > 0) {
         return msgpack_buffer_read_to_string_nonblock(b, string, length);
     } else if(b->io != Qnil) {
@@ -393,11 +397,13 @@ static inline size_t msgpack_buffer_read_to_string(msgpack_buffer_t* b, VALUE st
 
 static inline size_t msgpack_buffer_skip(msgpack_buffer_t* b, size_t length)
 {
+    size_t avail;
+
     if(length == 0) {
         return 0;
     }
 
-    size_t avail = msgpack_buffer_top_readable_size(b);
+    avail = msgpack_buffer_top_readable_size(b);
     if(avail > 0) {
         return msgpack_buffer_skip_nonblock(b, length);
     } else if(b->io != Qnil) {
@@ -420,6 +426,8 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
 
 static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool will_be_frozen)
 {
+    VALUE result;
+
 #ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
     /* optimize */
     if(!will_be_frozen &&
@@ -431,7 +439,7 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
     }
 #endif
 
-    VALUE result = rb_str_new(b->read_buffer, length);
+    result = rb_str_new(b->read_buffer, length);
     _msgpack_buffer_consumed(b, length);
     return result;
 }

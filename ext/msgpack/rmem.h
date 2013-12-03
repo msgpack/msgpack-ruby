@@ -86,13 +86,16 @@ void _msgpack_rmem_chunk_free(msgpack_rmem_t* pm, msgpack_rmem_chunk_t* c);
 
 static inline bool msgpack_rmem_free(msgpack_rmem_t* pm, void* mem)
 {
+    msgpack_rmem_chunk_t* c;
+    msgpack_rmem_chunk_t* before_first;
+
     if(_msgpack_rmem_chunk_try_free(&pm->head, mem)) {
         return true;
     }
 
     /* search from last */
-    msgpack_rmem_chunk_t* c = pm->array_last - 1;
-    msgpack_rmem_chunk_t* before_first = pm->array_first - 1;
+    c = pm->array_last - 1;
+    before_first = pm->array_first - 1;
     for(; c != before_first; c--) {
         if(_msgpack_rmem_chunk_try_free(c, mem)) {
             if(c != pm->array_first && c->mask == 0xffffffff) {

@@ -38,6 +38,7 @@ void msgpack_rmem_destroy(msgpack_rmem_t* pm)
 
 void* _msgpack_rmem_alloc2(msgpack_rmem_t* pm)
 {
+    msgpack_rmem_chunk_t tmp;
     msgpack_rmem_chunk_t* c = pm->array_first;
     msgpack_rmem_chunk_t* last = pm->array_last;
     for(; c != last; c++) {
@@ -53,10 +54,11 @@ void* _msgpack_rmem_alloc2(msgpack_rmem_t* pm)
     }
 
     if(c == pm->array_end) {
+        msgpack_rmem_chunk_t* array;
         size_t capacity = c - pm->array_first;
         size_t length = last - pm->array_first;
         capacity = (capacity == 0) ? 8 : capacity * 2;
-        msgpack_rmem_chunk_t* array = realloc(pm->array_first, capacity * sizeof(msgpack_rmem_chunk_t));
+        array = realloc(pm->array_first, capacity * sizeof(msgpack_rmem_chunk_t));
         pm->array_first = array;
         pm->array_last = array + length;
         pm->array_end = array + capacity;
@@ -66,7 +68,7 @@ void* _msgpack_rmem_alloc2(msgpack_rmem_t* pm)
     c = pm->array_last++;
 
     /* move to head */
-    msgpack_rmem_chunk_t tmp = pm->head;
+    tmp = pm->head;
     pm->head = *c;
     *c = tmp;
 
@@ -78,6 +80,8 @@ void* _msgpack_rmem_alloc2(msgpack_rmem_t* pm)
 
 void _msgpack_rmem_chunk_free(msgpack_rmem_t* pm, msgpack_rmem_chunk_t* c)
 {
+    msgpack_rmem_chunk_t tmp;
+
     if(pm->array_first->mask == 0xffffffff) {
         /* free and move to last */
         pm->array_last--;
@@ -87,7 +91,7 @@ void _msgpack_rmem_chunk_free(msgpack_rmem_t* pm, msgpack_rmem_chunk_t* c)
     }
 
     /* move to first */
-    msgpack_rmem_chunk_t tmp = *pm->array_first;
+    tmp = *pm->array_first;
     *pm->array_first = *c;
     *c = tmp;
 }

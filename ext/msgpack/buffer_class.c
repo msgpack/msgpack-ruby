@@ -30,7 +30,7 @@ static ID s_append;
 static ID s_close;
 
 #define BUFFER(from, name) \
-    msgpack_buffer_t *name = NULL; \
+    name = NULL; \
     Data_Get_Struct(from, msgpack_buffer_t, name); \
     if(name == NULL) { \
         rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
@@ -44,10 +44,12 @@ static ID s_close;
 
 static void Buffer_free(void* data)
 {
+    msgpack_buffer_t* b;
+
     if(data == NULL) {
         return;
     }
-    msgpack_buffer_t* b = (msgpack_buffer_t*) data;
+    b = (msgpack_buffer_t*) data;
     msgpack_buffer_destroy(b);
     free(b);
 }
@@ -118,6 +120,7 @@ static VALUE Buffer_initialize(int argc, VALUE* argv, VALUE self)
 {
     VALUE io = Qnil;
     VALUE options = Qnil;
+    msgpack_buffer_t *b;
 
     if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
         /* Qnil */
@@ -150,6 +153,7 @@ static VALUE Buffer_initialize(int argc, VALUE* argv, VALUE self)
 
 static VALUE Buffer_clear(VALUE self)
 {
+    msgpack_buffer_t *b;
     BUFFER(self, b);
     msgpack_buffer_clear(b);
     return Qnil;
@@ -157,13 +161,17 @@ static VALUE Buffer_clear(VALUE self)
 
 static VALUE Buffer_size(VALUE self)
 {
+    msgpack_buffer_t *b;
+    size_t size;
+
     BUFFER(self, b);
-    size_t size = msgpack_buffer_all_readable_size(b);
+    size = msgpack_buffer_all_readable_size(b);
     return SIZET2NUM(size);
 }
 
 static VALUE Buffer_empty_p(VALUE self)
 {
+    msgpack_buffer_t *b;
     BUFFER(self, b);
     if(msgpack_buffer_top_readable_size(b) == 0) {
         return Qtrue;
@@ -174,21 +182,28 @@ static VALUE Buffer_empty_p(VALUE self)
 
 static VALUE Buffer_write(VALUE self, VALUE string_or_buffer)
 {
+    msgpack_buffer_t *b;
+    VALUE string;
+    size_t length;
+
     BUFFER(self, b);
 
-    VALUE string = string_or_buffer;  // TODO optimize if string_or_buffer is a Buffer
+    string = string_or_buffer;  // TODO optimize if string_or_buffer is a Buffer
     StringValue(string);
 
-    size_t length = msgpack_buffer_append_string(b, string);
+    length = msgpack_buffer_append_string(b, string);
 
     return SIZET2NUM(length);
 }
 
 static VALUE Buffer_append(VALUE self, VALUE string_or_buffer)
 {
+    msgpack_buffer_t *b;
+    VALUE string;
+
     BUFFER(self, b);
 
-    VALUE string = string_or_buffer;  // TODO optimize if string_or_buffer is a Buffer
+    string = string_or_buffer;  // TODO optimize if string_or_buffer is a Buffer
     StringValue(string);
 
     msgpack_buffer_append_string(b, string);
@@ -291,24 +306,31 @@ static inline VALUE read_all(msgpack_buffer_t* b, VALUE out)
 
 static VALUE Buffer_skip(VALUE self, VALUE sn)
 {
+    msgpack_buffer_t *b;
+    unsigned long n;
+    size_t sz;
+
     BUFFER(self, b);
 
-    unsigned long n = FIX2ULONG(sn);
+    n = FIX2ULONG(sn);
 
     /* do nothing */
     if(n == 0) {
         return ULONG2NUM(0);
     }
 
-    size_t sz = read_until_eof(b, Qnil, n);
+    sz = read_until_eof(b, Qnil, n);
     return ULONG2NUM(sz);
 }
 
 static VALUE Buffer_skip_all(VALUE self, VALUE sn)
 {
+    msgpack_buffer_t *b;
+    unsigned long n;
+
     BUFFER(self, b);
 
-    unsigned long n = FIX2ULONG(sn);
+    n = FIX2ULONG(sn);
 
     /* do nothing */
     if(n == 0) {
@@ -329,6 +351,7 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
     VALUE out = Qnil;
     unsigned long n = 0;
     bool all = false;
+    msgpack_buffer_t *b;
 
     switch(argc) {
     case 2:
@@ -375,6 +398,7 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
     VALUE out = Qnil;
     unsigned long n = -1;
     bool all = false;
+    msgpack_buffer_t *b;
 
     switch(argc) {
     case 2:
@@ -433,18 +457,21 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
 
 static VALUE Buffer_to_str(VALUE self)
 {
+    msgpack_buffer_t *b;
     BUFFER(self, b);
     return msgpack_buffer_all_as_string(b);
 }
 
 static VALUE Buffer_to_a(VALUE self)
 {
+    msgpack_buffer_t *b;
     BUFFER(self, b);
     return msgpack_buffer_all_as_string_array(b);
 }
 
 static VALUE Buffer_flush(VALUE self)
 {
+    msgpack_buffer_t *b;
     BUFFER(self, b);
     msgpack_buffer_flush(b);
     return self;
@@ -452,12 +479,14 @@ static VALUE Buffer_flush(VALUE self)
 
 static VALUE Buffer_io(VALUE self)
 {
+    msgpack_buffer_t *b;
     BUFFER(self, b);
     return b->io;
 }
 
 static VALUE Buffer_close(VALUE self)
 {
+    msgpack_buffer_t *b;
     BUFFER(self, b);
     if(b->io != Qnil) {
         return rb_funcall(b->io, s_close, 0);
@@ -467,8 +496,11 @@ static VALUE Buffer_close(VALUE self)
 
 static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
+    msgpack_buffer_t *b;
+    size_t sz;
+
     BUFFER(self, b);
-    size_t sz = msgpack_buffer_flush_to_io(b, io, s_write, true);
+    sz = msgpack_buffer_flush_to_io(b, io, s_write, true);
     return ULONG2NUM(sz);
 }
 

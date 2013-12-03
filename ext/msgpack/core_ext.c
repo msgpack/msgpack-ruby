@@ -36,11 +36,12 @@ static inline VALUE delegete_to_pack(int argc, VALUE* argv, VALUE self)
 }
 
 #define ENSURE_PACKER(argc, argv, packer, pk) \
+    VALUE packer; \
+    msgpack_packer_t *pk; \
     if(argc != 1 || rb_class_of(argv[0]) != cMessagePack_Packer) { \
         return delegete_to_pack(argc, argv, self); \
     } \
-    VALUE packer = argv[0]; \
-    msgpack_packer_t *pk; \
+    packer = argv[0]; \
     Data_Get_Struct(packer, msgpack_packer_t, pk);
 
 static VALUE NilClass_to_msgpack(int argc, VALUE* argv, VALUE self)

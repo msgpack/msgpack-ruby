@@ -38,7 +38,17 @@ typedef unsigned __int64 uint64_t;
 
 #else
 #include <stdint.h>
+#endif
+
+#if __STDC_VERSION__ > 199901L
 #include <stdbool.h>
+#elif !defined(__bool_true_false_are_defined)
+#if !defined(bool)
+#define bool int
+#define false 0
+#define true (!false)
+#endif
+#define __bool_true_false_are_defined
 #endif
 
 
