@@ -288,10 +288,15 @@ static VALUE Unpacker_reset(VALUE self)
 VALUE MessagePack_unpack(int argc, VALUE* argv)
 {
     VALUE src;
+    VALUE options = Qnil;
 
     switch(argc) {
     case 1:
         src = argv[0];
+        break;
+    case 2:
+        src = argv[0];
+        options = argv[1];
         break;
     default:
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
@@ -312,11 +317,12 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
     msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(uk), 0);
 
     if(io != Qnil) {
-        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, Qnil);
+        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, options);
     }
 
     if(src != Qnil) {
         /* prefer reference than copying; see MessagePack_Unpacker_module_init */
+        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, options);
         msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
     }
 

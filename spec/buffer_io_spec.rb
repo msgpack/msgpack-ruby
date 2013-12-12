@@ -201,7 +201,7 @@ describe Buffer do
       fragments.each {|s|
         lambda {
           b.skip_all(s.size)
-        }.should_not raise_error(EOFError)
+        }.should_not raise_error
       }
       b.empty?.should == true
       lambda {

@@ -230,6 +230,14 @@ describe Unpacker do
     parsed.should == true
   end
 
+  it 'symbolize_keys' do
+    hash = { a: :b, c: :d }
+    hash_result = { a: 'b', c: 'd' }
+    MessagePack.unpack(MessagePack.pack(hash), symbolize_keys: true).should == hash_result
+    hash = { 'a' => 'b', 'c' => 'd' }
+    MessagePack.unpack(MessagePack.pack(hash), symbolize_keys: true).should == hash_result
+  end
+
   it "msgpack str 8 type" do
     MessagePack.unpack([0xd9, 0x00].pack('C*')).should == ""
     MessagePack.unpack([0xd9, 0x01].pack('C*') + 'a').should == "a"

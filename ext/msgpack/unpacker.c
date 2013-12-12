@@ -257,10 +257,15 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
         /* don't use zerocopy for hash keys but get a frozen string directly
          * because rb_hash_aset freezes keys and it causes copying */
         bool will_freeze = is_reading_map_key(uk);
-        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
-        object_complete_string(uk, string);
-        if(will_freeze) {
-            rb_obj_freeze(string);
+        bool symbolize_keys = will_freeze && UNPACKER_BUFFER_(uk)->symbolize_keys;
+        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze, symbolize_keys);
+        if(symbolize_keys) {
+            object_complete(uk, string);
+        } else {
+            object_complete_string(uk, string);
+            if(will_freeze) {
+                rb_obj_freeze(string);
+            }
         }
         uk->reading_raw_remaining = 0;
         return PRIMITIVE_OBJECT_COMPLETE;
