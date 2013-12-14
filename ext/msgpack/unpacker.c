@@ -19,6 +19,10 @@
 #include "unpacker.h"
 #include "rmem.h"
 
+#ifdef COMPAT_HAVE_ENCODING
+static int s_enc_utf8;
+#endif
+
 #if !defined(DISABLE_RMEM) && !defined(DISABLE_UNPACKER_STACK_RMEM) && \
         MSGPACK_UNPACKER_STACK_CAPACITY * MSGPACK_UNPACKER_STACK_SIZE <= MSGPACK_RMEM_PAGE_SIZE
 #define UNPACKER_STACK_RMEM
@@ -26,10 +30,6 @@
 
 #ifdef UNPACKER_STACK_RMEM
 static msgpack_rmem_t s_stack_rmem;
-#endif
-
-#ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
-static int s_enc_utf8;
 #endif
 
 void msgpack_unpacker_static_init()
@@ -71,6 +71,10 @@ void msgpack_unpacker_init(msgpack_unpacker_t* uk)
     uk->stack = malloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_t));
 #endif
     uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
+
+#ifdef COMPAT_HAVE_ENCODING
+    uk->encoding_index = s_enc_utf8;
+#endif
 }
 
 void msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
@@ -151,7 +155,7 @@ static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 {
 #ifdef COMPAT_HAVE_ENCODING
     // TODO ruby 2.0 has String#b method
-    ENCODING_SET(str, s_enc_utf8);
+    ENCODING_SET(str, uk->encoding_index);
 #endif
     return object_complete(uk, str);
 }

@@ -241,7 +241,26 @@ describe Unpacker do
     symbolized_hash = {:a => 'b', :c => 'd'}
     unpacker.feed(MessagePack.pack(symbolized_hash)).read.should == symbolized_hash
   end
+  it 'MessagePack.unpack encoding' do
+    pack = MessagePack.pack 'a'
 
+    MessagePack.load(pack).encoding.should == Encoding::UTF_8
+    MessagePack.load(pack, :encoding => 'utf-8').encoding.should == Encoding::UTF_8
+    MessagePack.load(pack, :encoding => 'euc-jp').encoding.should == Encoding::EUC_JP
+  end
+
+  it 'Unpacker#unpack encoding' do
+    pack = MessagePack.pack 'a'
+
+    unpacker = Unpacker.new
+    unpacker.feed(pack).read.encoding.should == Encoding::UTF_8
+
+    unpacker = Unpacker.new(:encoding => 'utf-8')
+    unpacker.feed(pack).read.encoding.should == Encoding::UTF_8
+
+    unpacker = Unpacker.new(:encoding => 'euc-jp')
+    unpacker.feed(pack).read.encoding.should == Encoding::EUC_JP
+  end
   it "msgpack str 8 type" do
     MessagePack.unpack([0xd9, 0x00].pack('C*')).should == ""
     MessagePack.unpack([0xd9, 0x01].pack('C*') + 'a').should == "a"

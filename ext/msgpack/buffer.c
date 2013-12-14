@@ -20,7 +20,7 @@
 #include "rmem.h"
 
 #ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
-int s_enc_ascii8bit;
+static int s_enc_ascii8bit;
 #endif
 
 #ifndef HAVE_RB_STR_REPLACE

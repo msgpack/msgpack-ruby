@@ -20,6 +20,7 @@ module MessagePack
     # Supported options:
     #
     # * *:symbolize_keys* deserialize keys of Hash objects as Symbol instead of String
+    # * *:encoding* set the default encoding for unpacked Strings
     #
     # See also Buffer#initialize for other options.
     #

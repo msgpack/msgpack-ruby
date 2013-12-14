@@ -102,6 +102,17 @@ void MessagePack_Unpacker_initialize(msgpack_unpacker_t* uk, VALUE io, VALUE opt
     if(options != Qnil) {
         VALUE v;
 
+        v = rb_hash_aref(options, ID2SYM(rb_intern("encoding")));
+        if (v != Qnil) {
+            const char *s = StringValueCStr(v);
+            int encoding_index = rb_enc_find_index(s);
+            if (encoding_index == -1) {
+                rb_raise(rb_eArgError, "unknown encoding name - %s", s);
+            }
+
+            msgpack_unpacker_set_encoding_index(uk, encoding_index);
+        }
+
         v = rb_hash_aref(options, ID2SYM(rb_intern("symbolize_keys")));
         msgpack_unpacker_set_symbolized_keys(uk, RTEST(v));
     }
