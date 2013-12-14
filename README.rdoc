@@ -26,6 +26,7 @@ or build msgpack-ruby and install:
 
 = Use cases
 
+* Create REST API returing MessagePack using Rails + [RABL](https://github.com/nesquena/rabl)
 * Store objects efficiently serialized by msgpack on memcached or Redis
   * In fact Redis supports msgpack in EVAL-scripts[http://redis.io/commands/eval]
 * Upload data in efficient format from mobile devices such as smartphones
