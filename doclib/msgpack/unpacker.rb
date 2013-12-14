@@ -17,7 +17,11 @@ module MessagePack
     #   This unpacker reads data from the _io_ to fill the internal buffer.
     #   _io_ must respond to readpartial(length [,string]) or read(length [,string]) method.
     #
-    # See Buffer#initialize for supported options.
+    # Supported options:
+    #
+    # * *:symbolize_keys* deserialize keys of Hash objects as Symbol instead of String
+    #
+    # See also Buffer#initialize for other options.
     #
     def initialize(*args)
     end
