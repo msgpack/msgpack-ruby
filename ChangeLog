@@ -1,4 +1,10 @@
 
+2013-12-14 version 0.5.8:
+
+* Fixed compatibility with Ruby 2.1.0
+* Added :symbolize_keys option to MessagePack.load and Unpacker#initialize
+
+
 2013-10-12 version 0.5.7:
 
 * Added deserialization support for the new MessagePack spec
