@@ -79,19 +79,17 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
         io = argv[0];
         options = argv[1];
         if(rb_type(options) != T_HASH) {
-            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(io));
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
         }
 
     } else {
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
     }
 
     PACKER(self, pk);
-    if(io != Qnil || options != Qnil) {
-        MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, options);
-    }
+    MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, options);
 
-    // TODO options
+    // TODO MessagePack_Unpacker_initialize and options
 
     return self;
 }
@@ -194,20 +192,31 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 
 VALUE MessagePack_pack(int argc, VALUE* argv)
 {
-    // TODO options
-
     VALUE v;
     VALUE io = Qnil;
+    VALUE options = Qnil;
 
-    switch(argc) {
-    case 2:
-        io = argv[1];
-        /* pass-through */
-    case 1:
+    if(argc == 1) {
         v = argv[0];
-        break;
-    default:
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..2)", argc);
+
+    } else if(argc == 2) {
+        v = argv[0];
+        if(rb_type(argv[1]) == T_HASH) {
+            options = argv[1];
+        } else {
+            io = argv[1];
+        }
+
+    } else if(argc == 3) {
+        v = argv[0];
+        io = argv[1];
+        options = argv[2];
+        if(rb_type(options) != T_HASH) {
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
+        }
+
+    } else {
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..3)", argc);
     }
 
     VALUE self = Packer_alloc(cMessagePack_Packer);
@@ -215,9 +224,8 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
     //msgpack_packer_reset(s_packer);
     //msgpack_buffer_reset_io(PACKER_BUFFER_(s_packer));
 
-    if(io != Qnil) {
-        MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, Qnil);
-    }
+    MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, options);
+    // TODO MessagePack_Unpacker_initialize and options
 
     msgpack_packer_write_value(pk, v);
 

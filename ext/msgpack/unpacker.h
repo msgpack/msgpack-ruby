@@ -57,6 +57,9 @@ struct msgpack_unpacker_t {
     size_t reading_raw_remaining;
 
     VALUE buffer_ref;
+
+    /* options */
+    bool symbolize_keys;
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)
@@ -82,6 +85,11 @@ void msgpack_unpacker_destroy(msgpack_unpacker_t* uk);
 void msgpack_unpacker_mark(msgpack_unpacker_t* uk);
 
 void msgpack_unpacker_reset(msgpack_unpacker_t* uk);
+
+static inline void msgpack_unpacker_set_symbolized_keys(msgpack_unpacker_t* uk, bool enable)
+{
+    uk->symbolize_keys = enable;
+}
 
 
 /* error codes */

@@ -26,5 +26,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack);
 
 VALUE MessagePack_unpack(int argc, VALUE* argv);
 
+void MessagePack_Unpacker_initialize(msgpack_unpacker_t* uk, VALUE io, VALUE options);
+
 #endif
 

@@ -105,11 +105,6 @@ void MessagePack_Buffer_initialize(msgpack_buffer_t* b, VALUE io, VALUE options)
         if(v != Qnil) {
             msgpack_buffer_set_io_buffer_size(b, NUM2ULONG(v));
         }
-
-        v = rb_hash_aref(options, ID2SYM(rb_intern("symbolize_keys")));
-        if(v != Qnil) {
-            msgpack_buffer_set_symbolize_keys(b, RTEST(v));
-        }
     }
 }
 

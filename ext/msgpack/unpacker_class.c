@@ -70,6 +70,9 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
         VALUE v = argv[0];
         if(rb_type(v) == T_HASH) {
             options = v;
+            if(rb_type(options) != T_HASH) {
+                rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
+            }
         } else {
             io = v;
         }
@@ -78,7 +81,7 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
         io = argv[0];
         options = argv[1];
         if(rb_type(options) != T_HASH) {
-            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(io));
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
         }
 
     } else {
@@ -86,13 +89,22 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
     }
 
     UNPACKER(self, uk);
-    if(io != Qnil || options != Qnil) {
-        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, options);
-    }
 
-    // TODO options
+    MessagePack_Unpacker_initialize(uk, io, options);
 
     return self;
+}
+
+void MessagePack_Unpacker_initialize(msgpack_unpacker_t* uk, VALUE io, VALUE options)
+{
+    MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, options);
+
+    if(options != Qnil) {
+        VALUE v;
+
+        v = rb_hash_aref(options, ID2SYM(rb_intern("symbolize_keys")));
+        msgpack_unpacker_set_symbolized_keys(uk, RTEST(v));
+    }
 }
 
 static void raise_unpacker_error(int r)
@@ -291,21 +303,17 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
     VALUE options = Qnil;
 
     switch(argc) {
+    case 2:
+        options = argv[1];
+        if(rb_type(options) != T_HASH) {
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
+        }
+        /* pass-through */
     case 1:
         src = argv[0];
         break;
-    case 2:
-        src = argv[0];
-        options = argv[1];
-        break;
     default:
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
-    }
-
-    VALUE io = Qnil;
-    if(rb_type(src) != T_STRING) {
-        io = src;
-        src = Qnil;
     }
 
     VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
@@ -313,17 +321,14 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
     //msgpack_unpacker_reset(s_unpacker);
     //msgpack_buffer_reset_io(UNPACKER_BUFFER_(s_unpacker));
 
-    /* prefer reference than copying */
+    /* prefer reference than copying; see MessagePack_Unpacker_module_init */
     msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(uk), 0);
 
-    if(io != Qnil) {
-        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, options);
-    }
-
-    if(src != Qnil) {
-        /* prefer reference than copying; see MessagePack_Unpacker_module_init */
-        MessagePack_Buffer_initialize(UNPACKER_BUFFER_(uk), io, options);
+    if(rb_type(src) == T_STRING) {
+        MessagePack_Unpacker_initialize(uk, Qnil, options);
         msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
+    } else {
+        MessagePack_Unpacker_initialize(uk, src, options);
     }
 
     int r = msgpack_unpacker_read(uk, 0);
