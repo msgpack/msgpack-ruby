@@ -609,7 +609,12 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
             case STACK_TYPE_MAP_VALUE:
                 if(uk->symbolize_keys && rb_type(top->key) == T_STRING) {
                     /* here uses rb_intern_str instead of rb_intern so that Ruby VM can GC unused symbols */
+#ifndef HAVE_RB_INTERN_STR
+                    /* MRI 1.8 doesn't have rb_intern_str or rb_intern2 */
+                    rb_hash_aset(top->object, ID2SYM(rb_intern(RSTRING_PTR(top->key))), uk->last_object);
+#else
                     rb_hash_aset(top->object, ID2SYM(rb_intern_str(top->key)), uk->last_object);
+#endif
                 } else {
                     rb_hash_aset(top->object, top->key, uk->last_object);
                 }
