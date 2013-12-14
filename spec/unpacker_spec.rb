@@ -230,12 +230,16 @@ describe Unpacker do
     parsed.should == true
   end
 
-  it 'symbolize_keys' do
-    hash = { a: :b, c: :d }
-    hash_result = { a: 'b', c: 'd' }
-    MessagePack.unpack(MessagePack.pack(hash), symbolize_keys: true).should == hash_result
-    hash = { 'a' => 'b', 'c' => 'd' }
-    MessagePack.unpack(MessagePack.pack(hash), symbolize_keys: true).should == hash_result
+  it 'MessagePack.unpack symbolize_keys' do
+    symbolized_hash = {:a => 'b', :c => 'd'}
+    MessagePack.load(MessagePack.pack(symbolized_hash), symbolize_keys: true).should == symbolized_hash
+    MessagePack.unpack(MessagePack.pack(symbolized_hash), symbolize_keys: true).should == symbolized_hash
+  end
+
+  it 'Unpacker#unpack symbolize_keys' do
+    unpacker = Unpacker.new(:symbolize_keys => true)
+    symbolized_hash = {:a => 'b', :c => 'd'}
+    unpacker.feed(MessagePack.pack(symbolized_hash)).read.should == symbolized_hash
   end
 
   it "msgpack str 8 type" do
