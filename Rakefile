@@ -52,7 +52,7 @@ else
   end
 end
 
-task :default => :build
+task :default => [:spec, :build, :doc]
 
 
 ###
