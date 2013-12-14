@@ -108,6 +108,7 @@ struct msgpack_buffer_t {
     size_t write_reference_threshold;
     size_t read_reference_threshold;
     size_t io_buffer_size;
+    bool symbolize_keys;
 
     VALUE owner;
 };
@@ -154,6 +155,11 @@ static inline void msgpack_buffer_set_io_buffer_size(msgpack_buffer_t* b, size_t
 static inline void msgpack_buffer_reset_io(msgpack_buffer_t* b)
 {
     b->io = Qnil;
+}
+
+static inline void msgpack_buffer_set_symbolize_keys(msgpack_buffer_t* b, bool val)
+{
+    b->symbolize_keys = val;
 }
 
 static inline bool msgpack_buffer_has_io(msgpack_buffer_t* b)
@@ -418,8 +424,14 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
     return rb_str_substr(b->head->mapped_string, offset, length);
 }
 
-static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool will_be_frozen)
+static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool will_be_frozen, bool symbolize_keys)
 {
+    if(symbolize_keys) {
+        VALUE result = ID2SYM(rb_intern2(b->read_buffer, length));
+        _msgpack_buffer_consumed(b, length);
+        return result;
+    }
+
 #ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
     /* optimize */
     if(!will_be_frozen &&
