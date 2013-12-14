@@ -85,7 +85,7 @@ static VALUE Unpacker_initialize(int argc, VALUE* argv, VALUE self)
         }
 
     } else {
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
     }
 
     UNPACKER(self, uk);
@@ -313,7 +313,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         src = argv[0];
         break;
     default:
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1)", argc);
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..2)", argc);
     }
 
     VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
