@@ -104,7 +104,7 @@
         <dt id="VERSION-constant" class="">VERSION =
           
         </dt>
-        <dd><pre class="code"><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>0.5.4</span><span class='tstring_end'>&quot;</span></span></pre></dd>
+        <dd><pre class="code"><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>0.5.8</span><span class='tstring_end'>&quot;</span></span></pre></dd>
       
     </dl>
   
@@ -126,7 +126,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#dump-class_method" title="dump (class method)">+ (Object) <strong>dump</strong>(arg) </a>
+      <a href="#dump-class_method" title="dump (class method)">+ (Object) <strong>dump</strong>(obj) </a>
     
 
     
@@ -150,7 +150,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#load-class_method" title="load (class method)">+ (Object) <strong>load</strong>(arg) </a>
+      <a href="#load-class_method" title="load (class method)">+ (Object) <strong>load</strong>(src, options = {}) </a>
     
 
     
@@ -174,7 +174,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#pack-class_method" title="pack (class method)">+ (Object) <strong>pack</strong>(arg) </a>
+      <a href="#pack-class_method" title="pack (class method)">+ (Object) <strong>pack</strong>(obj) </a>
     
 
     
@@ -198,7 +198,7 @@
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#unpack-class_method" title="unpack (class method)">+ (Object) <strong>unpack</strong>(arg) </a>
+      <a href="#unpack-class_method" title="unpack (class method)">+ (Object) <strong>unpack</strong>(src, options = {}) </a>
     
 
     
@@ -232,9 +232,9 @@
   <h3 class="signature first" id="dump-class_method">
   
     
-      <span class="overload">+ (<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>) <strong>dump</strong>(obj) </span>
+      <span class="overload">+ (<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>) <strong>dump</strong>(obj, options = {}) </span>
     
-      <span class="overload">+ (<tt>IO</tt>) <strong>dump</strong>(obj, io) </span>
+      <span class="overload">+ (<tt>IO</tt>) <strong>dump</strong>(obj, io, options = {}) </span>
     
   
 
@@ -246,6 +246,8 @@
     
 <p>Serializes an object into an IO or String.</p>
 
+<p>See Packer#initialize for supported options.</p>
+
 
   </div>
 </div>
@@ -256,7 +258,7 @@
     
       
       <li class="overload_item">
-        <span class="signature">+ (<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>) <strong>dump</strong>(obj) </span>
+        <span class="signature">+ (<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>) <strong>dump</strong>(obj, options = {}) </span>
         <div class="docstring">
   <div class="discussion">
     
@@ -266,7 +268,38 @@
   </div>
 </div>
 <div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
   
+    <li>
+      
+        <span class='name'>obj</span>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>object to be serialized</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
 <p class="tag_title">Returns:</p>
 <ul class="return">
   
@@ -291,7 +324,7 @@
     
       
       <li class="overload_item">
-        <span class="signature">+ (<tt>IO</tt>) <strong>dump</strong>(obj, io) </span>
+        <span class="signature">+ (<tt>IO</tt>) <strong>dump</strong>(obj, io, options = {}) </span>
         <div class="docstring">
   <div class="discussion">
     
@@ -299,7 +332,49 @@
   </div>
 </div>
 <div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
   
+    <li>
+      
+        <span class='name'>obj</span>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>object to be serialized</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>io</span>
+      
+      
+        <span class='type'>(<tt>IO</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
 <p class="tag_title">Returns:</p>
 <ul class="return">
   
@@ -326,13 +401,13 @@
       <pre class="lines">
 
 
-12
-13</pre>
+19
+20</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack.rb', line 12</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack.rb', line 19</span>
 
-<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_dump'>dump</span><span class='lparen'>(</span><span class='id identifier rubyid_arg'>arg</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_dump'>dump</span><span class='lparen'>(</span><span class='id identifier rubyid_obj'>obj</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -343,9 +418,9 @@
   <h3 class="signature " id="load-class_method">
   
     
-      <span class="overload">+ (<tt>Object</tt>) <strong>load</strong>(string) </span>
+      <span class="overload">+ (<tt>Object</tt>) <strong>load</strong>(string, options = {}) </span>
     
-      <span class="overload">+ (<tt>Object</tt>) <strong>load</strong>(io) </span>
+      <span class="overload">+ (<tt>Object</tt>) <strong>load</strong>(io, options = {}) </span>
     
   
 
@@ -357,6 +432,8 @@
     
 <p>Deserializes an object from an IO or String.</p>
 
+<p>See Unpacker#initialize for supported options.</p>
+
 
   </div>
 </div>
@@ -367,7 +444,7 @@
     
       
       <li class="overload_item">
-        <span class="signature">+ (<tt>Object</tt>) <strong>load</strong>(string) </span>
+        <span class="signature">+ (<tt>Object</tt>) <strong>load</strong>(string, options = {}) </span>
         <div class="docstring">
   <div class="discussion">
     
@@ -394,6 +471,17 @@
       
     </li>
   
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
 </ul>
 
 
@@ -402,7 +490,7 @@
     
       
       <li class="overload_item">
-        <span class="signature">+ (<tt>Object</tt>) <strong>load</strong>(io) </span>
+        <span class="signature">+ (<tt>Object</tt>) <strong>load</strong>(io, options = {}) </span>
         <div class="docstring">
   <div class="discussion">
     
@@ -419,6 +507,17 @@
       
       
         <span class='type'>(<tt>IO</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
       
       
       
@@ -450,6 +549,192 @@
     </li>
   
 </ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+56
+57</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack.rb', line 56</span>
+
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_load'>load</span><span class='lparen'>(</span><span class='id identifier rubyid_src'>src</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="pack-class_method">
+  
+    
+      <span class="overload">+ (<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>) <strong>pack</strong>(obj, options = {}) </span>
+    
+      <span class="overload">+ (<tt>IO</tt>) <strong>pack</strong>(obj, io, options = {}) </span>
+    
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Serializes an object into an IO or String. Alias of dump.</p>
+
+<p>See Packer#initialize for supported options.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <p class="tag_title">Overloads:</p>
+  <ul class="overload">
+    
+      
+      <li class="overload_item">
+        <span class="signature">+ (<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>) <strong>pack</strong>(obj, options = {}) </span>
+        <div class="docstring">
+  <div class="discussion">
+    
+<p>Serialized data</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>obj</span>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>object to be serialized</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>serialized data</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div>
+      </li>
+    
+      
+      <li class="overload_item">
+        <span class="signature">+ (<tt>IO</tt>) <strong>pack</strong>(obj, io, options = {}) </span>
+        <div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>obj</span>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>object to be serialized</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>io</span>
+      
+      
+        <span class='type'>(<tt>IO</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>IO</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div>
+      </li>
+    
+  </ul>
+
 
 </div><table class="source_code">
   <tr>
@@ -463,118 +748,7 @@
     <td>
       <pre class="code"><span class="info file"># File 'doclib/msgpack.rb', line 38</span>
 
-<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_load'>load</span><span class='lparen'>(</span><span class='id identifier rubyid_arg'>arg</span><span class='rparen'>)</span>
-<span class='kw'>end</span></pre>
-    </td>
-  </tr>
-</table>
-</div>
-    
-      <div class="method_details ">
-  <h3 class="signature " id="pack-class_method">
-  
-    
-      <span class="overload">+ (<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>) <strong>dump</strong>(obj) </span>
-    
-      <span class="overload">+ (<tt>IO</tt>) <strong>dump</strong>(obj, io) </span>
-    
-  
-
-  
-
-  
-</h3><div class="docstring">
-  <div class="discussion">
-    
-<p>Serializes an object into an IO or String. Alias of dump.</p>
-
-
-  </div>
-</div>
-<div class="tags">
-  
-  <p class="tag_title">Overloads:</p>
-  <ul class="overload">
-    
-      
-      <li class="overload_item">
-        <span class="signature">+ (<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>) <strong>dump</strong>(obj) </span>
-        <div class="docstring">
-  <div class="discussion">
-    
-<p>Serialized data</p>
-
-
-  </div>
-</div>
-<div class="tags">
-  
-<p class="tag_title">Returns:</p>
-<ul class="return">
-  
-    <li>
-      
-      
-        <span class='type'>(<tt><span class='object_link'><a href="String.html" title="String (class)">String</a></span></tt>)</span>
-      
-      
-      
-        &mdash;
-        <div class='inline'>
-<p>serialized data</p>
-</div>
-      
-    </li>
-  
-</ul>
-
-</div>
-      </li>
-    
-      
-      <li class="overload_item">
-        <span class="signature">+ (<tt>IO</tt>) <strong>dump</strong>(obj, io) </span>
-        <div class="docstring">
-  <div class="discussion">
-    
-
-  </div>
-</div>
-<div class="tags">
-  
-<p class="tag_title">Returns:</p>
-<ul class="return">
-  
-    <li>
-      
-      
-        <span class='type'>(<tt>IO</tt>)</span>
-      
-      
-      
-    </li>
-  
-</ul>
-
-</div>
-      </li>
-    
-  </ul>
-
-
-</div><table class="source_code">
-  <tr>
-    <td>
-      <pre class="lines">
-
-
-24
-25</pre>
-    </td>
-    <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack.rb', line 24</span>
-
-<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_pack'>pack</span><span class='lparen'>(</span><span class='id identifier rubyid_arg'>arg</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_pack'>pack</span><span class='lparen'>(</span><span class='id identifier rubyid_obj'>obj</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -585,9 +759,9 @@
   <h3 class="signature " id="unpack-class_method">
   
     
-      <span class="overload">+ (<tt>Object</tt>) <strong>unpack</strong>(string) </span>
+      <span class="overload">+ (<tt>Object</tt>) <strong>unpack</strong>(string, options = {}) </span>
     
-      <span class="overload">+ (<tt>Object</tt>) <strong>unpack</strong>(io) </span>
+      <span class="overload">+ (<tt>Object</tt>) <strong>unpack</strong>(io, options = {}) </span>
     
   
 
@@ -599,6 +773,8 @@
     
 <p>Deserializes an object from an IO or String. Alias of load.</p>
 
+<p>See Unpacker#initialize for supported options.</p>
+
 
   </div>
 </div>
@@ -609,7 +785,7 @@
     
       
       <li class="overload_item">
-        <span class="signature">+ (<tt>Object</tt>) <strong>unpack</strong>(string) </span>
+        <span class="signature">+ (<tt>Object</tt>) <strong>unpack</strong>(string, options = {}) </span>
         <div class="docstring">
   <div class="discussion">
     
@@ -636,6 +812,17 @@
       
     </li>
   
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
 </ul>
 
 
@@ -644,7 +831,7 @@
     
       
       <li class="overload_item">
-        <span class="signature">+ (<tt>Object</tt>) <strong>unpack</strong>(io) </span>
+        <span class="signature">+ (<tt>Object</tt>) <strong>unpack</strong>(io, options = {}) </span>
         <div class="docstring">
   <div class="discussion">
     
@@ -661,6 +848,17 @@
       
       
         <span class='type'>(<tt>IO</tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
       
       
       
@@ -699,13 +897,13 @@
       <pre class="lines">
 
 
-52
-53</pre>
+74
+75</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack.rb', line 52</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack.rb', line 74</span>
 
-<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_unpack'>unpack</span><span class='lparen'>(</span><span class='id identifier rubyid_arg'>arg</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='kw'>self</span><span class='period'>.</span><span class='id identifier rubyid_unpack'>unpack</span><span class='lparen'>(</span><span class='id identifier rubyid_src'>src</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -717,7 +915,7 @@
 </div>
 
     <div id="footer">
-  Generated on Fri Mar 15 11:27:20 2013 by
+  Generated on Sat Dec 14 15:08:13 2013 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.8.3 (ruby-1.9.3).
 </div>

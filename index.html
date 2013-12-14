@@ -82,6 +82,12 @@ speed...), MessagePack is a perfect replacement.</p>
 
 <pre class="code ruby"><code><span class='id identifier rubyid_gem'>gem</span> <span class='id identifier rubyid_install'>install</span> <span class='id identifier rubyid_msgpack'>msgpack</span></code></pre>
 
+<p>or build msgpack-ruby and install:</p>
+
+<pre class="code ruby"><code>bundle
+rake
+gem install --local pkg/msgpack</code></pre>
+
 <h1>Use cases</h1>
 <ul><li>
 <p>Store objects efficiently serialized by msgpack on memcached or Redis</p>
@@ -179,13 +185,35 @@ is backed with a fixed-length shared memory pool which is very fast for
 small data (&lt;= 4KB), and has zero-copy capability which significantly
 affects performance to handle large binary data.</p>
 
+<h1>How to build and run tests</h1>
+
+<p>Before building msgpack, you need to install bundler and dependencies.</p>
+
+<pre class="code ruby"><code><span class='id identifier rubyid_gem'>gem</span> <span class='id identifier rubyid_install'>install</span> <span class='id identifier rubyid_bundler'>bundler</span>
+<span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_install'>install</span></code></pre>
+
+<p>Then, you can run the tasks as follows:</p>
+<ul><li>
+<p>Build</p>
+
+<pre class="code ruby"><code><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_build'>build</span></code></pre>
+</li><li>
+<p>Run tests</p>
+
+<pre class="code ruby"><code><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_spec'>spec</span></code></pre>
+</li><li>
+<p>Generating docs</p>
+
+<pre class="code ruby"><code><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_doc'>doc</span></code></pre>
+</li></ul>
+
 <h1>Copyright</h1>
 <table class="rdoc-list"><tr><td class="rdoc-term"><p>Author</p></td>
 <td>
-<p>FURUHASHI Sadayuki &lt;frsyuki@gmail.com&gt;</p>
+<p>Sadayuki Furuhashi &lt;frsyuki@gmail.com&gt;</p>
 </td></tr><tr><td class="rdoc-term"><p>Copyright</p></td>
 <td>
-<p>Copyright (c) 2008-2012 FURUHASHI Sadayuki</p>
+<p>Copyright (c) 2008-2013 Sadayuki Furuhashi</p>
 </td></tr><tr><td class="rdoc-term"><p>License</p></td>
 <td>
 <p>Apache License, Version 2.0</p>
@@ -193,7 +221,7 @@ affects performance to handle large binary data.</p>
 </div></div>
 
     <div id="footer">
-  Generated on Fri Mar 15 11:27:20 2013 by
+  Generated on Sat Dec 14 15:08:13 2013 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.8.3 (ruby-1.9.3).
 </div>

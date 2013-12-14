@@ -121,7 +121,7 @@ internal buffer, which is a MessagePack::Buffer.</p>
       <li class="public ">
   <span class="summary_signature">
     
-      <a href="#buffer-instance_method" title="#buffer (instance method)">- (MessagePack::Unpacker) <strong>buffer</strong> </a>
+      <a href="#buffer-instance_method" title="#buffer (instance method)">- (MessagePack::Buffer) <strong>buffer</strong> </a>
     
 
     
@@ -429,7 +429,13 @@ buffer.</p>
     
 <p>Creates a MessagePack::Unpacker instance.</p>
 
-<p>See Buffer#initialize for supported options.</p>
+<p>Supported options:</p>
+<ul><li>
+<p><b>:symbolize_keys</b> deserialize keys of Hash objects as Symbol instead
+of String</p>
+</li></ul>
+
+<p>See also Buffer#initialize for other options.</p>
 
 
   </div>
@@ -523,11 +529,11 @@ buffer.</p>
       <pre class="lines">
 
 
-22
-23</pre>
+26
+27</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 22</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 26</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -546,7 +552,7 @@ buffer.</p>
       <div class="method_details first">
   <h3 class="signature first" id="buffer-instance_method">
   
-    - (<tt><span class='object_link'><a href="" title="MessagePack::Unpacker (class)">MessagePack::Unpacker</a></span></tt>) <strong>buffer</strong>  <span class="extras">(readonly)</span>
+    - (<tt><span class='object_link'><a href="Buffer.html" title="MessagePack::Buffer (class)">MessagePack::Buffer</a></span></tt>) <strong>buffer</strong>  <span class="extras">(readonly)</span>
   
 
   
@@ -568,7 +574,7 @@ buffer.</p>
     <li>
       
       
-        <span class='type'>(<tt><span class='object_link'><a href="" title="MessagePack::Unpacker (class)">MessagePack::Unpacker</a></span></tt>)</span>
+        <span class='type'>(<tt><span class='object_link'><a href="Buffer.html" title="MessagePack::Buffer (class)">MessagePack::Buffer</a></span></tt>)</span>
       
       
       
@@ -582,12 +588,12 @@ buffer.</p>
       <pre class="lines">
 
 
-30
-31
-32</pre>
+34
+35
+36</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 30</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 34</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_buffer'>buffer</span>
   <span class='ivar'>@buffer</span>
@@ -675,11 +681,11 @@ becomes empty until the IO raises EOFError.</p>
       <pre class="lines">
 
 
-115
-116</pre>
+119
+120</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 115</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 119</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_each'>each</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -748,11 +754,11 @@ buffer.append(data).</p>
       <pre class="lines">
 
 
-99
-100</pre>
+103
+104</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 99</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 103</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_feed'>feed</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -841,11 +847,11 @@ This method is equals to feed(data) &amp;&amp; each.</p>
       <pre class="lines">
 
 
-126
-127</pre>
+130
+131</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 126</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 130</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_feed_each'>feed_each</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -906,11 +912,11 @@ stack is too deep, this method raises MessagePack::StackError.</p>
       <pre class="lines">
 
 
-41
-42</pre>
+45
+46</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 41</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 45</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read'>read</span>
 <span class='kw'>end</span></pre>
@@ -967,11 +973,11 @@ If there're not enough buffer, this method raises EOFError.</p>
       <pre class="lines">
 
 
-77
-78</pre>
+81
+82</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 77</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 81</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read_array_header'>read_array_header</span>
 <span class='kw'>end</span></pre>
@@ -1028,11 +1034,11 @@ there're not enough buffer, this method raises EOFError.</p>
       <pre class="lines">
 
 
-89
-90</pre>
+93
+94</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 89</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 93</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read_map_header'>read_map_header</span>
 <span class='kw'>end</span></pre>
@@ -1086,11 +1092,11 @@ buffer.</p>
       <pre class="lines">
 
 
-134
-135</pre>
+138
+139</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 134</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 138</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset'>reset</span>
 <span class='kw'>end</span></pre>
@@ -1146,11 +1152,11 @@ buffer.</p>
       <pre class="lines">
 
 
-53
-54</pre>
+57
+58</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 53</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 57</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_skip'>skip</span>
 <span class='kw'>end</span></pre>
@@ -1202,11 +1208,11 @@ if a byte exists but the byte doesn't represent nil value, returns
       <pre class="lines">
 
 
-65
-66</pre>
+69
+70</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 65</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 69</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_skip_nil'>skip_nil</span>
 <span class='kw'>end</span></pre>
@@ -1220,7 +1226,7 @@ if a byte exists but the byte doesn't represent nil value, returns
 </div>
 
     <div id="footer">
-  Generated on Fri Mar 15 11:27:20 2013 by
+  Generated on Sat Dec 14 15:08:13 2013 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.8.3 (ruby-1.9.3).
 </div>
