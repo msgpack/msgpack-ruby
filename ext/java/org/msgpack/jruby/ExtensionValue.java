@@ -16,6 +16,8 @@ import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.util.ByteList;
 
+import static org.jruby.runtime.Visibility.PRIVATE;
+
 import org.jcodings.Encoding;
 
 import static org.msgpack.jruby.Types.*;
@@ -46,7 +48,7 @@ public class ExtensionValue extends RubyObject {
     return v;
   }
 
-  @JRubyMethod(name = "initialize", required = 2)
+  @JRubyMethod(name = "initialize", required = 2, visibility = PRIVATE)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject type, IRubyObject payload) {
     this.type = (RubyFixnum) type;
     this.payload = (RubyString) payload;
