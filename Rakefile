@@ -34,6 +34,8 @@ if RUBY_PLATFORM =~ /java/
     jars = ["#{jruby_home}/lib/jruby.jar"]
     ext.classpath = jars.map { |x| File.expand_path(x) }.join(':')
     ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
+    ext.source_version = '1.6'
+    ext.target_version = '1.6'
   end
 
   RSpec::Core::RakeTask.new(:spec) do |t|
