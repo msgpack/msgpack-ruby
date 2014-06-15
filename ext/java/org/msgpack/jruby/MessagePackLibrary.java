@@ -9,8 +9,12 @@ import org.jruby.RubyHash;
 import org.jruby.runtime.load.Library;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.runtime.ThreadContext;
+import org.jruby.runtime.Block;
+import org.jruby.runtime.Visibility;
 import org.jruby.anno.JRubyModule;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.internal.runtime.methods.CallConfiguration;
+import org.jruby.internal.runtime.methods.DynamicMethod;
 
 
 public class MessagePackLibrary implements Library {
@@ -22,10 +26,49 @@ public class MessagePackLibrary implements Library {
     RubyClass underflowErrorClass = msgpackModule.defineClassUnder("UnderflowError", unpackErrorClass, unpackErrorClass.getAllocator());
     RubyClass extensionValueClass = msgpackModule.defineClassUnder("ExtensionValue", runtime.getObject(), new ExtensionValue.ExtensionValueAllocator());
     extensionValueClass.defineAnnotatedMethods(ExtensionValue.class);
+    RubyClass packerClass = msgpackModule.defineClassUnder("Packer", runtime.getObject(), new Packer.PackerAllocator());
+    packerClass.defineAnnotatedMethods(Packer.class);
     RubyClass unpackerClass = msgpackModule.defineClassUnder("Unpacker", runtime.getObject(), new Unpacker.UnpackerAllocator());
     unpackerClass.defineAnnotatedMethods(Unpacker.class);
     RubyClass bufferClass = msgpackModule.defineClassUnder("Buffer", runtime.getObject(), new Buffer.BufferAllocator());
     bufferClass.defineAnnotatedMethods(Buffer.class);
+    installCoreExtensions(runtime);
+  }
+
+  private void installCoreExtensions(Ruby runtime) {
+    installCoreExtensions(
+      runtime,
+      runtime.getNilClass(),
+      runtime.getTrueClass(),
+      runtime.getFalseClass(),
+      runtime.getFixnum(),
+      runtime.getBignum(),
+      runtime.getFloat(),
+      runtime.getString(),
+      runtime.getArray(),
+      runtime.getHash(),
+      runtime.getSymbol()
+    );
+  }
+
+  private void installCoreExtensions(Ruby runtime, RubyClass... classes) {
+    for (RubyClass cls : classes) {
+      cls.addMethod("to_msgpack", createToMsgpackMethod(runtime, cls));
+    }
+  }
+
+  private DynamicMethod createToMsgpackMethod(final Ruby runtime, RubyClass cls) {
+    return new DynamicMethod(cls, Visibility.PUBLIC, CallConfiguration.FrameNoneScopeNone) {
+      @Override
+      public IRubyObject call(ThreadContext context, IRubyObject recv, RubyModule clazz, String name, IRubyObject[] args, Block block) {
+        return MessagePackModule.pack(runtime.getCurrentContext(), null, new IRubyObject[] {recv});
+      }
+
+      @Override
+      public DynamicMethod dup() {
+        return this;
+      }
+    };
   }
 
   @JRubyModule(name = "MessagePack")
