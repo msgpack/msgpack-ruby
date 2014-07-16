@@ -228,8 +228,8 @@ describe Unpacker do
 
   it 'MessagePack.unpack symbolize_keys' do
     symbolized_hash = {:a => 'b', :c => 'd'}
-    MessagePack.load(MessagePack.pack(symbolized_hash), symbolize_keys: true).should == symbolized_hash
-    MessagePack.unpack(MessagePack.pack(symbolized_hash), symbolize_keys: true).should == symbolized_hash
+    MessagePack.load(MessagePack.pack(symbolized_hash), :symbolize_keys => true).should == symbolized_hash
+    MessagePack.unpack(MessagePack.pack(symbolized_hash), :symbolize_keys => true).should == symbolized_hash
   end
 
   it 'Unpacker#unpack symbolize_keys' do
