@@ -37,14 +37,19 @@ if RUBY_PLATFORM =~ /java/
 
   Rake::JavaExtensionTask.new('msgpack', spec) do |ext|
     ext.ext_dir = 'ext/java'
-    jars = FileList['ext/java/*.jar']
-    ext.classpath = jars.map { |x| File.expand_path x }.join ':'
+    ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
+    ext.classpath = FileList['ext/java/*.jar'].map { |x| File.expand_path x }.join ':'
+  end
+
+  task 'copy:msgpack:java' do
+    cp FileList['ext/java/*.jar'], 'lib/msgpack'
   end
 
 else
   require 'rake/extensiontask'
 
   Rake::ExtensionTask.new('msgpack', spec) do |ext|
+    ext.ext_dir = 'ext/msgpack'
     ext.cross_compile = true
     ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
     #ext.cross_platform = 'i386-mswin32'
