@@ -52,12 +52,37 @@ public class Encoder {
     }
   }
 
-  public IRubyObject encode(IRubyObject object) {
-    encodeObject(object);
-    return runtime.newString(new ByteList(buffer.array(), 0, buffer.position(), binaryEncoding, false));
+  private IRubyObject readRubyString() {
+    IRubyObject str = runtime.newString(new ByteList(buffer.array(), 0, buffer.position(), binaryEncoding, false));
+    buffer.clear();
+    return str;
   }
 
-  private void encodeObject(IRubyObject object) {
+  public IRubyObject encode(IRubyObject object) {
+    appendObject(object);
+    return readRubyString();
+  }
+
+  public IRubyObject encode(IRubyObject object, IRubyObject destination) {
+    appendObject(object, destination);
+    return readRubyString();
+  }
+
+  public IRubyObject encodeArrayHeader(int size) {
+    appendArrayHeader(size);
+    return readRubyString();
+  }
+
+  public IRubyObject encodeMapHeader(int size) {
+    appendHashHeader(size);
+    return readRubyString();
+  }
+
+  private void appendObject(IRubyObject object) {
+    appendObject(object, null);
+  }
+
+  private void appendObject(IRubyObject object, IRubyObject destination) {
     if (object == null || object instanceof RubyNil) {
       ensureRemainingCapacity(1);
       buffer.put(NIL);
@@ -65,27 +90,27 @@ public class Encoder {
       ensureRemainingCapacity(1);
       buffer.put(((RubyBoolean) object).isTrue() ? TRUE : FALSE);
     } else if (object instanceof RubyBignum) {
-      encodeBignum((RubyBignum) object);
+      appendBignum((RubyBignum) object);
     } else if (object instanceof RubyInteger) {
-      encodeInteger((RubyInteger) object);
+      appendInteger((RubyInteger) object);
     } else if (object instanceof RubyFloat) {
-      encodeFloat((RubyFloat) object);
+      appendFloat((RubyFloat) object);
     } else if (object instanceof RubyString) {
-      encodeString((RubyString) object);
+      appendString((RubyString) object);
     } else if (object instanceof RubySymbol) {
-      encodeString(((RubySymbol) object).asString());
+      appendString(((RubySymbol) object).asString());
     } else if (object instanceof RubyArray) {
-      encodeArray((RubyArray) object);
+      appendArray((RubyArray) object);
     } else if (object instanceof RubyHash) {
-      encodeHash((RubyHash) object);
+      appendHash((RubyHash) object);
     } else if (object.respondsTo("to_msgpack")) {
-      appendCustom(object);
+      appendCustom(object, destination);
     } else {
       throw runtime.newArgumentError(String.format("Cannot pack type: %s", object.getClass().getName()));
     }
   }
 
-  private void encodeBignum(RubyBignum object) {
+  private void appendBignum(RubyBignum object) {
     BigInteger value = ((RubyBignum) object).getBigIntegerValue();
     if (value.bitLength() > 64 || (value.bitLength() > 63 && value.signum() < 0)) {
       throw runtime.newArgumentError(String.format("Cannot pack big integer: %s", value));
@@ -96,7 +121,7 @@ public class Encoder {
     buffer.put(b, b.length - 8, 8);
   }
 
-  private void encodeInteger(RubyInteger object) {
+  private void appendInteger(RubyInteger object) {
     long value = ((RubyInteger) object).getLongValue();
     if (value < 0) {
       if (value < Short.MIN_VALUE) {
@@ -148,7 +173,7 @@ public class Encoder {
     }
   }
 
-  private void encodeFloat(RubyFloat object) {
+  private void appendFloat(RubyFloat object) {
     double value = object.getDoubleValue();
     float f = (float) value;
     if (Double.compare(f, value) == 0) {
@@ -162,7 +187,7 @@ public class Encoder {
     }
   }
 
-  private void encodeString(RubyString object) {
+  private void appendString(RubyString object) {
     Encoding encoding = object.getEncoding();
     boolean binary = encoding == binaryEncoding;
     if (encoding != utf8Encoding && encoding != binaryEncoding) {
@@ -189,8 +214,16 @@ public class Encoder {
     buffer.put(bytes.unsafeBytes(), bytes.begin(), length);
   }
 
-  private void encodeArray(RubyArray object) {
-    int size = object.size();
+  private void appendArray(RubyArray object) {
+    appendArrayHeader(object);
+    appendArrayElements(object);
+  }
+
+  private void appendArrayHeader(RubyArray object) {
+    appendArrayHeader(object.size());
+  }
+
+  private void appendArrayHeader(int size) {
     if (size < 16) {
       ensureRemainingCapacity(1);
       buffer.put((byte) (size | 0x90));
@@ -203,13 +236,25 @@ public class Encoder {
       buffer.put(ARY32);
       buffer.putInt(size);
     }
+  }
+
+  private void appendArrayElements(RubyArray object) {
+    int size = object.size();
     for (int i = 0; i < size; i++) {
-      encodeObject(object.eltOk(i));
+      appendObject(object.eltOk(i));
     }
   }
 
-  private void encodeHash(RubyHash object) {
-    int size = object.size();
+  private void appendHash(RubyHash object) {
+    appendHashHeader(object);
+    appendHashElements(object);
+  }
+
+  private void appendHashHeader(RubyHash object) {
+    appendHashHeader(object.size());
+  }
+
+  private void appendHashHeader(int size) {
     if (size < 16) {
       ensureRemainingCapacity(1);
       buffer.put((byte) (size | 0x80));
@@ -222,6 +267,10 @@ public class Encoder {
       buffer.put(MAP32);
       buffer.putInt(size);
     }
+  }
+
+  private void appendHashElements(RubyHash object) {
+    int size = object.size();
     HashVisitor visitor = new HashVisitor(size);
     object.visitAll(visitor);
     if (visitor.remain != 0) {
@@ -238,17 +287,21 @@ public class Encoder {
 
     public void visit(IRubyObject key, IRubyObject value) {
       if (remain-- > 0) {
-        encodeObject(key);
-        encodeObject(value);
+        appendObject(key);
+        appendObject(value);
       }
     }
   }
 
-  private void appendCustom(IRubyObject object) {
-    RubyString string = (RubyString) object.callMethod(runtime.getCurrentContext(), "to_msgpack");
-    ByteList bytes = string.getByteList();
-    int length = bytes.length();
-    ensureRemainingCapacity(length);
-    buffer.put(bytes.unsafeBytes(), bytes.begin(), length);
+  private void appendCustom(IRubyObject object, IRubyObject destination) {
+    if (destination == null) {
+      IRubyObject result = object.callMethod(runtime.getCurrentContext(), "to_msgpack");
+      ByteList bytes = result.asString().getByteList();
+      int length = bytes.length();
+      ensureRemainingCapacity(length);
+      buffer.put(bytes.unsafeBytes(), bytes.begin(), length);
+    } else {
+      object.callMethod(runtime.getCurrentContext(), "to_msgpack", destination);
+    }
   }
 }
