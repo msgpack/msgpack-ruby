@@ -37,9 +37,8 @@ if RUBY_PLATFORM =~ /java/
 
   Rake::JavaExtensionTask.new('msgpack', spec) do |ext|
     ext.ext_dir = 'ext/java'
-    #jruby_home = RbConfig::CONFIG['prefix']
-    #jars = ["#{jruby_home}/lib/jruby.jar"] + FileList['lib/*.jar']
-    #ext.classpath = jars.map { |x| File.expand_path x }.join ':'
+    jars = FileList['ext/java/*.jar']
+    ext.classpath = jars.map { |x| File.expand_path x }.join ':'
   end
 
 else
