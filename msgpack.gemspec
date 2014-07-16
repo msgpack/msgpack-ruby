@@ -17,6 +17,13 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.extensions = ["ext/msgpack/extconf.rb"]
 
+  jars = Dir['lib/**/*.jar']
+  if RUBY_PLATFORM =~ /java/
+    s.files += jars
+  else
+    s.files -= jars
+  end
+
   s.add_development_dependency 'bundler', ['~> 1.0']
   s.add_development_dependency 'rake', ['~> 0.9.2']
   s.add_development_dependency 'rake-compiler', ['~> 0.8.3']

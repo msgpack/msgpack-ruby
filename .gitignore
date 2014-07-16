@@ -16,3 +16,4 @@ tmp
 /nbproject/private/
 ext/java/build
 ext/java/msgpack.jar
+lib/msgpack/msgpack.jar

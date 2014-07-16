@@ -38,11 +38,7 @@ if RUBY_PLATFORM =~ /java/
   Rake::JavaExtensionTask.new('msgpack', spec) do |ext|
     ext.ext_dir = 'ext/java'
     ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
-    ext.classpath = FileList['ext/java/*.jar'].map { |x| File.expand_path x }.join ':'
-  end
-
-  task 'copy:msgpack:java' do
-    cp FileList['ext/java/*.jar'], 'lib/msgpack'
+    ext.classpath = Dir['lib/msgpack/java/*.jar'].map { |x| File.expand_path x }.join ':'
   end
 
 else
@@ -56,7 +52,6 @@ else
   end
 end
 
-CLEAN.include('lib/msgpack/*.jar')
 CLEAN.include('lib/msgpack/msgpack.*')
 
 task :default => [:spec, :build, :doc]
