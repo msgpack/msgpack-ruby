@@ -61,7 +61,10 @@ public class MessagePackLibrary implements Library {
     return new DynamicMethod(cls, Visibility.PUBLIC, CallConfiguration.FrameNoneScopeNone) {
       @Override
       public IRubyObject call(ThreadContext context, IRubyObject recv, RubyModule clazz, String name, IRubyObject[] args, Block block) {
-        return MessagePackModule.pack(runtime.getCurrentContext(), null, new IRubyObject[] {recv});
+        IRubyObject[] allArgs = new IRubyObject[1 + args.length];
+        allArgs[0] = recv;
+        System.arraycopy(args, 0, allArgs, 1, args.length);
+        return MessagePackModule.pack(runtime.getCurrentContext(), null, allArgs);
       }
 
       @Override
@@ -75,8 +78,17 @@ public class MessagePackLibrary implements Library {
   public static class MessagePackModule {
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"dump"})
     public static IRubyObject pack(ThreadContext ctx, IRubyObject recv, IRubyObject[] args) {
-      Encoder encoder = new Encoder(ctx.getRuntime());
-      return encoder.encode(args[0]);
+      IRubyObject[] extraArgs = null;
+      if (args.length == 0) {
+        extraArgs = new IRubyObject[] {};
+      } else {
+        extraArgs = new IRubyObject[args.length - 1];
+        System.arraycopy(args, 1, extraArgs, 0, args.length - 1);
+      }
+      Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"));
+      packer.initialize(ctx, extraArgs);
+      packer.write(ctx, args[0]);
+      return packer.toS(ctx);
     }
 
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"load"})
