@@ -8,13 +8,6 @@ require 'rspec/core'
 require 'rspec/core/rake_task'
 require 'yard'
 
-RSpec::Core::RakeTask.new(:spec) do |t|
-  t.rspec_opts = ["-c", "-f progress"]
-  t.rspec_opts << "-Ilib"
-  t.pattern = 'spec/**/*_spec.rb'
-  t.verbose = true
-end
-
 task :spec => :compile
 
 desc 'Run RSpec code examples and measure coverage'
@@ -41,6 +34,13 @@ if RUBY_PLATFORM =~ /java/
     ext.classpath = Dir['lib/msgpack/java/*.jar'].map { |x| File.expand_path x }.join ':'
   end
 
+  RSpec::Core::RakeTask.new(:spec) do |t|
+    t.rspec_opts = ["-c", "-f progress"]
+    t.rspec_opts << "-Ilib"
+    t.pattern = 'spec/{,jruby/}*_spec.rb'
+    t.verbose = true
+  end
+
 else
   require 'rake/extensiontask'
 
@@ -49,6 +49,13 @@ else
     ext.cross_compile = true
     ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
     #ext.cross_platform = 'i386-mswin32'
+  end
+
+  RSpec::Core::RakeTask.new(:spec) do |t|
+    t.rspec_opts = ["-c", "-f progress"]
+    t.rspec_opts << "-Ilib"
+    t.pattern = 'spec/{,cruby/}*_spec.rb'
+    t.verbose = true
   end
 end
 
