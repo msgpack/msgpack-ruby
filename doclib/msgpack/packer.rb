@@ -1,8 +1,7 @@
 module MessagePack
 
   #
-  # MessagePack::Packer is an interface to serialize objects into an internal buffer,
-  # which is a MessagePack::Buffer.
+  # MessagePack::Packer is a class to serialize objects.
   #
   class Packer
     #
@@ -31,7 +30,7 @@ module MessagePack
     attr_reader :buffer
 
     #
-    # Serializes an object into internal buffer.
+    # Serializes an object into internal buffer, and flushes to io if necessary.
     #
     # If it could not serialize the object, it raises
     # NoMethodError: undefined method `to_msgpack' for #<the_object>.

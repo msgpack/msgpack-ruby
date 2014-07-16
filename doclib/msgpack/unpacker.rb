@@ -1,8 +1,7 @@
 module MessagePack
 
   #
-  # MessagePack::Unpacker is an interface to deserialize objects from an internal buffer,
-  # which is a MessagePack::Buffer.
+  # MessagePack::Unpacker is a class to deserialize objects.
   #
   class Unpacker
     #
@@ -34,11 +33,16 @@ module MessagePack
     attr_reader :buffer
 
     #
-    # Deserializes an object from internal buffer and returns it.
+    # Deserializes an object from the io or internal buffer and returns it.
     #
-    # If there're not enough buffer, this method raises EOFError.
+    # This method reads data from io into the internal buffer and deserializes an object
+    # from the buffer. It repeats reading data from the io until enough data is available
+    # to deserialize at least one object. After deserializing one object, unused data is
+    # left in the internal buffer.
+    #
+    # If there're not enough data to deserialize one object, this method raises EOFError.
     # If data format is invalid, this method raises MessagePack::MalformedFormatError.
-    # If the stack is too deep, this method raises MessagePack::StackError.
+    # If the object nests too deeply, this method raises MessagePack::StackError.
     #
     # @return [Object] deserialized object
     #
@@ -50,7 +54,7 @@ module MessagePack
     #
     # Deserializes an object and ignores it. This method is faster than _read_.
     #
-    # This method could raise same errors with _read_.
+    # This method could raise the same errors with _read_.
     #
     # @return nil
     #
@@ -62,7 +66,7 @@ module MessagePack
     # Otherwise, if a byte exists but the byte doesn't represent nil value,
     # returns _false_.
     #
-    # If there're not enough buffer, this method raises EOFError.
+    # If there're not enough data, this method raises EOFError.
     #
     # @return [Boolean]
     #
@@ -74,7 +78,7 @@ module MessagePack
     # It converts a serialized array into a stream of elements.
     #
     # If the serialized object is not an array, it raises MessagePack::TypeError.
-    # If there're not enough buffer, this method raises EOFError.
+    # If there're not enough data, this method raises EOFError.
     #
     # @return [Integer] size of the array
     #
@@ -86,7 +90,7 @@ module MessagePack
     # It converts a serialized map into a stream of key-value pairs.
     #
     # If the serialized object is not a map, it raises MessagePack::TypeError.
-    # If there're not enough buffer, this method raises EOFError.
+    # If there're not enough data, this method raises EOFError.
     #
     # @return [Integer] size of the map
     #
@@ -95,7 +99,7 @@ module MessagePack
 
     #
     # Appends data into the internal buffer.
-    # This method calls buffer.append(data).
+    # This method is equivalent to unpacker.buffer.append(data).
     #
     # @param data [String]
     # @return [Unpacker] self
@@ -106,7 +110,7 @@ module MessagePack
     #
     # Repeats to deserialize objects.
     #
-    # It repeats until the internal buffer does not include any complete objects.
+    # It repeats until the io or internal buffer does not include any complete objects.
     #
     # If the an IO is set, it repeats to read data from the IO when the buffer
     # becomes empty until the IO raises EOFError.
@@ -121,7 +125,7 @@ module MessagePack
 
     #
     # Appends data into the internal buffer and repeats to deserialize objects.
-    # This method is equals to feed(data) && each.
+    # This method is equivalent to unpacker.feed(data) && unpacker.each { ... }.
     #
     # @param data [String]
     # @yieldparam object [Object] deserialized object
@@ -131,7 +135,7 @@ module MessagePack
     end
 
     #
-    # Resets deserialization state of the unpacker and clears the internal buffer.
+    # Clears the internal buffer and resets deserialization state of the unpacker.
     #
     # @return nil
     #
