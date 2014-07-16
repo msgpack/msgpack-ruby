@@ -56,6 +56,9 @@ else
   end
 end
 
+CLEAN.include('lib/msgpack/*.jar')
+CLEAN.include('lib/msgpack/msgpack.*')
+
 task :default => [:spec, :build, :doc]
 
 
