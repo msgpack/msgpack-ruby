@@ -65,13 +65,6 @@ describe Packer do
     io.string.should == "\xc0"
   end
 
-  it 'buffer' do
-    o1 = packer.buffer.object_id
-    packer.buffer << 'frsyuki'
-    packer.buffer.to_s.should == 'frsyuki'
-    packer.buffer.object_id.should == o1
-  end
-
   it 'to_msgpack returns String' do
     nil.to_msgpack.class.should == String
     true.to_msgpack.class.should == String

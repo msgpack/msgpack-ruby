@@ -53,7 +53,8 @@ describe Unpacker do
     packer.write(4)
     packer.write(5)
 
-    unpacker = Unpacker.new(packer.buffer)
+    unpacker = Unpacker.new
+    unpacker.feed(packer.to_s)
 
     unpacker.read.should == 1
     unpacker.skip
@@ -131,13 +132,6 @@ describe Unpacker do
     unpacker.each.map {|x| x }.should == [1]
   end
 
-  it 'buffer' do
-    o1 = unpacker.buffer.object_id
-    unpacker.buffer << 'frsyuki'
-    unpacker.buffer.to_s.should == 'frsyuki'
-    unpacker.buffer.object_id.should == o1
-  end
-
   it 'frozen short strings' do
     raw = sample_object.to_msgpack.to_s.force_encoding('UTF-8')
     lambda {
@@ -156,7 +150,8 @@ describe Unpacker do
     512.times { packer.write_array_header(1) }
     packer.write(nil)
 
-    unpacker = Unpacker.new(packer.buffer)
+    unpacker = Unpacker.new
+    unpacker.feed(packer.to_s)
     lambda {
       unpacker.read
     }.should raise_error(MessagePack::StackError)
@@ -166,7 +161,8 @@ describe Unpacker do
     512.times { packer.write_array_header(1) }
     packer.write(nil)
 
-    unpacker = Unpacker.new(packer.buffer)
+    unpacker = Unpacker.new
+    unpacker.feed(packer.to_s)
     lambda {
       unpacker.skip
     }.should raise_error(MessagePack::StackError)
