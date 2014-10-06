@@ -1,4 +1,10 @@
 
+2014-10-05 version 0.5.9:
+
+* Fixed Unpacker#read_map_header and #read_array_header
+* Added support for Symbol GC added since MRI 2.2.0
+
+
 2013-12-14 version 0.5.8:
 
 * Fixed compatibility with Ruby 2.1.0
