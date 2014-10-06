@@ -4,6 +4,8 @@ have_header("ruby/st.h")
 have_header("st.h")
 have_func("rb_str_replace", ["ruby.h"])
 have_func("rb_intern_str", ["ruby.h"])
+have_func("rb_sym2str", ["ruby.h"])
+have_func("rb_str_intern", ["ruby.h"])
 
 $CFLAGS << %[ -I.. -Wall -O3 -g -std=c99]
 #$CFLAGS << %[ -DDISABLE_RMEM]

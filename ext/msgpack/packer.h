@@ -334,6 +334,10 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
 
 static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)
 {
+#ifdef HAVE_RB_SYM2STR
+    /* rb_sym2str is added since MRI 2.2.0 */
+    msgpack_packer_write_string_value(pk, rb_sym2str(v));
+#else
     const char* name = rb_id2name(SYM2ID(v));
     unsigned long len = strlen(name);
     /* actual return type of strlen is size_t */
@@ -343,6 +347,7 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
     }
     msgpack_packer_write_raw_header(pk, (unsigned int)len);
     msgpack_buffer_append(PACKER_BUFFER_(pk), name, len);
+#endif
 }
 
 static inline void msgpack_packer_write_fixnum_value(msgpack_packer_t* pk, VALUE v)
