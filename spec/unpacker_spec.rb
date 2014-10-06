@@ -24,9 +24,31 @@ describe Unpacker do
     }.should raise_error(MessagePack::TypeError)
   end
 
+  it 'read_map_header converts an map to key-value sequence' do
+    packer.write_array_header(2)
+    packer.write("e")
+    packer.write(1)
+    unpacker = Unpacker.new
+    unpacker.feed(packer.to_s)
+    unpacker.read_array_header.should == 2
+    unpacker.read.should == "e"
+    unpacker.read.should == 1
+  end
+
   it 'read_map_header succeeds' do
     unpacker.feed("\x81")
     unpacker.read_map_header.should == 1
+  end
+
+  it 'read_map_header converts an map to key-value sequence' do
+    packer.write_map_header(1)
+    packer.write("k")
+    packer.write("v")
+    unpacker = Unpacker.new
+    unpacker.feed(packer.to_s)
+    unpacker.read_map_header.should == 1
+    unpacker.read.should == "k"
+    unpacker.read.should == "v"
   end
 
   it 'read_map_header fails' do

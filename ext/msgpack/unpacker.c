@@ -549,6 +549,7 @@ int msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk, uint32_t* result_
         return PRIMITIVE_UNEXPECTED_TYPE;
     }
 
+    reset_head_byte(uk);
     return 0;
 }
 
@@ -576,6 +577,7 @@ int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk, uint32_t* result_si
         return PRIMITIVE_UNEXPECTED_TYPE;
     }
 
+    reset_head_byte(uk);
     return 0;
 }
 

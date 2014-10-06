@@ -335,8 +335,8 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
 static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)
 {
     const char* name = rb_id2name(SYM2ID(v));
-    /* actual return type of strlen is size_t */
     unsigned long len = strlen(name);
+    /* actual return type of strlen is size_t */
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
