@@ -60,6 +60,7 @@ struct msgpack_unpacker_t {
 
     /* options */
     bool symbolize_keys;
+    int encoding_index;
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)
@@ -89,6 +90,11 @@ void msgpack_unpacker_reset(msgpack_unpacker_t* uk);
 static inline void msgpack_unpacker_set_symbolized_keys(msgpack_unpacker_t* uk, bool enable)
 {
     uk->symbolize_keys = enable;
+}
+
+static inline void msgpack_unpacker_set_encoding_index(msgpack_unpacker_t* uk, int encoding_index)
+{
+    uk->encoding_index = encoding_index;
 }
 
 
