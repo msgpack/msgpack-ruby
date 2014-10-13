@@ -116,5 +116,27 @@ describe Packer do
     CustomPack02.new.to_msgpack(s04)
     s04.string.should == [1,2].to_msgpack
   end
+
+  describe "override core_ext's #to_msgpack" do
+    class CustomHash < Hash
+    end
+
+    context "child of core_ext" do
+      it 'calls #to_msgpack' do
+        obj = CustomHash.new
+        obj.should_receive(:to_msgpack)
+        MessagePack.pack(obj)
+      end
+    end
+
+    context "monkey-patched #to_msgpack" do
+      it "calls #to_msgpack" do
+        obj = {}
+        obj.should_receive(:to_msgpack)
+        MessagePack.pack(obj)
+      end
+    end
+  end
+
 end
 

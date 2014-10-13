@@ -123,46 +123,8 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 #endif
 }
 
-static void _msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
-{
-    rb_funcall(v, pk->to_msgpack_method, 1, pk->to_msgpack_arg);
-}
-
 void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v)
 {
-    switch(rb_type(v)) {
-    case T_NIL:
-        msgpack_packer_write_nil(pk);
-        break;
-    case T_TRUE:
-        msgpack_packer_write_true(pk);
-        break;
-    case T_FALSE:
-        msgpack_packer_write_false(pk);
-        break;
-    case T_FIXNUM:
-        msgpack_packer_write_fixnum_value(pk, v);
-        break;
-    case T_SYMBOL:
-        msgpack_packer_write_symbol_value(pk, v);
-        break;
-    case T_STRING:
-        msgpack_packer_write_string_value(pk, v);
-        break;
-    case T_ARRAY:
-        msgpack_packer_write_array_value(pk, v);
-        break;
-    case T_HASH:
-        msgpack_packer_write_hash_value(pk, v);
-        break;
-    case T_BIGNUM:
-        msgpack_packer_write_bignum_value(pk, v);
-        break;
-    case T_FLOAT:
-        msgpack_packer_write_float_value(pk, v);
-        break;
-    default:
-        _msgpack_packer_write_other_value(pk, v);
-    }
+    rb_funcall(v, pk->to_msgpack_method, 1, pk->to_msgpack_arg);
 }
 
