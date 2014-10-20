@@ -294,6 +294,13 @@ static VALUE Unpacker_each(VALUE self)
 
 static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 {
+#ifdef RETURN_ENUMERATOR
+    {
+        VALUE argv[] = { data };
+        RETURN_ENUMERATOR(self, sizeof(argv) / sizeof(VALUE), argv);
+    }
+#endif
+
     // TODO optimize
     Unpacker_feed(self, data);
     return Unpacker_each(self);
