@@ -134,6 +134,12 @@ describe Unpacker do
     objects.should == [sample_object] * 4
   end
 
+  it 'feed_each enumerator' do
+    raw = sample_object.to_msgpack.to_s * 4
+
+    unpacker.feed_each(raw).to_a.should == [sample_object] * 4
+  end
+
   it 'reset clears internal buffer' do
     # 1-element array
     unpacker.feed("\x91")
