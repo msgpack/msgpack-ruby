@@ -337,8 +337,9 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
     }
 
     /* raise if extra bytes follow */
-    if(msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk)) > 0) {
-        rb_raise(eMalformedFormatError, "extra bytes follow after a deserialized object");
+    size_t extra = msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk));
+    if(extra > 0) {
+        rb_raise(eMalformedFormatError, "%zd extra bytes after the deserialized object", extra);
     }
 
 #ifdef RB_GC_GUARD
