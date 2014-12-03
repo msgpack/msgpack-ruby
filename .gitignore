@@ -3,6 +3,8 @@
 *.bundle
 *.gem
 *.class
+doc
+.yardoc
 .bundle
 Gemfile*
 pkg
