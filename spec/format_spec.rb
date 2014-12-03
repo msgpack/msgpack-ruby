@@ -83,8 +83,11 @@ describe MessagePack do
     check_raw 1, (1<<5)-1
   end
 
+  it "raw 8" do
+    check_raw 2, (1<<8)-1
+  end
+
   it "raw 16" do
-    check_raw 3, (1<<5)
     check_raw 3, (1<<16)-1
   end
 

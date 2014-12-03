@@ -271,6 +271,10 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
         unsigned char h = 0xa0 | (uint8_t) n;
         msgpack_buffer_write_1(PACKER_BUFFER_(pk), h);
+    } else if(n < 256) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        unsigned char be = (uint8_t) n;
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xd9, (const void*)&be, 1);
     } else if(n < 65536) {
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
         uint16_t be = _msgpack_be16(n);
