@@ -96,6 +96,26 @@ describe MessagePack do
     #check_raw 5, (1<<32)-1  # memory error
   end
 
+  it "str encoding is UTF_8" do
+    pack_unpack('string'.force_encoding(Encoding::UTF_8)).encoding.should == Encoding::UTF_8
+  end
+
+  it "bin 8" do
+    check_bin 2, (1<<8)-1
+  end
+
+  it "bin 16" do
+    check_bin 3, (1<<16)-1
+  end
+
+  it "bin 32" do
+    check_bin 5, (1<<16)
+  end
+
+  it "bin encoding is ASCII_8BIT" do
+    pack_unpack('string'.force_encoding(Encoding::ASCII_8BIT)).encoding.should == Encoding::ASCII_8BIT
+  end
+
   it "fixarray" do
     check_array 1, 0
     check_array 1, (1<<4)-1
@@ -213,7 +233,11 @@ describe MessagePack do
   end
 
   def check_raw(overhead, num)
-    check num+overhead, " "*num
+    check num+overhead, (" "*num).force_encoding(Encoding::UTF_8)
+  end
+
+  def check_bin(overhead, num)
+    check num+overhead, (" "*num).force_encoding(Encoding::ASCII_8BIT)
   end
 
   def check_array(overhead, num)
@@ -223,6 +247,10 @@ describe MessagePack do
   def match(obj, buf)
     raw = obj.to_msgpack.to_s
     raw.should == buf
+  end
+
+  def pack_unpack(obj)
+    MessagePack.unpack(obj.to_msgpack)
   end
 end
 
