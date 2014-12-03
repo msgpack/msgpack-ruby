@@ -427,7 +427,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 return read_raw_body_begin(uk, true);
             }
 
-        case 0xdb:  // raw 32 / str 16
+        case 0xdb:  // raw 32 / str 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
