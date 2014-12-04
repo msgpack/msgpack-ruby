@@ -78,13 +78,13 @@ void msgpack_unpacker_static_init();
 
 void msgpack_unpacker_static_destroy();
 
-void msgpack_unpacker_init(msgpack_unpacker_t* uk);
+void _msgpack_unpacker_init(msgpack_unpacker_t* uk);
 
-void msgpack_unpacker_destroy(msgpack_unpacker_t* uk);
+void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk);
 
 void msgpack_unpacker_mark(msgpack_unpacker_t* uk);
 
-void msgpack_unpacker_reset(msgpack_unpacker_t* uk);
+void _msgpack_unpacker_reset(msgpack_unpacker_t* uk);
 
 static inline void msgpack_unpacker_set_symbolized_keys(msgpack_unpacker_t* uk, bool enable)
 {
