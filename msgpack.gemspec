@@ -1,4 +1,4 @@
-$:.push File.expand_path("../lib", __FILE__)
+$LOAD_PATH.push File.expand_path("../lib", __FILE__)
 require 'msgpack/version'
 
 Gem::Specification.new do |s|
@@ -6,16 +6,21 @@ Gem::Specification.new do |s|
   s.version = MessagePack::VERSION
   s.summary = "MessagePack, a binary-based efficient data interchange format."
   s.description = %q{MessagePack is a binary-based efficient object serialization library. It enables to exchange structured objects between many languages like JSON. But unlike JSON, it is very fast and small.}
-  s.author = "Sadayuki Furuhashi"
-  s.email = "frsyuki@gmail.com"
+  s.authors = ["Sadayuki Furuhashi", "Theo Hultberg"]
+  s.email = ["frsyuki@gmail.com", "theo@iconara.net"]
   s.license = "Apache 2.0"
   s.homepage = "http://msgpack.org/"
   s.rubyforge_project = "msgpack"
   s.has_rdoc = false
-  s.files = `git ls-files`.split("\n")
-  s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
   s.require_paths = ["lib"]
-  s.extensions = ["ext/msgpack/extconf.rb"]
+  if /java/ =~ RUBY_PLATFORM
+    s.files = Dir['lib/**/*.rb', 'lib/**/*.jar']
+    s.platform = Gem::Platform.new('java')
+  else
+    s.files = `git ls-files`.split("\n")
+    s.extensions = ["ext/msgpack/extconf.rb"]
+  end
+  s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
 
   s.add_development_dependency 'bundler', ['~> 1.0']
   s.add_development_dependency 'rake', ['~> 0.9.2']
