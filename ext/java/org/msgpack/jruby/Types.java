@@ -2,6 +2,7 @@ package org.msgpack.jruby;
 
 
 public interface Types {
+  public static final byte FIXSTR   = (byte) 0xa0; // This is actually not header byte, but prefix bit mask
   public static final byte NIL      = (byte) 0xc0;
   public static final byte FALSE    = (byte) 0xc2;
   public static final byte TRUE     = (byte) 0xc3;

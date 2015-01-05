@@ -176,15 +176,16 @@ public class Encoder {
   private void appendFloat(RubyFloat object) {
     double value = object.getDoubleValue();
     float f = (float) value;
-    if (Double.compare(f, value) == 0) {
-      ensureRemainingCapacity(5);
-      buffer.put(FLOAT32);
-      buffer.putFloat(f);
-    } else {
+    //TODO: msgpack-ruby original does encode this value as Double, not float
+    // if (Double.compare(f, value) == 0) {
+    //   ensureRemainingCapacity(5);
+    //   buffer.put(FLOAT32);
+    //   buffer.putFloat(f);
+    // } else {
       ensureRemainingCapacity(9);
       buffer.put(FLOAT64);
       buffer.putDouble(value);
-    }
+    // }
   }
 
   private void appendString(RubyString object) {
@@ -197,12 +198,13 @@ public class Encoder {
     int length = bytes.length();
     if (length < 32 && !binary) {
       ensureRemainingCapacity(1 + length);
-      buffer.put((byte) (length | 0xa0));
-    } else if (length < 0xff) {
-      ensureRemainingCapacity(2 + length);
-      buffer.put(binary ? BIN8 : STR8);
-      buffer.put((byte) length);
-    } else if (length < 0xffff) {
+      buffer.put((byte) (length | FIXSTR));
+    //TODO: msgpack-ruby original does encode this value as RAW16 (currently should be BIN8/STR8)
+    // } else if (length <= 0xff) {
+    //   ensureRemainingCapacity(2 + length);
+    //   buffer.put(binary ? BIN8 : STR8);
+    //   buffer.put((byte) length);
+    } else if (length <= 0xffff) {
       ensureRemainingCapacity(3 + length);
       buffer.put(binary ? BIN16 : STR16);
       buffer.putShort((short) length);
