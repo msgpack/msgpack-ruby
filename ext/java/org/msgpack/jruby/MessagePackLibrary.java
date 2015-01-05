@@ -5,6 +5,8 @@ import org.jruby.Ruby;
 import org.jruby.RubyModule;
 import org.jruby.RubyClass;
 import org.jruby.RubyString;
+import org.jruby.RubyNil;
+import org.jruby.RubyBoolean;
 import org.jruby.RubyHash;
 import org.jruby.runtime.load.Library;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -94,6 +96,17 @@ public class MessagePackLibrary implements Library {
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"load"})
     public static IRubyObject unpack(ThreadContext ctx, IRubyObject recv, IRubyObject[] args) {
       Decoder decoder = new Decoder(ctx.getRuntime(), args[0].asString().getBytes());
+      if (args.length > 1) {
+        if (args[args.length - 1] instanceof RubyHash) {
+          Ruby runtime = ctx.getRuntime();
+          IRubyObject symbolizeKeys = ((RubyHash) args[args.length - 1]).fastARef((IRubyObject) runtime.getSymbolTable().getSymbol("symbolize_keys"));
+          if (symbolizeKeys instanceof RubyNil || symbolizeKeys instanceof RubyBoolean.False) {
+            decoder.symbolizeKeys(false);
+          } else {
+            decoder.symbolizeKeys(true);
+          }
+        }
+      }
       return decoder.next();
     }
   }

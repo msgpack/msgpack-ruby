@@ -11,6 +11,7 @@ import org.jruby.Ruby;
 import org.jruby.RubyObject;
 import org.jruby.RubyClass;
 import org.jruby.RubyBignum;
+import org.jruby.RubyString;
 import org.jruby.RubyHash;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -30,6 +31,7 @@ public class Decoder implements Iterator<IRubyObject> {
   private final RubyClass underflowErrorClass;
 
   private ByteBuffer buffer;
+  private boolean symbolizeKeys;
 
   public Decoder(Ruby runtime) {
     this(runtime, new byte[] {}, 0, 0);
@@ -46,6 +48,10 @@ public class Decoder implements Iterator<IRubyObject> {
     this.unpackErrorClass = runtime.getModule("MessagePack").getClass("UnpackError");
     this.underflowErrorClass = runtime.getModule("MessagePack").getClass("UnderflowError");
     feed(bytes, offset, length);
+  }
+
+  public void symbolizeKeys(boolean symbolize) {
+    this.symbolizeKeys = symbolize;
   }
 
   public void feed(byte[] bytes) {
@@ -98,7 +104,11 @@ public class Decoder implements Iterator<IRubyObject> {
   private IRubyObject consumeHash(int size) {
     RubyHash hash = RubyHash.newHash(runtime);
     for (int i = 0; i < size; i++) {
-      hash.fastASet(next(), next());
+      IRubyObject key = next();
+      if (this.symbolizeKeys && key instanceof RubyString) {
+          key = ((RubyString) key).intern();
+      }
+      hash.fastASet(key, next());
     }
     return hash;
   }

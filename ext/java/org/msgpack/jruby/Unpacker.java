@@ -43,7 +43,7 @@ public class Unpacker extends RubyObject {
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
     if (args.length > 0) {
       if (args[args.length - 1] instanceof RubyHash) {
-
+        //TODO: symbolize_keys
       } else if (!(args[0] instanceof RubyHash)) {
         setStream(ctx, args[0]);
       }
