@@ -1,8 +1,8 @@
 require "msgpack/version"
 
-if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
-  require 'jruby'
-  require 'msgpack/msgpack.jar'
+if defined?(RUBY_ENGINE) && RUBY_ENGINE == "jruby" # This is same with `/java/ =~ RUBY_VERSION`
+  require "java"
+  require "msgpack/msgpack.jar"
   org.msgpack.jruby.MessagePackLibrary.new.load(JRuby.runtime, false)
 else
   begin
