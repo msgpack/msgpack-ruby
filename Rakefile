@@ -30,8 +30,12 @@ if RUBY_PLATFORM =~ /java/
 
   Rake::JavaExtensionTask.new('msgpack', spec) do |ext|
     ext.ext_dir = 'ext/java'
+    jruby_home = RbConfig::CONFIG['prefix']
+    jars = ["#{jruby_home}/lib/jruby.jar"]
+    ext.classpath = jars.map { |x| File.expand_path(x) }.join(':')
     ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
-    ext.classpath = Dir['lib/msgpack/java/*.jar'].map { |x| File.expand_path x }.join ':'
+    ext.source_version = '1.6'
+    ext.target_version = '1.6'
   end
 
   RSpec::Core::RakeTask.new(:spec) do |t|

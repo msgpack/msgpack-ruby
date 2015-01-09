@@ -15,7 +15,13 @@ end
 
 require 'msgpack'
 
-Packer = MessagePack::Packer
-Unpacker = MessagePack::Unpacker
-Buffer = MessagePack::Buffer
-
+if /java/ =~ RUBY_PLATFORM
+  RSpec.configure do |c|
+    c.treat_symbols_as_metadata_keys_with_true_values = true
+    c.filter_run_excluding :encodings => !(defined? Encoding)
+  end
+else
+  Packer = MessagePack::Packer
+  Unpacker = MessagePack::Unpacker
+  Buffer = MessagePack::Buffer
+end
