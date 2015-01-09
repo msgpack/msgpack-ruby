@@ -1,4 +1,10 @@
 
+2015-01-09 version 0.5.10:
+
+* Merged msgpack-jruby by @iconara. JRuby can run `require 'msgpack'` to use
+  msgpack-jruby.
+
+
 2014-10-05 version 0.5.9:
 
 * Fixed Unpacker#read_map_header and #read_array_header
