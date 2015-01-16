@@ -8,6 +8,7 @@ rvm:
   - ruby-head
   - rbx-2
   - jruby-19mode
+  - jruby-head
 
 os:
   - linux
@@ -23,3 +24,4 @@ gemfile:
 matrix:
   allow_failures:
     - rvm: ruby-head
+    - rvm: jruby-head
