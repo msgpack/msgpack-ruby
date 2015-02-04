@@ -23,9 +23,6 @@ describe MessagePack do
   end
 
   it "msgpack str 8 type" do
-    if /java/ =~ RUBY_PLATFORM
-      skip "str 8 type is not supported in JRuby (incompatibility)"
-    end
     MessagePack.unpack([0xd9, 0x00].pack('C*')).should == ""
     MessagePack.unpack([0xd9, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xd9, 0x02].pack('C*') + 'aa').should == "aa"
@@ -44,27 +41,18 @@ describe MessagePack do
   end
 
   it "msgpack bin 8 type" do
-    if /java/ =~ RUBY_PLATFORM
-      skip "bin 8 type is not supported in JRuby (incompatibility)"
-    end
     MessagePack.unpack([0xc4, 0x00].pack('C*')).should == ""
     MessagePack.unpack([0xc4, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xc4, 0x02].pack('C*') + 'aa').should == "aa"
   end
 
   it "msgpack bin 16 type" do
-    if /java/ =~ RUBY_PLATFORM
-      skip "bin 16 type is not supported in JRuby (incompatibility)"
-    end
     MessagePack.unpack([0xc5, 0x00, 0x00].pack('C*')).should == ""
     MessagePack.unpack([0xc5, 0x00, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xc5, 0x00, 0x02].pack('C*') + 'aa').should == "aa"
   end
 
   it "msgpack bin 32 type" do
-    if /java/ =~ RUBY_PLATFORM
-      skip "bin 32 type is not supported in JRuby (incompatibility)"
-    end
     MessagePack.unpack([0xc6, 0x00, 0x00, 0x00, 0x00].pack('C*')).should == ""
     MessagePack.unpack([0xc6, 0x00, 0x00, 0x00, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xc6, 0x00, 0x00, 0x00, 0x02].pack('C*') + 'aa').should == "aa"
