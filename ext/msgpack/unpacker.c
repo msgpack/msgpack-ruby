@@ -52,7 +52,7 @@ void msgpack_unpacker_static_destroy()
 
 #define HEAD_BYTE_REQUIRED 0xc1
 
-void msgpack_unpacker_init(msgpack_unpacker_t* uk)
+void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
 {
     memset(uk, 0, sizeof(msgpack_unpacker_t));
 
@@ -73,7 +73,7 @@ void msgpack_unpacker_init(msgpack_unpacker_t* uk)
     uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
 }
 
-void msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
+void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 {
 #ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_free(&s_stack_rmem, uk->stack);
@@ -101,7 +101,7 @@ void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
     rb_gc_mark(uk->buffer_ref);
 }
 
-void msgpack_unpacker_reset(msgpack_unpacker_t* uk)
+void _msgpack_unpacker_reset(msgpack_unpacker_t* uk)
 {
     msgpack_buffer_clear(UNPACKER_BUFFER_(uk));
 

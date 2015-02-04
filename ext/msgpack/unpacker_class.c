@@ -42,14 +42,14 @@ static void Unpacker_free(msgpack_unpacker_t* uk)
     if(uk == NULL) {
         return;
     }
-    msgpack_unpacker_destroy(uk);
+    _msgpack_unpacker_destroy(uk);
     free(uk);
 }
 
 static VALUE Unpacker_alloc(VALUE klass)
 {
     msgpack_unpacker_t* uk = ALLOC_N(msgpack_unpacker_t, 1);
-    msgpack_unpacker_init(uk);
+    _msgpack_unpacker_init(uk);
 
     VALUE self = Data_Wrap_Struct(klass, msgpack_unpacker_mark, Unpacker_free, uk);
 
@@ -292,7 +292,7 @@ static VALUE Unpacker_reset(VALUE self)
 {
     UNPACKER(self, uk);
 
-    msgpack_unpacker_reset(uk);
+    _msgpack_unpacker_reset(uk);
 
     return Qnil;
 }
@@ -318,7 +318,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
 
     VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
     UNPACKER(self, uk);
-    //msgpack_unpacker_reset(s_unpacker);
+    //_msgpack_unpacker_reset(s_unpacker);
     //msgpack_buffer_reset_io(UNPACKER_BUFFER_(s_unpacker));
 
     /* prefer reference than copying; see MessagePack_Unpacker_module_init */
