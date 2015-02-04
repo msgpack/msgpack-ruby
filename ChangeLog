@@ -1,4 +1,14 @@
 
+2015-02-04 version 0.5.11:
+
+* Fixed Encoding::CompatibilityError error when serializing a long string
+  longer than write_reference_threshold (5KB by default) and whose encoding
+  is not ASCII-8BIT.
+* Fix read_(map|array)_header (@funny-falcon++).
+* Internally, rename msgpack_unpacker_{init,reset,destroy} functions
+  so that we can load msgpack-c in the same process (@miihael++)
+
+
 2015-01-09 version 0.5.10:
 
 * Merged msgpack-jruby by @iconara. JRuby can run `require 'msgpack'` to use
