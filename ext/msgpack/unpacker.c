@@ -532,7 +532,7 @@ int msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk, uint32_t* result_
         return b;
     }
 
-    if(0x90 < b && b < 0x9f) {
+    if(0x90 <= b && b <= 0x9f) {
         *result_size = b & 0x0f;
 
     } else if(b == 0xdc) {
@@ -560,7 +560,7 @@ int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk, uint32_t* result_si
         return b;
     }
 
-    if(0x80 < b && b < 0x8f) {
+    if(0x80 <= b && b <= 0x8f) {
         *result_size = b & 0x0f;
 
     } else if(b == 0xde) {
