@@ -332,7 +332,19 @@ void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string)
 
     if(b->io != Qnil) {
         msgpack_buffer_flush(b);
+#ifdef COMPAT_HAVE_ENCODING
+        if (ENCODING_GET(string) == s_enc_ascii8bit) {
+            rb_funcall(b->io, b->io_write_all_method, 1, string);
+        } else if(!STR_DUP_LIKELY_DOES_COPY(string)) {
+            VALUE s = rb_str_dup(string);
+            ENCODING_SET(s, s_enc_ascii8bit);
+            rb_funcall(b->io, b->io_write_all_method, 1, s);
+        } else {
+            msgpack_buffer_append(b, RSTRING_PTR(string), length);
+        }
+#else
         rb_funcall(b->io, b->io_write_all_method, 1, string);
+#endif
 
     } else if(!STR_DUP_LIKELY_DOES_COPY(string)) {
         _msgpack_buffer_append_reference(b, string);
