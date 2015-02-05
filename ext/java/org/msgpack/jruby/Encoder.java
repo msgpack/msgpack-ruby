@@ -192,7 +192,7 @@ public class Encoder {
     Encoding encoding = object.getEncoding();
     boolean binary = encoding == binaryEncoding;
     if (encoding != utf8Encoding && encoding != binaryEncoding) {
-      object = (RubyString) ((RubyString) object).encode(runtime.getCurrentContext(), RubyEncoding.newEncoding(runtime, utf8Encoding));
+      object = (RubyString) ((RubyString) object).encode(runtime.getCurrentContext(), runtime.getEncodingService().getEncoding(utf8Encoding));
     }
     ByteList bytes = object.getByteList();
     int length = bytes.length();
