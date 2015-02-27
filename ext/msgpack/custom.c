@@ -31,9 +31,23 @@ static st_table *msgpack_custom_types;
 
 #define MSGPACK_EXT_TYPE_RUBY 1
 
-VALUE msgpack_custom_unpack_type(char *buffer, size_t sz)
+VALUE msgpack_custom_unpack_type(const char *buffer, size_t sz)
 {
-    return Qnil;
+    const char *p = buffer;
+    size_t data_sz;
+
+    if (*p++ != MSGPACK_EXT_TYPE_RUBY) {
+        return Qnil;
+    }
+
+    /* only deserialize types that we've registered */
+    if (!st_lookup(msgpack_custom_types, (st_data_t) p, NULL)) {
+        return Qnil;
+    }
+
+    p += strlen(p) + 1;
+    data_sz = sz - (p - buffer) + 1;
+    return rb_funcall(mMarshal, s_load, 1, rb_str_new(p, data_sz));
 }
 
 static unsigned char get_ext_byte(size_t sz)

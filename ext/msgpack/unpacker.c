@@ -18,6 +18,7 @@
 
 #include "unpacker.h"
 #include "rmem.h"
+#include "custom.h"
 
 #if !defined(DISABLE_RMEM) && !defined(DISABLE_UNPACKER_STACK_RMEM) && \
         MSGPACK_UNPACKER_STACK_CAPACITY * MSGPACK_UNPACKER_STACK_SIZE <= MSGPACK_RMEM_PAGE_SIZE
@@ -323,9 +324,36 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc3:  // true
             return object_complete(uk, Qtrue);
 
-        //case 0xc7: // ext 8
-        //case 0xc8: // ext 16
-        //case 0xc9: // ext 32
+        case 0xc7: // ext 8
+        case 0xc8: // ext 16
+        case 0xc9: // ext 32
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, (1UL << (b - 0xc7)));
+                uint32_t count = 0;
+                if (b == 0xc7)
+                    count = cb->u8;
+                else if (b == 0xc8)
+                    count = _msgpack_be16(cb->u16);
+                else if (b == 0xc9)
+                    count = _msgpack_be32(cb->u32);
+
+                if(count == 0) {
+                    return PRIMITIVE_UNEXPECTED_TYPE;
+                }
+
+                /* read_raw_body_begin sets uk->reading_raw */
+                uk->reading_raw_remaining = count + 1; /* add 1 for the type byte */
+                int ret = read_raw_body_begin(uk, false);
+                if (ret == PRIMITIVE_OBJECT_COMPLETE) {
+                    VALUE v = msgpack_custom_unpack_type(RSTRING_PTR(uk->last_object), RSTRING_LEN(uk->last_object));
+                    if (!NIL_P(v)) {
+                        uk->last_object = v;
+                    } else {
+                        ret = PRIMITIVE_UNEXPECTED_TYPE;
+                    }
+                }
+                return ret;
+            }
 
         case 0xca:  // float
             {
@@ -399,9 +427,15 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
         //case 0xd4:  // fixext 1
         //case 0xd5:  // fixext 2
-        //case 0xd6:  // fixext 4
-        //case 0xd7:  // fixext 8
-        //case 0xd8:  // fixext 16
+        case 0xd6:  // fixext 4
+        case 0xd7:  // fixext 8
+        case 0xd8:  // fixext 16
+            {
+                size_t sz = 1UL << (b - 0xd4);
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, sz);
+                VALUE v = msgpack_custom_unpack_type(cb->buffer, sz);
+                return !NIL_P(v) ? object_complete(uk, v) : PRIMITIVE_UNEXPECTED_TYPE;
+            }
 
         case 0xd9:  // raw 8 / str 8
             {

@@ -22,7 +22,7 @@
 
 void MessagePack_custom_module_init(VALUE mMessagePack);
 
-VALUE msgpack_custom_unpack_type(char *buffer, size_t sz);
+VALUE msgpack_custom_unpack_type(const char *buffer, size_t sz);
 
 #endif
 
