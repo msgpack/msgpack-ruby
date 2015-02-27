@@ -188,6 +188,12 @@ static inline void msgpack_buffer_write_2(msgpack_buffer_t* b, int byte1, unsign
     *(b->tail.last++) = (char) byte2;
 }
 
+static inline void msgpack_buffer_write_data(msgpack_buffer_t* b, const void* data, size_t length)
+{
+    memcpy(b->tail.last, data, length);
+    b->tail.last += length;
+}
+
 static inline void msgpack_buffer_write_byte_and_data(msgpack_buffer_t* b, int byte, const void* data, size_t length)
 {
     (*b->tail.last++) = (char) byte;
