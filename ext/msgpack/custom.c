@@ -22,6 +22,8 @@
 #include "core_ext.h"
 
 static ID s_to_msgpack;
+static ID s___to_msgpack;
+static ID s_from_msgpack;
 static ID s_dump;
 static ID s_load;
 static VALUE mMarshal;
@@ -35,19 +37,27 @@ VALUE msgpack_custom_unpack_type(const char *buffer, size_t sz)
 {
     const char *p = buffer;
     size_t data_sz;
+    VALUE str, cls, val;
 
     if (*p++ != MSGPACK_EXT_TYPE_RUBY) {
         return Qnil;
     }
 
     /* only deserialize types that we've registered */
-    if (!st_lookup(msgpack_custom_types, (st_data_t) p, NULL)) {
+    if (!st_lookup(msgpack_custom_types, (st_data_t) p, (st_data_t *) &cls)) {
         return Qnil;
     }
 
-    p += strlen(p) + 1;
-    data_sz = sz - (p - buffer) + 1;
-    return rb_funcall(mMarshal, s_load, 1, rb_str_new(p, data_sz));
+    p += strlen(p) + 1; /* skip past the null byte */
+    data_sz = sz - (p - buffer);
+    str = rb_str_new(p, data_sz);
+    if (NIL_P(cls)) {
+        val = rb_funcall(mMarshal, s_load, 1, str);
+    } else {
+        val = rb_funcall(cls, s_from_msgpack, 1, str);
+    }
+
+    return val;
 }
 
 static unsigned char get_ext_byte(size_t sz)
@@ -73,15 +83,22 @@ static unsigned char get_ext_byte(size_t sz)
 static VALUE custom_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     const char * clsname;
-    VALUE data;
+    VALUE cls, data;
     unsigned char ext;
     size_t header_sz = 0, body_sz = 0, data_sz = 0, clsname_sz;
 
     ENSURE_PACKER(argc, argv, packer, pk);
 
+    cls = rb_obj_class(self);
     clsname = rb_obj_classname(self);
     clsname_sz = strlen(clsname);
-    data = rb_funcall(mMarshal, s_dump, 1, self);
+
+    if (rb_method_boundp(cls, s___to_msgpack, 0)) {
+        data = rb_funcall(self, s___to_msgpack, 0);
+    } else {
+        data = rb_funcall(mMarshal, s_dump, 1, self);
+    }
+
     Check_Type(data, T_STRING);
 
     /*
@@ -139,10 +156,29 @@ static VALUE MessagePack_register_type_module_method(VALUE self, VALUE cls)
 
     clsname = rb_class2name(cls);
     if (!st_lookup(msgpack_custom_types, (st_data_t) clsname, NULL)) {
+        VALUE singleton_cls = rb_singleton_class(cls);
+        bool define_to_msgpack = false;
+
         if (!rb_method_boundp(cls, s_to_msgpack, 0)) {
+            define_to_msgpack = true;
+        } else {
+            /* if arity is 0, then this is a custom `to_msgpack` --
+             * we need to alias it to `__to_msgpack` and it will be called
+             * by our `to_msgpack`.
+             */
+            if (rb_mod_method_arity(cls, s_to_msgpack) == 0) {
+                rb_define_alias(cls, "__to_msgpack", "to_msgpack");
+                define_to_msgpack = true;
+            }
+        }
+
+        if (define_to_msgpack) {
             rb_define_method(cls, "to_msgpack", custom_to_msgpack, -1);
         }
-        st_insert(msgpack_custom_types, (st_data_t) clsname, 1);
+
+        /* if the class defines a `from_msgpack` method, we'll use that to unpack */
+        st_insert(msgpack_custom_types, (st_data_t) clsname,
+            rb_method_boundp(singleton_cls, s_from_msgpack, 0) ? (st_data_t) cls : (st_data_t) Qnil);
     }
 
     return Qnil;
@@ -151,6 +187,8 @@ static VALUE MessagePack_register_type_module_method(VALUE self, VALUE cls)
 void MessagePack_custom_module_init(VALUE mMessagePack)
 {
     s_to_msgpack = rb_intern("to_msgpack");
+    s___to_msgpack = rb_intern("__to_msgpack");
+    s_from_msgpack = rb_intern("from_msgpack");
     s_dump = rb_intern("dump");
     s_load = rb_intern("load");
 
