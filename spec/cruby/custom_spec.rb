@@ -26,6 +26,10 @@ class CustomMessagePackExtensionWithSerializer
   end
 end
 
+class CustomMessagePackExtensionWithSerializerNoFrom
+  def to_msgpack; end
+end
+
 describe MessagePack do
   before(:all) do
     MessagePack.register_type CustomMessagePackExtension
@@ -73,5 +77,18 @@ describe MessagePack do
     obj = MessagePack.unpack(packed)
     expect(CustomMessagePackExtensionWithSerializer.deserialized).to be == "1"
     expect(obj.class).to be CustomMessagePackExtensionWithSerializer
+  end
+
+  it 'should support custom types in collections' do
+    a = [ CustomMessagePackExtension.new ]
+    packed = MessagePack.pack(a)
+    a = MessagePack.unpack(packed)
+    expect(a[0].class).to be CustomMessagePackExtension
+  end
+
+  it 'should raise when a custom serializer does not implement from_msgpack' do
+    expect {
+      MessagePack.register_type CustomMessagePackExtensionWithSerializerNoFrom
+    }.to raise_error
   end
 end

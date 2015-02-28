@@ -158,6 +158,8 @@ static VALUE MessagePack_register_type_module_method(VALUE self, VALUE cls)
     if (!st_lookup(msgpack_custom_types, (st_data_t) clsname, NULL)) {
         VALUE singleton_cls = rb_singleton_class(cls);
         bool define_to_msgpack = false;
+        bool has_custom_to_msgpack = false;
+        int has_from_msgpack = 0;
 
         if (!rb_method_boundp(cls, s_to_msgpack, 0)) {
             define_to_msgpack = true;
@@ -168,7 +170,7 @@ static VALUE MessagePack_register_type_module_method(VALUE self, VALUE cls)
              */
             if (rb_mod_method_arity(cls, s_to_msgpack) == 0) {
                 rb_define_alias(cls, "__to_msgpack", "to_msgpack");
-                define_to_msgpack = true;
+                define_to_msgpack = has_custom_to_msgpack = true;
             }
         }
 
@@ -176,9 +178,14 @@ static VALUE MessagePack_register_type_module_method(VALUE self, VALUE cls)
             rb_define_method(cls, "to_msgpack", custom_to_msgpack, -1);
         }
 
+        has_from_msgpack = rb_method_boundp(singleton_cls, s_from_msgpack, 0);
+        if (has_custom_to_msgpack && !has_from_msgpack) {
+            rb_raise(rb_eArgError, "class %s must define from_msgpack", clsname);
+        }
+
         /* if the class defines a `from_msgpack` method, we'll use that to unpack */
         st_insert(msgpack_custom_types, (st_data_t) clsname,
-            rb_method_boundp(singleton_cls, s_from_msgpack, 0) ? (st_data_t) cls : (st_data_t) Qnil);
+            has_from_msgpack ? (st_data_t) cls : (st_data_t) Qnil);
     }
 
     return Qnil;
