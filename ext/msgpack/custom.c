@@ -26,6 +26,9 @@ static ID s___to_msgpack;
 static ID s_from_msgpack;
 static ID s_dump;
 static ID s_load;
+static ID s_instance_method;
+static ID s_arity;
+
 static VALUE mMarshal;
 static VALUE ePackError;
 
@@ -148,6 +151,12 @@ static VALUE custom_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+static int get_instance_method_arity(VALUE cls, ID method_id)
+{
+    VALUE method = rb_funcall(cls, s_instance_method, 1, ID2SYM(method_id));
+    return FIX2INT(rb_funcall(method, s_arity, 0));
+}
+
 static VALUE MessagePack_register_type_module_method(VALUE self, VALUE cls)
 {
     const char * clsname;
@@ -168,7 +177,7 @@ static VALUE MessagePack_register_type_module_method(VALUE self, VALUE cls)
              * we need to alias it to `__to_msgpack` and it will be called
              * by our `to_msgpack`.
              */
-            if (rb_mod_method_arity(cls, s_to_msgpack) == 0) {
+            if (get_instance_method_arity(cls, s_to_msgpack) == 0) {
                 rb_define_alias(cls, "__to_msgpack", "to_msgpack");
                 define_to_msgpack = has_custom_to_msgpack = true;
             }
@@ -198,6 +207,8 @@ void MessagePack_custom_module_init(VALUE mMessagePack)
     s_from_msgpack = rb_intern("from_msgpack");
     s_dump = rb_intern("dump");
     s_load = rb_intern("load");
+    s_instance_method = rb_intern("instance_method");
+    s_arity = rb_intern("arity");
 
     mMarshal = rb_define_module("Marshal");
 
