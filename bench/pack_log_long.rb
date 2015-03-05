@@ -18,10 +18,10 @@ data_structure = {
   'agent' => 'Mozilla/4.08 [en] (Win98; I ;Nav)',
 }
 
-seconds = 5 # 3600 # 1 hour
+seconds = 3600 # 1 hour
 
 Viiite.bench do |b|
-  b.range_over([2, 4, 8, 16], :threads) do |threads|
+  b.range_over([1, 2, 4, 8, 16], :threads) do |threads|
     b.report(:plain) do
       ths = []
       end_at = Time.now + seconds
