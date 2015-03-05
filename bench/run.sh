@@ -1,6 +1,8 @@
 #!/bin/sh
 
-# execute `rbenv shell 2.2.1`(or jruby-x.x.x or ...) and `bundle install`
+# prerequisites
+# $ rbenv shell 2.2.1 (or jruby-x.x.x or ...)
+# $ rake install
 
 echo "pack"
 viiite report --regroup bench,runs bench/pack.rb 
