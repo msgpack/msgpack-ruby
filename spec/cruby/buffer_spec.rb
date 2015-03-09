@@ -379,7 +379,6 @@ describe Buffer do
   end
 
   it 'big write -> short write' do
-    biglen = 1024*1024 + 2
     big1 = "a" * (1024*1024 + 2)
 
     case_keys.each {|k|
@@ -557,7 +556,7 @@ describe Buffer do
         n = r.rand(1024*1400)
         begin
           b.skip_all(n)
-          ex = s.slice!(0, n)
+          s.slice!(0, n)
           b.size.should == s.size
         ensure EOFError
           b.size.should == s.size
@@ -569,4 +568,3 @@ describe Buffer do
     }
   end
 end
-
