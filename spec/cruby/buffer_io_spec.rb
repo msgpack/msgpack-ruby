@@ -137,7 +137,7 @@ describe Buffer do
 
     50.times {
       fragments = []
-      sx = r.bytes(0)
+      r.bytes(0)
 
       r.rand(4).times do
         n = r.rand(1024*1400)
@@ -253,4 +253,3 @@ describe Buffer do
     }
   end
 end
-
