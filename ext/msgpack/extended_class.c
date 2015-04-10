@@ -63,9 +63,9 @@ static VALUE Extended_initialize(VALUE self, VALUE type, VALUE data)
 
 static VALUE Extended_create(VALUE klass, VALUE type, VALUE data)
 {
-    VALUE obj = rb_obj_alloc(klass);
-    VALUE argv[2] = { type, data };
-    rb_obj_call_init(obj, 2, argv);
+    VALUE obj;
+
+    obj = rb_funcall(klass, rb_intern("new"), 2, type, data);
 
     return obj;
 }
