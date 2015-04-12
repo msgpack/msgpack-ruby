@@ -117,7 +117,7 @@ static VALUE Extended_eql(VALUE self, VALUE other)
 
 void MessagePack_Extended_module_init(VALUE mMessagePack)
 {
-    cMessagePack_Extended = rb_define_class_under(mMessagePack, "Extended", rb_cObject);
+    cMessagePack_Extended = rb_define_class_under(mMessagePack, "ExtensionValue", rb_cObject);
 
     rb_define_alloc_func(cMessagePack_Extended, Extended_alloc);
 

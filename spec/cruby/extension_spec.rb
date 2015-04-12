@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe MessagePack do
   it 'unpacks to the original data' do
-    data = MessagePack::Extended.new(1, " " * (1 << 16))
+    data = MessagePack::ExtensionValue.new(1, " " * (1 << 16))
     packed = MessagePack.pack(data)
 
     expect(MessagePack.unpack(packed))
@@ -10,17 +10,17 @@ describe MessagePack do
   end
 
   it "raises an error when type type is out of range" do
-    expect { MessagePack::Extended.new(128, "") }
+    expect { MessagePack::ExtensionValue.new(128, "") }
       .to raise_error
 
-    expect { MessagePack::Extended.new(-129, "") }
+    expect { MessagePack::ExtensionValue.new(-129, "") }
       .to raise_error
   end
 
   describe ".eql?" do
     context "comparison with another object" do
       it "returns false" do
-        a = MessagePack::Extended.new(1, "foo")
+        a = MessagePack::ExtensionValue.new(1, "foo")
         b = "foo"
 
         expect(a).
@@ -30,8 +30,8 @@ describe MessagePack do
 
     context "same type and data" do
       it "returns true" do
-        a = MessagePack::Extended.new(1, "foo")
-        b = MessagePack::Extended.new(1, "foo")
+        a = MessagePack::ExtensionValue.new(1, "foo")
+        b = MessagePack::ExtensionValue.new(1, "foo")
 
         expect(a).
           to eql b
@@ -40,8 +40,8 @@ describe MessagePack do
 
     context "same type but different data" do
       it "returns false" do
-        a = MessagePack::Extended.new(1, "foo")
-        b = MessagePack::Extended.new(1, "bar")
+        a = MessagePack::ExtensionValue.new(1, "foo")
+        b = MessagePack::ExtensionValue.new(1, "bar")
 
         expect(a).
           to_not eql b
@@ -50,8 +50,8 @@ describe MessagePack do
 
     context "different type but same data" do
       it "returns true" do
-        a = MessagePack::Extended.new(1, "foo")
-        b = MessagePack::Extended.new(2, "foo")
+        a = MessagePack::ExtensionValue.new(1, "foo")
+        b = MessagePack::ExtensionValue.new(2, "foo")
 
         expect(a).
           to_not eql b
@@ -62,7 +62,7 @@ describe MessagePack do
 
   describe "#type=" do
     it "sets type" do
-      ext = MessagePack::Extended.new(1, "foo")
+      ext = MessagePack::ExtensionValue.new(1, "foo")
 
       expect {
         ext.type = 2
@@ -70,8 +70,8 @@ describe MessagePack do
     end
 
     it "changed type is equal to initialized with same type" do
-      initialized = MessagePack::Extended.new(2, "foo")
-      changed     = MessagePack::Extended.new(1, "foo")
+      initialized = MessagePack::ExtensionValue.new(2, "foo")
+      changed     = MessagePack::ExtensionValue.new(1, "foo")
 
       changed.type = 2
 

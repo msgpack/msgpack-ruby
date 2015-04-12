@@ -123,7 +123,7 @@ describe Packer do
     "".to_msgpack.class.should == String
     Hash.new.to_msgpack.class.should == String
     Array.new.to_msgpack.class.should == String
-    MessagePack::Extended.new(1, "").to_msgpack.class.should == String
+    MessagePack::ExtensionValue.new(1, "").to_msgpack.class.should == String
   end
 
   class CustomPack01
