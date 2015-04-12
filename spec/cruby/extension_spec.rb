@@ -23,6 +23,16 @@ describe MessagePack do
 
         MessagePack.unpack(packed)
       end
+
+      describe "passed `data` to ##from_msgpack" do
+        it "its encoding should be ASCII-8BIT" do
+          allow(Foo).to receive(:from_msgpack) do |data|
+            expect(data.encoding).to eql Encoding::ASCII_8BIT
+          end
+
+          MessagePack.unpack(packed)
+        end
+      end
     end
   end
 
@@ -32,6 +42,13 @@ describe MessagePack do
 
     expect(MessagePack.unpack(packed))
       .to eql data
+  end
+
+  describe ".data" do
+    it "its encoding should be ASCII-8BIT" do
+      data = MessagePack::ExtensionValue.new(1, " " * (1 << 16)).data
+      expect(data.encoding).to eql Encoding::ASCII_8BIT
+    end
   end
 
   it "raises an error when type type is out of range" do

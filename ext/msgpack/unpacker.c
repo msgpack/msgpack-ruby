@@ -31,6 +31,7 @@ static msgpack_rmem_t s_stack_rmem;
 
 #ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
 static int s_enc_utf8;
+static int s_enc_ascii_8bit;
 #endif
 
 void msgpack_unpacker_static_init()
@@ -41,6 +42,7 @@ void msgpack_unpacker_static_init()
 
 #ifdef COMPAT_HAVE_ENCODING
     s_enc_utf8 = rb_utf8_encindex();
+    s_enc_ascii_8bit = rb_ascii8bit_encindex();
 #endif
 }
 
@@ -273,8 +275,14 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
 static inline int read_extended_body_begin(msgpack_unpacker_t* uk, int8_t type)
 {
     read_raw_body_begin(uk, false);
+
     VALUE obj;
     st_data_t klass_name;
+
+#ifdef COMPAT_HAVE_ENCODING
+    // TODO ruby 2.0 has String#b method
+    ENCODING_SET(uk->last_object, s_enc_ascii_8bit);
+#endif
 
     if (st_lookup(msgpack_extension_mappings, type, &klass_name)) {
         ID from_msgpack_method = rb_intern("from_msgpack");

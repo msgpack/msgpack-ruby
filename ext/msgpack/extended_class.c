@@ -7,6 +7,10 @@
 
 VALUE cMessagePack_Extended;
 
+#ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
+static int s_enc_ascii_8bit;
+#endif
+
 #define EXTENDED(from, name) \
     msgpack_extended_t *name = NULL; \
     Data_Get_Struct(from, msgpack_extended_t, name); \
@@ -60,9 +64,15 @@ static VALUE Extended_initialize(VALUE self, VALUE type, VALUE data)
     EXTENDED(self, ext);
 
     assert_fixnum_type(type);
+    Check_Type(data, T_STRING);
+
+#ifdef COMPAT_HAVE_ENCODING
+    // TODO ruby 2.0 has String#b method
+    ENCODING_SET(data, s_enc_ascii_8bit);
+#endif
 
     ext->type = type;
-    ext->data = StringValue(data);
+    ext->data = data;
 
     return self;
 }
@@ -153,5 +163,10 @@ void MessagePack_Extended_module_init(VALUE mMessagePack)
             "register_extension",
             MessagePack_register_extension_module_method,
             2);
+
+#ifdef COMPAT_HAVE_ENCODING
+    s_enc_ascii_8bit = rb_ascii8bit_encindex();
+#endif
+
 }
 
