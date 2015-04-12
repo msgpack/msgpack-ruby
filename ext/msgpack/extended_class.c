@@ -14,6 +14,15 @@ VALUE cMessagePack_Extended;
         rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
     }
 
+static void assert_fixnum_type(VALUE type)
+{
+    Check_Type(type, T_FIXNUM);
+
+    if ((FIX2INT(type) < INT8_MIN) || (FIX2INT(type) > INT8_MAX)) {
+        rb_raise(rb_eRangeError, "type should be <= %d and >= %d", INT8_MIN, INT8_MAX);
+    }
+}
+
 static void Extended_free(void* data)
 {
     if(data == NULL) {
@@ -49,11 +58,8 @@ static VALUE Extended_alloc(VALUE klass)
 static VALUE Extended_initialize(VALUE self, VALUE type, VALUE data)
 {
     EXTENDED(self, ext);
-    Check_Type(type, T_FIXNUM);
 
-    if ((FIX2INT(type) < INT8_MIN) || (FIX2INT(type) > INT8_MAX)) {
-        rb_raise(rb_eRangeError, "type should be <= %d and >= %d", INT8_MIN, INT8_MAX);
-    }
+    assert_fixnum_type(type);
 
     ext->type = type;
     ext->data = StringValue(data);
@@ -114,6 +120,18 @@ static VALUE Extended_eql(VALUE self, VALUE other)
     return Qtrue;
 }
 
+static VALUE MessagePack_register_extension_module_method(VALUE self, VALUE type, VALUE klass)
+{
+    assert_fixnum_type(type);
+    Check_Type(klass, T_CLASS);
+
+    const int itype = FIX2INT(type);
+    const char *klass_name = rb_class2name(klass);
+
+    st_add_direct(msgpack_extension_mappings, itype, (st_data_t)klass_name);
+
+    return Qnil;
+}
 
 void MessagePack_Extended_module_init(VALUE mMessagePack)
 {
@@ -128,5 +146,12 @@ void MessagePack_Extended_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Extended, "to_msgpack", Extended_to_msgpack, -1);
     rb_define_method(cMessagePack_Extended, "==", Extended_eql, 1);
     rb_define_method(cMessagePack_Extended, "eql?", Extended_eql, 1);
+
+    msgpack_extension_mappings = st_init_numtable();
+
+    rb_define_module_function(mMessagePack,
+            "register_extension",
+            MessagePack_register_extension_module_method,
+            2);
 }
 

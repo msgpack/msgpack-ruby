@@ -1,6 +1,31 @@
 require 'spec_helper'
 
 describe MessagePack do
+  describe "::register_extension" do
+    class Foo
+      MessagePack.register_extension 42, self
+
+      def self.from_msgpack(data)
+      end
+    end
+
+    context "unpacking serialized Extension object `Foo`" do
+      let(:packed) { "\xC7\x03\x2abar" }
+      it "returns the result of Foo##from_msgpack" do
+        result = double("unpacked object")
+        expect(Foo).to receive(:from_msgpack).and_return(result)
+
+        expect(MessagePack.unpack(packed)).to eql result
+      end
+
+      it "passes the `data` to ##from_msgpack" do
+        expect(Foo).to receive(:from_msgpack).with("bar")
+
+        MessagePack.unpack(packed)
+      end
+    end
+  end
+
   it 'unpacks to the original data' do
     data = MessagePack::ExtensionValue.new(1, " " * (1 << 16))
     packed = MessagePack.pack(data)

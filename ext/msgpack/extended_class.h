@@ -6,6 +6,8 @@
 struct msgpack_extended_t;
 typedef struct msgpack_extended_t msgpack_extended_t;
 
+st_table *msgpack_extension_mappings;
+
 struct msgpack_extended_t {
     VALUE type;
     VALUE data;

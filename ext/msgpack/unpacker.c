@@ -273,9 +273,18 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
 static inline int read_extended_body_begin(msgpack_unpacker_t* uk, int8_t type)
 {
     read_raw_body_begin(uk, false);
+    VALUE obj;
+    st_data_t klass_name;
 
-    VALUE argv[2] = { INT2FIX(type), uk->last_object };
-    VALUE obj = rb_class_new_instance(2, argv, cMessagePack_Extended);
+    if (st_lookup(msgpack_extension_mappings, type, &klass_name)) {
+        ID from_msgpack_method = rb_intern("from_msgpack");
+        VALUE klass = rb_path2class((const char *)klass_name);
+        obj = rb_funcall(klass, from_msgpack_method, 1, uk->last_object);
+    } else {
+        VALUE argv[2] = { INT2FIX(type), uk->last_object };
+        obj = rb_class_new_instance(2, argv, cMessagePack_Extended);
+    }
+
     return object_complete(uk, obj);
 }
 
