@@ -102,6 +102,12 @@ describe MessagePack do
     match obj, "\xc9\x00\x01\x00\x01\x01" << ("a" * size)
   end
 
+  def check(len, obj)
+    raw = obj.to_msgpack.to_s
+    raw.length.should == len
+    MessagePack.unpack(raw).should == obj
+  end
+
   def check_ext(overhead, num, type)
     check num+overhead, MessagePack::ExtensionValue.new(type, "a" * num)
   end
