@@ -60,21 +60,6 @@ describe MessagePack do
 
   end
 
-  describe "#create" do
-    it "unpacks to the original data" do
-      data = MessagePack::Extended.create(1, " " * (1 << 16))
-      packed = MessagePack.pack(data)
-
-      expect(MessagePack.unpack(packed))
-        .to eql data
-    end
-
-    it "creates a MessagePack::Extended by default" do
-      expect(MessagePack::Extended.create(1, " " * (1 << 16)))
-        .to be_a MessagePack::Extended
-    end
-  end
-
   describe "#type=" do
     it "sets type" do
       ext = MessagePack::Extended.new(1, "foo")

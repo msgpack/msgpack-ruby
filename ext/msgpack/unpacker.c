@@ -272,11 +272,10 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
 
 static inline int read_extended_body_begin(msgpack_unpacker_t* uk, int8_t type)
 {
-    VALUE s_create = rb_intern("create");
-
     read_raw_body_begin(uk, false);
 
-    VALUE obj = rb_funcall(cMessagePack_Extended, s_create, 2, INT2FIX(type), uk->last_object);
+    VALUE argv[2] = { INT2FIX(type), uk->last_object };
+    VALUE obj = rb_class_new_instance(2, argv, cMessagePack_Extended);
     return object_complete(uk, obj);
 }
 
