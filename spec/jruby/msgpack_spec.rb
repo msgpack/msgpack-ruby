@@ -122,6 +122,12 @@ describe MessagePack do
       unpacked.should == {:hello => 'world', :nested => ['object', {:structure => true}]}
     end
 
+    it 'does not symbolize keys even if other options are present' do
+      packed = MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
+      unpacked = MessagePack.unpack(packed, :other_option => false)
+      unpacked.should == {'hello' => 'world', 'nested' => ['object', {'structure' => true}]}
+    end
+
     it 'can unpack strings with a specified encoding', :encodings do
       packed = MessagePack.pack({utf8enc('hello') => utf8enc('world')})
       unpacked = MessagePack.unpack(packed)
