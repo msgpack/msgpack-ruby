@@ -96,16 +96,10 @@ public class MessagePackLibrary implements Library {
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"load"})
     public static IRubyObject unpack(ThreadContext ctx, IRubyObject recv, IRubyObject[] args) {
       Decoder decoder = new Decoder(ctx.getRuntime(), args[0].asString().getBytes());
-      if (args.length > 1) {
-        if (args[args.length - 1] instanceof RubyHash) {
-          Ruby runtime = ctx.getRuntime();
-          IRubyObject symbolizeKeys = ((RubyHash) args[args.length - 1]).fastARef((IRubyObject) runtime.getSymbolTable().getSymbol("symbolize_keys"));
-          if (symbolizeKeys instanceof RubyNil || symbolizeKeys instanceof RubyBoolean.False) {
-            decoder.symbolizeKeys(false);
-          } else {
-            decoder.symbolizeKeys(true);
-          }
-        }
+      if (args.length > 1 && !args[args.length - 1].isNil()) {
+        RubyHash hash = args[args.length - 1].convertToHash();
+        IRubyObject symbolizeKeys = hash.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
+        decoder.symbolizeKeys(symbolizeKeys != null && symbolizeKeys.isTrue());
       }
       return decoder.next();
     }
