@@ -128,6 +128,13 @@ static VALUE Packer_write_map_header(VALUE self, VALUE n)
     return self;
 }
 
+static VALUE Packer_write_ext_header(VALUE self, VALUE n, VALUE type)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_ext_header(pk, NUM2UINT(n), NUM2INT(type));
+    return self;
+}
+
 static VALUE Packer_flush(VALUE self)
 {
     PACKER(self, pk);
@@ -278,6 +285,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_nil", Packer_write_nil, 0);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
+    rb_define_method(cMessagePack_Packer, "write_ext_header", Packer_write_ext_header, 2);
     rb_define_method(cMessagePack_Packer, "flush", Packer_flush, 0);
 
     /* delegation methods */

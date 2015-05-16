@@ -17,6 +17,7 @@
  */
 
 #include "unpacker.h"
+#include "extended_class.h"
 #include "rmem.h"
 
 #if !defined(DISABLE_RMEM) && !defined(DISABLE_UNPACKER_STACK_RMEM) && \
@@ -30,6 +31,7 @@ static msgpack_rmem_t s_stack_rmem;
 
 #ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
 static int s_enc_utf8;
+static int s_enc_ascii_8bit;
 #endif
 
 void msgpack_unpacker_static_init()
@@ -40,6 +42,7 @@ void msgpack_unpacker_static_init()
 
 #ifdef COMPAT_HAVE_ENCODING
     s_enc_utf8 = rb_utf8_encindex();
+    s_enc_ascii_8bit = rb_ascii8bit_encindex();
 #endif
 }
 
@@ -269,6 +272,30 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
     return read_raw_body_cont(uk);
 }
 
+static inline int read_extended_body_begin(msgpack_unpacker_t* uk, int8_t type)
+{
+    read_raw_body_begin(uk, false);
+
+    VALUE obj;
+    st_data_t klass_name;
+
+#ifdef COMPAT_HAVE_ENCODING
+    // TODO ruby 2.0 has String#b method
+    ENCODING_SET(uk->last_object, s_enc_ascii_8bit);
+#endif
+
+    if (st_lookup(msgpack_extension_mappings, type, &klass_name)) {
+        ID from_msgpack_method = rb_intern("from_msgpack");
+        VALUE klass = rb_path2class((const char *)klass_name);
+        obj = rb_funcall(klass, from_msgpack_method, 1, uk->last_object);
+    } else {
+        VALUE argv[2] = { INT2FIX(type), uk->last_object };
+        obj = rb_class_new_instance(2, argv, cMessagePack_Extended);
+    }
+
+    return object_complete(uk, obj);
+}
+
 static int read_primitive(msgpack_unpacker_t* uk)
 {
     if(uk->reading_raw_remaining > 0) {
@@ -310,6 +337,14 @@ static int read_primitive(msgpack_unpacker_t* uk)
         }
         return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new());
 
+    SWITCH_RANGE(b, 0xd4, 0xd8) // FixExt
+        int count = 1 << ((b - 4) & 0x0f);
+        READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+        int8_t type = cb->i8;
+
+        uk->reading_raw_remaining = count;
+        return read_extended_body_begin(uk, type);
+
     SWITCH_RANGE(b, 0xc0, 0xdf)  // Variable
         switch(b) {
         case 0xc0:  // nil
@@ -323,9 +358,38 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc3:  // true
             return object_complete(uk, Qtrue);
 
-        //case 0xc7: // ext 8
-        //case 0xc8: // ext 16
-        //case 0xc9: // ext 32
+        case 0xc7: // ext 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
+                uint16_t head = _msgpack_be16(cb->i16);
+                uint8_t count = (head >> 8) & 0x00FF;
+                int8_t type   = head & 0x00FF;
+
+                uk->reading_raw_remaining = count;
+                return read_extended_body_begin(uk, type);
+            }
+
+        case 0xc8: // ext 16
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
+                uint32_t head  = _msgpack_be32(cb->i32);
+                uint16_t count = (head >> 16) & 0x0000FFFF;
+                int8_t type    = (head >> 8) & 0x000000FF;
+
+                uk->reading_raw_remaining = count;
+                return read_extended_body_begin(uk, type);
+            }
+
+        case 0xc9: // ext 32
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
+                uint64_t head  = _msgpack_be64(cb->i64);
+                uint32_t count = (head >> 32) & 0x00FFFFFFFF;
+                int8_t type    = (head >> 24) & 0x00000000FF;
+
+                uk->reading_raw_remaining = count;
+                return read_extended_body_begin(uk, type);
+            }
 
         case 0xca:  // float
             {
@@ -396,12 +460,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 int64_t i64 = _msgpack_be64(cb->i64);
                 return object_complete(uk, rb_ll2inum(i64));
             }
-
-        //case 0xd4:  // fixext 1
-        //case 0xd5:  // fixext 2
-        //case 0xd6:  // fixext 4
-        //case 0xd7:  // fixext 8
-        //case 0xd8:  // fixext 16
 
         case 0xd9:  // raw 8 / str 8
             {
