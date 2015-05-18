@@ -271,6 +271,10 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
         unsigned char h = 0xa0 | (uint8_t) n;
         msgpack_buffer_write_1(PACKER_BUFFER_(pk), h);
+    } else if(n < 256) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        unsigned char be = (uint8_t) n;
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xd9, (const void*)&be, 1);
     } else if(n < 65536) {
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
         uint16_t be = _msgpack_be16(n);
@@ -279,6 +283,23 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 5);
         uint32_t be = _msgpack_be32(n);
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xdb, (const void*)&be, 4);
+    }
+}
+
+static inline void msgpack_packer_write_bin_header(msgpack_packer_t* pk, unsigned int n)
+{
+    if(n < 256) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
+        unsigned char be = (uint8_t) n;
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc4, (const void*)&be, 1);
+    } else if(n < 65536) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
+        uint16_t be = _msgpack_be16(n);
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc5, (const void*)&be, 2);
+    } else {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 5);
+        uint32_t be = _msgpack_be32(n);
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc6, (const void*)&be, 4);
     }
 }
 
@@ -316,6 +337,25 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
     }
 }
 
+static inline char *object_id_string(VALUE object)
+{
+    VALUE object_id = rb_funcall(object, rb_intern("object_id"), 0);
+    VALUE object_id_str = rb_funcall(object_id, rb_intern("to_s"), 0);
+    return StringValuePtr(object_id_str);
+}
+
+static inline bool is_byte_array(VALUE string)
+{
+    VALUE ascii_8bit = rb_eval_string("Encoding::ASCII_8BIT");
+    VALUE string_encoding = rb_funcall(string, rb_intern("encoding"), 0);
+
+    if (strcmp(object_id_string(ascii_8bit), object_id_string(string_encoding)) == 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
 
@@ -328,7 +368,12 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
     }
-    msgpack_packer_write_raw_header(pk, (unsigned int)len);
+
+    if(is_byte_array(v)) {
+        msgpack_packer_write_bin_header(pk, (unsigned int)len);
+    } else {
+        msgpack_packer_write_raw_header(pk, (unsigned int)len);
+    }
     msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
 }
 

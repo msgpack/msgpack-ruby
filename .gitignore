@@ -4,6 +4,8 @@
 *.gem
 *.class
 *.jar
+doc
+.yardoc
 .bundle
 Gemfile*
 pkg

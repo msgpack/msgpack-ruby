@@ -30,6 +30,7 @@ static msgpack_rmem_t s_stack_rmem;
 
 #ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
 static int s_enc_utf8;
+static int s_enc_ascii_8bit;
 #endif
 
 void msgpack_unpacker_static_init()
@@ -40,6 +41,7 @@ void msgpack_unpacker_static_init()
 
 #ifdef COMPAT_HAVE_ENCODING
     s_enc_utf8 = rb_utf8_encindex();
+    s_enc_ascii_8bit = rb_ascii8bit_encindex();
 #endif
 }
 
@@ -150,8 +152,16 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 {
 #ifdef COMPAT_HAVE_ENCODING
-    // TODO ruby 2.0 has String#b method
     ENCODING_SET(str, s_enc_utf8);
+#endif
+    return object_complete(uk, str);
+}
+
+static inline int object_complete_byte_array(msgpack_unpacker_t* uk, VALUE str)
+{
+#ifdef COMPAT_HAVE_ENCODING
+    // TODO ruby 2.0 has String#b method
+    ENCODING_SET(str, s_enc_ascii_8bit);
 #endif
     return object_complete(uk, str);
 }
@@ -258,7 +268,11 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
          * because rb_hash_aset freezes keys and it causes copying */
         bool will_freeze = is_reading_map_key(uk);
         VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
-        object_complete_string(uk, string);
+        if(str == true) {
+            object_complete_string(uk, string);
+        } else {
+            object_complete_byte_array(uk, string);
+        }
         if(will_freeze) {
             rb_obj_freeze(string);
         }
@@ -427,7 +441,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 return read_raw_body_begin(uk, true);
             }
 
-        case 0xdb:  // raw 32 / str 16
+        case 0xdb:  // raw 32 / str 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
@@ -444,7 +458,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
                 uint8_t count = cb->u8;
                 if(count == 0) {
-                    return object_complete_string(uk, rb_str_buf_new(0));
+                    return object_complete_byte_array(uk, rb_str_buf_new(0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -456,7 +470,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint16_t count = _msgpack_be16(cb->u16);
                 if(count == 0) {
-                    return object_complete_string(uk, rb_str_buf_new(0));
+                    return object_complete_byte_array(uk, rb_str_buf_new(0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -468,7 +482,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
                 if(count == 0) {
-                    return object_complete_string(uk, rb_str_buf_new(0));
+                    return object_complete_byte_array(uk, rb_str_buf_new(0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -581,7 +595,7 @@ int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk, uint32_t* result_si
     return 0;
 }
 
-int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
+    int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
 {
     while(true) {
         int r = read_primitive(uk);
