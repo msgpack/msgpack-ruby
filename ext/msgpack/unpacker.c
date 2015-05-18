@@ -585,7 +585,7 @@ int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk, uint32_t* result_si
     return 0;
 }
 
-    int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
+int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
 {
     while(true) {
         int r = read_primitive(uk);
