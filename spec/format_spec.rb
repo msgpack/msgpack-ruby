@@ -108,6 +108,12 @@ describe MessagePack do
     v.encoding.should == Encoding::UTF_8
   end
 
+  it "str transcode UTF-16" do
+    v = pack_unpack('string'.encode(Encoding::UTF_16))
+    v.encoding.should == Encoding::UTF_8
+    v.should == 'string'
+  end
+
   it "str transcode EUC-JP 7bit safe" do
     v = pack_unpack('string'.force_encoding(Encoding::EUC_JP))
     v.encoding.should == Encoding::UTF_8
