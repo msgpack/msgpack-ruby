@@ -199,11 +199,10 @@ public class Encoder {
     if (length < 32 && !binary) {
       ensureRemainingCapacity(1 + length);
       buffer.put((byte) (length | FIXSTR));
-    //TODO: msgpack-ruby original does encode this value as RAW16 (currently should be BIN8/STR8)
-    // } else if (length <= 0xff) {
-    //   ensureRemainingCapacity(2 + length);
-    //   buffer.put(binary ? BIN8 : STR8);
-    //   buffer.put((byte) length);
+    } else if (length <= 0xff) {
+      ensureRemainingCapacity(2 + length);
+      buffer.put(binary ? BIN8 : STR8);
+      buffer.put((byte) length);
     } else if (length <= 0xffff) {
       ensureRemainingCapacity(3 + length);
       buffer.put(binary ? BIN16 : STR16);
