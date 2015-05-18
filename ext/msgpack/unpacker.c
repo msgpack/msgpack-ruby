@@ -28,20 +28,10 @@
 static msgpack_rmem_t s_stack_rmem;
 #endif
 
-#ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
-static int s_enc_utf8;
-static int s_enc_ascii_8bit;
-#endif
-
 void msgpack_unpacker_static_init()
 {
 #ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_init(&s_stack_rmem);
-#endif
-
-#ifdef COMPAT_HAVE_ENCODING
-    s_enc_utf8 = rb_utf8_encindex();
-    s_enc_ascii_8bit = rb_ascii8bit_encindex();
 #endif
 }
 
@@ -152,16 +142,16 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 {
 #ifdef COMPAT_HAVE_ENCODING
-    ENCODING_SET(str, s_enc_utf8);
+    ENCODING_SET(str, msgpack_rb_encindex_utf8);
 #endif
     return object_complete(uk, str);
 }
 
-static inline int object_complete_byte_array(msgpack_unpacker_t* uk, VALUE str)
+static inline int object_complete_binary(msgpack_unpacker_t* uk, VALUE str)
 {
 #ifdef COMPAT_HAVE_ENCODING
     // TODO ruby 2.0 has String#b method
-    ENCODING_SET(str, s_enc_ascii_8bit);
+    ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
 #endif
     return object_complete(uk, str);
 }
@@ -271,7 +261,7 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
         if(str == true) {
             object_complete_string(uk, string);
         } else {
-            object_complete_byte_array(uk, string);
+            object_complete_binary(uk, string);
         }
         if(will_freeze) {
             rb_obj_freeze(string);
@@ -458,7 +448,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
                 uint8_t count = cb->u8;
                 if(count == 0) {
-                    return object_complete_byte_array(uk, rb_str_buf_new(0));
+                    return object_complete_binary(uk, rb_str_buf_new(0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -470,7 +460,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint16_t count = _msgpack_be16(cb->u16);
                 if(count == 0) {
-                    return object_complete_byte_array(uk, rb_str_buf_new(0));
+                    return object_complete_binary(uk, rb_str_buf_new(0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -482,7 +472,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
                 if(count == 0) {
-                    return object_complete_byte_array(uk, rb_str_buf_new(0));
+                    return object_complete_binary(uk, rb_str_buf_new(0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;

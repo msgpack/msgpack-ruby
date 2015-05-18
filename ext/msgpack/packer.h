@@ -66,7 +66,6 @@ static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_w
 
 void msgpack_packer_reset(msgpack_packer_t* pk);
 
-
 static inline void msgpack_packer_write_nil(msgpack_packer_t* pk)
 {
     msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
@@ -337,27 +336,19 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
     }
 }
 
-static inline char *object_id_string(VALUE object)
+#ifdef COMPAT_HAVE_ENCODING
+static inline bool msgpack_packer_is_binary(VALUE v, int encindex)
 {
-    VALUE object_id = rb_funcall(object, rb_intern("object_id"), 0);
-    VALUE object_id_str = rb_funcall(object_id, rb_intern("to_s"), 0);
-    return StringValuePtr(object_id_str);
+    return encindex == msgpack_rb_encindex_ascii8bit;
 }
 
-static inline bool is_byte_array(VALUE string)
+static inline bool msgpack_packer_is_utf8_compat_string(VALUE v, int encindex)
 {
-    VALUE ascii_8bit = rb_eval_string("Encoding::ASCII_8BIT");
-    VALUE string_encoding = rb_funcall(string, rb_intern("encoding"), 0);
-
-    if (strcmp(object_id_string(ascii_8bit), object_id_string(string_encoding)) == 0) {
-        return true;
-    } else {
-        return false;
-    }
+    return encindex == msgpack_rb_encindex_utf8 ||
+        encindex == msgpack_rb_encindex_usascii ||
+        rb_enc_str_asciionly_p(v);
 }
-
-
-void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
+#endif
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
@@ -369,12 +360,27 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
         rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
     }
 
-    if(is_byte_array(v)) {
+#ifdef COMPAT_HAVE_ENCODING
+    int encindex = ENCODING_GET(v);
+    if(msgpack_packer_is_binary(v, encindex)) {
+        /* write ASCII-8BIT string using Binary type */
         msgpack_packer_write_bin_header(pk, (unsigned int)len);
+        msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
     } else {
+        /* write UTF-8, US-ASCII, or 7bit-safe ascii-compatible string using String type directly */
+        if(!msgpack_packer_is_utf8_compat_string(v, encindex)) {
+            /* transcode other strings to UTF-8 and write using String type */
+            VALUE enc = rb_enc_from_encoding(rb_utf8_encoding()); /* rb_enc_from_encoding_index is not extern */
+            v = rb_str_encode(v, enc, 0, Qnil);
+            len = RSTRING_LEN(v);
+        }
         msgpack_packer_write_raw_header(pk, (unsigned int)len);
+        msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
     }
+#else
+    msgpack_packer_write_raw_header(pk, (unsigned int)len);
     msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
+#endif
 }
 
 static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)

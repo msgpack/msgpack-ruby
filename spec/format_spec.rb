@@ -84,11 +84,12 @@ describe MessagePack do
   end
 
   it "raw 8" do
-    check_raw 2, (1<<8)-1
+    check_raw 2, (1 << 5)
+    check_raw 2, (1 << 8)-1
   end
 
   it "raw 16" do
-    check_raw 3, (1 << 5)
+    check_raw 3, (1 << 8)
     check_raw 3, (1 << 16)-1
   end
 
@@ -98,7 +99,25 @@ describe MessagePack do
   end
 
   it "str encoding is UTF_8" do
-    pack_unpack('string'.force_encoding(Encoding::UTF_8)).encoding.should == Encoding::UTF_8
+    v = pack_unpack('string'.force_encoding(Encoding::UTF_8))
+    v.encoding.should == Encoding::UTF_8
+  end
+
+  it "str transcode US-ASCII" do
+    v = pack_unpack('string'.force_encoding(Encoding::US_ASCII))
+    v.encoding.should == Encoding::UTF_8
+  end
+
+  it "str transcode EUC-JP 7bit safe" do
+    v = pack_unpack('string'.force_encoding(Encoding::EUC_JP))
+    v.encoding.should == Encoding::UTF_8
+    v.should == 'string'
+  end
+
+  it "str transcode EUC-JP 7bit unsafe" do
+    v = pack_unpack([0xa4, 0xa2].pack('C*').force_encoding(Encoding::EUC_JP))
+    v.encoding.should == Encoding::UTF_8
+    v.should == "\xE3\x81\x82".force_encoding('UTF-8')
   end
 
   it "bin 8" do
