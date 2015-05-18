@@ -19,12 +19,14 @@
 #include "buffer.h"
 #include "rmem.h"
 
-#ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
-int s_enc_ascii8bit;
-#endif
-
 #ifndef HAVE_RB_STR_REPLACE
 static ID s_replace;
+#endif
+
+#ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
+int msgpack_rb_encindex_utf8;
+int msgpack_rb_encindex_usascii;
+int msgpack_rb_encindex_ascii8bit;
 #endif
 
 #ifndef DISABLE_RMEM
@@ -33,15 +35,18 @@ static msgpack_rmem_t s_rmem;
 
 void msgpack_buffer_static_init()
 {
+#ifdef COMPAT_HAVE_ENCODING
+    msgpack_rb_encindex_utf8 = rb_utf8_encindex();
+    msgpack_rb_encindex_usascii = rb_usascii_encindex();
+    msgpack_rb_encindex_ascii8bit = rb_ascii8bit_encindex();
+#endif
+
 #ifndef DISABLE_RMEM
     msgpack_rmem_init(&s_rmem);
 #endif
+
 #ifndef HAVE_RB_STR_REPLACE
     s_replace = rb_intern("replace");
-#endif
-
-#ifdef COMPAT_HAVE_ENCODING
-    s_enc_ascii8bit = rb_ascii8bit_encindex();
 #endif
 }
 
@@ -304,7 +309,7 @@ static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE s
 {
     VALUE mapped_string = rb_str_dup(string);
 #ifdef COMPAT_HAVE_ENCODING
-    ENCODING_SET(mapped_string, s_enc_ascii8bit);
+    ENCODING_SET(mapped_string, msgpack_rb_encindex_ascii8bit);
 #endif
 
     _msgpack_buffer_add_new_chunk(b);
@@ -333,11 +338,11 @@ void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string)
     if(b->io != Qnil) {
         msgpack_buffer_flush(b);
 #ifdef COMPAT_HAVE_ENCODING
-        if (ENCODING_GET(string) == s_enc_ascii8bit) {
+        if (ENCODING_GET(string) == msgpack_rb_encindex_ascii8bit) {
             rb_funcall(b->io, b->io_write_all_method, 1, string);
         } else if(!STR_DUP_LIKELY_DOES_COPY(string)) {
             VALUE s = rb_str_dup(string);
-            ENCODING_SET(s, s_enc_ascii8bit);
+            ENCODING_SET(s, msgpack_rb_encindex_ascii8bit);
             rb_funcall(b->io, b->io_write_all_method, 1, s);
         } else {
             msgpack_buffer_append(b, RSTRING_PTR(string), length);

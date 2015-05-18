@@ -262,36 +262,42 @@ describe Unpacker do
 
   it "msgpack str 8 type" do
     MessagePack.unpack([0xd9, 0x00].pack('C*')).should == ""
+    MessagePack.unpack([0xd9, 0x00].pack('C*')).encoding.should == Encoding::UTF_8
     MessagePack.unpack([0xd9, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xd9, 0x02].pack('C*') + 'aa').should == "aa"
   end
 
   it "msgpack str 16 type" do
     MessagePack.unpack([0xda, 0x00, 0x00].pack('C*')).should == ""
+    MessagePack.unpack([0xda, 0x00, 0x00].pack('C*')).encoding.should == Encoding::UTF_8
     MessagePack.unpack([0xda, 0x00, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xda, 0x00, 0x02].pack('C*') + 'aa').should == "aa"
   end
 
   it "msgpack str 32 type" do
     MessagePack.unpack([0xdb, 0x00, 0x00, 0x00, 0x00].pack('C*')).should == ""
+    MessagePack.unpack([0xdb, 0x00, 0x00, 0x00, 0x00].pack('C*')).encoding.should == Encoding::UTF_8
     MessagePack.unpack([0xdb, 0x00, 0x00, 0x00, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xdb, 0x00, 0x00, 0x00, 0x02].pack('C*') + 'aa').should == "aa"
   end
 
   it "msgpack bin 8 type" do
     MessagePack.unpack([0xc4, 0x00].pack('C*')).should == ""
+    MessagePack.unpack([0xc4, 0x00].pack('C*')).encoding.should == Encoding::ASCII_8BIT
     MessagePack.unpack([0xc4, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xc4, 0x02].pack('C*') + 'aa').should == "aa"
   end
 
   it "msgpack bin 16 type" do
     MessagePack.unpack([0xc5, 0x00, 0x00].pack('C*')).should == ""
+    MessagePack.unpack([0xc5, 0x00, 0x00].pack('C*')).encoding.should == Encoding::ASCII_8BIT
     MessagePack.unpack([0xc5, 0x00, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xc5, 0x00, 0x02].pack('C*') + 'aa').should == "aa"
   end
 
   it "msgpack bin 32 type" do
     MessagePack.unpack([0xc6, 0x00, 0x00, 0x00, 0x00].pack('C*')).should == ""
+    MessagePack.unpack([0xc6, 0x0, 0x00, 0x00, 0x000].pack('C*')).encoding.should == Encoding::ASCII_8BIT
     MessagePack.unpack([0xc6, 0x00, 0x00, 0x00, 0x01].pack('C*') + 'a').should == "a"
     MessagePack.unpack([0xc6, 0x00, 0x00, 0x00, 0x02].pack('C*') + 'aa').should == "aa"
   end

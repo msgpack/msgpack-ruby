@@ -66,7 +66,6 @@ static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_w
 
 void msgpack_packer_reset(msgpack_packer_t* pk);
 
-
 static inline void msgpack_packer_write_nil(msgpack_packer_t* pk)
 {
     msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
@@ -271,6 +270,10 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
         unsigned char h = 0xa0 | (uint8_t) n;
         msgpack_buffer_write_1(PACKER_BUFFER_(pk), h);
+    } else if(n < 256) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        unsigned char be = (uint8_t) n;
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xd9, (const void*)&be, 1);
     } else if(n < 65536) {
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
         uint16_t be = _msgpack_be16(n);
@@ -279,6 +282,23 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 5);
         uint32_t be = _msgpack_be32(n);
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xdb, (const void*)&be, 4);
+    }
+}
+
+static inline void msgpack_packer_write_bin_header(msgpack_packer_t* pk, unsigned int n)
+{
+    if(n < 256) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
+        unsigned char be = (uint8_t) n;
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc4, (const void*)&be, 1);
+    } else if(n < 65536) {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
+        uint16_t be = _msgpack_be16(n);
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc5, (const void*)&be, 2);
+    } else {
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 5);
+        uint32_t be = _msgpack_be32(n);
+        msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc6, (const void*)&be, 4);
     }
 }
 
@@ -316,8 +336,25 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
     }
 }
 
+#ifdef COMPAT_HAVE_ENCODING
+static inline bool msgpack_packer_is_binary(VALUE v, int encindex)
+{
+    return encindex == msgpack_rb_encindex_ascii8bit;
+}
 
-void _msgpack_packer_write_string_to_io(msgpack_packer_t* pk, VALUE string);
+static inline bool msgpack_packer_is_utf8_compat_string(VALUE v, int encindex)
+{
+    return encindex == msgpack_rb_encindex_utf8
+        || encindex == msgpack_rb_encindex_usascii
+#ifdef ENC_CODERANGE_ASCIIONLY
+        /* Because ENC_CODERANGE_ASCIIONLY does not scan string, it may return ENC_CODERANGE_UNKNOWN unlike */
+        /* rb_enc_str_asciionly_p. It is always faster than rb_str_encode if it is available. */
+        /* Very old Rubinius (< v1.3.1) doesn't have ENC_CODERANGE_ASCIIONLY. */
+        || (rb_enc_asciicompat(rb_enc_from_index(encindex)) && ENC_CODERANGE_ASCIIONLY(v))
+#endif
+        ;
+}
+#endif
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
@@ -328,8 +365,28 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
     }
+
+#ifdef COMPAT_HAVE_ENCODING
+    int encindex = ENCODING_GET(v);
+    if(msgpack_packer_is_binary(v, encindex)) {
+        /* write ASCII-8BIT string using Binary type */
+        msgpack_packer_write_bin_header(pk, (unsigned int)len);
+        msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
+    } else {
+        /* write UTF-8, US-ASCII, or 7bit-safe ascii-compatible string using String type directly */
+        if(!msgpack_packer_is_utf8_compat_string(v, encindex)) {
+            /* transcode other strings to UTF-8 and write using String type */
+            VALUE enc = rb_enc_from_encoding(rb_utf8_encoding()); /* rb_enc_from_encoding_index is not extern */
+            v = rb_str_encode(v, enc, 0, Qnil);
+            len = RSTRING_LEN(v);
+        }
+        msgpack_packer_write_raw_header(pk, (unsigned int)len);
+        msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
+    }
+#else
     msgpack_packer_write_raw_header(pk, (unsigned int)len);
     msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
+#endif
 }
 
 static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)
