@@ -346,7 +346,8 @@ static inline bool msgpack_packer_is_utf8_compat_string(VALUE v, int encindex)
 {
     return encindex == msgpack_rb_encindex_utf8 ||
         encindex == msgpack_rb_encindex_usascii ||
-        rb_enc_str_asciionly_p(v);
+        (rb_enc_asciicompat(rb_enc_from_index(encindex)) && ENC_CODERANGE(str) == ENC_CODERANGE_7BIT);
+    /* ENC_CODERANGE may return ENC_CODERANGE_UNKNOWN unlike rb_enc_str_asciionly_p */
 }
 #endif
 
