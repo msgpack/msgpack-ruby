@@ -3,15 +3,24 @@ machine:
   ruby:
     version: 2.2.0
 
-# general:
+general:
+  artifacts:
+    - pkg
 #   branches:
 #     only:
 #       - /release-.*/
 
 dependencies:
   pre:
+    # libffi-dev is for 2.2 (fiddle)
+    - sudo apt-get install libffi-dev
     - sudo apt-get install gcc-mingw32 mingw-w64
+    - rvm use 2.2.0; gem update --system; gem install rake-compiler; rake-compiler cross-ruby VERSION=2.2.0
+    - rvm use 2.1.5; gem update --system; gem install rake-compiler; rake-compiler cross-ruby VERSION=2.1.5
+    - rvm use 2.0.0-p598; gem update --system; gem install rake-compiler; rake-compiler cross-ruby VERSION=2.0.0-p598
+    - rvm use 2.2.0
+    - gem install yard
 
 test:
   override:
-    - bundle exec rake spec
+    - gem install bundler; bundle; rake cross native gem RUBY_CC_VERSION=2.0.0:2.1.5:2.2.0
