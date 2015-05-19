@@ -52,7 +52,7 @@ else
     ext.ext_dir = 'ext/msgpack'
     ext.cross_compile = true
     ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
-    ext.config_options << '--without-fiddle'
+    ext.config_options << '--with-out-ext=fiddle'
     #ext.cross_platform = 'i386-mswin32'
   end
 
