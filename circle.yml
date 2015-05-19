@@ -1,0 +1,17 @@
+machine:
+  timezone: UTC
+  ruby:
+    version: 2.2.0
+
+# general:
+#   branches:
+#     only:
+#       - /release-.*/
+
+dependencies:
+  pre:
+    - sudo apt-get install gcc-mingw32 mingw-w64
+
+test:
+  override:
+    - bundle exec rake spec
