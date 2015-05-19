@@ -12,8 +12,10 @@ general:
 
 dependencies:
   pre:
+    # to check package dependencies
+    - sudo apt-get -f install
     # libffi-dev is for 2.2 (fiddle)
-    - sudo apt-get install autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm3 libgdbm-dev
+    - sudo apt-get install libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm3 libgdbm-dev
     - sudo apt-get install gcc-mingw32 mingw-w64
     - rvm use 2.2.0; gem update --system; gem install rake-compiler; rake-compiler cross-ruby VERSION=2.2.0
     - rvm use 2.1.5; gem update --system; gem install rake-compiler; rake-compiler cross-ruby VERSION=2.1.5
