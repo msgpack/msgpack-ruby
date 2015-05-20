@@ -121,6 +121,16 @@ Then, you can run the tasks as follows:
 
     bundle exec rake doc
 
+== How to build -mingw32 rubygems
+
+MessagePack mingw32 rubygems build process uses {Docker}[https://docs.docker.com/]. 
+
+Set up docker environment at first, and then run docker container to build gems, with shared directory "pkg".
+
+    docker run -it --rm -v `pwd`/pkg:/home/ubuntu/msgpack-ruby/pkg msgpack/msgpack-rubygem-cross01
+
+Once this step successes, target gems exist in pkg/msgpack-*-{x86,x64}-mingw32.gem.
+
 = Copyright
 
 Author::    Sadayuki Furuhashi <frsyuki@gmail.com>
