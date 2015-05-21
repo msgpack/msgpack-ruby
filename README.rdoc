@@ -131,6 +131,8 @@ Set up docker environment at first, and then run docker container to build gems,
 
 Once this step successes, target gems exist in pkg/msgpack-*-{x86,x64}-mingw32.gem.
 
+See also: https://registry.hub.docker.com/u/msgpack/msgpack-rubygem-cross01/
+
 = Copyright
 
 Author::    Sadayuki Furuhashi <frsyuki@gmail.com>
