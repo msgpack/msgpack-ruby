@@ -2,10 +2,24 @@ FROM ubuntu:14.04
 MAINTAINER TAGOMORI Satoshi <tagomoris@gmail.com>
 LABEL Description="Host image to cross-compile msgpack.gem for mingw32" Vendor="MessagePack Organization" Version="1.0"
 
-RUN apt-get update -y
-RUN apt-get install -y git curl
-RUN apt-get install -y autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm3 libgdbm-dev
-RUN apt-get install -y mingw-w64 gcc-mingw-w64-i686 gcc-mingw-w64-x86-64
+RUN apt-get update -y && apt-get install -y \
+            git \
+            curl \
+            autoconf \
+            bison \
+            build-essential \
+            libssl-dev \
+            libyaml-dev \
+            libreadline6-dev \
+            zlib1g-dev \
+            libncurses5-dev \
+            libffi-dev \
+            libgdbm3 \
+            libgdbm-dev \
+            mingw-w64 \
+            gcc-mingw-w64-i686 \
+            gcc-mingw-w64-x86-64 \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN useradd ubuntu -d /home/ubuntu -m -U
 RUN chown -R ubuntu:ubuntu /home/ubuntu
