@@ -1,4 +1,9 @@
 
+2015-05-26 version 0.6.0:
+
+* Added support for Binary types
+* Fixed to encode/decode between Binary types and ASCII-8BIT Ruby String objects
+
 2015-05-21 version 0.5.12:
 
 * Added support for JRuby 9K.
