@@ -1,7 +1,7 @@
 /*
  * MessagePack for Ruby
  *
- * Copyright (C) 2008-2013 Sadayuki Furuhashi
+ * Copyright (C) 2008-2015 Sadayuki Furuhashi, Scott Francis
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,21 +15,14 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+#ifndef MSGPACK_RUBY_CUSTOM_H__
+#define MSGPACK_RUBY_CUSTOM_H__
 
-#include "buffer_class.h"
-#include "packer_class.h"
-#include "unpacker_class.h"
-#include "core_ext.h"
-#include "custom.h"
+#include "compat.h"
 
-void Init_msgpack(void)
-{
-    VALUE mMessagePack = rb_define_module("MessagePack");
+void MessagePack_custom_module_init(VALUE mMessagePack);
 
-    MessagePack_Buffer_module_init(mMessagePack);
-    MessagePack_Packer_module_init(mMessagePack);
-    MessagePack_Unpacker_module_init(mMessagePack);
-    MessagePack_custom_module_init(mMessagePack);
-    MessagePack_core_ext_module_init();
-}
+VALUE msgpack_custom_unpack_type(const char *buffer, size_t sz);
+
+#endif
 
