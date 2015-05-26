@@ -59,4 +59,4 @@ ENV BUILD_BRANCH master
 ENV BUILD_POSITION HEAD
 
 ### docker run -v `pwd`/pkg:/home/ubuntu/msgpack-ruby/pkg IMAGENAME
-CMD ["bash", "-c", "git remote add dockerbuild $MSGPACK_REPO && git fetch dockerbuild && git checkout $BUILD_BRANCH && git reset --hard $BUILD_POSITION && bundle && rake cross native gem"]
+CMD ["bash", "-c", "git remote add dockerbuild $MSGPACK_REPO && git fetch dockerbuild && git checkout $BUILD_BRANCH && git pull dockerbuild $BUILD_BRANCH && git reset --hard $BUILD_POSITION && bundle && rake clean && rake cross native gem"]
