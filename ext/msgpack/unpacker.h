@@ -19,6 +19,7 @@
 #define MSGPACK_RUBY_UNPACKER_H__
 
 #include "buffer.h"
+#include "unpacker_ext_registry.h"
 
 #ifndef MSGPACK_UNPACKER_STACK_CAPACITY
 #define MSGPACK_UNPACKER_STACK_CAPACITY 128
@@ -57,6 +58,8 @@ struct msgpack_unpacker_t {
     size_t reading_raw_remaining;
 
     VALUE buffer_ref;
+
+    msgpack_unpacker_ext_registry_t ext_registry;
 
     /* options */
     bool symbolize_keys;

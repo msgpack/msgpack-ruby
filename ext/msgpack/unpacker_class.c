@@ -362,9 +362,17 @@ static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
     return MessagePack_unpack(argc, argv);
 }
 
+VALUE MessagePack_Unpacker_new(int argc, VALUE* argv)
+{
+    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
+    Unpacker_initialize(argc, argv, self);
+    return self;
+}
+
 void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
     msgpack_unpacker_static_init();
+    msgpack_unpacker_ext_registry_static_init();
 
     cMessagePack_Unpacker = rb_define_class_under(mMessagePack, "Unpacker", rb_cObject);
 
@@ -391,6 +399,8 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
     rb_define_method(cMessagePack_Unpacker, "reset", Unpacker_reset, 0);
+
+    //TODO rb_define_method(cMessagePack_Unpacker, "register_type", Unpacker_register_type, -1);
 
     //s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
     //rb_gc_register_address(&s_unpacker_value);

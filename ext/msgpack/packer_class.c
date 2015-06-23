@@ -260,12 +260,20 @@ static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
     return MessagePack_pack(argc, argv);
 }
 
+VALUE MessagePack_Packer_new(int argc, VALUE* argv)
+{
+    VALUE self = Packer_alloc(cMessagePack_Packer);
+    Packer_initialize(argc, argv, self);
+    return self;
+}
+
 void MessagePack_Packer_module_init(VALUE mMessagePack)
 {
     s_to_msgpack = rb_intern("to_msgpack");
     s_write = rb_intern("write");
 
     msgpack_packer_static_init();
+    msgpack_packer_ext_registry_static_init();
 
     cMessagePack_Packer = rb_define_class_under(mMessagePack, "Packer", rb_cObject);
 
@@ -290,6 +298,8 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "to_a", Packer_to_a, 0);
     //rb_define_method(cMessagePack_Packer, "append", Packer_append, 1);
     //rb_define_alias(cMessagePack_Packer, "<<", "append");
+
+    //TODO rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
 
     //s_packer_value = Packer_alloc(cMessagePack_Packer);
     //rb_gc_register_address(&s_packer_value);
