@@ -19,6 +19,7 @@
 #define MSGPACK_RUBY_PACKER_H__
 
 #include "buffer.h"
+#include "packer_ext_registry.h"
 
 #ifndef MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY
 #define MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY (1024)
@@ -41,6 +42,7 @@ struct msgpack_packer_t {
 
     /* options */
     bool comaptibility_mode;
+    msgpack_packer_ext_registry_t ext_registry;
 };
 
 #define PACKER_BUFFER_(pk) (&(pk)->buffer)
