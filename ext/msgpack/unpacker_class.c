@@ -42,8 +42,15 @@ static void Unpacker_free(msgpack_unpacker_t* uk)
     if(uk == NULL) {
         return;
     }
+    msgpack_unpacker_ext_registry_destroy(&uk->ext_registry);
     _msgpack_unpacker_destroy(uk);
     free(uk);
+}
+
+static void Unpacker_mark(msgpack_unpacker_t* uk)
+{
+    msgpack_unpacker_mark(uk);
+    msgpack_unpacker_ext_registry_mark(&uk->ext_registry);
 }
 
 static VALUE Unpacker_alloc(VALUE klass)
@@ -51,8 +58,9 @@ static VALUE Unpacker_alloc(VALUE klass)
     msgpack_unpacker_t* uk = ALLOC_N(msgpack_unpacker_t, 1);
     _msgpack_unpacker_init(uk);
 
-    VALUE self = Data_Wrap_Struct(klass, msgpack_unpacker_mark, Unpacker_free, uk);
+    VALUE self = Data_Wrap_Struct(klass, Unpacker_mark, Unpacker_free, uk);
 
+    msgpack_unpacker_ext_registry_init(&uk->ext_registry);
     uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
 
     return self;

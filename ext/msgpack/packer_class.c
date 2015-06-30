@@ -42,8 +42,15 @@ static void Packer_free(msgpack_packer_t* pk)
     if(pk == NULL) {
         return;
     }
+    msgpack_packer_ext_registry_destroy(&pk->ext_registry);
     msgpack_packer_destroy(pk);
     free(pk);
+}
+
+static void Packer_mark(msgpack_packer_t* pk)
+{
+    msgpack_packer_mark(pk);
+    msgpack_packer_ext_registry_mark(&pk->ext_registry);
 }
 
 static VALUE Packer_alloc(VALUE klass)
@@ -51,9 +58,10 @@ static VALUE Packer_alloc(VALUE klass)
     msgpack_packer_t* pk = ALLOC_N(msgpack_packer_t, 1);
     msgpack_packer_init(pk);
 
-    VALUE self = Data_Wrap_Struct(klass, msgpack_packer_mark, Packer_free, pk);
+    VALUE self = Data_Wrap_Struct(klass, Packer_mark, Packer_free, pk);
 
     msgpack_packer_set_to_msgpack_method(pk, s_to_msgpack, self);
+    msgpack_packer_ext_registry_init(&pk->ext_registry);
     pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
 
     return self;
@@ -136,6 +144,18 @@ static VALUE Packer_write_map_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
     msgpack_packer_write_map_header(pk, NUM2UINT(n));
+    return self;
+}
+
+static VALUE Packer_write_ext(VALUE self, VALUE type, VALUE data)
+{
+    PACKER(self, pk);
+    int ext_type = rb_num2int(type);
+    if (ext_type < -128 || ext_type > 127) {
+        rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
+    }
+    StringValue(data);
+    msgpack_packer_write_ext(pk, ext_type, data);
     return self;
 }
 
@@ -338,6 +358,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_nil", Packer_write_nil, 0);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
+    rb_define_method(cMessagePack_Packer, "write_ext", Packer_write_ext, 2);
     rb_define_method(cMessagePack_Packer, "flush", Packer_flush, 0);
 
     /* delegation methods */

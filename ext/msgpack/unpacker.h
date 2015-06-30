@@ -56,6 +56,7 @@ struct msgpack_unpacker_t {
 
     VALUE reading_raw;
     size_t reading_raw_remaining;
+    int reading_raw_type;
 
     VALUE buffer_ref;
 

@@ -6,6 +6,14 @@ describe Factory do
     Factory.new
   end
 
+  let :packer do
+    factory.packer
+  end
+
+  let :unpacker do
+    factory.unpacker
+  end
+
   it 'packer' do
     factory.packer.should be_kind_of(Packer)
   end
@@ -41,12 +49,14 @@ describe Factory do
   end
 
   it 'packer register_type' do
-    factory.packer.register_type(0x7f, MyType) {|my| [my.string].pack('m') }
-    factory.packer.register_type(0x7f, MyType, :to_msgpack_ext)
+    packer.register_type(0x7f, MyType) {|my| [my.string].pack('m') }
+    packer.register_type(0x7f, MyType, :to_msgpack_ext)
+    packer.write(MyType.new("abc"))
+    packer.buffer.to_s.should == "\xc7\x7fYWJj\n"
   end
 
   it 'unpacker register_type' do
-    factory.unpacker.register_type(0x7f) {|data| MyType.new(data.unpack('m')[0]) }
-    factory.unpacker.register_type(0x7f, MyType, :from_msgpack_ext)
+    unpacker.register_type(0x7f) {|data| MyType.new(data.unpack('m')[0]) }
+    unpacker.register_type(0x7f, MyType, :from_msgpack_ext)
   end
 end
