@@ -51,16 +51,19 @@ void msgpack_unpacker_ext_registry_dup(msgpack_unpacker_ext_registry_t* src,
         msgpack_unpacker_ext_registry_t* dst)
 {
     for(int i=0; i < 255; i++) {
-        dst->array[i] = rb_funcall(src->array[i], s_dup, 0);
+        if (src->array[i] == Qnil) {
+            dst->array[i] = Qnil;
+        } else {
+            dst->array[i] = rb_funcall(src->array[i], s_dup, 0);
+        }
     }
 }
 
 VALUE msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t* ukrg,
         int ext_type, VALUE proc)
 {
-    //assert(ext_type >= 0 && ext_type <= 255);
-    VALUE before = ukrg->array[ext_type];
-    ukrg->array[ext_type] = proc;
+    VALUE before = ukrg->array[ext_type + 128];
+    ukrg->array[ext_type + 128] = proc;
     return before;
 }
 

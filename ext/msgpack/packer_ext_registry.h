@@ -42,7 +42,7 @@ void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst);
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_class, int ext_type, VALUE ext_proc);
+        VALUE ext_class, int ext_type, VALUE proc);
 
 static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_class, int* ext_type_result)
@@ -51,8 +51,8 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
     if(e == Qnil) {
         return Qnil;
     }
-    *ext_type_result = FIX2INT(RSTRUCT_GET(e, 0));
-    return RSTRUCT_GET(e, 1);
+    *ext_type_result = FIX2INT(rb_ary_entry(e, 0));
+    return rb_ary_entry(e, 1);
 }
 
 VALUE msgpack_packer_ext_registry_call(msgpack_packer_ext_registry_t* pkrg,

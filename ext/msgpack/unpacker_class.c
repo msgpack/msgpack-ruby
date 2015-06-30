@@ -297,6 +297,37 @@ static VALUE Unpacker_reset(VALUE self)
     return Qnil;
 }
 
+static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
+{
+    UNPACKER(self, uk);
+
+    int ext_type;
+    VALUE proc;
+
+    switch (argc) {
+    case 1:
+        /* register_type(0x7f) {|data| block... } */
+        rb_need_block();
+        proc = rb_block_lambda();
+        break;
+    case 3:
+        /* register_type(0x7f, Time, :from_msgpack_ext) */
+        proc = rb_obj_method(argv[1], argv[2]);
+        break;
+    default:
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1 or 3)", argc);
+    }
+
+    ext_type = rb_num2int(argv[0]);
+    if (ext_type < -128 || ext_type > 127) {
+        rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
+    }
+
+    msgpack_unpacker_ext_registry_put(&uk->ext_registry, ext_type, proc);
+
+    return Qnil;
+}
+
 VALUE MessagePack_unpack(int argc, VALUE* argv)
 {
     VALUE src;
@@ -400,7 +431,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
     rb_define_method(cMessagePack_Unpacker, "reset", Unpacker_reset, 0);
 
-    //TODO rb_define_method(cMessagePack_Unpacker, "register_type", Unpacker_register_type, -1);
+    rb_define_method(cMessagePack_Unpacker, "register_type", Unpacker_register_type, -1);
 
     //s_unpacker_value = Unpacker_alloc(cMessagePack_Unpacker);
     //rb_gc_register_address(&s_unpacker_value);

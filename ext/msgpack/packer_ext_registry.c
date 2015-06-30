@@ -19,13 +19,10 @@
 #include "packer_ext_registry.h"
 
 static ID s_call;
-static VALUE sc_entry_struct;
 
 void msgpack_packer_ext_registry_static_init()
 {
     s_call = rb_intern("call");
-    sc_entry_struct = rb_struct_define_without_accessor(NULL, rb_cStruct, NULL, "index", "proc", NULL);
-    //rb_obj_hide(sc_entry_struct);
 }
 
 void msgpack_packer_ext_registry_static_destroy()
@@ -51,9 +48,9 @@ void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
 }
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_class, int ext_type, VALUE ext_proc)
+        VALUE ext_class, int ext_type, VALUE proc)
 {
-    VALUE e = rb_struct_new(sc_entry_struct, INT2FIX(ext_type), ext_proc);
+    VALUE e = rb_ary_new_from_args(2, INT2FIX(ext_type), proc);
     return rb_hash_aset(pkrg->hash, ext_class, e);
 }
 
