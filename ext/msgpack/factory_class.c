@@ -77,7 +77,13 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
 
-    // TODO
+    switch (argc) {
+    case 0:
+        break;
+    default:
+        // TODO options is not supported
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0)", argc);
+    }
 
     return Qnil;
 }
@@ -112,6 +118,67 @@ static VALUE Factory_unpacker(int argc, VALUE* argv, VALUE self)
     return unpacker;
 }
 
+static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
+{
+    FACTORY(self, fc);
+
+    int ext_type;
+    VALUE ext_class;
+    VALUE options;
+    VALUE packer_arg, unpacker_arg;
+    VALUE packer_proc, unpacker_proc;
+
+    switch (argc) {
+    case 2:
+        /* register_type(0x7f, Time) */
+        packer_arg = ID2SYM(rb_intern("to_msgpack_ext"));
+        unpacker_arg = ID2SYM(rb_intern("from_msgpack_ext"));
+        break;
+    case 3:
+        /* register_type(0x7f, Time, packer: proc-like, unapcker: proc-like) */
+        options = argv[2];
+        if (rb_type(options) != T_HASH) {
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
+        }
+        packer_arg = rb_hash_aref(options, ID2SYM(rb_intern("packer")));
+        unpacker_arg = rb_hash_aref(options, ID2SYM(rb_intern("unpacker")));
+        break;
+    default:
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 2..3)", argc);
+    }
+
+    ext_type = rb_num2int(argv[0]);
+    if (ext_type < -128 || ext_type > 127) {
+        rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
+    }
+
+    ext_class = argv[1];
+    if (rb_type(ext_class) != T_CLASS) {
+        rb_raise(rb_eArgError, "expected Class but found %s.", rb_obj_classname(ext_class));
+    }
+
+    packer_proc = Qnil;
+    unpacker_proc = Qnil;
+
+    if (packer_arg != Qnil) {
+        packer_proc = rb_funcall(packer_arg, rb_intern("to_proc"), 0);
+    }
+
+    if (unpacker_arg != Qnil) {
+        if (rb_type(unpacker_arg) == T_SYMBOL || rb_type(unpacker_arg) == T_STRING) {
+            unpacker_proc = rb_obj_method(ext_class, unpacker_arg);
+        } else {
+            unpacker_proc = rb_funcall(unpacker_arg, rb_intern("method"), 1, ID2SYM(rb_intern("call")));
+        }
+    }
+
+    msgpack_packer_ext_registry_put(&fc->pkrg, ext_class, ext_type, packer_proc);
+
+    msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_type, unpacker_proc);
+
+    return Qnil;
+}
+
 void MessagePack_Factory_module_init(VALUE mMessagePack)
 {
     cMessagePack_Factory = rb_define_class_under(mMessagePack, "Factory", rb_cObject);
@@ -123,5 +190,5 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Factory, "packer", Factory_packer, -1);
     rb_define_method(cMessagePack_Factory, "unpacker", Factory_unpacker, -1);
 
-    //TODO rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
+    rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
 }

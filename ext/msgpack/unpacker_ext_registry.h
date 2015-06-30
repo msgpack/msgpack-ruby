@@ -48,8 +48,7 @@ VALUE msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t* ukrg,
 static inline VALUE msgpack_unpacker_ext_registry_lookup(msgpack_unpacker_ext_registry_t* ukrg,
         int ext_type)
 {
-    //assert(ext_type >= 0 && ext_type <= 255);
-    return ukrg->array[ext_type];
+    return ukrg->array[ext_type + 128];
 }
 
 VALUE msgpack_unpacker_ext_registry_call(msgpack_unpacker_ext_registry_t* ukrg,

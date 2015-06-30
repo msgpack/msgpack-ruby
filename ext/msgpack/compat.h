@@ -110,13 +110,5 @@
 #endif
 
 
-/*
- * RSTRUCT_GET
- */
-#ifndef RSTRUCT_GET  /* MRI 2.1.0 */
-#  define RSTRUCT_GET(st, idx) (RSTRUCT_PTR(st)[idx])
-#endif
-
-
 #endif
 

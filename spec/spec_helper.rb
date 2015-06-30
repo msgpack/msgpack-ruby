@@ -24,4 +24,5 @@ else
   Packer = MessagePack::Packer
   Unpacker = MessagePack::Unpacker
   Buffer = MessagePack::Buffer
+  Factory = MessagePack::Factory
 end

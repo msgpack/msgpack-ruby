@@ -190,6 +190,43 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 //    return self;
 //}
 
+static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
+{
+    PACKER(self, pk);
+
+    int ext_type;
+    VALUE ext_class;
+    VALUE proc;
+
+    switch (argc) {
+    case 2:
+        /* register_type(0x7f, Time) {|obj| block... } */
+        rb_need_block();
+        proc = rb_block_lambda();
+        break;
+    case 3:
+        /* register_type(0x7f, Time, :to_msgpack_ext) */
+        proc = rb_funcall(argv[2], rb_intern("to_proc"), 0);
+        break;
+    default:
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 2..3)", argc);
+    }
+
+    ext_type = rb_num2int(argv[0]);
+    if (ext_type < -128 || ext_type > 127) {
+        rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
+    }
+
+    ext_class = argv[1];
+    if (rb_type(ext_class) != T_CLASS) {
+        rb_raise(rb_eArgError, "expected Class but found %s.", rb_obj_classname(ext_class));
+    }
+
+    msgpack_packer_ext_registry_put(&pk->ext_registry, ext_class, ext_type, proc);
+
+    return Qnil;
+}
+
 VALUE MessagePack_pack(int argc, VALUE* argv)
 {
     VALUE v;
@@ -299,7 +336,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     //rb_define_method(cMessagePack_Packer, "append", Packer_append, 1);
     //rb_define_alias(cMessagePack_Packer, "<<", "append");
 
-    //TODO rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
+    rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
 
     //s_packer_value = Packer_alloc(cMessagePack_Packer);
     //rb_gc_register_address(&s_packer_value);
