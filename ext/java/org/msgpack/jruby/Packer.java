@@ -32,7 +32,12 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "initialize", optional = 2)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
-    this.encoder = new Encoder(ctx.getRuntime());
+    boolean compatibilityMode = false;
+    if (args.length > 0 && args[args.length - 1] instanceof RubyHash) {
+      RubyHash options = (RubyHash) args[args.length - 1];
+      compatibilityMode = options.fastARef(ctx.getRuntime().newSymbol("compatibility_mode")).isTrue();
+    }
+    this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode);
     this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
     return this;
