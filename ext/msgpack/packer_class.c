@@ -221,6 +221,11 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 
     VALUE self = Packer_alloc(cMessagePack_Packer);
     PACKER(self, pk);
+
+    if (options != Qnil) {
+      pk->compatibility_mode = RTEST(rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode"))));
+    }
+
     //msgpack_packer_reset(s_packer);
     //msgpack_buffer_reset_io(PACKER_BUFFER_(s_packer));
 
