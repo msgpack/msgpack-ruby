@@ -36,8 +36,14 @@ describe MessagePack do
       ['negative floats', -2.1, "\xCB\xC0\x00\xCC\xCC\xCC\xCC\xCC\xCD"]
     ],
     'strings' => [
-      ['strings', utf8enc('hello world'), "\xABhello world"],
+      ['tiny strings', utf8enc('hello world'), "\xABhello world"],
+      ['short strings', utf8enc('hello' * 5), "\xB9hellohellohellohellohello"],
       ['empty strings', utf8enc(''), "\xA0"]
+    ],
+    'binary strings' => [
+      ['tiny strings', asciienc('hello world'), "\xC4\vhello world"],
+      ['short strings', asciienc('hello' * 5), "\xC4\x19hellohellohellohellohello"],
+      ['empty strings', asciienc(''), "\xC4\x00"]
     ],
     'arrays' => [
       ['empty arrays', [], "\x90"],
