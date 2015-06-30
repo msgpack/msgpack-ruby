@@ -339,6 +339,47 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
     }
 }
 
+static inline void msgpack_packer_write_ext(msgpack_packer_t* pk, int ext_type, VALUE string)
+{
+    unsigned long len = RSTRING_LEN(string);
+    switch (len) {
+    case 1:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd4, ext_type);
+        break;
+    case 2:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd5, ext_type);
+        break;
+    case 4:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd6, ext_type);
+        break;
+    case 8:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd7, ext_type);
+        break;
+    case 16:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd8, ext_type);
+        break;
+    default:
+        if(len < 255) {
+            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+            msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xc7, ext_type);
+        } else if (len < 65536) {
+            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
+            uint16_t be = _msgpack_be16(len);
+            msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc8, (const void*)&be, 2);
+        } else {
+            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 5);
+            uint32_t be = _msgpack_be32(len);
+            msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc8, (const void*)&be, 2);
+        }
+    }
+    msgpack_buffer_append_string(PACKER_BUFFER_(pk), string);
+}
+
 #ifdef COMPAT_HAVE_ENCODING
 static inline bool msgpack_packer_is_binary(VALUE v, int encindex)
 {

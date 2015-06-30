@@ -125,7 +125,16 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 
 static void _msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
 {
-    rb_funcall(v, pk->to_msgpack_method, 1, pk->to_msgpack_arg);
+    int ext_type;
+    VALUE proc = msgpack_packer_ext_registry_lookup(&pk->ext_registry,
+            rb_obj_class(v), &ext_type);
+    if (proc != Qnil) {
+        VALUE data = rb_proc_call(proc, rb_ary_new3(1, v));
+        StringValue(data);
+        msgpack_packer_write_ext(pk, ext_type, data);
+    } else {
+        rb_funcall(v, pk->to_msgpack_method, 1, pk->to_msgpack_arg);
+    }
 }
 
 void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v)

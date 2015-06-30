@@ -50,7 +50,7 @@ void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_class, int ext_type, VALUE proc)
 {
-    VALUE e = rb_ary_new_from_args(2, INT2FIX(ext_type), proc);
+    VALUE e = rb_ary_new3(2, INT2FIX(ext_type), proc);
     return rb_hash_aset(pkrg->hash, ext_class, e);
 }
 
