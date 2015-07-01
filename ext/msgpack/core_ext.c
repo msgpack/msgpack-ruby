@@ -19,6 +19,7 @@
 #include "core_ext.h"
 #include "packer.h"
 #include "packer_class.h"
+#include "extension_value_class.h"
 
 static inline VALUE delegete_to_pack(int argc, VALUE* argv, VALUE self)
 {
@@ -113,6 +114,19 @@ static VALUE Symbol_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+static VALUE ExtensionValue_to_msgpack(int argc, VALUE* argv, VALUE self)
+{
+    ENSURE_PACKER(argc, argv, packer, pk);
+    int ext_type = FIX2INT(RSTRUCT_GET(self, 0));
+    if(ext_type < -128 || ext_type > 127) {
+        rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
+    }
+    VALUE payload = RSTRUCT_GET(self, 1);
+    StringValue(payload);
+    msgpack_packer_write_ext(pk, ext_type, payload);
+    return packer;
+}
+
 void MessagePack_core_ext_module_init()
 {
     rb_define_method(rb_cNilClass,   "to_msgpack", NilClass_to_msgpack, -1);
@@ -125,5 +139,6 @@ void MessagePack_core_ext_module_init()
     rb_define_method(rb_cArray,  "to_msgpack", Array_to_msgpack, -1);
     rb_define_method(rb_cHash,   "to_msgpack", Hash_to_msgpack, -1);
     rb_define_method(rb_cSymbol, "to_msgpack", Symbol_to_msgpack, -1);
+    rb_define_method(cMessagePack_ExtensionValue, "to_msgpack", ExtensionValue_to_msgpack, -1);
 }
 

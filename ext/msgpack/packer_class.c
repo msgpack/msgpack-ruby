@@ -151,7 +151,7 @@ static VALUE Packer_write_ext(VALUE self, VALUE type, VALUE data)
 {
     PACKER(self, pk);
     int ext_type = rb_num2int(type);
-    if (ext_type < -128 || ext_type > 127) {
+    if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
     StringValue(data);
@@ -244,7 +244,7 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
     }
 
     ext_type = rb_num2int(argv[0]);
-    if (ext_type < -128 || ext_type > 127) {
+    if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 

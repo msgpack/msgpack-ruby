@@ -52,11 +52,20 @@ describe Factory do
     packer.register_type(0x7f, MyType) {|my| [my.string].pack('m') }
     packer.register_type(0x7f, MyType, :to_msgpack_ext)
     packer.write(MyType.new("abc"))
-    packer.buffer.to_s.should == "\xc7\x7fYWJj\n"
+    packer.buffer.to_s.should == "\xc7\x05\x7fYWJj\n"
   end
 
   it 'unpacker register_type' do
     unpacker.register_type(0x7f) {|data| MyType.new(data.unpack('m')[0]) }
     unpacker.register_type(0x7f, MyType, :from_msgpack_ext)
+    packer.write_ext(0x7f, ["abc"].pack('m'))
+    unpacker.feed(packer.buffer)
+    my = unpacker.read
+    my.class.should == MyType
+    my.string.should == "abc"
+  end
+
+  it 'allow_unknown_ext' do
+    factory.unpacker(allow_unknown_ext: true)
   end
 end

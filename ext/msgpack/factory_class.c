@@ -29,8 +29,6 @@ struct msgpack_factory_t;
 typedef struct msgpack_factory_t msgpack_factory_t;
 
 struct msgpack_factory_t {
-    VALUE packer_options;
-    VALUE unpacker_options;
     msgpack_packer_ext_registry_t pkrg;
     msgpack_unpacker_ext_registry_t ukrg;
 };
@@ -54,8 +52,6 @@ static void Factory_free(msgpack_factory_t* fc)
 
 void Factory_mark(msgpack_factory_t* fc)
 {
-    rb_gc_mark(fc->packer_options);
-    rb_gc_mark(fc->unpacker_options);
     msgpack_packer_ext_registry_mark(&fc->pkrg);
     msgpack_unpacker_ext_registry_mark(&fc->ukrg);
 }
@@ -64,8 +60,6 @@ static VALUE Factory_alloc(VALUE klass)
 {
     msgpack_factory_t* fc = ALLOC_N(msgpack_factory_t, 1);
 
-    fc->packer_options = rb_hash_new();
-    fc->unpacker_options = rb_hash_new();
     msgpack_packer_ext_registry_init(&fc->pkrg);
     msgpack_unpacker_ext_registry_init(&fc->ukrg);
 
@@ -81,7 +75,7 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
     case 0:
         break;
     default:
-        // TODO options is not supported
+        // TODO options is not supported yet
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0)", argc);
     }
 
@@ -191,4 +185,8 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Factory, "unpacker", Factory_unpacker, -1);
 
     rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
+
+    VALUE default_factory = Factory_alloc(cMessagePack_Factory);
+    Factory_initialize(0, NULL, default_factory);
+    rb_define_const(mMessagePack, "DefaultFactory", default_factory);
 }

@@ -25,4 +25,5 @@ else
   Unpacker = MessagePack::Unpacker
   Buffer = MessagePack::Buffer
   Factory = MessagePack::Factory
+  ExtensionValue = MessagePack::ExtensionValue
 end
