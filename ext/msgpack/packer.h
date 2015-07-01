@@ -33,6 +33,7 @@ struct msgpack_packer_t {
 
     VALUE io;
     ID io_write_all_method;
+    bool compatibility_mode;
 
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
@@ -40,6 +41,9 @@ struct msgpack_packer_t {
     VALUE buffer_ref;
 
     msgpack_packer_ext_registry_t ext_registry;
+
+    /* options */
+    bool comaptibility_mode;
 };
 
 #define PACKER_BUFFER_(pk) (&(pk)->buffer)
@@ -68,6 +72,11 @@ static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_w
 }
 
 void msgpack_packer_reset(msgpack_packer_t* pk);
+
+static inline void msgpack_packer_set_compat(msgpack_packer_t* pk, bool enable)
+{
+    pk->compatibility_mode = enable;
+}
 
 static inline void msgpack_packer_write_nil(msgpack_packer_t* pk)
 {
@@ -273,7 +282,7 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
         unsigned char h = 0xa0 | (uint8_t) n;
         msgpack_buffer_write_1(PACKER_BUFFER_(pk), h);
-    } else if(n < 256) {
+    } else if(n < 256 && !pk->compatibility_mode) {
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
         unsigned char be = (uint8_t) n;
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xd9, (const void*)&be, 1);
@@ -402,7 +411,6 @@ static inline bool msgpack_packer_is_utf8_compat_string(VALUE v, int encindex)
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
-    /* TODO encoding conversion? */
     /* actual return type of RSTRING_LEN is long */
     unsigned long len = RSTRING_LEN(v);
     if(len > 0xffffffffUL) {
@@ -412,13 +420,14 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
 
 #ifdef COMPAT_HAVE_ENCODING
     int encindex = ENCODING_GET(v);
-    if(msgpack_packer_is_binary(v, encindex)) {
+    if(msgpack_packer_is_binary(v, encindex) && !pk->compatibility_mode) {
         /* write ASCII-8BIT string using Binary type */
         msgpack_packer_write_bin_header(pk, (unsigned int)len);
         msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
     } else {
         /* write UTF-8, US-ASCII, or 7bit-safe ascii-compatible string using String type directly */
-        if(!msgpack_packer_is_utf8_compat_string(v, encindex)) {
+        /* in compatibility mode, packer packs String values as is */
+        if(!pk->compatibility_mode && !msgpack_packer_is_utf8_compat_string(v, encindex)) {
             /* transcode other strings to UTF-8 and write using String type */
             VALUE enc = rb_enc_from_encoding(rb_utf8_encoding()); /* rb_enc_from_encoding_index is not extern */
             v = rb_str_encode(v, enc, 0, Qnil);

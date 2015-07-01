@@ -17,7 +17,11 @@ module MessagePack
     #   This packer writes serialzied objects into the IO when the internal buffer is filled.
     #   _io_ must respond to write(string) or append(string) method.
     #
-    # See also Buffer#initialize for options.
+    # Supported options:
+    #
+    # * *:compatibility_mode* serialize in older versions way, without str8 and bin types
+    #
+    # See also Buffer#initialize for other options.
     #
     def initialize(*args)
     end

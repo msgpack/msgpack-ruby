@@ -95,11 +95,22 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
     }
 
     PACKER(self, pk);
-    MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, options);
 
-    // TODO MessagePack_Unpacker_initialize and options
+    MessagePack_Packer_initialize(pk, io, options);
 
     return self;
+}
+
+void MessagePack_Packer_initialize(msgpack_packer_t* pk, VALUE io, VALUE options)
+{
+    MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, options);
+
+    if(options != Qnil) {
+        VALUE v;
+
+        v = rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode")));
+        msgpack_packer_set_compat(pk, RTEST(v));
+    }
 }
 
 static VALUE Packer_buffer(VALUE self)
@@ -278,11 +289,15 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 
     VALUE self = Packer_alloc(cMessagePack_Packer);
     PACKER(self, pk);
+
+    if (options != Qnil) {
+      pk->compatibility_mode = RTEST(rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode"))));
+    }
+
     //msgpack_packer_reset(s_packer);
     //msgpack_buffer_reset_io(PACKER_BUFFER_(s_packer));
 
-    MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, options);
-    // TODO MessagePack_Unpacker_initialize and options
+    MessagePack_Packer_initialize(pk, io, options);
 
     msgpack_packer_write_value(pk, v);
 

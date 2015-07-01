@@ -21,7 +21,6 @@ import org.jcodings.Encoding;
 
 @JRubyClass(name="MessagePack::Buffer")
 public class Buffer extends RubyObject {
-  private RubyHash options;
   private IRubyObject io;
   private ByteBuffer buffer;
   private boolean writeMode;
@@ -45,9 +44,6 @@ public class Buffer extends RubyObject {
     if (args.length > 0) {
       if (args[0].respondsTo("read") && args[0].respondsTo("write")) {
         this.io = args[0];
-      }
-      if (args[args.length - 1] instanceof RubyHash) {
-        this.options = (RubyHash) args[args.length - 1];
       }
     }
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
