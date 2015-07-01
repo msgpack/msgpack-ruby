@@ -38,6 +38,9 @@ struct msgpack_packer_t {
     VALUE to_msgpack_arg;
 
     VALUE buffer_ref;
+
+    /* options */
+    bool comaptibility_mode;
 };
 
 #define PACKER_BUFFER_(pk) (&(pk)->buffer)
@@ -66,6 +69,11 @@ static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_w
 }
 
 void msgpack_packer_reset(msgpack_packer_t* pk);
+
+static inline void msgpack_packer_set_compat(msgpack_packer_t* pk, bool enable)
+{
+    pk->compatibility_mode = enable;
+}
 
 static inline void msgpack_packer_write_nil(msgpack_packer_t* pk)
 {
@@ -359,7 +367,6 @@ static inline bool msgpack_packer_is_utf8_compat_string(VALUE v, int encindex)
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
-    /* TODO encoding conversion? */
     /* actual return type of RSTRING_LEN is long */
     unsigned long len = RSTRING_LEN(v);
     if(len > 0xffffffffUL) {
@@ -375,7 +382,8 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
         msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
     } else {
         /* write UTF-8, US-ASCII, or 7bit-safe ascii-compatible string using String type directly */
-        if(!msgpack_packer_is_utf8_compat_string(v, encindex)) {
+        /* in compatibility mode, packer packs String values as is */
+        if(!pk->compatibility_mode && !msgpack_packer_is_utf8_compat_string(v, encindex)) {
             /* transcode other strings to UTF-8 and write using String type */
             VALUE enc = rb_enc_from_encoding(rb_utf8_encoding()); /* rb_enc_from_encoding_index is not extern */
             v = rb_str_encode(v, enc, 0, Qnil);

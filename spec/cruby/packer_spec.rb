@@ -123,6 +123,10 @@ describe Packer do
       packed.should eq("\xA5hello")
       packed = MessagePack.pack(('hello' * 100).force_encoding(Encoding::BINARY), compatibility_mode: true)
       packed.should start_with("\xDA\x01\xF4")
+
+      packer = MessagePack::Packer.new(compatibility_mode: 1)
+      packed = packer.pack(('hello' * 100).force_encoding(Encoding::BINARY))
+      packed.to_str.should start_with("\xDA\x01\xF4")
     end
 
     it 'does not use the str8 type' do
