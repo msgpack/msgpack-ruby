@@ -26,5 +26,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack);
 
 VALUE MessagePack_pack(int argc, VALUE* argv);
 
+void MessagePack_Packer_initialize(msgpack_packer_t* pk, VALUE io, VALUE options);
+
 #endif
 
