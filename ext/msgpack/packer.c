@@ -25,6 +25,8 @@ static ID s_key;
 static ID s_value;
 #endif
 
+static ID s_call;
+
 void msgpack_packer_static_init()
 {
 #ifdef RUBINIUS
@@ -33,6 +35,8 @@ void msgpack_packer_static_init()
     s_key = rb_intern("key");
     s_value = rb_intern("value");
 #endif
+
+    s_call = rb_intern("call");
 }
 
 void msgpack_packer_static_destroy()
@@ -129,9 +133,9 @@ static void _msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
     VALUE proc = msgpack_packer_ext_registry_lookup(&pk->ext_registry,
             rb_obj_class(v), &ext_type);
     if (proc != Qnil) {
-        VALUE data = rb_proc_call(proc, rb_ary_new3(1, v));
-        StringValue(data);
-        msgpack_packer_write_ext(pk, ext_type, data);
+        VALUE payload = rb_funcall(proc, s_call, 1, v);
+        StringValue(payload);
+        msgpack_packer_write_ext(pk, ext_type, payload);
     } else {
         rb_funcall(v, pk->to_msgpack_method, 1, pk->to_msgpack_arg);
     }

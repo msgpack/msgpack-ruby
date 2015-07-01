@@ -112,6 +112,9 @@ void MessagePack_Unpacker_initialize(msgpack_unpacker_t* uk, VALUE io, VALUE opt
 
         v = rb_hash_aref(options, ID2SYM(rb_intern("symbolize_keys")));
         msgpack_unpacker_set_symbolized_keys(uk, RTEST(v));
+
+        v = rb_hash_aref(options, ID2SYM(rb_intern("allow_unknown_ext")));
+        msgpack_unpacker_set_allow_unknown_ext(uk, RTEST(v));
     }
 }
 
@@ -126,6 +129,8 @@ static void raise_unpacker_error(int r)
         rb_raise(eStackError, "stack level too deep");
     case PRIMITIVE_UNEXPECTED_TYPE:
         rb_raise(eTypeError, "unexpected type");
+    case PRIMITIVE_UNEXPECTED_EXT_TYPE:
+        rb_raise(eTypeError, "unexpected extension type");
     default:
         rb_raise(eUnpackError, "logically unknown error %d", r);
     }

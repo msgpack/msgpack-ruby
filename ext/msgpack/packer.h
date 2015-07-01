@@ -348,9 +348,9 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
     }
 }
 
-static inline void msgpack_packer_write_ext(msgpack_packer_t* pk, int ext_type, VALUE string)
+static inline void msgpack_packer_write_ext(msgpack_packer_t* pk, int ext_type, VALUE payload)
 {
-    unsigned long len = RSTRING_LEN(string);
+    unsigned long len = RSTRING_LEN(payload);
     switch (len) {
     case 1:
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
@@ -374,19 +374,22 @@ static inline void msgpack_packer_write_ext(msgpack_packer_t* pk, int ext_type, 
         break;
     default:
         if(len < 255) {
-            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
-            msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xc7, ext_type);
-        } else if (len < 65536) {
             msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
+            msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xc7, len);
+            msgpack_buffer_write_1(PACKER_BUFFER_(pk), ext_type);
+        } else if (len < 65536) {
+            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 4);
             uint16_t be = _msgpack_be16(len);
             msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc8, (const void*)&be, 2);
+            msgpack_buffer_write_1(PACKER_BUFFER_(pk), ext_type);
         } else {
-            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 5);
+            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 6);
             uint32_t be = _msgpack_be32(len);
-            msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc8, (const void*)&be, 2);
+            msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc9, (const void*)&be, 4);
+            msgpack_buffer_write_1(PACKER_BUFFER_(pk), ext_type);
         }
     }
-    msgpack_buffer_append_string(PACKER_BUFFER_(pk), string);
+    msgpack_buffer_append_string(PACKER_BUFFER_(pk), payload);
 }
 
 #ifdef COMPAT_HAVE_ENCODING
