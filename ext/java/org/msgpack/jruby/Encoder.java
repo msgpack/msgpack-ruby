@@ -34,14 +34,16 @@ public class Encoder {
   private final Ruby runtime;
   private final Encoding binaryEncoding;
   private final Encoding utf8Encoding;
+  private final boolean compatibilityMode;
 
   private ByteBuffer buffer;
 
-  public Encoder(Ruby runtime) {
+  public Encoder(Ruby runtime, boolean compatibilityMode) {
     this.runtime = runtime;
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
+    this.compatibilityMode = compatibilityMode;
   }
 
   private void ensureRemainingCapacity(int c) {
@@ -190,7 +192,7 @@ public class Encoder {
 
   private void appendString(RubyString object) {
     Encoding encoding = object.getEncoding();
-    boolean binary = encoding == binaryEncoding;
+    boolean binary = !compatibilityMode && encoding == binaryEncoding;
     if (encoding != utf8Encoding && encoding != binaryEncoding) {
       object = (RubyString) ((RubyString) object).encode(runtime.getCurrentContext(), runtime.getEncodingService().getEncoding(utf8Encoding));
     }
@@ -199,7 +201,7 @@ public class Encoder {
     if (length < 32 && !binary) {
       ensureRemainingCapacity(1 + length);
       buffer.put((byte) (length | FIXSTR));
-    } else if (length <= 0xff) {
+    } else if (length <= 0xff && !compatibilityMode) {
       ensureRemainingCapacity(2 + length);
       buffer.put(binary ? BIN8 : STR8);
       buffer.put((byte) length);

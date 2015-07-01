@@ -32,6 +32,7 @@ struct msgpack_packer_t {
 
     VALUE io;
     ID io_write_all_method;
+    bool compatibility_mode;
 
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
@@ -270,7 +271,7 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
         unsigned char h = 0xa0 | (uint8_t) n;
         msgpack_buffer_write_1(PACKER_BUFFER_(pk), h);
-    } else if(n < 256) {
+    } else if(n < 256 && !pk->compatibility_mode) {
         msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
         unsigned char be = (uint8_t) n;
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xd9, (const void*)&be, 1);
@@ -368,7 +369,7 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
 
 #ifdef COMPAT_HAVE_ENCODING
     int encindex = ENCODING_GET(v);
-    if(msgpack_packer_is_binary(v, encindex)) {
+    if(msgpack_packer_is_binary(v, encindex) && !pk->compatibility_mode) {
         /* write ASCII-8BIT string using Binary type */
         msgpack_packer_write_bin_header(pk, (unsigned int)len);
         msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);

@@ -116,5 +116,19 @@ describe Packer do
     CustomPack02.new.to_msgpack(s04)
     s04.string.should == [1,2].to_msgpack
   end
+
+  context 'in compatibility mode' do
+    it 'does not use the bin types' do
+      packed = MessagePack.pack('hello'.force_encoding(Encoding::BINARY), compatibility_mode: true)
+      packed.should eq("\xA5hello")
+      packed = MessagePack.pack(('hello' * 100).force_encoding(Encoding::BINARY), compatibility_mode: true)
+      packed.should start_with("\xDA\x01\xF4")
+    end
+
+    it 'does not use the str8 type' do
+      packed = MessagePack.pack('x' * 32, compatibility_mode: true)
+      packed.should start_with("\xDA\x00\x20")
+    end
+  end
 end
 
