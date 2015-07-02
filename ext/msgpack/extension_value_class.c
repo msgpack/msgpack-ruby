@@ -20,9 +20,9 @@
 
 VALUE cMessagePack_ExtensionValue;
 
-static VALUE MessagePack_ExtensionValue_new(int ext_type, VALUE payload)
+VALUE MessagePack_ExtensionValue_new(int ext_type, VALUE payload)
 {
-    return rb_struct_new(cMessagePack_ExtensionValue, FIX2INT(ext_type), payload);
+    return rb_struct_new(cMessagePack_ExtensionValue, INT2FIX(ext_type), payload);
 }
 
 void MessagePack_ExtensionValue_module_init(VALUE mMessagePack)

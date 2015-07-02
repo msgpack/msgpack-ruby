@@ -23,7 +23,7 @@
 
 extern VALUE cMessagePack_ExtensionValue;
 
-static VALUE MessagePack_ExtensionValue_new(int ext_type, VALUE payload);
+VALUE MessagePack_ExtensionValue_new(int ext_type, VALUE payload);
 
 void MessagePack_ExtensionValue_module_init(VALUE mMessagePack);
 

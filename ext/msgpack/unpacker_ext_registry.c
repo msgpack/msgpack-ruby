@@ -32,7 +32,7 @@ void msgpack_unpacker_ext_registry_static_destroy()
 
 void msgpack_unpacker_ext_registry_init(msgpack_unpacker_ext_registry_t* ukrg)
 {
-    for(int i=0; i < 255; i++) {
+    for(int i=0; i < 256; i++) {
         ukrg->array[i] = Qnil;
     }
 }
@@ -42,7 +42,7 @@ void msgpack_unpacker_ext_registry_destroy(msgpack_unpacker_ext_registry_t* ukrg
 
 void msgpack_unpacker_ext_registry_mark(msgpack_unpacker_ext_registry_t* ukrg)
 {
-    for(int i=0; i < 255; i++) {
+    for(int i=0; i < 256; i++) {
         rb_gc_mark(ukrg->array[i]);
     }
 }
@@ -50,12 +50,8 @@ void msgpack_unpacker_ext_registry_mark(msgpack_unpacker_ext_registry_t* ukrg)
 void msgpack_unpacker_ext_registry_dup(msgpack_unpacker_ext_registry_t* src,
         msgpack_unpacker_ext_registry_t* dst)
 {
-    for(int i=0; i < 255; i++) {
-        if(src->array[i] == Qnil) {
-            dst->array[i] = Qnil;
-        } else {
-            dst->array[i] = rb_funcall(src->array[i], s_dup, 0);
-        }
+    for(int i=0; i < 256; i++) {
+        dst->array[i] = src->array[i];
     }
 }
 
