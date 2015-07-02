@@ -176,7 +176,7 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
     }
 
     if(uk->allow_unknown_ext) {
-        VALUE obj = MessagePack_ExtensionValue_new(ext_type, INT2FIX(str));
+        VALUE obj = MessagePack_ExtensionValue_new(ext_type, str);
         return object_complete(uk, obj);
     }
 

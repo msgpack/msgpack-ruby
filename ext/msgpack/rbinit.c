@@ -20,6 +20,7 @@
 #include "packer_class.h"
 #include "unpacker_class.h"
 #include "factory_class.h"
+#include "extension_value_class.h"
 #include "core_ext.h"
 
 void Init_msgpack(void)
