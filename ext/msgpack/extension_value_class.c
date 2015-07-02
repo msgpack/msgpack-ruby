@@ -27,6 +27,8 @@ VALUE MessagePack_ExtensionValue_new(int ext_type, VALUE payload)
 
 void MessagePack_ExtensionValue_module_init(VALUE mMessagePack)
 {
-    cMessagePack_ExtensionValue = rb_struct_define_under(mMessagePack, "ExtensionValue", "type", "payload", NULL);
+    /* rb_struct_define_under is not available ruby < 2.1 */
+    //cMessagePack_ExtensionValue = rb_struct_define_under(mMessagePack, "ExtensionValue", "type", "payload", NULL);
+    cMessagePack_ExtensionValue = rb_struct_define(NULL, "type", "payload", NULL);
+    rb_define_const(mMessagePack, "ExtensionValue", cMessagePack_ExtensionValue);
 }
-
