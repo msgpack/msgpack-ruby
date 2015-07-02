@@ -249,7 +249,7 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
     }
 
     ext_class = argv[1];
-    if (rb_type(ext_class) != T_CLASS) {
+    if(rb_type(ext_class) != T_CLASS) {
         rb_raise(rb_eArgError, "expected Class but found %s.", rb_obj_classname(ext_class));
     }
 

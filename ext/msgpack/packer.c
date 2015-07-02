@@ -132,7 +132,7 @@ static void _msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
     int ext_type;
     VALUE proc = msgpack_packer_ext_registry_lookup(&pk->ext_registry,
             rb_obj_class(v), &ext_type);
-    if (proc != Qnil) {
+    if(proc != Qnil) {
         VALUE payload = rb_funcall(proc, s_call, 1, v);
         StringValue(payload);
         msgpack_packer_write_ext(pk, ext_type, payload);

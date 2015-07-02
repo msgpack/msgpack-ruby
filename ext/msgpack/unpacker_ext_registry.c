@@ -51,7 +51,7 @@ void msgpack_unpacker_ext_registry_dup(msgpack_unpacker_ext_registry_t* src,
         msgpack_unpacker_ext_registry_t* dst)
 {
     for(int i=0; i < 255; i++) {
-        if (src->array[i] == Qnil) {
+        if(src->array[i] == Qnil) {
             dst->array[i] = Qnil;
         } else {
             dst->array[i] = rb_funcall(src->array[i], s_dup, 0);

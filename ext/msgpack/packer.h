@@ -376,7 +376,7 @@ static inline void msgpack_packer_write_ext(msgpack_packer_t* pk, int ext_type, 
             msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
             msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xc7, len);
             msgpack_buffer_write_1(PACKER_BUFFER_(pk), ext_type);
-        } else if (len < 65536) {
+        } else if(len < 65536) {
             msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 4);
             uint16_t be = _msgpack_be16(len);
             msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc8, (const void*)&be, 2);
