@@ -158,7 +158,7 @@ static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 static inline int object_complete_binary(msgpack_unpacker_t* uk, VALUE str)
 {
 #ifdef COMPAT_HAVE_ENCODING
-    // TODO ruby 2.0 has String#b method
+    ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
 #endif
     return object_complete(uk, str);
 }

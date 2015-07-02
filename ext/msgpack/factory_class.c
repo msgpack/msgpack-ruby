@@ -131,7 +131,7 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     case 3:
         /* register_type(0x7f, Time, packer: proc-like, unapcker: proc-like) */
         options = argv[2];
-        if (rb_type(options) != T_HASH) {
+        if(rb_type(options) != T_HASH) {
             rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
         }
         packer_arg = rb_hash_aref(options, ID2SYM(rb_intern("packer")));
@@ -142,24 +142,24 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     }
 
     ext_type = rb_num2int(argv[0]);
-    if (ext_type < -128 || ext_type > 127) {
+    if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
     ext_class = argv[1];
-    if (rb_type(ext_class) != T_CLASS) {
+    if(rb_type(ext_class) != T_CLASS) {
         rb_raise(rb_eArgError, "expected Class but found %s.", rb_obj_classname(ext_class));
     }
 
     packer_proc = Qnil;
     unpacker_proc = Qnil;
 
-    if (packer_arg != Qnil) {
+    if(packer_arg != Qnil) {
         packer_proc = rb_funcall(packer_arg, rb_intern("to_proc"), 0);
     }
 
-    if (unpacker_arg != Qnil) {
-        if (rb_type(unpacker_arg) == T_SYMBOL || rb_type(unpacker_arg) == T_STRING) {
+    if(unpacker_arg != Qnil) {
+        if(rb_type(unpacker_arg) == T_SYMBOL || rb_type(unpacker_arg) == T_STRING) {
             unpacker_proc = rb_obj_method(ext_class, unpacker_arg);
         } else {
             unpacker_proc = rb_funcall(unpacker_arg, rb_intern("method"), 1, ID2SYM(rb_intern("call")));
