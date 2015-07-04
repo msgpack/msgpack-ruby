@@ -44,7 +44,12 @@ void msgpack_packer_ext_registry_mark(msgpack_packer_ext_registry_t* pkrg)
 void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst)
 {
+#ifdef HAVE_RB_HASH_DUP
     dst->hash = rb_hash_dup(src->hash);
+#else
+    /* MRI 1.8 */
+    dst->hash = rb_funcall(src->hash, rb_intern("dup"), 0);
+#endif
 }
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
