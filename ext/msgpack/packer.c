@@ -47,8 +47,6 @@ void msgpack_packer_init(msgpack_packer_t* pk)
     memset(pk, 0, sizeof(msgpack_packer_t));
 
     msgpack_buffer_init(PACKER_BUFFER_(pk));
-
-    pk->io = Qnil;
 }
 
 void msgpack_packer_destroy(msgpack_packer_t* pk)
@@ -58,8 +56,6 @@ void msgpack_packer_destroy(msgpack_packer_t* pk)
 
 void msgpack_packer_mark(msgpack_packer_t* pk)
 {
-    rb_gc_mark(pk->io);
-
     /* See MessagePack_Buffer_wrap */
     /* msgpack_buffer_mark(PACKER_BUFFER_(pk)); */
     rb_gc_mark(pk->buffer_ref);
@@ -69,8 +65,6 @@ void msgpack_packer_reset(msgpack_packer_t* pk)
 {
     msgpack_buffer_clear(PACKER_BUFFER_(pk));
 
-    pk->io = Qnil;
-    pk->io_write_all_method = 0;
     pk->buffer_ref = Qnil;
 }
 

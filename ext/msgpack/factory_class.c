@@ -24,6 +24,7 @@
 #include "unpacker_class.h"
 
 VALUE cMessagePack_Factory;
+VALUE cMessagePack_DefaultFactory;
 
 struct msgpack_factory_t;
 typedef struct msgpack_factory_t msgpack_factory_t;
@@ -82,7 +83,7 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
-static VALUE Factory_packer(int argc, VALUE* argv, VALUE self)
+VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
 
@@ -97,7 +98,7 @@ static VALUE Factory_packer(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
-static VALUE Factory_unpacker(int argc, VALUE* argv, VALUE self)
+VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
 
@@ -181,12 +182,12 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
 
     rb_define_method(cMessagePack_Factory, "initialize", Factory_initialize, -1);
 
-    rb_define_method(cMessagePack_Factory, "packer", Factory_packer, -1);
-    rb_define_method(cMessagePack_Factory, "unpacker", Factory_unpacker, -1);
+    rb_define_method(cMessagePack_Factory, "packer", MessagePack_Factory_packer, -1);
+    rb_define_method(cMessagePack_Factory, "unpacker", MessagePack_Factory_unpacker, -1);
 
     rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
 
-    VALUE default_factory = Factory_alloc(cMessagePack_Factory);
-    Factory_initialize(0, NULL, default_factory);
-    rb_define_const(mMessagePack, "DefaultFactory", default_factory);
+    cMessagePack_DefaultFactory = Factory_alloc(cMessagePack_Factory);
+    Factory_initialize(0, NULL, cMessagePack_DefaultFactory);
+    rb_define_const(mMessagePack, "DefaultFactory", cMessagePack_DefaultFactory);
 }

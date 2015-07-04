@@ -19,6 +19,7 @@
 #include "unpacker.h"
 #include "unpacker_class.h"
 #include "buffer_class.h"
+#include "factory_class.h"
 
 VALUE cMessagePack_Unpacker;
 
@@ -349,36 +350,24 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
 VALUE MessagePack_unpack(int argc, VALUE* argv)
 {
     VALUE src;
-    VALUE options = Qnil;
+    VALUE self;
 
-    switch(argc) {
-    case 2:
-        options = argv[1];
-        if(rb_type(options) != T_HASH) {
-            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
-        }
-        /* pass-through */
-    case 1:
-        src = argv[0];
-        break;
-    default:
+    if (argc < 0 || argc > 2) {
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..2)", argc);
     }
+    src = argv[0];
 
-    VALUE self = Unpacker_alloc(cMessagePack_Unpacker);
+    if(rb_type(src) == T_STRING) {
+        self = MessagePack_Factory_unpacker(argc - 1, argv + 1, cMessagePack_DefaultFactory);
+        UNPACKER(self, uk);
+        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
+    } else {
+        self = MessagePack_Factory_unpacker(argc, argv, cMessagePack_DefaultFactory);
+    }
     UNPACKER(self, uk);
-    //_msgpack_unpacker_reset(s_unpacker);
-    //msgpack_buffer_reset_io(UNPACKER_BUFFER_(s_unpacker));
 
     /* prefer reference than copying; see MessagePack_Unpacker_module_init */
     msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(uk), 0);
-
-    if(rb_type(src) == T_STRING) {
-        MessagePack_Unpacker_initialize(uk, Qnil, options);
-        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
-    } else {
-        MessagePack_Unpacker_initialize(uk, src, options);
-    }
 
     int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
