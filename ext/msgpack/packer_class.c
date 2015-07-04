@@ -21,6 +21,7 @@
 #include "packer.h"
 #include "packer_class.h"
 #include "buffer_class.h"
+#include "factory_class.h"
 
 VALUE cMessagePack_Packer;
 
@@ -266,48 +267,19 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
 VALUE MessagePack_pack(int argc, VALUE* argv)
 {
     VALUE v;
-    VALUE io = Qnil;
-    VALUE options = Qnil;
 
-    if(argc == 1) {
-        v = argv[0];
-
-    } else if(argc == 2) {
-        v = argv[0];
-        if(rb_type(argv[1]) == T_HASH) {
-            options = argv[1];
-        } else {
-            io = argv[1];
-        }
-
-    } else if(argc == 3) {
-        v = argv[0];
-        io = argv[1];
-        options = argv[2];
-        if(rb_type(options) != T_HASH) {
-            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
-        }
-
-    } else {
+    if (argc < 0 || argc > 3) {
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..3)", argc);
     }
+    v = argv[0];
 
-    VALUE self = Packer_alloc(cMessagePack_Packer);
+    VALUE self = MessagePack_Factory_packer(argc - 1, argv + 1, cMessagePack_DefaultFactory);
     PACKER(self, pk);
-
-    if (options != Qnil) {
-      pk->compatibility_mode = RTEST(rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode"))));
-    }
-
-    //msgpack_packer_reset(s_packer);
-    //msgpack_buffer_reset_io(PACKER_BUFFER_(s_packer));
-
-    MessagePack_Packer_initialize(pk, io, options);
 
     msgpack_packer_write_value(pk, v);
 
     VALUE retval;
-    if(io != Qnil) {
+    if(msgpack_buffer_has_io(PACKER_BUFFER_(pk))) {
         msgpack_buffer_flush(PACKER_BUFFER_(pk));
         retval = Qnil;
     } else {

@@ -23,6 +23,12 @@
 
 extern VALUE cMessagePack_Factory;
 
+extern VALUE cMessagePack_DefaultFactory;
+
+extern VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self);
+
+extern VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self);
+
 void MessagePack_Factory_module_init(VALUE mMessagePack);
 
 #endif

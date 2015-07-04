@@ -31,8 +31,6 @@ typedef struct msgpack_packer_t msgpack_packer_t;
 struct msgpack_packer_t {
     msgpack_buffer_t buffer;
 
-    VALUE io;
-    ID io_write_all_method;
     bool compatibility_mode;
 
     ID to_msgpack_method;
@@ -63,12 +61,6 @@ static inline void msgpack_packer_set_to_msgpack_method(msgpack_packer_t* pk,
 {
     pk->to_msgpack_method = to_msgpack_method;
     pk->to_msgpack_arg = to_msgpack_arg;
-}
-
-static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_write_all_method)
-{
-    pk->io = io;
-    pk->io_write_all_method = io_write_all_method;
 }
 
 void msgpack_packer_reset(msgpack_packer_t* pk);
