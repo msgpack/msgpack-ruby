@@ -233,7 +233,12 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
     case 2:
         /* register_type(0x7f, Time) {|obj| block... } */
         rb_need_block();
+#ifdef HAVE_RB_BLOCK_LAMBDA
         proc = rb_block_lambda();
+#else
+        /* MRI 1.8 */
+        proc = rb_block_proc();
+#endif
         break;
     case 3:
         /* register_type(0x7f, Time, :to_msgpack_ext) */
