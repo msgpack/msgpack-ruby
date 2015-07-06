@@ -35,7 +35,8 @@ void msgpack_unpacker_ext_registry_static_destroy();
 
 void msgpack_unpacker_ext_registry_init(msgpack_unpacker_ext_registry_t* ukrg);
 
-void msgpack_unpacker_ext_registry_destroy(msgpack_unpacker_ext_registry_t* ukrg);
+static inline msgpack_unpacker_ext_registry_destroy(msgpack_unpacker_ext_registry_t* ukrg)
+{ }
 
 void msgpack_unpacker_ext_registry_mark(msgpack_unpacker_ext_registry_t* ukrg);
 
