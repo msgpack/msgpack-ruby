@@ -87,7 +87,8 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
 
-    VALUE packer = MessagePack_Packer_new(argc, argv);
+    VALUE packer = MessagePack_Packer_alloc(cMessagePack_Packer);
+    MessagePack_Packer_initialize(argc, argv, packer);
 
     msgpack_packer_t* pk;
     Data_Get_Struct(packer, msgpack_packer_t, pk);
@@ -102,7 +103,8 @@ VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
 
-    VALUE unpacker = MessagePack_Unpacker_new(argc, argv);
+    VALUE unpacker = MessagePack_Unpacker_alloc(cMessagePack_Unpacker);
+    MessagePack_Unpacker_initialize(argc, argv, unpacker);
 
     msgpack_unpacker_t* uk;
     Data_Get_Struct(unpacker, msgpack_unpacker_t, uk);

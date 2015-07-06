@@ -37,9 +37,6 @@ void msgpack_unpacker_ext_registry_init(msgpack_unpacker_ext_registry_t* ukrg)
     }
 }
 
-void msgpack_unpacker_ext_registry_destroy(msgpack_unpacker_ext_registry_t* ukrg)
-{ }
-
 void msgpack_unpacker_ext_registry_mark(msgpack_unpacker_ext_registry_t* ukrg)
 {
     for(int i=0; i < 256; i++) {

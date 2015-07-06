@@ -34,7 +34,8 @@ void msgpack_packer_ext_registry_static_destroy();
 
 void msgpack_packer_ext_registry_init(msgpack_packer_ext_registry_t* pkrg);
 
-void msgpack_packer_ext_registry_destroy(msgpack_packer_ext_registry_t* pkrg);
+static inline void msgpack_packer_ext_registry_destroy(msgpack_packer_ext_registry_t* pkrg)
+{ }
 
 void msgpack_packer_ext_registry_mark(msgpack_packer_ext_registry_t* pkrg);
 

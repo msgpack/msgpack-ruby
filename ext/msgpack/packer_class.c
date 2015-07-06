@@ -54,7 +54,7 @@ static void Packer_mark(msgpack_packer_t* pk)
     msgpack_packer_ext_registry_mark(&pk->ext_registry);
 }
 
-static VALUE Packer_alloc(VALUE klass)
+VALUE MessagePack_Packer_alloc(VALUE klass)
 {
     msgpack_packer_t* pk = ALLOC_N(msgpack_packer_t, 1);
     msgpack_packer_init(pk);
@@ -68,7 +68,7 @@ static VALUE Packer_alloc(VALUE klass)
     return self;
 }
 
-static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
+VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
 {
     VALUE io = Qnil;
     VALUE options = Qnil;
@@ -97,14 +97,7 @@ static VALUE Packer_initialize(int argc, VALUE* argv, VALUE self)
 
     PACKER(self, pk);
 
-    MessagePack_Packer_initialize(pk, io, options);
-
-    return self;
-}
-
-void MessagePack_Packer_initialize(msgpack_packer_t* pk, VALUE io, VALUE options)
-{
-    MessagePack_Buffer_initialize(PACKER_BUFFER_(pk), io, options);
+    MessagePack_Buffer_set_options(PACKER_BUFFER_(pk), io, options);
 
     if(options != Qnil) {
         VALUE v;
@@ -112,6 +105,8 @@ void MessagePack_Packer_initialize(msgpack_packer_t* pk, VALUE io, VALUE options
         v = rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode")));
         msgpack_packer_set_compat(pk, RTEST(v));
     }
+
+    return self;
 }
 
 static VALUE Packer_buffer(VALUE self)
@@ -309,13 +304,6 @@ static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
     return MessagePack_pack(argc, argv);
 }
 
-VALUE MessagePack_Packer_new(int argc, VALUE* argv)
-{
-    VALUE self = Packer_alloc(cMessagePack_Packer);
-    Packer_initialize(argc, argv, self);
-    return self;
-}
-
 void MessagePack_Packer_module_init(VALUE mMessagePack)
 {
     s_to_msgpack = rb_intern("to_msgpack");
@@ -326,9 +314,9 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
 
     cMessagePack_Packer = rb_define_class_under(mMessagePack, "Packer", rb_cObject);
 
-    rb_define_alloc_func(cMessagePack_Packer, Packer_alloc);
+    rb_define_alloc_func(cMessagePack_Packer, MessagePack_Packer_alloc);
 
-    rb_define_method(cMessagePack_Packer, "initialize", Packer_initialize, -1);
+    rb_define_method(cMessagePack_Packer, "initialize", MessagePack_Packer_initialize, -1);
     rb_define_method(cMessagePack_Packer, "buffer", Packer_buffer, 0);
     rb_define_method(cMessagePack_Packer, "write", Packer_write, 1);
     rb_define_alias(cMessagePack_Packer, "pack", "write");
@@ -351,7 +339,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
 
     rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
 
-    //s_packer_value = Packer_alloc(cMessagePack_Packer);
+    //s_packer_value = MessagePack_Packer_alloc(cMessagePack_Packer);
     //rb_gc_register_address(&s_packer_value);
     //Data_Get_Struct(s_packer_value, msgpack_packer_t, s_packer);
 
