@@ -11,3 +11,7 @@ else
     require "msgpack/msgpack"
   end
 end
+
+require "msgpack/packer"
+require "msgpack/unpacker"
+require "msgpack/factory"

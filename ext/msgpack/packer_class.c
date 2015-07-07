@@ -217,6 +217,12 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 //    return self;
 //}
 
+static VALUE Packer_registered_types(VALUE self)
+{
+    PACKER(self, pk);
+    return rb_hash_dup(pk->ext_registry.hash);
+}
+
 static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
 {
     PACKER(self, pk);
@@ -337,6 +343,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     //rb_define_method(cMessagePack_Packer, "append", Packer_append, 1);
     //rb_define_alias(cMessagePack_Packer, "<<", "append");
 
+    rb_define_method(cMessagePack_Packer, "registered_types", Packer_registered_types, 0);
     rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
 
     //s_packer_value = MessagePack_Packer_alloc(cMessagePack_Packer);

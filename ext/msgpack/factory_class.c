@@ -115,6 +115,19 @@ VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
     return unpacker;
 }
 
+static VALUE Factory_registered_types_internal(VALUE self)
+{
+    FACTORY(self, fc);
+
+    VALUE uk_mapping = rb_hash_new();
+    for(int i=0; i < 256; i++) {
+        if(fc->ukrg.array[i] != Qnil) {
+            rb_hash_aset(uk_mapping, INT2FIX(i - 128), fc->ukrg.array[i]);
+        }
+    }
+    return rb_ary_new3(2, rb_hash_dup(fc->pkrg.hash), uk_mapping);
+}
+
 static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
@@ -187,6 +200,7 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Factory, "packer", MessagePack_Factory_packer, -1);
     rb_define_method(cMessagePack_Factory, "unpacker", MessagePack_Factory_unpacker, -1);
 
+    rb_define_method(cMessagePack_Factory, "registered_types_internal", Factory_registered_types_internal, 0);
     rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
 
     cMessagePack_DefaultFactory = Factory_alloc(cMessagePack_Factory);
