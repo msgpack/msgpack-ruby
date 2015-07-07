@@ -66,6 +66,49 @@ describe MessagePack::Factory do
     end
   end
 
+  class MyType2 < MyType
+  end
+
+  describe '#registered_types' do
+    it 'returns Hash' do
+      expect(subject.registered_types).to be_instance_of(Hash)
+    end
+
+    it 'returns Hash contains type id as key and array of class, procs for packer/unpacker as value' do
+      subject.register_type(0x20, ::MyType)
+      subject.register_type(0x21, ::MyType2)
+
+      mapping = subject.registered_types
+
+      expect(mapping.size).to eq(2)
+      expect(mapping[0x20].size).to eq(3)
+      expect(mapping[0x20][0]).to eq(::MyType)
+      expect(mapping[0x20][1]).to eq(:to_msgpack_ext.to_proc)
+      expect(mapping[0x20][2]).to eq(::MyType.method(:from_msgpack_ext))
+    end
+  end
+
+  describe '#type_registered?' do
+    it 'receive Class or Integer, and return bool' do
+      expect(subject.type_registered?(0x00)).to be_falsy
+      expect(subject.type_registered?(0x01)).to be_falsy
+      expect(subject.type_registered?(::MyType)).to be_falsy
+    end
+
+    it 'returns true if specified type or class is already registered' do
+      subject.register_type(0x20, ::MyType)
+      subject.register_type(0x21, ::MyType2)
+
+      expect(subject.type_registered?(0x00)).to be_falsy
+      expect(subject.type_registered?(0x01)).to be_falsy
+
+      expect(subject.type_registered?(0x20)).to be_truthy
+      expect(subject.type_registered?(0x21)).to be_truthy
+      expect(subject.type_registered?(::MyType)).to be_truthy
+      expect(subject.type_registered?(::MyType2)).to be_truthy
+    end
+  end
+
   describe '#register_type' do
     let :src do
       ::MyType.new(1, 2)

@@ -306,6 +306,20 @@ static VALUE Unpacker_reset(VALUE self)
     return Qnil;
 }
 
+static VALUE Unpacker_registered_types(VALUE self)
+{
+    UNPACKER(self, uk);
+
+    VALUE mapping = rb_hash_new();
+    for(int i=0; i < 256; i++) {
+        if(uk->ext_registry.array[i] != Qnil) {
+            rb_hash_aset(mapping, INT2FIX(i - 128), uk->ext_registry.array[i]);
+        }
+    }
+
+    return mapping;
+}
+
 static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
 {
     UNPACKER(self, uk);
@@ -433,6 +447,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
     rb_define_method(cMessagePack_Unpacker, "reset", Unpacker_reset, 0);
 
+    rb_define_method(cMessagePack_Unpacker, "registered_types", Unpacker_registered_types, 0);
     rb_define_method(cMessagePack_Unpacker, "register_type", Unpacker_register_type, -1);
 
     //s_unpacker_value = MessagePack_Unpacker_alloc(cMessagePack_Unpacker);
