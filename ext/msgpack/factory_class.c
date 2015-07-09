@@ -182,9 +182,9 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         }
     }
 
-    msgpack_packer_ext_registry_put(&fc->pkrg, ext_class, ext_type, packer_proc);
+    msgpack_packer_ext_registry_put(&fc->pkrg, ext_class, ext_type, packer_proc, packer_arg);
 
-    msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_type, unpacker_proc);
+    msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_class, ext_type, unpacker_proc, unpacker_arg);
 
     return Qnil;
 }

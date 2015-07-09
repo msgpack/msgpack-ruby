@@ -70,21 +70,54 @@ describe MessagePack::Factory do
   end
 
   describe '#registered_types' do
-    it 'returns Hash' do
-      expect(subject.registered_types).to be_instance_of(Hash)
+    it 'returns Array' do
+      expect(subject.registered_types).to be_instance_of(Array)
     end
 
-    it 'returns Hash contains type id as key and array of class, procs for packer/unpacker as value' do
+    it 'returns Array of Hash contains :type, :class, :packer, :unpacker' do
       subject.register_type(0x20, ::MyType)
       subject.register_type(0x21, ::MyType2)
 
-      mapping = subject.registered_types
+      list = subject.registered_types
 
-      expect(mapping.size).to eq(2)
-      expect(mapping[0x20].size).to eq(3)
-      expect(mapping[0x20][0]).to eq(::MyType)
-      expect(mapping[0x20][1]).to eq(:to_msgpack_ext.to_proc)
-      expect(mapping[0x20][2]).to eq(::MyType.method(:from_msgpack_ext))
+      expect(list.size).to eq(2)
+      expect(list[0]).to be_instance_of(Hash)
+      expect(list[1]).to be_instance_of(Hash)
+      expect(list[0].keys.sort).to eq([:type, :class, :packer, :unpacker].sort)
+      expect(list[1].keys.sort).to eq([:type, :class, :packer, :unpacker].sort)
+
+      expect(list[0][:type]).to eq(0x20)
+      expect(list[0][:class]).to eq(::MyType)
+      expect(list[0][:packer]).to eq(:to_msgpack_ext)
+      expect(list[0][:unpacker]).to eq(:from_msgpack_ext)
+
+      expect(list[1][:type]).to eq(0x21)
+      expect(list[1][:class]).to eq(::MyType2)
+      expect(list[1][:packer]).to eq(:to_msgpack_ext)
+      expect(list[1][:unpacker]).to eq(:from_msgpack_ext)
+    end
+
+    it 'returns Array of Hash which has nil for unregistered feature' do
+      subject.register_type(0x20, ::MyType, packer: :to_msgpack_ext)
+      subject.register_type(0x21, ::MyType2, unpacker: :from_msgpack_ext)
+
+      list = subject.registered_types
+
+      expect(list.size).to eq(2)
+      expect(list[0]).to be_instance_of(Hash)
+      expect(list[1]).to be_instance_of(Hash)
+      expect(list[0].keys.sort).to eq([:type, :class, :packer, :unpacker].sort)
+      expect(list[1].keys.sort).to eq([:type, :class, :packer, :unpacker].sort)
+
+      expect(list[0][:type]).to eq(0x20)
+      expect(list[0][:class]).to eq(::MyType)
+      expect(list[0][:packer]).to eq(:to_msgpack_ext)
+      expect(list[0][:unpacker]).to be_nil
+
+      expect(list[1][:type]).to eq(0x21)
+      expect(list[1][:class]).to eq(::MyType2)
+      expect(list[1][:packer]).to be_nil
+      expect(list[1][:unpacker]).to eq(:from_msgpack_ext)
     end
   end
 
@@ -93,6 +126,13 @@ describe MessagePack::Factory do
       expect(subject.type_registered?(0x00)).to be_falsy
       expect(subject.type_registered?(0x01)).to be_falsy
       expect(subject.type_registered?(::MyType)).to be_falsy
+    end
+
+    it 'has option to specify what types are registered for' do
+      expect(subject.type_registered?(0x00, :both)).to be_falsy
+      expect(subject.type_registered?(0x00, :packer)).to be_falsy
+      expect(subject.type_registered?(0x00, :unpacker)).to be_falsy
+      expect{ subject.type_registered?(0x00, :something) }.to raise_error(ArgumentError)
     end
 
     it 'returns true if specified type or class is already registered' do

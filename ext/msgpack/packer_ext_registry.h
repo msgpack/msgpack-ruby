@@ -26,6 +26,10 @@ typedef struct msgpack_packer_ext_registry_t msgpack_packer_ext_registry_t;
 
 struct msgpack_packer_ext_registry_t {
     VALUE hash;
+    /*
+     * lookup cache for subclasses of registered classes
+     */
+    VALUE cache;
 };
 
 void msgpack_packer_ext_registry_static_init();
@@ -43,17 +47,66 @@ void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst);
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_class, int ext_type, VALUE proc);
+        VALUE ext_class, int ext_type, VALUE proc, VALUE arg);
+
+static int msgpack_packer_ext_find_inherited(VALUE key, VALUE value, VALUE arg)
+{
+    VALUE *args = (VALUE *) arg;
+    if(key == Qundef) {
+        return ST_CONTINUE;
+    }
+    if(rb_class_inherited_p(args[0], key) == Qtrue) {
+        args[1] = key;
+        return ST_STOP;
+    }
+    return ST_CONTINUE;
+}
+
 
 static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_class, int* ext_type_result)
 {
     VALUE e = rb_hash_lookup(pkrg->hash, ext_class);
-    if(e == Qnil) {
-        return Qnil;
+    if(e != Qnil) {
+        *ext_type_result = FIX2INT(rb_ary_entry(e, 0));
+        return rb_ary_entry(e, 1);
     }
-    *ext_type_result = FIX2INT(rb_ary_entry(e, 0));
-    return rb_ary_entry(e, 1);
+
+    VALUE c = rb_hash_lookup(pkrg->cache, ext_class);
+    if(c != Qnil) {
+        *ext_type_result = FIX2INT(rb_ary_entry(c, 0));
+        return rb_ary_entry(c, 1);
+    }
+
+    /*
+     * check all keys whether it is super class of ext_class, or not
+     */
+    VALUE args[2];
+    args[0] = ext_class;
+    args[1] = Qnil;
+
+#ifdef RUBINIUS
+    ID s_next = rb_intern("next");
+    ID s_key = rb_intern("key");
+    ID s_value = rb_intern("value");
+    VALUE iter = rb_funcall(v, rb_intern("to_iter"), 0);
+    VALUE entry = Qnil;
+    while(RTEST(entry = rb_funcall(iter, s_next, 1, entry))) {
+        VALUE key = rb_funcall(entry, s_key, 0);
+        VALUE val = rb_funcall(entry, s_value, 0);
+        msgpack_packer_ext_find_inherited(key, val, ext_class, (VALUE) args);
+    }
+#else
+    rb_hash_foreach(pkrg->hash, msgpack_packer_ext_find_inherited, (VALUE) args);
+#endif
+
+    VALUE hit = args[1];
+    if(hit != Qnil) {
+        rb_hash_aset(pkrg->cache, ext_class, hit);
+        return hit;
+    }
+
+    return Qnil;
 }
 
 VALUE msgpack_packer_ext_registry_call(msgpack_packer_ext_registry_t* pkrg,

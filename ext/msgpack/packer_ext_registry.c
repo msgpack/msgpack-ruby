@@ -31,23 +31,28 @@ void msgpack_packer_ext_registry_static_destroy()
 void msgpack_packer_ext_registry_init(msgpack_packer_ext_registry_t* pkrg)
 {
     pkrg->hash = rb_hash_new();
+    pkrg->cache = rb_hash_new();
 }
 
 void msgpack_packer_ext_registry_mark(msgpack_packer_ext_registry_t* pkrg)
 {
     rb_gc_mark(pkrg->hash);
+    rb_gc_mark(pkrg->cache);
 }
 
 void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst)
 {
     dst->hash = rb_hash_dup(src->hash);
+    dst->cache = rb_hash_dup(src->cache);
 }
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_class, int ext_type, VALUE proc)
+        VALUE ext_class, int ext_type, VALUE proc, VALUE arg)
 {
-    VALUE e = rb_ary_new3(2, INT2FIX(ext_type), proc);
+    VALUE e = rb_ary_new3(3, INT2FIX(ext_type), proc, arg);
+    /* clear lookup cache not to miss added type */
+    rb_hash_clear(pkrg->cache);
     return rb_hash_aset(pkrg->hash, ext_class, e);
 }
 

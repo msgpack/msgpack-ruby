@@ -53,10 +53,11 @@ void msgpack_unpacker_ext_registry_dup(msgpack_unpacker_ext_registry_t* src,
 }
 
 VALUE msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t* ukrg,
-        int ext_type, VALUE proc)
+        VALUE ext_class, int ext_type, VALUE proc, VALUE arg)
 {
+    VALUE e = rb_ary_new3(3, ext_class, proc, arg);
     VALUE before = ukrg->array[ext_type + 128];
-    ukrg->array[ext_type + 128] = proc;
+    ukrg->array[ext_type + 128] = e;
     return before;
 }
 

@@ -2,8 +2,12 @@ require 'spec_helper'
 
 describe MessagePack::Unpacker do
   class ValueOne
+    attr_reader :num
     def initialize(num)
       @num = num
+    end
+    def ==(obj)
+      self.num == obj.num
     end
     def num
       @num
@@ -17,8 +21,12 @@ describe MessagePack::Unpacker do
   end
 
   class ValueTwo
+    attr_reader :num_s
     def initialize(num)
       @num_s = num.to_s
+    end
+    def ==(obj)
+      self.num_s == obj.num_s
     end
     def num
       @num_s.to_i
@@ -70,16 +78,50 @@ describe MessagePack::Unpacker do
       unpacker.register_type(0x02, ValueTwo, :from_msgpack_ext)
     end
 
-    it 'returns a Hash which contains map of Class and type' do
+    it 'returns a Array of Hash which contains :type, :class and :unpacker' do
       unpacker = MessagePack::Unpacker.new
-      unpacker.register_type(0x01, ValueOne, :from_msgpack_ext)
       unpacker.register_type(0x02, ValueTwo, :from_msgpack_ext)
+      unpacker.register_type(0x01, ValueOne, :from_msgpack_ext)
 
-      expect(unpacker.registered_types).to be_a(Hash)
-      expect(unpacker.registered_types.size).to eq(2)
+      list = unpacker.registered_types
 
-      expect(unpacker.registered_types[0x01]).to eq(ValueOne.method(:from_msgpack_ext))
-      expect(unpacker.registered_types[0x02]).to eq(ValueTwo.method(:from_msgpack_ext))
+      expect(list).to be_a(Array)
+      expect(list.size).to eq(2)
+
+      one = list[0]
+      expect(one.keys.sort).to eq([:type, :class, :unpacker].sort)
+      expect(one[:type]).to eq(0x01)
+      expect(one[:class]).to eq(ValueOne)
+      expect(one[:unpacker]).to eq(:from_msgpack_ext)
+
+      two = list[1]
+      expect(two.keys.sort).to eq([:type, :class, :unpacker].sort)
+      expect(two[:type]).to eq(0x02)
+      expect(two[:class]).to eq(ValueTwo)
+      expect(two[:unpacker]).to eq(:from_msgpack_ext)
+    end
+
+    it 'returns a Array of Hash, which contains nil for class if block unpacker specified' do
+      unpacker = MessagePack::Unpacker.new
+      unpacker.register_type(0x01){|data| ValueOne.from_msgpack_ext }
+      unpacker.register_type(0x02, &ValueTwo.method(:from_msgpack_ext))
+
+      list = unpacker.registered_types
+
+      expect(list).to be_a(Array)
+      expect(list.size).to eq(2)
+
+      one = list[0]
+      expect(one.keys.sort).to eq([:type, :class, :unpacker].sort)
+      expect(one[:type]).to eq(0x01)
+      expect(one[:class]).to be_nil
+      expect(one[:unpacker]).to be_instance_of(Proc)
+
+      two = list[1]
+      expect(two.keys.sort).to eq([:type, :class, :unpacker].sort)
+      expect(two[:type]).to eq(0x02)
+      expect(two[:class]).to be_nil
+      expect(two[:unpacker]).to be_instance_of(Proc)
     end
   end
 end

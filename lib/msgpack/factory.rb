@@ -2,27 +2,56 @@ module MessagePack
   class Factory
     # see ext for other methods
 
-    def registered_types
+    # [ {type: id, class: Class(or nil), packer: arg, unpacker: arg}, ... ]
+    def registered_types(selector=:both)
       packer, unpacker = registered_types_internal
-      # packer: Class -> [id, proc]
-      # unpacker: id -> proc
+      # packer: Class -> [tid, proc, arg]
+      # unpacker: tid -> [klass, proc, arg]
 
-      mapping = {} # id => [Class, packer_proc, unpacker_proc]
-      packer.each_pair do |klass, pk|
-        mapping[pk[0]] = [klass, pk[1], unpacker[pk[0]]]
+      list = []
+
+      case selector
+      when :both
+        packer.each_pair do |klass, ary|
+          type = ary[0]
+          packer_arg = ary[2]
+          unpacker_arg = nil
+          if unpacker.has_key?(type) && unpacker[type][0] == klass
+            unpacker_arg = unpacker.delete(type)[2]
+          end
+          list << {type: type, class: klass, packer: packer_arg, unpacker: unpacker_arg}
+        end
+
+        # unpacker definition only
+        unpacker.each_pair do |type, ary|
+          list << {type: type, class: ary[0], packer: nil, unpacker: ary[2]}
+        end
+
+      when :packer
+        packer.each_pair do |klass, ary|
+          list << {type: ary[0], class: klass, packer: ary[2]}
+        end
+
+      when :unpacker
+        unpacker.each_pair do |type, ary|
+          list << {type: type, class: ary[0], unpacker: ary[2]}
+        end
+
+      else
+        raise ArgumentError, "invalid selector #{selector}"
       end
 
-      mapping
+      list
     end
 
-    def type_registered?(klass_or_type)
-      packer, unpacker = registered_types_internal
-
+    def type_registered?(klass_or_type, selector=:both)
       case klass_or_type
-      when Integer
-        unpacker.has_key?(klass_or_type)
       when Class
-        packer.has_key?(klass_or_type) || packer.keys.any?{|klass| klass_or_type <= klass }
+        klass = klass_or_type
+        registered_types(selector).any?{|entry| klass <= entry[:class] }
+      when Integer
+        type = klass_or_type
+        registered_types(selector).any?{|entry| type == entry[:type] }
       else
         raise ArgumentError, "class or type id"
       end
