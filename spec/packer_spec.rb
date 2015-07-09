@@ -72,16 +72,20 @@ describe MessagePack::Packer do
       packer.register_type(0x01, ValueOne, :to_msgpack_ext)
       packer.register_type(0x02, ValueTwo, :to_msgpack_ext)
 
-      expect(packer.registered_types).to be_a(Hash)
+      expect(packer.registered_types).to be_a(Array)
       expect(packer.registered_types.size).to eq(2)
 
-      one = packer.registered_types[ValueOne]
-      expect(one[0]).to eq(0x01)
-      expect(one[1]).to eq(:to_msgpack_ext.to_proc)
+      one = packer.registered_types[0]
+      expect(one.keys.sort).to eq([:type, :class, :packer].sort)
+      expect(one[:type]).to eq(0x01)
+      expect(one[:class]).to eq(ValueOne)
+      expect(one[:packer]).to eq(:to_msgpack_ext)
 
-      two = packer.registered_types[ValueTwo]
-      expect(two[0]).to eq(0x02)
-      expect(two[1]).to eq(:to_msgpack_ext.to_proc)
+      two = packer.registered_types[1]
+      expect(two.keys.sort).to eq([:type, :class, :packer].sort)
+      expect(two[:type]).to eq(0x02)
+      expect(two[:class]).to eq(ValueTwo)
+      expect(two[:packer]).to eq(:to_msgpack_ext)
     end
   end
 end
