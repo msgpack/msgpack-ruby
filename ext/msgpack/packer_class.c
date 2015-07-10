@@ -346,7 +346,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     //rb_define_method(cMessagePack_Packer, "append", Packer_append, 1);
     //rb_define_alias(cMessagePack_Packer, "<<", "append");
 
-    rb_define_method(cMessagePack_Packer, "registered_types_internal", Packer_registered_types_internal, 0);
+    rb_define_private_method(cMessagePack_Packer, "registered_types_internal", Packer_registered_types_internal, 0);
     rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
 
     //s_packer_value = MessagePack_Packer_alloc(cMessagePack_Packer);
