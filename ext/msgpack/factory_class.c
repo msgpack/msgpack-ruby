@@ -200,7 +200,7 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Factory, "packer", MessagePack_Factory_packer, -1);
     rb_define_method(cMessagePack_Factory, "unpacker", MessagePack_Factory_unpacker, -1);
 
-    rb_define_method(cMessagePack_Factory, "registered_types_internal", Factory_registered_types_internal, 0);
+    rb_define_private_method(cMessagePack_Factory, "registered_types_internal", Factory_registered_types_internal, 0);
     rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
 
     cMessagePack_DefaultFactory = Factory_alloc(cMessagePack_Factory);
