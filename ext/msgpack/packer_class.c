@@ -217,6 +217,12 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 //    return self;
 //}
 
+static VALUE Packer_registered_types_internal(VALUE self)
+{
+    PACKER(self, pk);
+    return rb_hash_dup(pk->ext_registry.hash);
+}
+
 static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
 {
     PACKER(self, pk);
@@ -224,6 +230,7 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
     int ext_type;
     VALUE ext_class;
     VALUE proc;
+    VALUE arg;
 
     switch (argc) {
     case 2:
@@ -235,10 +242,12 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
         /* MRI 1.8 */
         proc = rb_block_proc();
 #endif
+        arg = proc;
         break;
     case 3:
         /* register_type(0x7f, Time, :to_msgpack_ext) */
-        proc = rb_funcall(argv[2], rb_intern("to_proc"), 0);
+        arg = argv[2];
+        proc = rb_funcall(arg, rb_intern("to_proc"), 0);
         break;
     default:
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 2..3)", argc);
@@ -254,7 +263,7 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "expected Class but found %s.", rb_obj_classname(ext_class));
     }
 
-    msgpack_packer_ext_registry_put(&pk->ext_registry, ext_class, ext_type, proc);
+    msgpack_packer_ext_registry_put(&pk->ext_registry, ext_class, ext_type, proc, arg);
 
     return Qnil;
 }
@@ -337,6 +346,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     //rb_define_method(cMessagePack_Packer, "append", Packer_append, 1);
     //rb_define_alias(cMessagePack_Packer, "<<", "append");
 
+    rb_define_method(cMessagePack_Packer, "registered_types_internal", Packer_registered_types_internal, 0);
     rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
 
     //s_packer_value = MessagePack_Packer_alloc(cMessagePack_Packer);
