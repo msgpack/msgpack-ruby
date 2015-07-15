@@ -35,22 +35,25 @@ RUN /home/ubuntu/xbuild/ruby-install 2.0.0-p643 /home/ubuntu/local/ruby-2.0
 
 ENV PATH /home/ubuntu/local/ruby-2.0/bin:$PATH
 RUN gem install rake-compiler
-RUN rake-compiler cross-ruby VERSION=2.0.0-p643 HOST=i686-w64-mingw32 EXTS=--without-extensions
-RUN rake-compiler cross-ruby VERSION=2.0.0-p643 HOST=x86_64-w64-mingw32 EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.0.0-p643 HOST=i386-mswin32-60 EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.0.0-p643 HOST=x86-mingw32     EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.0.0-p643 HOST=x64-mingw32     EXTS=--without-extensions
 
 RUN /home/ubuntu/xbuild/ruby-install 2.1.5 /home/ubuntu/local/ruby-2.1
 
 ENV PATH /home/ubuntu/local/ruby-2.1/bin:$PATH
 RUN gem install rake-compiler
-RUN rake-compiler cross-ruby VERSION=2.1.5 HOST=i686-w64-mingw32 EXTS=--without-extensions
-RUN rake-compiler cross-ruby VERSION=2.1.5 HOST=x86_64-w64-mingw32 EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.1.5 HOST=i386-mswin32-60 EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.1.5 HOST=x86-mingw32     EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.1.5 HOST=x64-mingw32     EXTS=--without-extensions
 
 RUN /home/ubuntu/xbuild/ruby-install 2.2.2 /home/ubuntu/local/ruby-2.2
 
 ENV PATH /home/ubuntu/local/ruby-2.2/bin:$PATH
 RUN gem install rake-compiler
-RUN rake-compiler cross-ruby VERSION=2.2.2 HOST=i686-w64-mingw32 EXTS=--without-extensions
-RUN rake-compiler cross-ruby VERSION=2.2.2 HOST=x86_64-w64-mingw32 EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.2.2 HOST=i386-mswin32-60 EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.2.2 HOST=x86-mingw32     EXTS=--without-extensions
+RUN rake-compiler cross-ruby VERSION=2.2.2 HOST=x64-mingw32     EXTS=--without-extensions
 
 WORKDIR /home/ubuntu/msgpack-ruby
 
@@ -59,4 +62,4 @@ ENV BUILD_BRANCH master
 ENV BUILD_POSITION HEAD
 
 ### docker run -v `pwd`/pkg:/home/ubuntu/msgpack-ruby/pkg IMAGENAME
-CMD ["bash", "-c", "git remote add dockerbuild $MSGPACK_REPO && git fetch dockerbuild && git checkout $BUILD_BRANCH && git pull dockerbuild $BUILD_BRANCH && git reset --hard $BUILD_POSITION && bundle && rake clean && rake cross native gem"]
+CMD ["bash", "-c", "git remote add dockerbuild $MSGPACK_REPO && git fetch dockerbuild && git checkout $BUILD_BRANCH && git pull dockerbuild $BUILD_BRANCH && git reset --hard $BUILD_POSITION && bundle && rake clean && rake cross native gem RUBY_CC_VERSION=2.0.0:2.1.5:2.2.2"]
