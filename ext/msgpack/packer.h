@@ -297,7 +297,7 @@ static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigne
 static inline void msgpack_packer_write_bin_header(msgpack_packer_t* pk, unsigned int n)
 {
     if(n < 256) {
-        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
         unsigned char be = (uint8_t) n;
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc4, (const void*)&be, 1);
     } else if(n < 65536) {
@@ -404,15 +404,17 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
     /* rb_sym2str is added since MRI 2.2.0 */
     msgpack_packer_write_string_value(pk, rb_sym2str(v));
 #else
-    const char* name = rb_id2name(SYM2ID(v));
-    unsigned long len = strlen(name);
-    /* actual return type of strlen is size_t */
+    VALUE name = rb_id2str(SYM2ID(v));
+    if (!name) {
+       rb_raise(rb_eRuntimeError, "could not find str by id");
+    }
+    unsigned long len = RSTRING_LEN(name);
     if(len > 0xffffffffUL) {
         // TODO rb_eArgError?
         rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
     }
     msgpack_packer_write_raw_header(pk, (unsigned int)len);
-    msgpack_buffer_append(PACKER_BUFFER_(pk), name, len);
+    msgpack_buffer_append(PACKER_BUFFER_(pk), RSTRING_PTR(name), len);
 #endif
 }
 
