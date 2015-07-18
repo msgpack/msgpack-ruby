@@ -138,6 +138,13 @@ describe MessagePack do
     v.should == a
   end
 
+  it "symbol to bin" do
+    a = "\xE3\x81\x82".force_encoding('ASCII-8BIT')
+    v = pack_unpack(a.to_sym)
+    v.encoding.should == Encoding::ASCII_8BIT
+    v.should == a
+  end
+
   it "bin 8" do
     check_bin 2, (1<<8)-1
   end
