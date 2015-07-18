@@ -126,6 +126,25 @@ describe MessagePack do
     v.should == "\xE3\x81\x82".force_encoding('UTF-8')
   end
 
+  it "symbol to str" do
+    v = pack_unpack(:a)
+    v.should == "a".force_encoding('UTF-8')
+  end
+
+  it "symbol to str with encoding" do
+    a = "\xE3\x81\x82".force_encoding('UTF-8')
+    v = pack_unpack(a.encode('Shift_JIS').to_sym)
+    v.encoding.should == Encoding::UTF_8
+    v.should == a
+  end
+
+  it "symbol to bin" do
+    a = "\xE3\x81\x82".force_encoding('ASCII-8BIT')
+    v = pack_unpack(a.to_sym)
+    v.encoding.should == Encoding::ASCII_8BIT
+    v.should == a
+  end
+
   it "bin 8" do
     check_bin 2, (1<<8)-1
   end

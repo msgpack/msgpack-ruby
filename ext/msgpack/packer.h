@@ -404,17 +404,11 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
     /* rb_sym2str is added since MRI 2.2.0 */
     msgpack_packer_write_string_value(pk, rb_sym2str(v));
 #else
-    VALUE name = rb_id2str(SYM2ID(v));
-    if (!name) {
-       rb_raise(rb_eRuntimeError, "could not find str by id");
+    VALUE str = rb_id2str(SYM2ID(v));
+    if (!str) {
+       rb_raise(rb_eRuntimeError, "could not convert a symbol to string");
     }
-    unsigned long len = RSTRING_LEN(name);
-    if(len > 0xffffffffUL) {
-        // TODO rb_eArgError?
-        rb_raise(rb_eArgError, "size of symbol is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
-    }
-    msgpack_packer_write_raw_header(pk, (unsigned int)len);
-    msgpack_buffer_append(PACKER_BUFFER_(pk), RSTRING_PTR(name), len);
+    msgpack_packer_write_string_value(pk, str);
 #endif
 }
 
