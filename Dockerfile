@@ -31,13 +31,6 @@ WORKDIR /home/ubuntu
 RUN git clone https://github.com/tagomoris/xbuild.git
 RUN git clone https://github.com/msgpack/msgpack-ruby.git
 
-RUN /home/ubuntu/xbuild/ruby-install 2.0.0-p643 /home/ubuntu/local/ruby-2.0
-
-ENV PATH /home/ubuntu/local/ruby-2.0/bin:$PATH
-RUN gem install rake-compiler
-RUN rake-compiler cross-ruby VERSION=2.0.0-p643 HOST=i686-w64-mingw32 EXTS=--without-extensions
-RUN rake-compiler cross-ruby VERSION=2.0.0-p643 HOST=x86_64-w64-mingw32 EXTS=--without-extensions
-
 RUN /home/ubuntu/xbuild/ruby-install 2.1.5 /home/ubuntu/local/ruby-2.1
 
 ENV PATH /home/ubuntu/local/ruby-2.1/bin:$PATH
@@ -59,4 +52,4 @@ ENV BUILD_BRANCH master
 ENV BUILD_POSITION HEAD
 
 ### docker run -v `pwd`/pkg:/home/ubuntu/msgpack-ruby/pkg IMAGENAME
-CMD ["bash", "-c", "git remote add dockerbuild $MSGPACK_REPO && git fetch dockerbuild && git checkout $BUILD_BRANCH && git pull dockerbuild $BUILD_BRANCH && git reset --hard $BUILD_POSITION && bundle && rake clean && rake cross native gem RUBY_CC_VERSION=2.0.0:2.1.5:2.2.2"]
+CMD ["bash", "-c", "git remote add dockerbuild $MSGPACK_REPO && git fetch dockerbuild && git checkout $BUILD_BRANCH && git pull dockerbuild $BUILD_BRANCH && git reset --hard $BUILD_POSITION && bundle && rake clean && rake cross native gem RUBY_CC_VERSION=2.1.5:2.2.2"]
