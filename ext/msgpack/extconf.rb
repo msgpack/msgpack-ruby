@@ -10,7 +10,7 @@ have_func("rb_block_lambda", ["ruby.h"])
 have_func("rb_hash_dup", ["ruby.h"])
 have_func("rb_hash_clear", ["ruby.h"])
 
-unless RUBY_PLATFORM.include? 'mswin'
+unless RUBY_PLATFORM =~ /mswin|mingw/
   $CFLAGS << %[ -I.. -Wall -O3 -g -std=c99]
 end
 #$CFLAGS << %[ -DDISABLE_RMEM]

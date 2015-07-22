@@ -64,6 +64,14 @@ else
   end
 end
 
+namespace :build do
+  desc 'Build gems for Windows per rake-compiler-dock'
+  task :windows do
+    require 'rake_compiler_dock'
+    RakeCompilerDock.sh 'bundle && rake cross native gem RUBY_CC_VERSION=1.9.3:2.0.0:2.1.6:2.2.2'
+  end
+end
+
 CLEAN.include('lib/msgpack/msgpack.*')
 
 task :default => [:spec, :build, :doc]
