@@ -1,3 +1,9 @@
+2015-07-22 version 0.6.2:
+
+* Fix release workflow: Ruby 2.1 and 2.2 are supported for Windows (2.0 is omitted)
+* Fix to encode symbols along its encoding
+* Fix segmentation fault in minor case
+
 2015-07-01 version 0.6.1:
 
 * Added :compatibility_mode option to Packer#initialize. Default is false. If it
