@@ -18,6 +18,10 @@
 
 #include "packer_ext_registry.h"
 
+#ifdef RUBINIUS
+#include "vm/capi/mri/compat.h"
+#endif
+
 static ID s_call;
 
 void msgpack_packer_ext_registry_static_init()
