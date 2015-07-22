@@ -31,6 +31,8 @@ WORKDIR /home/ubuntu
 RUN git clone https://github.com/tagomoris/xbuild.git
 RUN git clone https://github.com/msgpack/msgpack-ruby.git
 
+# HOST values are for names of xxx-gcc in system for cross-compiling (currently ubuntu:14.04)
+
 RUN /home/ubuntu/xbuild/ruby-install 2.1.5 /home/ubuntu/local/ruby-2.1
 
 ENV PATH /home/ubuntu/local/ruby-2.1/bin:$PATH

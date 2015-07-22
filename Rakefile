@@ -52,6 +52,7 @@ else
     ext.ext_dir = 'ext/msgpack'
     ext.cross_compile = true
     ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
+    # cross_platform names are of MRI's platform name
     ext.cross_platform = ['x86-mingw32', 'x64-mingw32']
   end
 
