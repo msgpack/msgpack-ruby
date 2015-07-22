@@ -84,21 +84,7 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
     VALUE args[2];
     args[0] = ext_class;
     args[1] = Qnil;
-
-#ifdef RUBINIUS
-    ID s_next = rb_intern("next");
-    ID s_key = rb_intern("key");
-    ID s_value = rb_intern("value");
-    VALUE iter = rb_funcall(v, rb_intern("to_iter"), 0);
-    VALUE entry = Qnil;
-    while(RTEST(entry = rb_funcall(iter, s_next, 1, entry))) {
-        VALUE key = rb_funcall(entry, s_key, 0);
-        VALUE val = rb_funcall(entry, s_value, 0);
-        msgpack_packer_ext_find_inherited(key, val, ext_class, (VALUE) args);
-    }
-#else
     rb_hash_foreach(pkrg->hash, msgpack_packer_ext_find_inherited, (VALUE) args);
-#endif
 
     VALUE hit = args[1];
     if(hit != Qnil) {
