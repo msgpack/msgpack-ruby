@@ -19,6 +19,7 @@
 #define MSGPACK_RUBY_PACKER_H__
 
 #include "buffer.h"
+#include "packer_ext_registry.h"
 
 #ifndef MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY
 #define MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY (1024)
@@ -30,14 +31,14 @@ typedef struct msgpack_packer_t msgpack_packer_t;
 struct msgpack_packer_t {
     msgpack_buffer_t buffer;
 
-    VALUE io;
-    ID io_write_all_method;
     bool compatibility_mode;
 
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
 
     VALUE buffer_ref;
+
+    msgpack_packer_ext_registry_t ext_registry;
 
     /* options */
     bool comaptibility_mode;
@@ -60,12 +61,6 @@ static inline void msgpack_packer_set_to_msgpack_method(msgpack_packer_t* pk,
 {
     pk->to_msgpack_method = to_msgpack_method;
     pk->to_msgpack_arg = to_msgpack_arg;
-}
-
-static inline void msgpack_packer_set_io(msgpack_packer_t* pk, VALUE io, ID io_write_all_method)
-{
-    pk->io = io;
-    pk->io_write_all_method = io_write_all_method;
 }
 
 void msgpack_packer_reset(msgpack_packer_t* pk);
@@ -343,6 +338,50 @@ static inline void msgpack_packer_write_map_header(msgpack_packer_t* pk, unsigne
         uint32_t be = _msgpack_be32(n);
         msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xdf, (const void*)&be, 4);
     }
+}
+
+static inline void msgpack_packer_write_ext(msgpack_packer_t* pk, int ext_type, VALUE payload)
+{
+    unsigned long len = RSTRING_LEN(payload);
+    switch (len) {
+    case 1:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd4, ext_type);
+        break;
+    case 2:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd5, ext_type);
+        break;
+    case 4:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd6, ext_type);
+        break;
+    case 8:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd7, ext_type);
+        break;
+    case 16:
+        msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 2);
+        msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd8, ext_type);
+        break;
+    default:
+        if(len < 255) {
+            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
+            msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xc7, len);
+            msgpack_buffer_write_1(PACKER_BUFFER_(pk), ext_type);
+        } else if(len < 65536) {
+            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 4);
+            uint16_t be = _msgpack_be16(len);
+            msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc8, (const void*)&be, 2);
+            msgpack_buffer_write_1(PACKER_BUFFER_(pk), ext_type);
+        } else {
+            msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 6);
+            uint32_t be = _msgpack_be32(len);
+            msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xc9, (const void*)&be, 4);
+            msgpack_buffer_write_1(PACKER_BUFFER_(pk), ext_type);
+        }
+    }
+    msgpack_buffer_append_string(PACKER_BUFFER_(pk), payload);
 }
 
 #ifdef COMPAT_HAVE_ENCODING
