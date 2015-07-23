@@ -220,7 +220,11 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 static VALUE Packer_registered_types_internal(VALUE self)
 {
     PACKER(self, pk);
+#ifdef HAVE_RB_HASH_DUP
     return rb_hash_dup(pk->ext_registry.hash);
+#else
+    return rb_funcall(pk->ext_registry.hash, rb_intern("dup"), 0);
+#endif
 }
 
 static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
