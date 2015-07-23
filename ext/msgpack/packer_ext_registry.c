@@ -18,10 +18,6 @@
 
 #include "packer_ext_registry.h"
 
-#ifdef RUBINIUS
-#include "vm/capi/mri/compat.h"
-#endif
-
 static ID s_call;
 
 void msgpack_packer_ext_registry_static_init()
@@ -50,6 +46,30 @@ void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
     dst->hash = rb_hash_dup(src->hash);
     dst->cache = rb_hash_dup(src->cache);
 }
+
+#ifdef RUBINIUS
+
+#include "ruby/st.h"
+
+static int
+__rb_hash_clear_clear_i(key, value, dummy)
+    VALUE key, value, dummy;
+{
+    return ST_DELETE;
+}
+
+static VALUE
+rb_hash_clear(hash)
+    VALUE hash;
+{
+  if(! RHASH_EMPTY_P(hash)) {
+    rb_hash_foreach(hash, __rb_hash_clear_clear_i, 0);
+  }
+
+  return hash;
+}
+
+#endif
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_class, int ext_type, VALUE proc, VALUE arg)
