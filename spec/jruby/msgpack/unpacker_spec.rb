@@ -85,6 +85,16 @@ describe ::MessagePack::Unpacker do
         objects << subject.read
         objects.should == [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
       end
+
+      it 'reads map header' do
+        subject.feed({}.to_msgpack)
+        subject.read_map_header.should == 0
+      end
+
+      it 'reads array header' do
+        subject.feed([].to_msgpack)
+        subject.read_array_header.should == 0
+      end
     end
   end
   

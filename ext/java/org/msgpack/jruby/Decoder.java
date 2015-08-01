@@ -135,6 +135,48 @@ public class Decoder implements Iterator<IRubyObject> {
     return buffer.remaining() > 0;
   }
 
+  public IRubyObject read_array_header() {
+    int position = buffer.position();
+    try {
+      byte b = buffer.get();
+      if ((b & 0xf0) == 0x90) {
+	return runtime.newFixnum(b & 0x0f);
+      } else if (b == ARY16) {
+	return runtime.newFixnum(buffer.getShort() & 0xffff);
+      } else if (b == ARY32) {
+	return runtime.newFixnum(buffer.getInt());
+      }
+      throw runtime.newTypeError("unexpected type");
+    } catch (RaiseException re) {
+      buffer.position(position);
+      throw re;
+    } catch (BufferUnderflowException bue) {
+      buffer.position(position);
+      throw runtime.newRaiseException(underflowErrorClass, "Not enough bytes available");
+    }
+  }
+
+  public IRubyObject read_map_header() {
+    int position = buffer.position();
+    try {
+      byte b = buffer.get();
+      if ((b & 0xf0) == 0x80) {
+	return runtime.newFixnum(b & 0x0f);
+      } else if (b == MAP16) {
+	return runtime.newFixnum(buffer.getShort() & 0xffff);
+      } else if (b == MAP32) {
+	return runtime.newFixnum(buffer.getInt());
+      }
+      throw runtime.newTypeError("unexpected type");
+    } catch (RaiseException re) {
+      buffer.position(position);
+      throw re;
+    } catch (BufferUnderflowException bue) {
+      buffer.position(position);
+      throw runtime.newRaiseException(underflowErrorClass, "Not enough bytes available");
+    }
+  }
+
   @Override
   public IRubyObject next() {
     int position = buffer.position();
