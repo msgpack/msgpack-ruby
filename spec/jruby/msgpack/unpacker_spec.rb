@@ -72,6 +72,21 @@ describe ::MessagePack::Unpacker do
       subject.should_not be_finished
     end
   end
+
+  describe '#read' do
+    context 'with a buffer' do
+      it 'reads objects' do
+        objects = []
+        subject.feed(buffer1)
+        subject.feed(buffer2)
+        subject.feed(buffer3)
+        objects << subject.read
+        objects << subject.read
+        objects << subject.read
+        objects.should == [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
+      end
+    end
+  end
   
   describe '#each' do
     context 'with a buffer' do
