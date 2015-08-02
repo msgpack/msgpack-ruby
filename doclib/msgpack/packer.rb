@@ -27,6 +27,44 @@ module MessagePack
     end
 
     #
+    # Register a new ext type to serialize it. This method should be called with one of
+    # method name or block, which returns bytes(ASCII-8BIT String) representation of
+    # object to be serialized.
+    #
+    # @overload register_type(type, klass, &block)
+    #   @param type [Fixnum] type id (0-127) user defined type id for specified Class
+    #   @param klass [Class] Class to be serialized with speicifed type id
+    #   @yieldparam object [Object] object to be serialized
+    #
+    # @overload register_type(type, klass, method_name)
+    #   @param type [Fixnum] type id (0-127) user defined type id for specified Class
+    #   @param klass [Class] Class to be serialized with speicifed type id
+    #   @param method_name [Symbol] method which returns bytes of serialized representation
+    #
+    # @return nil
+    #
+    def register_type(type, klass, method_name, &block)
+    end
+
+    #
+    # Returns a list of registered types, ordered by type id.
+    # Each element is a Hash object includes keys :type, :class and :packer.
+    #
+    # @return Array
+    #
+    def registered_types
+    end
+
+    #
+    # Returns true/false which indicate specified class or type id is registered or not.
+    #
+    # @param klass_or_type [Class or Fixnum] Class or type id (0-127) to be checked
+    # @return true or false
+    #
+    def type_registered?(klass_or_type)
+    end
+
+    #
     # Internal buffer
     #
     # @return MessagePack::Buffer

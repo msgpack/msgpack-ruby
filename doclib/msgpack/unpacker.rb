@@ -19,10 +19,47 @@ module MessagePack
     # Supported options:
     #
     # * *:symbolize_keys* deserialize keys of Hash objects as Symbol instead of String
+    # * *:allow_unknown_ext* allow to deserialize ext type object with unknown type id as ExtensionValue instance
     #
     # See also Buffer#initialize for other options.
     #
     def initialize(*args)
+    end
+
+    #
+    # Register a new ext type to deserialize it. This method should be called with
+    # Class and its class method name, or block, which returns a instance object.
+    #
+    # @overload register_type(type, &block)
+    #   @param type [Fixnum] type id (0-127) user defined type id for specified deserializer block
+    #   @yieldparam data [String] bytes(ASCII-8BIT String) represents serialized object, to be deserialized
+    #
+    # @overload register_type(type, klass, class_method_name)
+    #   @param type [Fixnum] type id (0-127) user defined type id for specified Class
+    #   @param klass [Class] Class to be serialized with speicifed type id
+    #   @param class_method_name [Symbol] class method which returns an instance object
+    #
+    # @return nil
+    #
+    def register_type(type, klass, method_name, &block)
+    end
+
+    #
+    # Returns a list of registered types, ordered by type id.
+    # Each element is a Hash object includes keys :type, :class and :unpacker.
+    #
+    # @return Array
+    #
+    def registered_types
+    end
+
+    #
+    # Returns true/false which indicate specified class or type id is registered or not.
+    #
+    # @param klass_or_type [Class or Fixnum] Class or type id (0-127) to be checked
+    # @return true or false
+    #
+    def type_registered?(klass_or_type)
     end
 
     #
