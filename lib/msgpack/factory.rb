@@ -41,7 +41,7 @@ module MessagePack
         raise ArgumentError, "invalid selector #{selector}"
       end
 
-      list
+      list.sort{|a, b| a[:type] <=> b[:type] }
     end
 
     def type_registered?(klass_or_type, selector=:both)

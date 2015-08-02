@@ -104,8 +104,8 @@ describe MessagePack::Factory do
     end
 
     it 'returns Array of Hash which has nil for unregistered feature' do
-      subject.register_type(0x20, ::MyType, packer: :to_msgpack_ext)
       subject.register_type(0x21, ::MyType2, unpacker: :from_msgpack_ext)
+      subject.register_type(0x20, ::MyType, packer: :to_msgpack_ext)
 
       list = subject.registered_types
 
