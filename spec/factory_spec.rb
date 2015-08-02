@@ -38,6 +38,12 @@ describe MessagePack::Factory do
       unpacker.feed(MessagePack::ExtensionValue.new(1, 'a').to_msgpack)
       unpacker.read.should == MessagePack::ExtensionValue.new(1, 'a')
     end
+
+    it 'creates unpacker without allow_unknown_ext option' do
+      unpacker = subject.unpacker
+      unpacker.feed(MessagePack::ExtensionValue.new(1, 'a').to_msgpack)
+      expect{ unpacker.read }.to raise_error(MessagePack::TypeError)
+    end
   end
 
   class MyType
