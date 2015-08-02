@@ -84,4 +84,13 @@ public class Packer extends RubyObject {
     return buffer.flush(ctx);
   }
 
+  @JRubyMethod(name = "size")
+  public IRubyObject size(ThreadContext ctx) {
+    return buffer.size(ctx);
+  }
+
+  @JRubyMethod(name = "clear")
+  public IRubyObject clear(ThreadContext ctx) {
+    return buffer.clear(ctx);
+  }
 }
