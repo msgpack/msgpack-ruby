@@ -13,8 +13,7 @@ describe MessagePack do
     MessagePack.unpack(MessagePack.pack(symbolized_hash), :symbolize_keys => true).should == symbolized_hash
   end
 
-  it 'Unpacker#unpack symbolize_keys' do
-    skip("Unpacker#unpack returns nil in JRuby (incompatible)") if java?
+  it 'Unpacker#read symbolize_keys' do
     unpacker = MessagePack::Unpacker.new(:symbolize_keys => true)
     symbolized_hash = {:a => 'b', :c => 'd'}
     unpacker.feed(MessagePack.pack(symbolized_hash)).read.should == symbolized_hash

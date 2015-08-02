@@ -35,9 +35,6 @@ describe MessagePack do
   end
 
   it 'calls custom to_msgpack method' do
-    if /java/ =~ RUBY_PLATFORM
-      skip "custom to_msgpack fallback is not supported yet in JRuby implementation"
-    end
     MessagePack.pack(CustomPack01.new).should == [1,2].to_msgpack
     MessagePack.pack(CustomPack02.new).should == [1,2].to_msgpack
     CustomPack01.new.to_msgpack.should == [1,2].to_msgpack
@@ -45,9 +42,6 @@ describe MessagePack do
   end
 
   it 'calls custom to_msgpack method with io' do
-    if /java/ =~ RUBY_PLATFORM
-      skip "custom to_msgpack fallback with io is not supported yet in JRuby implementation"
-    end
     s01 = StringIO.new
     MessagePack.pack(CustomPack01.new, s01)
     s01.string.should == [1,2].to_msgpack

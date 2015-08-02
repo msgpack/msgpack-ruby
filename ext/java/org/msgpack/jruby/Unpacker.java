@@ -107,7 +107,7 @@ public class Unpacker extends RubyObject {
     } else {
       decoder.feed(byteList.unsafeBytes(), byteList.begin(), byteList.length());
     }
-    return ctx.getRuntime().getNil();
+    return this;
   }
 
   @JRubyMethod(name = "feed_each", required = 1)

@@ -105,10 +105,8 @@ public class Encoder {
       appendArray((RubyArray) object);
     } else if (object instanceof RubyHash) {
       appendHash((RubyHash) object);
-    } else if (object.respondsTo("to_msgpack")) {
-      appendCustom(object, destination);
     } else {
-      throw runtime.newArgumentError(String.format("Cannot pack type: %s", object.getClass().getName()));
+      appendCustom(object, destination);
     }
   }
 
