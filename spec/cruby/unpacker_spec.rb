@@ -21,7 +21,10 @@ describe Unpacker do
     unpacker.feed("\x81")
     lambda {
       unpacker.read_array_header
-    }.should raise_error(MessagePack::TypeError)
+    }.should raise_error(MessagePack::TypeError)  # TypeError is included in UnexpectedTypeError
+    lambda {
+      unpacker.read_array_header
+    }.should raise_error(MessagePack::UnexpectedTypeError)
   end
 
   it 'read_map_header converts an map to key-value sequence' do
@@ -55,7 +58,10 @@ describe Unpacker do
     unpacker.feed("\x91")
     lambda {
       unpacker.read_map_header
-    }.should raise_error(MessagePack::TypeError)
+    }.should raise_error(MessagePack::TypeError)  # TypeError is included in UnexpectedTypeError
+    lambda {
+      unpacker.read_map_header
+    }.should raise_error(MessagePack::UnexpectedTypeError)
   end
 
   it 'skip_nil succeeds' do

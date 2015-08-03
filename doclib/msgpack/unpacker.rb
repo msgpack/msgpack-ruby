@@ -114,7 +114,7 @@ module MessagePack
     # Read a header of an array and returns its size.
     # It converts a serialized array into a stream of elements.
     #
-    # If the serialized object is not an array, it raises MessagePack::TypeError.
+    # If the serialized object is not an array, it raises MessagePack::UnexpectedTypeError.
     # If there're not enough data, this method raises EOFError.
     #
     # @return [Integer] size of the array
@@ -126,7 +126,7 @@ module MessagePack
     # Reads a header of an map and returns its size.
     # It converts a serialized map into a stream of key-value pairs.
     #
-    # If the serialized object is not a map, it raises MessagePack::TypeError.
+    # If the serialized object is not a map, it raises MessagePack::UnexpectedTypeError.
     # If there're not enough data, this method raises EOFError.
     #
     # @return [Integer] size of the map

@@ -9,6 +9,10 @@ module MessagePack
   class StackError < UnpackError
   end
 
-  class TypeError < StandardError
+  module TypeError
+  end
+
+  class UnexpectedTypeError < UnpackError
+    include TypeError
   end
 end
