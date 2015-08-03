@@ -30,7 +30,7 @@ static VALUE eUnpackError;
 static VALUE eMalformedFormatError;
 static VALUE eStackError;
 static VALUE eUnexpectedTypeError;
-static VALUE mTypeError;
+static VALUE mTypeError;  // obsoleted. only for backward compatibility. See #86.
 
 #define UNPACKER(from, name) \
     msgpack_unpacker_t *name = NULL; \
