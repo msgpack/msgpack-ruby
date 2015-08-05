@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'bundler', ['~> 1.0']
   s.add_development_dependency 'rake', ['~> 0.9.2']
   s.add_development_dependency 'rake-compiler', ['~> 0.8.3']
-  s.add_development_dependency 'rspec', ['~> 2.11']
-  s.add_development_dependency 'json', ['~> 1.7']
+  s.add_development_dependency 'rspec', ['~> 3.3']
   s.add_development_dependency 'yard', ['~> 0.8.2']
+  s.add_development_dependency 'json'
 end

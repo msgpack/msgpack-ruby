@@ -24,9 +24,11 @@ extern VALUE cMessagePack_Packer;
 
 void MessagePack_Packer_module_init(VALUE mMessagePack);
 
-VALUE MessagePack_pack(int argc, VALUE* argv);
+VALUE MessagePack_Packer_alloc(VALUE klass);
 
-void MessagePack_Packer_initialize(msgpack_packer_t* pk, VALUE io, VALUE options);
+VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self);
+
+VALUE MessagePack_pack(int argc, VALUE* argv);
 
 #endif
 

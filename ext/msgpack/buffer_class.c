@@ -82,7 +82,7 @@ static ID get_write_all_method(VALUE io)
     }
 }
 
-void MessagePack_Buffer_initialize(msgpack_buffer_t* b, VALUE io, VALUE options)
+void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options)
 {
     b->io = io;
     b->io_partial_read_method = get_partial_read_method(io);
@@ -143,7 +143,7 @@ static VALUE Buffer_initialize(int argc, VALUE* argv, VALUE self)
 
     BUFFER(self, b);
 
-    MessagePack_Buffer_initialize(b, io, options);
+    MessagePack_Buffer_set_options(b, io, options);
 
     return self;
 }

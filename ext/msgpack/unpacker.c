@@ -18,11 +18,17 @@
 
 #include "unpacker.h"
 #include "rmem.h"
+#include "extension_value_class.h"
 
 #if !defined(DISABLE_RMEM) && !defined(DISABLE_UNPACKER_STACK_RMEM) && \
         MSGPACK_UNPACKER_STACK_CAPACITY * MSGPACK_UNPACKER_STACK_SIZE <= MSGPACK_RMEM_PAGE_SIZE
 #define UNPACKER_STACK_RMEM
 #endif
+
+static int RAW_TYPE_STRING = 256;
+static int RAW_TYPE_BINARY = 257;
+
+static ID s_call;
 
 #ifdef UNPACKER_STACK_RMEM
 static msgpack_rmem_t s_stack_rmem;
@@ -33,6 +39,8 @@ void msgpack_unpacker_static_init()
 #ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_init(&s_stack_rmem);
 #endif
+
+    s_call = rb_intern("call");
 }
 
 void msgpack_unpacker_static_destroy()
@@ -150,10 +158,29 @@ static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 static inline int object_complete_binary(msgpack_unpacker_t* uk, VALUE str)
 {
 #ifdef COMPAT_HAVE_ENCODING
-    // TODO ruby 2.0 has String#b method
     ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
 #endif
     return object_complete(uk, str);
+}
+
+static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALUE str)
+{
+#ifdef COMPAT_HAVE_ENCODING
+    ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
+#endif
+
+    VALUE proc = msgpack_unpacker_ext_registry_lookup(&uk->ext_registry, ext_type);
+    if(proc != Qnil) {
+        VALUE obj = rb_funcall(proc, s_call, 1, str);
+        return object_complete(uk, obj);
+    }
+
+    if(uk->allow_unknown_ext) {
+        VALUE obj = MessagePack_ExtensionValue_new(ext_type, str);
+        return object_complete(uk, obj);
+    }
+
+    return PRIMITIVE_UNEXPECTED_EXT_TYPE;
 }
 
 /* stack funcs */
@@ -242,12 +269,19 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
         uk->reading_raw_remaining = length = length - n;
     } while(length > 0);
 
-    object_complete_string(uk, uk->reading_raw);
+    int ret;
+    if(uk->reading_raw_type == RAW_TYPE_STRING) {
+        ret = object_complete_string(uk, uk->reading_raw);
+    } else if(uk->reading_raw_type == RAW_TYPE_BINARY) {
+        ret = object_complete_binary(uk, uk->reading_raw);
+    } else {
+        ret = object_complete_ext(uk, uk->reading_raw_type, uk->reading_raw);
+    }
     uk->reading_raw = Qnil;
-    return PRIMITIVE_OBJECT_COMPLETE;
+    return ret;
 }
 
-static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
+static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
 {
     /* assuming uk->reading_raw == Qnil */
 
@@ -258,18 +292,22 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, bool str)
          * because rb_hash_aset freezes keys and it causes copying */
         bool will_freeze = is_reading_map_key(uk);
         VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
-        if(str == true) {
-            object_complete_string(uk, string);
+        int ret;
+        if(raw_type == RAW_TYPE_STRING) {
+            ret = object_complete_string(uk, string);
+        } else if(raw_type == RAW_TYPE_BINARY) {
+            ret = object_complete_binary(uk, string);
         } else {
-            object_complete_binary(uk, string);
+            ret = object_complete_ext(uk, raw_type, string);
         }
         if(will_freeze) {
             rb_obj_freeze(string);
         }
         uk->reading_raw_remaining = 0;
-        return PRIMITIVE_OBJECT_COMPLETE;
+        return ret;
     }
 
+    uk->reading_raw_type = raw_type;
     return read_raw_body_cont(uk);
 }
 
@@ -298,7 +336,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         }
         /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
-        return read_raw_body_begin(uk, true);
+        return read_raw_body_begin(uk, RAW_TYPE_STRING);
 
     SWITCH_RANGE(b, 0x90, 0x9f)  // FixArray
         int count = b & 0x0f;
@@ -327,9 +365,41 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc3:  // true
             return object_complete(uk, Qtrue);
 
-        //case 0xc7: // ext 8
-        //case 0xc8: // ext 16
-        //case 0xc9: // ext 32
+        case 0xc7: // ext 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
+                uint8_t length = cb->u8;
+                int ext_type = cb->buffer[1];
+                if(length == 0) {
+                    return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
+                }
+                uk->reading_raw_remaining = length;
+                return read_raw_body_begin(uk, ext_type);
+            }
+
+        case 0xc8: // ext 16
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
+                uint16_t length = cb->u16;
+                int ext_type = cb->buffer[2];
+                if(length == 0) {
+                    return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
+                }
+                uk->reading_raw_remaining = length;
+                return read_raw_body_begin(uk, ext_type);
+            }
+
+        case 0xc9: // ext 32
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
+                uint32_t length = cb->u32;
+                int ext_type = cb->buffer[4];
+                if(length == 0) {
+                    return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
+                }
+                uk->reading_raw_remaining = length;
+                return read_raw_body_begin(uk, ext_type);
+            }
 
         case 0xca:  // float
             {
@@ -401,11 +471,46 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 return object_complete(uk, rb_ll2inum(i64));
             }
 
-        //case 0xd4:  // fixext 1
-        //case 0xd5:  // fixext 2
-        //case 0xd6:  // fixext 4
-        //case 0xd7:  // fixext 8
-        //case 0xd8:  // fixext 16
+        case 0xd4:  // fixext 1
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int ext_type = cb->i8;
+                uk->reading_raw_remaining = 1;
+                return read_raw_body_begin(uk, ext_type);
+            }
+
+        case 0xd5:  // fixext 2
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int ext_type = cb->i8;
+                uk->reading_raw_remaining = 2;
+                return read_raw_body_begin(uk, ext_type);
+            }
+
+        case 0xd6:  // fixext 4
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int ext_type = cb->i8;
+                uk->reading_raw_remaining = 4;
+                return read_raw_body_begin(uk, ext_type);
+            }
+
+        case 0xd7:  // fixext 8
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int ext_type = cb->i8;
+                uk->reading_raw_remaining = 8;
+                return read_raw_body_begin(uk, ext_type);
+            }
+
+        case 0xd8:  // fixext 16
+            {
+                READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
+                int ext_type = cb->i8;
+                uk->reading_raw_remaining = 16;
+                return read_raw_body_begin(uk, ext_type);
+            }
+
 
         case 0xd9:  // raw 8 / str 8
             {
@@ -416,7 +521,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk, true);
+                return read_raw_body_begin(uk, RAW_TYPE_STRING);
             }
 
         case 0xda:  // raw 16 / str 16
@@ -428,7 +533,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk, true);
+                return read_raw_body_begin(uk, RAW_TYPE_STRING);
             }
 
         case 0xdb:  // raw 32 / str 32
@@ -440,7 +545,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk, true);
+                return read_raw_body_begin(uk, RAW_TYPE_STRING);
             }
 
         case 0xc4:  // bin 8
@@ -452,7 +557,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk, false);
+                return read_raw_body_begin(uk, RAW_TYPE_BINARY);
             }
 
         case 0xc5:  // bin 16
@@ -464,7 +569,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk, false);
+                return read_raw_body_begin(uk, RAW_TYPE_BINARY);
             }
 
         case 0xc6:  // bin 32
@@ -476,7 +581,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
-                return read_raw_body_begin(uk, false);
+                return read_raw_body_begin(uk, RAW_TYPE_BINARY);
             }
 
         case 0xdc:  // array 16

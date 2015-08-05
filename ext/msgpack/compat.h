@@ -110,5 +110,17 @@
 #endif
 
 
+/*
+ * RSTRUCT_GET
+ */
+#ifndef RSTRUCT_GET
+#  ifdef RSTRUCT_PTR  /* MRI <= 2.0.0 */
+#    define RSTRUCT_GET(st, idx)  (RSTRUCT_PTR(st)[idx])
+#  else /* Rubinius */
+#    define RSTRUCT_GET(st, idx)  (rb_struct_aref(st, INT2FIX(idx)))
+#  endif
+#endif
+
+
 #endif
 

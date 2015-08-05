@@ -1,7 +1,7 @@
 /*
  * MessagePack for Ruby
  *
- * Copyright (C) 2008-2013 Sadayuki Furuhashi
+ * Copyright (C) 2008-2015 Sadayuki Furuhashi
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -15,18 +15,17 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#ifndef MSGPACK_RUBY_BUFFER_CLASS_H__
-#define MSGPACK_RUBY_BUFFER_CLASS_H__
+#ifndef MSGPACK_RUBY_EXTENSION_VALUE_CLASS_H__
+#define MSGPACK_RUBY_EXTENSION_VALUE_CLASS_H__
 
-#include "buffer.h"
+#include "compat.h"
+#include "sysdep.h"
 
-extern VALUE cMessagePack_Buffer;
+extern VALUE cMessagePack_ExtensionValue;
 
-void MessagePack_Buffer_module_init(VALUE mMessagePack);
+VALUE MessagePack_ExtensionValue_new(int ext_type, VALUE payload);
 
-VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner);
-
-void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options);
+void MessagePack_ExtensionValue_module_init(VALUE mMessagePack);
 
 #endif
 

@@ -15,18 +15,20 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#ifndef MSGPACK_RUBY_BUFFER_CLASS_H__
-#define MSGPACK_RUBY_BUFFER_CLASS_H__
 
-#include "buffer.h"
+#include "factory_class.h"
 
-extern VALUE cMessagePack_Buffer;
+VALUE cMessagePack_ExtensionValue;
 
-void MessagePack_Buffer_module_init(VALUE mMessagePack);
+VALUE MessagePack_ExtensionValue_new(int ext_type, VALUE payload)
+{
+    return rb_struct_new(cMessagePack_ExtensionValue, INT2FIX(ext_type), payload);
+}
 
-VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner);
-
-void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options);
-
-#endif
-
+void MessagePack_ExtensionValue_module_init(VALUE mMessagePack)
+{
+    /* rb_struct_define_under is not available ruby < 2.1 */
+    //cMessagePack_ExtensionValue = rb_struct_define_under(mMessagePack, "ExtensionValue", "type", "payload", NULL);
+    cMessagePack_ExtensionValue = rb_struct_define(NULL, "type", "payload", NULL);
+    rb_define_const(mMessagePack, "ExtensionValue", cMessagePack_ExtensionValue);
+}

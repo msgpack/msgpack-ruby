@@ -32,7 +32,7 @@ describe Buffer do
   end
 
   it 'close closes internal io' do
-    io.should_receive(:close)
+    expect(io).to receive(:close)
     buffer.close
   end
 
