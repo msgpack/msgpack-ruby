@@ -42,7 +42,7 @@ describe MessagePack::Factory do
     it 'creates unpacker without allow_unknown_ext option' do
       unpacker = subject.unpacker
       unpacker.feed(MessagePack::ExtensionValue.new(1, 'a').to_msgpack)
-      expect{ unpacker.read }.to raise_error(MessagePack::TypeError)
+      expect{ unpacker.read }.to raise_error(MessagePack::UnknownExtTypeError)
     end
   end
 

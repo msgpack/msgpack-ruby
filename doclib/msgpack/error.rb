@@ -12,4 +12,8 @@ module MessagePack
   class UnexpectedTypeError < UnpackError
     include TypeError
   end
+
+  class UnknownExtTypeError < UnpackError
+    include TypeError
+  end
 end

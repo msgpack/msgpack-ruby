@@ -19,7 +19,7 @@ module MessagePack
     # Supported options:
     #
     # * *:symbolize_keys* deserialize keys of Hash objects as Symbol instead of String
-    # * *:allow_unknown_ext* allow to deserialize ext type object with unknown type id as ExtensionValue instance
+    # * *:allow_unknown_ext* allow to deserialize ext type object with unknown type id as ExtensionValue instance. Otherwise (by default), unpacker throws UnknownExtTypeError.
     #
     # See also Buffer#initialize for other options.
     #

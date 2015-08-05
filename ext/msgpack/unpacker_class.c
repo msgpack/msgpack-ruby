@@ -30,6 +30,7 @@ static VALUE eUnpackError;
 static VALUE eMalformedFormatError;
 static VALUE eStackError;
 static VALUE eUnexpectedTypeError;
+static VALUE eUnknownExtTypeError;
 static VALUE mTypeError;  // obsoleted. only for backward compatibility. See #86.
 
 #define UNPACKER(from, name) \
@@ -127,7 +128,7 @@ static void raise_unpacker_error(int r)
     case PRIMITIVE_UNEXPECTED_TYPE:
         rb_raise(eUnexpectedTypeError, "unexpected type");
     case PRIMITIVE_UNEXPECTED_EXT_TYPE:
-        rb_raise(eTypeError, "unexpected extension type");
+        rb_raise(eUnknownExtTypeError, "unexpected extension type");
     default:
         rb_raise(eUnpackError, "logically unknown error %d", r);
     }
@@ -440,6 +441,8 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 
     eUnexpectedTypeError = rb_define_class_under(mMessagePack, "UnexpectedTypeError", eUnpackError);
     rb_include_module(eUnexpectedTypeError, mTypeError);
+
+    eUnknownExtTypeError = rb_define_class_under(mMessagePack, "UnknownExtTypeError", eUnpackError);
 
     rb_define_alloc_func(cMessagePack_Unpacker, MessagePack_Unpacker_alloc);
 
