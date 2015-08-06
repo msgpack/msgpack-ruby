@@ -8,12 +8,10 @@ describe MessagePack::ExtensionValue do
 
   describe '#type/#type=' do
     it 'returns value set by #initialize' do
-      skip("not supported yet in JRuby implementation") if java?
       subject.type.should == 1
     end
 
     it 'assigns a value' do
-      skip("not supported yet in JRuby implementation") if java?
       subject.type = 2
       subject.type.should == 2
     end
@@ -21,12 +19,10 @@ describe MessagePack::ExtensionValue do
 
   describe '#payload/#payload=' do
     it 'returns value set by #initialize' do
-      skip("not supported yet in JRuby implementation") if java?
       subject.payload.should == "data"
     end
 
     it 'assigns a value' do
-      skip("not supported yet in JRuby implementation") if java?
       subject.payload = "a"
       subject.payload.should == "a"
     end
@@ -34,7 +30,6 @@ describe MessagePack::ExtensionValue do
 
   describe '#==/#eql?/#hash' do
     it 'returns equivalent if the content is same' do
-      skip("not supported yet in JRuby implementation") if java?
       ext1 = MessagePack::ExtensionValue.new(1, "data")
       ext2 = MessagePack::ExtensionValue.new(1, "data")
       (ext1 == ext2).should be true
@@ -43,7 +38,6 @@ describe MessagePack::ExtensionValue do
     end
 
     it 'returns not equivalent if type is not same' do
-      skip("not supported yet in JRuby implementation") if java?
       ext1 = MessagePack::ExtensionValue.new(1, "data")
       ext2 = MessagePack::ExtensionValue.new(2, "data")
       (ext1 == ext2).should be false
@@ -52,7 +46,6 @@ describe MessagePack::ExtensionValue do
     end
 
     it 'returns not equivalent if payload is not same' do
-      skip("not supported yet in JRuby implementation") if java?
       ext1 = MessagePack::ExtensionValue.new(1, "data")
       ext2 = MessagePack::ExtensionValue.new(1, "value")
       (ext1 == ext2).should be false
@@ -78,7 +71,6 @@ describe MessagePack::ExtensionValue do
     end
 
     it 'with a packer serializes to a packer' do
-      skip("not supported yet in JRuby implementation") if java?
       ext = MessagePack::ExtensionValue.new(1, "aa")
       packer = MessagePack::Packer.new
       ext.to_msgpack(packer)
@@ -88,7 +80,6 @@ describe MessagePack::ExtensionValue do
     [-129, -65540, -(2**40), 128, 65540, 2**40].each do |type|
       context "with invalid type (#{type})" do
         it 'raises RangeError' do
-          skip("not supported yet in JRuby implementation") if java?
           lambda { MessagePack::ExtensionValue.new(type, "a").to_msgpack }.should raise_error(RangeError)
         end
       end
@@ -97,7 +88,6 @@ describe MessagePack::ExtensionValue do
 
   describe '#dup' do
     it 'duplicates' do
-      skip("not supported yet in JRuby implementation") if java?
       ext1 = MessagePack::ExtensionValue.new(1, "data")
       ext2 = ext1.dup
       ext2.type = 2

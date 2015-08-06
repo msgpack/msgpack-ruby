@@ -41,6 +41,7 @@ public class MessagePackLibrary implements Library {
   }
 
   private void installCoreExtensions(Ruby runtime) {
+    RubyClass extensionValueClass = runtime.getModule("MessagePack").getClass("ExtensionValue");
     installCoreExtensions(
       runtime,
       runtime.getNilClass(),
@@ -52,7 +53,8 @@ public class MessagePackLibrary implements Library {
       runtime.getString(),
       runtime.getArray(),
       runtime.getHash(),
-      runtime.getSymbol()
+      runtime.getSymbol(),
+      extensionValueClass
     );
   }
 

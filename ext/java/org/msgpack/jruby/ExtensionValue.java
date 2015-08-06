@@ -55,62 +55,6 @@ public class ExtensionValue extends RubyObject {
     return this;
   }
 
-  @JRubyMethod(name = "to_msgpack")
-  public IRubyObject toMsgpack() {
-    ByteList payloadBytes = payload.getByteList();
-    int payloadSize = payloadBytes.length();
-    int outputSize = 0;
-    boolean fixSize = payloadSize == 1 || payloadSize == 2 || payloadSize == 4 || payloadSize == 8 || payloadSize == 16;
-    if (fixSize) {
-      outputSize = 2 + payloadSize;
-    } else if (payloadSize < 0x100) {
-      outputSize = 3 + payloadSize;
-    } else if (payloadSize < 0x10000) {
-      outputSize = 4 + payloadSize;
-    } else {
-      outputSize = 6 + payloadSize;
-    }
-    byte[] bytes = new byte[outputSize];
-    ByteBuffer buffer = ByteBuffer.wrap(bytes);
-    if (payloadSize == 1) {
-      buffer.put(FIXEXT1);
-      buffer.put((byte) type.getLongValue());
-      buffer.put((byte) payloadBytes.get(0));
-    } else if (payloadSize == 2) {
-      buffer.put(FIXEXT2);
-      buffer.put((byte) type.getLongValue());
-      buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), 2);
-    } else if (payloadSize == 4) {
-      buffer.put(FIXEXT4);
-      buffer.put((byte) type.getLongValue());
-      buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), 4);
-    } else if (payloadSize == 8) {
-      buffer.put(FIXEXT8);
-      buffer.put((byte) type.getLongValue());
-      buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), 8);
-    } else if (payloadSize == 16) {
-      buffer.put(FIXEXT16);
-      buffer.put((byte) type.getLongValue());
-      buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), 16);
-    } else if (payloadSize < 0x100) {
-      buffer.put(VAREXT8);
-      buffer.put((byte) payloadSize);
-      buffer.put((byte) type.getLongValue());
-      buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), payloadSize);
-    } else if (payloadSize < 0x10000) {
-      buffer.put(VAREXT16);
-      buffer.putShort((short) payloadSize);
-      buffer.put((byte) type.getLongValue());
-      buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), payloadSize);
-    } else {
-      buffer.put(VAREXT32);
-      buffer.putInt(payloadSize);
-      buffer.put((byte) type.getLongValue());
-      buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), payloadSize);
-    }
-    return getRuntime().newString(new ByteList(bytes, binaryEncoding, false));
-  }
-
   @JRubyMethod(name = {"to_s", "inspect"})
   @Override
   public IRubyObject to_s() {
@@ -121,16 +65,67 @@ public class ExtensionValue extends RubyObject {
   @JRubyMethod(name = "hash")
   @Override
   public RubyFixnum hash() {
-    long hash = payload.hashCode() & (type.getLongValue() << 56);
+    long hash = payload.hashCode() ^ (type.getLongValue() << 56);
     return RubyFixnum.newFixnum(getRuntime(), hash);
   }
 
   @JRubyMethod(name = "eql?")
   public IRubyObject eql_p(ThreadContext ctx, IRubyObject o) {
+    Ruby runtime = ctx.runtime;
+    if (this == o) {
+	    return runtime.getTrue();
+    }
     if (o instanceof ExtensionValue) {
       ExtensionValue other = (ExtensionValue) o;
-      return getRuntime().newBoolean(this.type.callMethod(ctx, "eql?", other.type).isTrue() && this.payload.callMethod(ctx, "eql?", other.payload).isTrue());
+      if (!this.type.eql_p(other.type).isTrue())
+        return runtime.getFalse();
+      if (runtime.is1_8()) {
+        return this.payload.str_eql_p(ctx, other.payload);
+      } else {
+        return this.payload.str_eql_p19(ctx, other.payload);
+      }
     }
-    return getRuntime().getFalse();
+    return runtime.getFalse();
+  }
+
+  @JRubyMethod(name = "==")
+  public IRubyObject op_equal(ThreadContext ctx, IRubyObject o) {
+    Ruby runtime = ctx.runtime;
+    if (this == o) {
+	    return runtime.getTrue();
+    }
+    if (o instanceof ExtensionValue) {
+      ExtensionValue other = (ExtensionValue) o;
+      if (!this.type.op_equal(ctx, other.type).isTrue())
+        return runtime.getFalse();
+      if (runtime.is1_8()) {
+        return this.payload.op_equal(ctx, other.payload);
+      } else {
+        return this.payload.op_equal19(ctx, other.payload);
+      }
+    }
+    return runtime.getFalse();
+  }
+
+  @JRubyMethod(name = "type")
+  public IRubyObject get_type() {
+    return type;
+  }
+
+  @JRubyMethod
+  public IRubyObject payload() {
+    return payload;
+  }
+
+  @JRubyMethod(name = "type=", required = 1)
+  public IRubyObject set_type(final IRubyObject tpe) {
+    type = (RubyFixnum)tpe;
+    return tpe;
+  }
+
+  @JRubyMethod(name = "payload=", required = 1)
+  public IRubyObject set_payload(final IRubyObject pld) {
+    payload = (RubyString)pld;
+    return pld;
   }
 }
