@@ -25,7 +25,6 @@ import org.jcodings.specific.UTF8Encoding;
 
 import static org.msgpack.jruby.Types.*;
 
-
 public class Encoder {
 
   private static final int CACHE_LINE_SIZE = 64;
@@ -105,10 +104,10 @@ public class Encoder {
       appendArray((RubyArray) object);
     } else if (object instanceof RubyHash) {
       appendHash((RubyHash) object);
-    } else if (object.respondsTo("to_msgpack")) {
-      appendCustom(object, destination);
+    } else if (object instanceof ExtensionValue) {
+      appendExtensionValue((ExtensionValue) object);
     } else {
-      throw runtime.newArgumentError(String.format("Cannot pack type: %s", object.getClass().getName()));
+      appendCustom(object, destination);
     }
   }
 
@@ -294,6 +293,49 @@ public class Encoder {
         appendObject(value);
       }
     }
+  }
+
+  private void appendExtensionValue(ExtensionValue object) {
+    long type = ((RubyFixnum)object.get_type()).getLongValue();
+    if (type < -128 || type > 127) {
+	    throw object.getRuntime().newRangeError(String.format("integer %d too big to convert to `signed char'", type));
+    }
+    ByteList payloadBytes = ((RubyString)object.payload()).getByteList();
+    int payloadSize = payloadBytes.length();
+    int outputSize = 0;
+    boolean fixSize = payloadSize == 1 || payloadSize == 2 || payloadSize == 4 || payloadSize == 8 || payloadSize == 16;
+    if (fixSize) {
+      outputSize = 2 + payloadSize;
+    } else if (payloadSize < 0x100) {
+      outputSize = 3 + payloadSize;
+    } else if (payloadSize < 0x10000) {
+      outputSize = 4 + payloadSize;
+    } else {
+      outputSize = 6 + payloadSize;
+    }
+    ensureRemainingCapacity(outputSize);
+    if (payloadSize == 1) {
+      buffer.put(FIXEXT1);
+    } else if (payloadSize == 2) {
+      buffer.put(FIXEXT2);
+    } else if (payloadSize == 4) {
+      buffer.put(FIXEXT4);
+    } else if (payloadSize == 8) {
+      buffer.put(FIXEXT8);
+    } else if (payloadSize == 16) {
+      buffer.put(FIXEXT16);
+    } else if (payloadSize < 0x100) {
+      buffer.put(VAREXT8);
+      buffer.put((byte) payloadSize);
+    } else if (payloadSize < 0x10000) {
+      buffer.put(VAREXT16);
+      buffer.putShort((short) payloadSize);
+    } else {
+      buffer.put(VAREXT32);
+      buffer.putInt(payloadSize);
+    }
+    buffer.put((byte) type);
+    buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), payloadSize);
   }
 
   private void appendCustom(IRubyObject object, IRubyObject destination) {

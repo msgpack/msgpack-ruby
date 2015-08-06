@@ -45,24 +45,28 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "write")
   public IRubyObject write(ThreadContext ctx, IRubyObject obj) {
-    return buffer.write(ctx, encoder.encode(obj, this));
+    buffer.write(ctx, encoder.encode(obj, this));
+    return this;
   }
 
   @JRubyMethod(name = "write_nil")
   public IRubyObject writeNil(ThreadContext ctx) {
-    return write(ctx, null);
+    write(ctx, null);
+    return this;
   }
 
   @JRubyMethod(name = "write_array_header")
   public IRubyObject writeArrayHeader(ThreadContext ctx, IRubyObject size) {
     int s = (int) size.convertToInteger().getLongValue();
-    return buffer.write(ctx, encoder.encodeArrayHeader(s));
+    buffer.write(ctx, encoder.encodeArrayHeader(s));
+    return this;
   }
 
   @JRubyMethod(name = "write_map_header")
   public IRubyObject writeMapHeader(ThreadContext ctx, IRubyObject size) {
     int s = (int) size.convertToInteger().getLongValue();
-    return buffer.write(ctx, encoder.encodeMapHeader(s));
+    buffer.write(ctx, encoder.encodeMapHeader(s));
+    return this;
   }
 
   @JRubyMethod(name = "to_s")
@@ -80,4 +84,13 @@ public class Packer extends RubyObject {
     return buffer.flush(ctx);
   }
 
+  @JRubyMethod(name = "size")
+  public IRubyObject size(ThreadContext ctx) {
+    return buffer.size(ctx);
+  }
+
+  @JRubyMethod(name = "clear")
+  public IRubyObject clear(ThreadContext ctx) {
+    return buffer.clear(ctx);
+  }
 }

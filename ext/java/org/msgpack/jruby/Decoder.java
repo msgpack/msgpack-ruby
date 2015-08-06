@@ -29,6 +29,7 @@ public class Decoder implements Iterator<IRubyObject> {
   private final Encoding utf8Encoding;
   private final RubyClass unpackErrorClass;
   private final RubyClass underflowErrorClass;
+  private final RubyClass unexpectedTypeErrorClass;
 
   private ByteBuffer buffer;
   private boolean symbolizeKeys;
@@ -47,6 +48,7 @@ public class Decoder implements Iterator<IRubyObject> {
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.unpackErrorClass = runtime.getModule("MessagePack").getClass("UnpackError");
     this.underflowErrorClass = runtime.getModule("MessagePack").getClass("UnderflowError");
+    this.unexpectedTypeErrorClass = runtime.getModule("MessagePack").getClass("UnexpectedTypeError");
     feed(bytes, offset, length);
   }
 
@@ -146,7 +148,7 @@ public class Decoder implements Iterator<IRubyObject> {
       } else if (b == ARY32) {
 	return runtime.newFixnum(buffer.getInt());
       }
-      throw runtime.newTypeError("unexpected type");
+      throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
       buffer.position(position);
       throw re;
@@ -167,7 +169,7 @@ public class Decoder implements Iterator<IRubyObject> {
       } else if (b == MAP32) {
 	return runtime.newFixnum(buffer.getInt());
       }
-      throw runtime.newTypeError("unexpected type");
+      throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
       buffer.position(position);
       throw re;

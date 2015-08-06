@@ -26,6 +26,9 @@ public class MessagePackLibrary implements Library {
     RubyClass standardErrorClass = runtime.getStandardError();
     RubyClass unpackErrorClass = msgpackModule.defineClassUnder("UnpackError", standardErrorClass, standardErrorClass.getAllocator());
     RubyClass underflowErrorClass = msgpackModule.defineClassUnder("UnderflowError", unpackErrorClass, unpackErrorClass.getAllocator());
+    RubyModule typeErrorModule = msgpackModule.defineModuleUnder("TypeError");
+    RubyClass unexpectedTypeErrorClass = msgpackModule.defineClassUnder("UnexpetedTypeError", unpackErrorClass, standardErrorClass.getAllocator());
+    unexpectedTypeErrorClass.includeModule(typeErrorModule);
     RubyClass extensionValueClass = msgpackModule.defineClassUnder("ExtensionValue", runtime.getObject(), new ExtensionValue.ExtensionValueAllocator());
     extensionValueClass.defineAnnotatedMethods(ExtensionValue.class);
     RubyClass packerClass = msgpackModule.defineClassUnder("Packer", runtime.getObject(), new Packer.PackerAllocator());
@@ -38,6 +41,7 @@ public class MessagePackLibrary implements Library {
   }
 
   private void installCoreExtensions(Ruby runtime) {
+    RubyClass extensionValueClass = runtime.getModule("MessagePack").getClass("ExtensionValue");
     installCoreExtensions(
       runtime,
       runtime.getNilClass(),
@@ -49,7 +53,8 @@ public class MessagePackLibrary implements Library {
       runtime.getString(),
       runtime.getArray(),
       runtime.getHash(),
-      runtime.getSymbol()
+      runtime.getSymbol(),
+      extensionValueClass
     );
   }
 
@@ -63,10 +68,18 @@ public class MessagePackLibrary implements Library {
     return new DynamicMethod(cls, Visibility.PUBLIC, CallConfiguration.FrameNoneScopeNone) {
       @Override
       public IRubyObject call(ThreadContext context, IRubyObject recv, RubyModule clazz, String name, IRubyObject[] args, Block block) {
-        IRubyObject[] allArgs = new IRubyObject[1 + args.length];
-        allArgs[0] = recv;
-        System.arraycopy(args, 0, allArgs, 1, args.length);
-        return MessagePackModule.pack(runtime.getCurrentContext(), null, allArgs);
+        if (args.length == 0) {
+          IRubyObject[] allArgs = { recv };
+          return MessagePackModule.pack(runtime.getCurrentContext(), null, allArgs);
+        } else if (args.length == 1 && args[0] instanceof Packer) {
+          Packer packer = (Packer)args[0];
+          return packer.write(runtime.getCurrentContext(), recv);
+        } else if (args.length == 1) {
+          IRubyObject[] allArgs = { recv, args[0] };
+          return MessagePackModule.pack(runtime.getCurrentContext(), null, allArgs);
+        } else {
+          throw runtime.newArgumentError(String.format("wrong number of arguments (%d for 0..1)", args.length));
+        }
       }
 
       @Override

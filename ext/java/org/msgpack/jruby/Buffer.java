@@ -81,6 +81,10 @@ public class Buffer extends RubyObject {
 
   @JRubyMethod(name = "clear")
   public IRubyObject clear(ThreadContext ctx) {
+    if (!writeMode) {
+      buffer.compact();
+      writeMode = true;
+    }
     buffer.clear();
     return ctx.getRuntime().getNil();
   }

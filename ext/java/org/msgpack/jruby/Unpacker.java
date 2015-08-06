@@ -27,6 +27,7 @@ public class Unpacker extends RubyObject {
   private IRubyObject data;
   private Decoder decoder;
   private final RubyClass underflowErrorClass;
+  private boolean symbolizeKeys;
 
   public Unpacker(Ruby runtime, RubyClass type) {
     super(runtime, type);
@@ -41,9 +42,14 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod(name = "initialize", optional = 1, visibility = PRIVATE)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
+    symbolizeKeys = false;
     if (args.length > 0) {
       if (args[args.length - 1] instanceof RubyHash) {
-        //TODO: symbolize_keys
+        RubyHash options = (RubyHash) args[args.length - 1];
+        IRubyObject sk = options.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
+        if (sk != null) {
+          symbolizeKeys = sk.isTrue();
+        }
       } else if (!(args[0] instanceof RubyHash)) {
         setStream(ctx, args[0]);
       }
@@ -66,6 +72,7 @@ public class Unpacker extends RubyObject {
       limit = byteList.length() - offset;
     }
     Decoder decoder = new Decoder(ctx.getRuntime(), byteList.unsafeBytes(), byteList.begin() + offset, limit);
+    decoder.symbolizeKeys(symbolizeKeys);
     try {
       this.data = null;
       this.data = decoder.next();
@@ -96,10 +103,11 @@ public class Unpacker extends RubyObject {
     ByteList byteList = data.asString().getByteList();
     if (decoder == null) {
       decoder = new Decoder(ctx.getRuntime(), byteList.unsafeBytes(), byteList.begin(), byteList.length());
+      decoder.symbolizeKeys(symbolizeKeys);
     } else {
       decoder.feed(byteList.unsafeBytes(), byteList.begin(), byteList.length());
     }
-    return ctx.getRuntime().getNil();
+    return this;
   }
 
   @JRubyMethod(name = "feed_each", required = 1)
@@ -213,6 +221,7 @@ public class Unpacker extends RubyObject {
     this.stream = stream;
     this.decoder = null;
     this.decoder = new Decoder(ctx.getRuntime(), byteList.unsafeBytes(), byteList.begin(), byteList.length());
+    decoder.symbolizeKeys(symbolizeKeys);
     return getStream(ctx);
   }
 }
