@@ -7,7 +7,7 @@ describe ActiveSupport::TimeWithZone do
     initial_time = Time.zone.local(2014, 8, 21, 15, 30, 0)
 
     packed_time = MessagePack.pack(initial_time)
-    packed_time.should == "\xB92014-08-21 15:30:00 -0700".b
+    packed_time.should == "\xB92014-08-21 15:30:00 -0700".force_encoding("binary")
 
     unpacked_time = MessagePack.unpack(packed_time)
     unpacked_time.should == "2014-08-21 15:30:00 -0700"
