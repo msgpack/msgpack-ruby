@@ -78,6 +78,7 @@ VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
     return rb_hash_aset(pkrg->hash, ext_class, e);
 }
 
+// TODO: delete this function (unused)
 VALUE msgpack_packer_ext_registry_call(msgpack_packer_ext_registry_t* pkrg,
         VALUE proc, VALUE ext_value)
 {

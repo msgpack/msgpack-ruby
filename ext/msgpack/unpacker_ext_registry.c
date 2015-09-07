@@ -61,6 +61,7 @@ VALUE msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t* ukrg,
     return before;
 }
 
+// TODO: delete this function (unused)
 VALUE msgpack_unpacker_ext_registry_call(msgpack_unpacker_ext_registry_t* ukrg,
         VALUE proc, VALUE ext_data)
 {

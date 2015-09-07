@@ -56,6 +56,7 @@ static inline VALUE msgpack_unpacker_ext_registry_lookup(msgpack_unpacker_ext_re
     return rb_ary_entry(e, 1);
 }
 
+// TODO: delete this function (unused)
 VALUE msgpack_unpacker_ext_registry_call(msgpack_unpacker_ext_registry_t* ukrg,
         VALUE proc, VALUE ext_data);
 
