@@ -20,6 +20,8 @@ import org.jruby.internal.runtime.methods.DynamicMethod;
 
 
 public class MessagePackLibrary implements Library {
+  public static Factory defaultFactory;
+
   public void load(Ruby runtime, boolean wrap) {
     RubyModule msgpackModule = runtime.defineModule("MessagePack");
     msgpackModule.defineAnnotatedMethods(MessagePackModule.class);
@@ -37,6 +39,11 @@ public class MessagePackLibrary implements Library {
     unpackerClass.defineAnnotatedMethods(Unpacker.class);
     RubyClass bufferClass = msgpackModule.defineClassUnder("Buffer", runtime.getObject(), new Buffer.BufferAllocator());
     bufferClass.defineAnnotatedMethods(Buffer.class);
+    RubyClass factoryClass = msgpackModule.defineClassUnder("Factory", runtime.getObject(), new Factory.FactoryAllocator());
+    factoryClass.defineAnnotatedMethods(Factory.class);
+    defaultFactory = new Factory(runtime, factoryClass);
+    defaultFactory.initialize(runtime.getCurrentContext());
+    msgpackModule.defineConstant("DefaultFactory", defaultFactory);
     installCoreExtensions(runtime);
   }
 
@@ -100,15 +107,15 @@ public class MessagePackLibrary implements Library {
         extraArgs = new IRubyObject[args.length - 1];
         System.arraycopy(args, 1, extraArgs, 0, args.length - 1);
       }
-      Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"));
-      packer.initialize(ctx, extraArgs);
+      Packer packer = MessagePackLibrary.defaultFactory.packer(ctx, extraArgs);
       packer.write(ctx, args[0]);
       return packer.toS(ctx);
     }
 
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"load"})
     public static IRubyObject unpack(ThreadContext ctx, IRubyObject recv, IRubyObject[] args) {
-      Decoder decoder = new Decoder(ctx.getRuntime(), args[0].asString().getBytes());
+      Unpacker.ExtRegistry registry = MessagePackLibrary.defaultFactory.unpackerRegistry();
+      Decoder decoder = new Decoder(ctx.getRuntime(), registry, args[0].asString().getBytes());
       if (args.length > 1 && !args[args.length - 1].isNil()) {
         RubyHash hash = args[args.length - 1].convertToHash();
         IRubyObject symbolizeKeys = hash.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));

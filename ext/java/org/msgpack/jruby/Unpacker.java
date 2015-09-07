@@ -1,12 +1,15 @@
 package org.msgpack.jruby;
 
+import java.util.Arrays;
 
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyString;
 import org.jruby.RubyObject;
+import org.jruby.RubyArray;
 import org.jruby.RubyHash;
 import org.jruby.RubyNumeric;
+import org.jruby.RubyFixnum;
 import org.jruby.RubyIO;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -23,11 +26,13 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Unpacker")
 public class Unpacker extends RubyObject {
+  public ExtRegistry registry;
   private IRubyObject stream;
   private IRubyObject data;
   private Decoder decoder;
   private final RubyClass underflowErrorClass;
   private boolean symbolizeKeys;
+  private boolean allowUnknownExt;
 
   public Unpacker(Ruby runtime, RubyClass type) {
     super(runtime, type);
@@ -40,9 +45,40 @@ public class Unpacker extends RubyObject {
     }
   }
 
+  static class ExtRegistry {
+    private Ruby runtime;
+    public RubyArray[] array;
+
+    public ExtRegistry(Ruby runtime) {
+      this.runtime = runtime;
+      this.array = new RubyArray[256];
+    }
+
+    public ExtRegistry dup() {
+      ExtRegistry copy = new ExtRegistry(this.runtime);
+      copy.array = Arrays.copyOf(this.array, 256);
+      return copy;
+    }
+
+    public void put(RubyClass klass, int typeId, IRubyObject proc, IRubyObject arg) {
+      RubyArray e = RubyArray.newArray(runtime, new IRubyObject[] { RubyFixnum.newFixnum(runtime, typeId), proc, arg });
+      array[typeId + 128] = e;
+    }
+
+    // proc, typeId(Fixnum)
+    public IRubyObject lookup(int type) {
+      RubyArray e = array[type + 128];
+      if (e == null) {
+        return null;
+      }
+      return e.entry(1);
+    }
+  }
+
   @JRubyMethod(name = "initialize", optional = 1, visibility = PRIVATE)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
     symbolizeKeys = false;
+    allowUnknownExt = false;
     if (args.length > 0) {
       if (args[args.length - 1] instanceof RubyHash) {
         RubyHash options = (RubyHash) args[args.length - 1];
@@ -50,12 +86,30 @@ public class Unpacker extends RubyObject {
         if (sk != null) {
           symbolizeKeys = sk.isTrue();
         }
+        IRubyObject au = options.fastARef(ctx.getRuntime().newSymbol("allow_unknown_ext"));
+        if (au != null) {
+          allowUnknownExt = au.isTrue();
+        }
       } else if (!(args[0] instanceof RubyHash)) {
         setStream(ctx, args[0]);
       }
     }
     return this;
   }
+
+  public void setExtRegistry(ExtRegistry registry) {
+    this.registry = registry;
+  }
+
+  public static Unpacker newUnpacker(ThreadContext ctx, ExtRegistry extRegistry, IRubyObject[] args) {
+    Unpacker unpacker = new Unpacker(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Unpacker"));
+    unpacker.initialize(ctx, args);
+    unpacker.setExtRegistry(extRegistry);
+    return unpacker;
+  }
+
+  //TODO: registered_types_internal
+  //TODO: register_type
 
   @JRubyMethod(required = 2)
   public IRubyObject execute(ThreadContext ctx, IRubyObject data, IRubyObject offset) {
@@ -71,8 +125,9 @@ public class Unpacker extends RubyObject {
     if (limit == -1) {
       limit = byteList.length() - offset;
     }
-    Decoder decoder = new Decoder(ctx.getRuntime(), byteList.unsafeBytes(), byteList.begin() + offset, limit);
+    Decoder decoder = new Decoder(ctx.getRuntime(), this.registry, byteList.unsafeBytes(), byteList.begin() + offset, limit);
     decoder.symbolizeKeys(symbolizeKeys);
+    decoder.allowUnknownExt(allowUnknownExt);
     try {
       this.data = null;
       this.data = decoder.next();
@@ -102,8 +157,9 @@ public class Unpacker extends RubyObject {
   public IRubyObject feed(ThreadContext ctx, IRubyObject data) {
     ByteList byteList = data.asString().getByteList();
     if (decoder == null) {
-      decoder = new Decoder(ctx.getRuntime(), byteList.unsafeBytes(), byteList.begin(), byteList.length());
+      decoder = new Decoder(ctx.getRuntime(), this.registry, byteList.unsafeBytes(), byteList.begin(), byteList.length());
       decoder.symbolizeKeys(symbolizeKeys);
+      decoder.allowUnknownExt(allowUnknownExt);
     } else {
       decoder.feed(byteList.unsafeBytes(), byteList.begin(), byteList.length());
     }
@@ -220,8 +276,9 @@ public class Unpacker extends RubyObject {
     ByteList byteList = str.getByteList();
     this.stream = stream;
     this.decoder = null;
-    this.decoder = new Decoder(ctx.getRuntime(), byteList.unsafeBytes(), byteList.begin(), byteList.length());
+    this.decoder = new Decoder(ctx.getRuntime(), this.registry, byteList.unsafeBytes(), byteList.begin(), byteList.length());
     decoder.symbolizeKeys(symbolizeKeys);
+    decoder.allowUnknownExt(allowUnknownExt);
     return getStream(ctx);
   }
 }

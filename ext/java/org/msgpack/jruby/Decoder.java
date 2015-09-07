@@ -12,6 +12,7 @@ import org.jruby.RubyObject;
 import org.jruby.RubyClass;
 import org.jruby.RubyBignum;
 import org.jruby.RubyString;
+import org.jruby.RubyArray;
 import org.jruby.RubyHash;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -31,19 +32,30 @@ public class Decoder implements Iterator<IRubyObject> {
   private final RubyClass underflowErrorClass;
   private final RubyClass unexpectedTypeErrorClass;
 
+  private Unpacker.ExtRegistry registry;
   private ByteBuffer buffer;
   private boolean symbolizeKeys;
+  private boolean allowUnknownExt;
 
   public Decoder(Ruby runtime) {
-    this(runtime, new byte[] {}, 0, 0);
+    this(runtime, null, new byte[] {}, 0, 0);
+  }
+
+  public Decoder(Ruby runtime, Unpacker.ExtRegistry registry) {
+    this(runtime, registry, new byte[] {}, 0, 0);
   }
 
   public Decoder(Ruby runtime, byte[] bytes) {
-    this(runtime, bytes, 0, bytes.length);
+    this(runtime, null, bytes, 0, bytes.length);
   }
 
-  public Decoder(Ruby runtime, byte[] bytes, int offset, int length) {
+  public Decoder(Ruby runtime, Unpacker.ExtRegistry registry, byte[] bytes) {
+    this(runtime, registry, bytes, 0, bytes.length);
+  }
+
+  public Decoder(Ruby runtime, Unpacker.ExtRegistry registry, byte[] bytes, int offset, int length) {
     this.runtime = runtime;
+    this.registry = registry;
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.unpackErrorClass = runtime.getModule("MessagePack").getClass("UnpackError");
@@ -54,6 +66,10 @@ public class Decoder implements Iterator<IRubyObject> {
 
   public void symbolizeKeys(boolean symbolize) {
     this.symbolizeKeys = symbolize;
+  }
+
+  public void allowUnknownExt(boolean allow) {
+    this.allowUnknownExt = allow;
   }
 
   public void feed(byte[] bytes) {
@@ -118,7 +134,20 @@ public class Decoder implements Iterator<IRubyObject> {
   private IRubyObject consumeExtension(int size) {
     int type = buffer.get();
     byte[] payload = readBytes(size);
-    return ExtensionValue.newExtensionValue(runtime, type, payload);
+
+    if (this.registry != null) {
+      IRubyObject proc = this.registry.lookup(type);
+      if (proc != null) {
+        ByteList byteList = new ByteList(payload, runtime.getEncodingService().getAscii8bitEncoding());
+        return proc.callMethod(runtime.getCurrentContext(), "call", runtime.newString(byteList));
+      }
+    }
+
+    if (this.allowUnknownExt) {
+      return ExtensionValue.newExtensionValue(runtime, type, payload);
+    }
+
+    throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
   }
 
   private byte[] readBytes(int size) {
