@@ -339,12 +339,12 @@ public class Encoder {
   }
 
   private void appendExtensionValue(ExtensionValue object) {
-    int type = (int) ((RubyFixnum)object.get_type()).getLongValue();
+    long type = ((RubyFixnum)object.get_type()).getLongValue();
     if (type < -128 || type > 127) {
 	    throw object.getRuntime().newRangeError(String.format("integer %d too big to convert to `signed char'", type));
     }
     ByteList payloadBytes = ((RubyString)object.payload()).getByteList();
-    appendExt(type, payloadBytes);
+    appendExt((int) type, payloadBytes);
   }
 
   private void appendOther(IRubyObject object, IRubyObject destination) {

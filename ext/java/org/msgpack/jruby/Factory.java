@@ -95,7 +95,7 @@ public class Factory extends RubyObject {
       throw runtime.newArgumentError(String.format("wrong number of arguments (%d for 2..3)", 2 + args.length));
     }
 
-    int typeId = (int) ((RubyFixnum) type).getLongValue();
+    long typeId = ((RubyFixnum) type).getLongValue();
     if (typeId < -128 || typeId > 127) {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
     }
@@ -118,8 +118,8 @@ public class Factory extends RubyObject {
       }
     }
 
-    this.packerExtRegistry.put(extClass, typeId, packerProc, packerArg);
-    this.unpackerExtRegistry.put(extClass, typeId, unpackerProc, unpackerArg);
+    this.packerExtRegistry.put(extClass, (int) typeId, packerProc, packerArg);
+    this.unpackerExtRegistry.put(extClass, (int) typeId, unpackerProc, unpackerArg);
 
     return runtime.getNil();
   }
