@@ -41,14 +41,12 @@ describe MessagePack::Unpacker do
 
   describe '#type_registered?' do
     it 'receive Class or Integer, and return bool' do
-      skip("not supported yet in JRuby implementation") if java?
       expect(subject.type_registered?(0x00)).to be_falsy
       expect(subject.type_registered?(0x01)).to be_falsy
       expect(subject.type_registered?(::ValueOne)).to be_falsy
     end
 
     it 'returns true if specified type or class is already registered' do
-      skip("not supported yet in JRuby implementation") if java?
       subject.register_type(0x30, ::ValueOne, :from_msgpack_ext)
       subject.register_type(0x31, ::ValueTwo, :from_msgpack_ext)
 
@@ -62,7 +60,6 @@ describe MessagePack::Unpacker do
     end
 
     it 'cannot detect unpack rule with block, not method' do
-      skip("not supported yet in JRuby implementation") if java?
       subject.register_type(0x40){|data| ValueOne.from_msgpack_ext(data) }
 
       expect(subject.type_registered?(0x40)).to be_truthy
@@ -72,7 +69,6 @@ describe MessagePack::Unpacker do
 
   context 'with ext definitions' do
     it 'get type and class mapping for packing' do
-      skip("not supported yet in JRuby implementation") if java?
       unpacker = MessagePack::Unpacker.new
       unpacker.register_type(0x01){|data| ValueOne.from_msgpack_ext }
       unpacker.register_type(0x02){|data| ValueTwo.from_msgpack_ext(data) }
@@ -83,7 +79,6 @@ describe MessagePack::Unpacker do
     end
 
     it 'returns a Array of Hash which contains :type, :class and :unpacker' do
-      skip("not supported yet in JRuby implementation") if java?
       unpacker = MessagePack::Unpacker.new
       unpacker.register_type(0x02, ValueTwo, :from_msgpack_ext)
       unpacker.register_type(0x01, ValueOne, :from_msgpack_ext)
@@ -107,7 +102,6 @@ describe MessagePack::Unpacker do
     end
 
     it 'returns a Array of Hash, which contains nil for class if block unpacker specified' do
-      skip("not supported yet in JRuby implementation") if java?
       unpacker = MessagePack::Unpacker.new
       unpacker.register_type(0x01){|data| ValueOne.from_msgpack_ext }
       unpacker.register_type(0x02, &ValueTwo.method(:from_msgpack_ext))

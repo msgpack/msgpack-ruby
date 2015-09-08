@@ -116,7 +116,7 @@ describe MessagePack do
     end
 
     it 'rasies an error on #unpack with garbage' do
-      skip "???"
+      skip "but nothing was raised. why?"
       expect { MessagePack.unpack('asdka;sd') }.to raise_error(MessagePack::UnpackError)
     end
   end

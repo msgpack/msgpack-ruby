@@ -10,6 +10,7 @@ import org.jruby.RubyArray;
 import org.jruby.RubyHash;
 import org.jruby.RubyNumeric;
 import org.jruby.RubyFixnum;
+import org.jruby.RubyProc;
 import org.jruby.RubyIO;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -22,7 +23,6 @@ import org.jruby.util.ByteList;
 import org.jruby.ext.stringio.StringIO;
 
 import static org.jruby.runtime.Visibility.PRIVATE;
-
 
 @JRubyClass(name="MessagePack::Unpacker")
 public class Unpacker extends RubyObject {
@@ -61,7 +61,11 @@ public class Unpacker extends RubyObject {
     }
 
     public void put(RubyClass klass, int typeId, IRubyObject proc, IRubyObject arg) {
-      RubyArray e = RubyArray.newArray(runtime, new IRubyObject[] { RubyFixnum.newFixnum(runtime, typeId), proc, arg });
+      IRubyObject k = klass;
+      if (k == null) {
+        k = runtime.getNil();
+      }
+      RubyArray e = RubyArray.newArray(runtime, new IRubyObject[] { k, proc, arg });
       array[typeId + 128] = e;
     }
 
@@ -94,6 +98,7 @@ public class Unpacker extends RubyObject {
         setStream(ctx, args[0]);
       }
     }
+    this.registry = new ExtRegistry(ctx.getRuntime());
     return this;
   }
 
@@ -108,8 +113,52 @@ public class Unpacker extends RubyObject {
     return unpacker;
   }
 
-  //TODO: registered_types_internal
-  //TODO: register_type
+  @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
+  public IRubyObject registeredTypesInternal(ThreadContext ctx) {
+    RubyHash mapping = RubyHash.newHash(ctx.getRuntime());
+    for (int i = 0; i < 256; i++) {
+      if (registry.array[i] != null) {
+        mapping.fastASet(RubyFixnum.newFixnum(ctx.getRuntime(), i - 128), registry.array[i].dup());
+      }
+    }
+    return mapping;
+  }
+
+  @JRubyMethod(name = "register_type", required = 1, optional = 2)
+  public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
+    // register_type(type){|data| ExtClass.deserialize(...) }
+    // register_type(type, Class, :from_msgpack_ext)
+    Ruby runtime = ctx.getRuntime();
+    IRubyObject type = args[0];
+
+    RubyClass extClass;
+    IRubyObject arg;
+    IRubyObject proc;
+    if (args.length == 1) {
+      if (! block.isGiven()) {
+        throw runtime.newLocalJumpErrorNoBlock();
+      }
+      proc = RubyProc.newProc(runtime, block, block.type);
+      if (proc == null)
+        System.err.println("proc from Block is null");
+      arg = proc;
+      extClass = null;
+    } else if (args.length == 3) {
+      extClass = (RubyClass) args[1];
+      arg = args[2];
+      proc = extClass.method(arg);
+    } else {
+      throw runtime.newArgumentError(String.format("wrong number of arguments (%d for 1 or 3)", 2 + args.length));
+    }
+
+    long typeId = ((RubyFixnum) type).getLongValue();
+    if (typeId < -128 || typeId > 127) {
+      throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
+    }
+
+    this.registry.put(extClass, (int) typeId, proc, arg);
+    return runtime.getNil();
+  }
 
   @JRubyMethod(required = 2)
   public IRubyObject execute(ThreadContext ctx, IRubyObject data, IRubyObject offset) {

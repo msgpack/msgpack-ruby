@@ -33,14 +33,12 @@ describe MessagePack::Packer do
 
   describe '#type_registered?' do
     it 'receive Class or Integer, and return bool' do
-      skip("not supported yet in JRuby implementation") if java?
       expect(subject.type_registered?(0x00)).to be_falsy
       expect(subject.type_registered?(0x01)).to be_falsy
       expect(subject.type_registered?(::ValueOne)).to be_falsy
     end
 
     it 'returns true if specified type or class is already registered' do
-      skip("not supported yet in JRuby implementation") if java?
       subject.register_type(0x30, ::ValueOne, :to_msgpack_ext)
       subject.register_type(0x31, ::ValueTwo, :to_msgpack_ext)
 
@@ -56,7 +54,6 @@ describe MessagePack::Packer do
 
   describe '#register_type' do
     it 'get type and class mapping for packing' do
-      skip("not supported yet in JRuby implementation") if java?
       packer = MessagePack::Packer.new
       packer.register_type(0x01, ValueOne){|obj| obj.to_msgpack_ext }
       packer.register_type(0x02, ValueTwo){|obj| obj.to_msgpack_ext }
@@ -71,7 +68,6 @@ describe MessagePack::Packer do
     end
 
     it 'returns a Hash which contains map of Class and type' do
-      skip("not supported yet in JRuby implementation") if java?
       packer = MessagePack::Packer.new
       packer.register_type(0x01, ValueOne, :to_msgpack_ext)
       packer.register_type(0x02, ValueTwo, :to_msgpack_ext)
