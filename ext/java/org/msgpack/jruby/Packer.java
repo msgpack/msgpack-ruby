@@ -167,7 +167,7 @@ public class Packer extends RubyObject {
     return runtime.getNil();
   }
 
-  @JRubyMethod(name = "write")
+  @JRubyMethod(name = "write", alias = { "pack" })
   public IRubyObject write(ThreadContext ctx, IRubyObject obj) {
     buffer.write(ctx, encoder.encode(obj, this));
     return this;
@@ -193,7 +193,7 @@ public class Packer extends RubyObject {
     return this;
   }
 
-  @JRubyMethod(name = "to_s")
+  @JRubyMethod(name = "to_s", alias = { "to_str" })
   public IRubyObject toS(ThreadContext ctx) {
     return buffer.toS(ctx);
   }
