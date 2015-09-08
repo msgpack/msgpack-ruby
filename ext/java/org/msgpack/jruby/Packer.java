@@ -102,7 +102,8 @@ public class Packer extends RubyObject {
     boolean compatibilityMode = false;
     if (args.length > 0 && args[args.length - 1] instanceof RubyHash) {
       RubyHash options = (RubyHash) args[args.length - 1];
-      compatibilityMode = options.fastARef(ctx.getRuntime().newSymbol("compatibility_mode")).isTrue();
+      IRubyObject mode = options.fastARef(ctx.getRuntime().newSymbol("compatibility_mode"));
+      compatibilityMode = (mode != null) && mode.isTrue();
     }
     this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode);
     this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
