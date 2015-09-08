@@ -60,34 +60,40 @@ public class Packer extends RubyObject {
     }
 
     // proc, typeId(Fixnum)
-    public IRubyObject[] lookup(RubyClass klass) {
+    public IRubyObject[] lookup(final RubyClass klass) {
       RubyArray e = (RubyArray) hash.fastARef(klass);
       if (e == null) {
         e = (RubyArray) cache.fastARef(klass);
       }
       if (e != null) {
-        IRubyObject[] pair = new IRubyObject[] {};
-        pair[0] = e.entry(1);
-        pair[1] = e.entry(0);
+        IRubyObject[] hit = new IRubyObject[] {};
+        hit[0] = e.entry(1);
+        hit[1] = e.entry(0);
+        return hit;
       }
 
+      final IRubyObject[] pair = new IRubyObject[2];
       // check all keys whether it's super class of klass, or not
-      /*
-      for (IRubyObject keyValue : hash.keys()) {
-        RubyClass key = (RubyClass) keyValue;
-        // TODO: are there any way to check `key` is a superclass of `klass`?
-        if (false) {
-          IRubyObject hit = RubyArray.newArray(2); // TODO: value
-          cache.fastASet(klass, hit);
-          IRubyObject[] pair = new IRubyObject[] {};
-          pair[0] = hit.entry(1);
-          pair[1] = hit.entry(0);
-          return pair;
+      hash.visitAll(new RubyHash.Visitor() {
+        public void visit(IRubyObject keyValue, IRubyObject value) {
+          if (pair[0] != null) {
+            return;
+          }
+          RubyClass key = (RubyClass) keyValue;
+          IRubyObject rb_class_inherited_p = klass.include_p(runtime.getCurrentContext(), key);
+          if (rb_class_inherited_p.isTrue()) {
+            RubyArray hit = (RubyArray) hash.fastARef(keyValue);
+            cache.fastASet(klass, hit);
+            pair[0] = hit.entry(1);
+            pair[1] = hit.entry(0);
+          }
         }
-      }
-      */
+      });
 
-      return null;
+      if (pair[0] == null) {
+        return null;
+      }
+      return pair;
     }
   }
 
