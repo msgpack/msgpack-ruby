@@ -255,7 +255,7 @@ public class Unpacker extends RubyObject {
     return ctx.getRuntime().getNil();
   }
 
-  @JRubyMethod
+  @JRubyMethod(name = "read", alias = { "unpack" })
   public IRubyObject read(ThreadContext ctx) {
     if (decoder != null) {
       try {
@@ -269,6 +269,20 @@ public class Unpacker extends RubyObject {
       }
     }
     return ctx.getRuntime().getNil();
+  }
+
+  /*
+    skip & skip_nil don't exist in JRuby implementation:
+    these depend on CRuby msgpack implemntation too highly.
+   */
+  @JRubyMethod(name = "skip")
+  public IRubyObject skip(ThreadContext ctx) {
+    throw ctx.getRuntime().newNotImplementedError("Not supported yet in JRuby implementation");
+  }
+
+  @JRubyMethod(name = "skip_nil")
+  public IRubyObject skipNil(ThreadContext ctx) {
+    throw ctx.getRuntime().newNotImplementedError("Not supported yet in JRuby implementation");
   }
 
   @JRubyMethod

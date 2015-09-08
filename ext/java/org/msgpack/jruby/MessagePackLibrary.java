@@ -28,9 +28,12 @@ public class MessagePackLibrary implements Library {
     RubyClass standardErrorClass = runtime.getStandardError();
     RubyClass unpackErrorClass = msgpackModule.defineClassUnder("UnpackError", standardErrorClass, standardErrorClass.getAllocator());
     RubyClass underflowErrorClass = msgpackModule.defineClassUnder("UnderflowError", unpackErrorClass, unpackErrorClass.getAllocator());
+    RubyClass malformedFormatErrorClass = msgpackModule.defineClassUnder("MalformedFormatError", unpackErrorClass, unpackErrorClass.getAllocator());
+    RubyClass stackErrorClass = msgpackModule.defineClassUnder("StackError", unpackErrorClass, unpackErrorClass.getAllocator());
     RubyModule typeErrorModule = msgpackModule.defineModuleUnder("TypeError");
-    RubyClass unexpectedTypeErrorClass = msgpackModule.defineClassUnder("UnexpetedTypeError", unpackErrorClass, standardErrorClass.getAllocator());
+    RubyClass unexpectedTypeErrorClass = msgpackModule.defineClassUnder("UnexpectedTypeError", unpackErrorClass, unpackErrorClass.getAllocator());
     unexpectedTypeErrorClass.includeModule(typeErrorModule);
+    RubyClass unknownExtTypeErrorClass = msgpackModule.defineClassUnder("UnknownExtTypeError", unpackErrorClass, unpackErrorClass.getAllocator());
     RubyClass extensionValueClass = msgpackModule.defineClassUnder("ExtensionValue", runtime.getObject(), new ExtensionValue.ExtensionValueAllocator());
     extensionValueClass.defineAnnotatedMethods(ExtensionValue.class);
     RubyClass packerClass = msgpackModule.defineClassUnder("Packer", runtime.getObject(), new Packer.PackerAllocator());

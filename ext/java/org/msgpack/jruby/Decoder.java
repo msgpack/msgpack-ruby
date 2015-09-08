@@ -30,7 +30,10 @@ public class Decoder implements Iterator<IRubyObject> {
   private final Encoding utf8Encoding;
   private final RubyClass unpackErrorClass;
   private final RubyClass underflowErrorClass;
+  private final RubyClass malformedFormatErrorClass;
+  private final RubyClass stackErrorClass;
   private final RubyClass unexpectedTypeErrorClass;
+  private final RubyClass unknownExtTypeErrorClass;
 
   private Unpacker.ExtRegistry registry;
   private ByteBuffer buffer;
@@ -60,7 +63,10 @@ public class Decoder implements Iterator<IRubyObject> {
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.unpackErrorClass = runtime.getModule("MessagePack").getClass("UnpackError");
     this.underflowErrorClass = runtime.getModule("MessagePack").getClass("UnderflowError");
+    this.malformedFormatErrorClass = runtime.getModule("MessagePack").getClass("MalformedFormatError");
+    this.stackErrorClass = runtime.getModule("MessagePack").getClass("StackError");
     this.unexpectedTypeErrorClass = runtime.getModule("MessagePack").getClass("UnexpectedTypeError");
+    this.unknownExtTypeErrorClass = runtime.getModule("MessagePack").getClass("UnknownExtTypeError");
     feed(bytes, offset, length);
   }
 
@@ -171,11 +177,11 @@ public class Decoder implements Iterator<IRubyObject> {
     try {
       byte b = buffer.get();
       if ((b & 0xf0) == 0x90) {
-	return runtime.newFixnum(b & 0x0f);
+        return runtime.newFixnum(b & 0x0f);
       } else if (b == ARY16) {
-	return runtime.newFixnum(buffer.getShort() & 0xffff);
+        return runtime.newFixnum(buffer.getShort() & 0xffff);
       } else if (b == ARY32) {
-	return runtime.newFixnum(buffer.getInt());
+        return runtime.newFixnum(buffer.getInt());
       }
       throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
@@ -192,11 +198,11 @@ public class Decoder implements Iterator<IRubyObject> {
     try {
       byte b = buffer.get();
       if ((b & 0xf0) == 0x80) {
-	return runtime.newFixnum(b & 0x0f);
+        return runtime.newFixnum(b & 0x0f);
       } else if (b == MAP16) {
-	return runtime.newFixnum(buffer.getShort() & 0xffff);
+        return runtime.newFixnum(buffer.getShort() & 0xffff);
       } else if (b == MAP32) {
-	return runtime.newFixnum(buffer.getInt());
+        return runtime.newFixnum(buffer.getInt());
       }
       throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
@@ -262,7 +268,7 @@ public class Decoder implements Iterator<IRubyObject> {
       default: return runtime.newFixnum(b);
       }
       buffer.position(position);
-      throw runtime.newRaiseException(unpackErrorClass, "Illegal byte sequence");
+      throw runtime.newRaiseException(malformedFormatErrorClass, "Illegal byte sequence");
     } catch (RaiseException re) {
       buffer.position(position);
       throw re;
