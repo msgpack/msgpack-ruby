@@ -561,7 +561,7 @@ describe MessagePack::Unpacker do
   context 'regressions' do
     it 'handles massive arrays (issue #2)' do
       array = ['foo'] * 10_000
-      MessagePack.unpack(MessagePack.pack(array)).should have(10_000).items
+      MessagePack.unpack(MessagePack.pack(array)).size.should == 10_000
     end
   end
 
