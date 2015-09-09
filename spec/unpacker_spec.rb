@@ -569,16 +569,6 @@ describe MessagePack::Unpacker do
     end
   end
 
-  describe '#reset' do
-    context 'with a buffer' do
-      it 'is unclear what it is supposed to do'
-    end
-
-    context 'with a stream' do
-      it 'is unclear what it is supposed to do'
-    end
-  end
-
   context 'regressions' do
     it 'handles massive arrays (issue #2)' do
       array = ['foo'] * 10_000

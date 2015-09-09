@@ -95,7 +95,7 @@ public class Decoder implements Iterator<IRubyObject> {
   }
 
   public void reset() {
-    buffer.rewind();
+    buffer = null;
   }
 
   public int offset() {
