@@ -257,18 +257,18 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod(name = "read", alias = { "unpack" })
   public IRubyObject read(ThreadContext ctx) {
-    if (decoder != null) {
-      try {
-        return decoder.next();
-      } catch (RaiseException re) {
-        if (re.getException().getType() != underflowErrorClass) {
-          throw re;
-        } else {
-          throw ctx.getRuntime().newEOFError();
-        }
+    if (decoder == null) {
+      throw ctx.getRuntime().newEOFError();
+    }
+    try {
+      return decoder.next();
+    } catch (RaiseException re) {
+      if (re.getException().getType() != underflowErrorClass) {
+        throw re;
+      } else {
+        throw ctx.getRuntime().newEOFError();
       }
     }
-    return ctx.getRuntime().getNil();
   }
 
   /*

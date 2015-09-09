@@ -68,7 +68,7 @@ describe MessagePack::Unpacker do
     }.should raise_error(MessagePack::UnexpectedTypeError)
   end
 
-  it 'read raises EOFError' do
+  it 'read raises EOFError before feeding' do
     lambda {
       unpacker.read
     }.should raise_error(EOFError)
