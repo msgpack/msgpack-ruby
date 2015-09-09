@@ -108,7 +108,9 @@ describe MessagePack::Unpacker do
   it 'feed_each enumerator' do
     raw = sample_object.to_msgpack.to_s * 4
 
-    unpacker.feed_each(raw).to_a.should == [sample_object] * 4
+    enum = unpacker.feed_each(raw)
+    enum.should be_instance_of(Enumerator)
+    enum.to_a.should == [sample_object] * 4
   end
 
   it 'reset clears internal buffer' do

@@ -218,8 +218,12 @@ public class Unpacker extends RubyObject {
   @JRubyMethod(name = "feed_each", required = 1)
   public IRubyObject feedEach(ThreadContext ctx, IRubyObject data, Block block) {
     feed(ctx, data);
-    each(ctx, block);
-    return ctx.getRuntime().getNil();
+    if (block.isGiven()) {
+      each(ctx, block);
+      return ctx.getRuntime().getNil();
+    } else {
+      return callMethod(ctx, "to_enum");
+    }
   }
 
   @JRubyMethod
