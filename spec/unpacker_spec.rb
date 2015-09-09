@@ -147,17 +147,6 @@ describe MessagePack::Unpacker do
     }.should_not raise_error
   end
 
-  it 'read raises level stack too deep error' do
-    512.times { packer.write_array_header(1) }
-    packer.write(nil)
-
-    unpacker = MessagePack::Unpacker.new
-    unpacker.feed(packer.to_s)
-    lambda {
-      unpacker.read
-    }.should raise_error(MessagePack::StackError)
-  end
-
   it 'read raises invalid byte error' do
     unpacker.feed("\xc1")
     lambda {
