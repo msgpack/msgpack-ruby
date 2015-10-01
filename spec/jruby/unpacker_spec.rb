@@ -102,6 +102,18 @@ describe MessagePack::Unpacker do
     end
   end
 
+  def flatten(struct, results = [])
+    case struct
+    when Array
+      struct.each { |v| flatten(v, results) }
+    when Hash
+      struct.each { |k, v| flatten(v, flatten(k, results)) }
+    else
+      results << struct
+    end
+    results
+  end
+
   context 'encoding', :encodings do
     before :all do
       @default_internal = Encoding.default_internal
@@ -126,15 +138,15 @@ describe MessagePack::Unpacker do
       Encoding.default_external = Encoding::ISO_8859_1
     end
 
-    it 'produces results with default internal encoding' do
+    it 'produces results with encoding as binary or string(utf8)' do
       unpacker.execute(buffer, 0)
       strings = flatten(unpacker.data).grep(String)
-      strings.map(&:encoding).uniq.sort.should == [Encoding.default_internal]
+      strings.map(&:encoding).uniq.sort{|a,b| a.to_s <=> b.to_s}.should == [Encoding::ASCII_8BIT, Encoding::UTF_8]
     end
 
     it 'recodes to internal encoding' do
       unpacker.execute(buffer, 0)
-      unpacker.data['nested'][1].keys.should == ["sk\xC3\xA5l".force_encoding(Encoding.default_internal)]
+      unpacker.data['nested'][1].keys.should == ["sk\xC3\xA5l".force_encoding(Encoding::UTF_8)]
     end
   end
 
@@ -160,14 +172,14 @@ describe MessagePack::Unpacker do
       end
 
       let :unpacker do
-        described_class.new(:encoding => 'UTF-8')
+        described_class.new()
       end
 
-      it 'can hardcode encoding when using #execute' do
+      it 'decode binary as ascii-8bit string when using #execute' do
         unpacker.execute(buffer, 0)
         strings = flatten(unpacker.data).grep(String)
         strings.should == %w[hello world nested object structure]
-        strings.map(&:encoding).uniq.should == [Encoding::UTF_8]
+        strings.map(&:encoding).uniq.should == [Encoding::ASCII_8BIT]
       end
     end
   end

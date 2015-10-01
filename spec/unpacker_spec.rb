@@ -519,16 +519,47 @@ describe MessagePack::Unpacker do
       end
     end
 
-    context 'encoding', :encodings do
+    context 'binary encoding', :encodings do
       let :buffer do
         MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
       end
 
       let :unpacker do
-        described_class.new(:encoding => 'UTF-8')
+        described_class.new()
       end
 
-      it 'can hardcode encoding when using #each' do
+      it 'decodes binary as ascii-8bit when using #feed' do
+        objs = []
+        unpacker.feed(buffer)
+        unpacker.each do |obj|
+          objs << obj
+        end
+        strings = flatten(objs).grep(String)
+        strings.should == %w[hello world nested object structure]
+        strings.map(&:encoding).uniq.should == [Encoding::ASCII_8BIT]
+      end
+
+      it 'decodes binary as ascii-8bit when using #feed_each' do
+        objs = []
+        unpacker.feed_each(buffer) do |obj|
+          objs << obj
+        end
+        strings = flatten(objs).grep(String)
+        strings.should == %w[hello world nested object structure]
+        strings.map(&:encoding).uniq.should == [Encoding::ASCII_8BIT]
+      end
+    end
+
+    context 'string encoding', :encodings do
+      let :buffer do
+        MessagePack.pack({'hello'.force_encoding(Encoding::UTF_8) => 'world'.force_encoding(Encoding::UTF_8), 'nested'.force_encoding(Encoding::UTF_8) => ['object'.force_encoding(Encoding::UTF_8), {'structure'.force_encoding(Encoding::UTF_8) => true}]})
+      end
+
+      let :unpacker do
+        described_class.new()
+      end
+
+      it 'decodes string as utf-8 when using #feed' do
         objs = []
         unpacker.feed(buffer)
         unpacker.each do |obj|
@@ -539,7 +570,7 @@ describe MessagePack::Unpacker do
         strings.map(&:encoding).uniq.should == [Encoding::UTF_8]
       end
 
-      it 'can hardcode encoding when using #feed_each' do
+      it 'decodes binary as ascii-8bit when using #feed_each' do
         objs = []
         unpacker.feed_each(buffer) do |obj|
           objs << obj
