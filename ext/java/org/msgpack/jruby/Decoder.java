@@ -153,7 +153,7 @@ public class Decoder implements Iterator<IRubyObject> {
       return ExtensionValue.newExtensionValue(runtime, type, payload);
     }
 
-    throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
+    throw runtime.newRaiseException(unknownExtTypeErrorClass, "unexpected extension type");
   }
 
   private byte[] readBytes(int size) {
