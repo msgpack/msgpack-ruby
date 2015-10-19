@@ -341,15 +341,15 @@ public class Encoder {
   private void appendExtensionValue(ExtensionValue object) {
     long type = ((RubyFixnum)object.get_type()).getLongValue();
     if (type < -128 || type > 127) {
-	    throw object.getRuntime().newRangeError(String.format("integer %d too big to convert to `signed char'", type));
+      throw object.getRuntime().newRangeError(String.format("integer %d too big to convert to `signed char'", type));
     }
     ByteList payloadBytes = ((RubyString)object.payload()).getByteList();
     appendExt((int) type, payloadBytes);
   }
 
   private void appendOther(IRubyObject object, IRubyObject destination) {
-    if (this.registry != null) {
-      IRubyObject[] pair = this.registry.lookup(object.getType());
+    if (registry != null) {
+      IRubyObject[] pair = registry.lookup(object.getType());
       if (pair != null) {
         RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
         int type = (int) ((RubyFixnum) pair[1]).getLongValue();
@@ -357,7 +357,6 @@ public class Encoder {
         return;
       }
     }
-    // registry is null or type is not registered
     appendCustom(object, destination);
   }
 

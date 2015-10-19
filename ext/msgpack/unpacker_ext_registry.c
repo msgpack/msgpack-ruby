@@ -60,10 +60,3 @@ VALUE msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t* ukrg,
     ukrg->array[ext_type + 128] = e;
     return before;
 }
-
-// TODO: delete this function (unused)
-VALUE msgpack_unpacker_ext_registry_call(msgpack_unpacker_ext_registry_t* ukrg,
-        VALUE proc, VALUE ext_data)
-{
-    return rb_funcall(proc, s_call, 1, ext_data);
-}

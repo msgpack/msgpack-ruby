@@ -64,7 +64,6 @@ public class Factory extends RubyObject {
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
-    // unpacker
     Unpacker.ExtRegistry reg = unpackerRegistry();
     RubyHash mapping = RubyHash.newHash(ctx.getRuntime());
     for (int i = 0; i < 256; i++) {
@@ -79,8 +78,6 @@ public class Factory extends RubyObject {
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args) {
-    // register_type(type, Class)
-    // register_type(type, Class, packer: proc-like, unpacker: proc-like)
     Ruby runtime = ctx.getRuntime();
     IRubyObject type = args[0];
     IRubyObject klass = args[1];

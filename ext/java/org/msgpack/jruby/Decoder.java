@@ -141,8 +141,8 @@ public class Decoder implements Iterator<IRubyObject> {
     int type = buffer.get();
     byte[] payload = readBytes(size);
 
-    if (this.registry != null) {
-      IRubyObject proc = this.registry.lookup(type);
+    if (registry != null) {
+      IRubyObject proc = registry.lookup(type);
       if (proc != null) {
         ByteList byteList = new ByteList(payload, runtime.getEncodingService().getAscii8bitEncoding());
         return proc.callMethod(runtime.getCurrentContext(), "call", runtime.newString(byteList));

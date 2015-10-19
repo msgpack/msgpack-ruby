@@ -95,8 +95,4 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
     return Qnil;
 }
 
-// TODO: delete this function (unused)
-VALUE msgpack_packer_ext_registry_call(msgpack_packer_ext_registry_t* pkrg,
-        VALUE proc, VALUE ext_value);
-
 #endif
