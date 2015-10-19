@@ -21,7 +21,7 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Packer")
 public class Packer extends RubyObject {
-  public ExtRegistry registry;
+  public ExtensionRegistry registry;
   private Buffer buffer;
   private Encoder encoder;
 
@@ -35,19 +35,19 @@ public class Packer extends RubyObject {
     }
   }
 
-  static class ExtRegistry {
+  static class ExtensionRegistry {
     private Ruby runtime;
     public RubyHash hash;
     public RubyHash cache;
 
-    public ExtRegistry(Ruby runtime) {
+    public ExtensionRegistry(Ruby runtime) {
       this.runtime = runtime;
       hash = RubyHash.newHash(runtime);
       cache = RubyHash.newHash(runtime);
     }
 
-    public ExtRegistry dup() {
-      ExtRegistry copy = new ExtRegistry(runtime);
+    public ExtensionRegistry dup() {
+      ExtensionRegistry copy = new ExtensionRegistry(runtime);
       copy.hash = (RubyHash) hash.dup(runtime.getCurrentContext());
       copy.cache = RubyHash.newHash(runtime);
       return copy;
@@ -107,19 +107,19 @@ public class Packer extends RubyObject {
     this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode);
     this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
-    this.registry = new ExtRegistry(ctx.getRuntime());
+    this.registry = new ExtensionRegistry(ctx.getRuntime());
     return this;
   }
 
-  public void setExtRegistry(ExtRegistry registry) {
+  public void setExtensionRegistry(ExtensionRegistry registry) {
     this.registry = registry;
     this.encoder.setRegistry(registry);
   }
 
-  public static Packer newPacker(ThreadContext ctx, ExtRegistry extRegistry, IRubyObject[] args) {
+  public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, IRubyObject[] args) {
     Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"));
     packer.initialize(ctx, args);
-    packer.setExtRegistry(extRegistry);
+    packer.setExtensionRegistry(extRegistry);
     return packer;
   }
 

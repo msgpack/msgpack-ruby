@@ -35,7 +35,7 @@ public class Encoder {
   private final Encoding utf8Encoding;
   private final boolean compatibilityMode;
 
-  private Packer.ExtRegistry registry;
+  private Packer.ExtensionRegistry registry;
   private ByteBuffer buffer;
 
   public Encoder(Ruby runtime, boolean compatibilityMode) {
@@ -46,7 +46,7 @@ public class Encoder {
     this.compatibilityMode = compatibilityMode;
   }
 
-  public void setRegistry(Packer.ExtRegistry registry) {
+  public void setRegistry(Packer.ExtensionRegistry registry) {
     this.registry = registry;
   }
 

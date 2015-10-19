@@ -23,8 +23,8 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 @JRubyClass(name="MessagePack::Factory")
 public class Factory extends RubyObject {
   private Ruby runtime;
-  private Packer.ExtRegistry packerExtRegistry;
-  private Unpacker.ExtRegistry unpackerExtRegistry;
+  private Packer.ExtensionRegistry packerExtensionRegistry;
+  private Unpacker.ExtensionRegistry unpackerExtensionRegistry;
 
   public Factory(Ruby runtime, RubyClass type) {
     super(runtime, type);
@@ -39,17 +39,17 @@ public class Factory extends RubyObject {
 
   @JRubyMethod(name = "initialize")
   public IRubyObject initialize(ThreadContext ctx) {
-    this.packerExtRegistry = new Packer.ExtRegistry(ctx.getRuntime());
-    this.unpackerExtRegistry = new Unpacker.ExtRegistry(ctx.getRuntime());
+    this.packerExtensionRegistry = new Packer.ExtensionRegistry(ctx.getRuntime());
+    this.unpackerExtensionRegistry = new Unpacker.ExtensionRegistry(ctx.getRuntime());
     return this;
   }
 
-  public Packer.ExtRegistry packerRegistry() {
-    return this.packerExtRegistry.dup();
+  public Packer.ExtensionRegistry packerRegistry() {
+    return this.packerExtensionRegistry.dup();
   }
 
-  public Unpacker.ExtRegistry unpackerRegistry() {
-    return this.unpackerExtRegistry.dup();
+  public Unpacker.ExtensionRegistry unpackerRegistry() {
+    return this.unpackerExtensionRegistry.dup();
   }
 
   @JRubyMethod(name = "packer", optional = 1)
@@ -64,7 +64,7 @@ public class Factory extends RubyObject {
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
-    Unpacker.ExtRegistry reg = unpackerRegistry();
+    Unpacker.ExtensionRegistry reg = unpackerRegistry();
     RubyHash mapping = RubyHash.newHash(ctx.getRuntime());
     for (int i = 0; i < 256; i++) {
       if (reg.array[i] != null) {
@@ -122,8 +122,8 @@ public class Factory extends RubyObject {
       }
     }
 
-    this.packerExtRegistry.put(extClass, (int) typeId, packerProc, packerArg);
-    this.unpackerExtRegistry.put(extClass, (int) typeId, unpackerProc, unpackerArg);
+    this.packerExtensionRegistry.put(extClass, (int) typeId, packerProc, packerArg);
+    this.unpackerExtensionRegistry.put(extClass, (int) typeId, unpackerProc, unpackerArg);
 
     return runtime.getNil();
   }

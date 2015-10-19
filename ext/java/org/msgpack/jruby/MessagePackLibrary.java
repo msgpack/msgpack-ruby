@@ -117,7 +117,7 @@ public class MessagePackLibrary implements Library {
 
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"load"})
     public static IRubyObject unpack(ThreadContext ctx, IRubyObject recv, IRubyObject[] args) {
-      Unpacker.ExtRegistry registry = MessagePackLibrary.defaultFactory.unpackerRegistry();
+      Unpacker.ExtensionRegistry registry = MessagePackLibrary.defaultFactory.unpackerRegistry();
       Decoder decoder = new Decoder(ctx.getRuntime(), registry, args[0].asString().getBytes());
       if (args.length > 1 && !args[args.length - 1].isNil()) {
         RubyHash hash = args[args.length - 1].convertToHash();

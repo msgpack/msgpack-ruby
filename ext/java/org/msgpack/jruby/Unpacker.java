@@ -26,7 +26,7 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Unpacker")
 public class Unpacker extends RubyObject {
-  public ExtRegistry registry;
+  public ExtensionRegistry registry;
   private IRubyObject stream;
   private IRubyObject data;
   private Decoder decoder;
@@ -45,17 +45,17 @@ public class Unpacker extends RubyObject {
     }
   }
 
-  static class ExtRegistry {
+  static class ExtensionRegistry {
     private Ruby runtime;
     public RubyArray[] array;
 
-    public ExtRegistry(Ruby runtime) {
+    public ExtensionRegistry(Ruby runtime) {
       this.runtime = runtime;
       this.array = new RubyArray[256];
     }
 
-    public ExtRegistry dup() {
-      ExtRegistry copy = new ExtRegistry(runtime);
+    public ExtensionRegistry dup() {
+      ExtensionRegistry copy = new ExtensionRegistry(runtime);
       copy.array = Arrays.copyOf(array, 256);
       return copy;
     }
@@ -98,18 +98,18 @@ public class Unpacker extends RubyObject {
         setStream(ctx, args[0]);
       }
     }
-    registry = new ExtRegistry(ctx.getRuntime());
+    registry = new ExtensionRegistry(ctx.getRuntime());
     return this;
   }
 
-  public void setExtRegistry(ExtRegistry registry) {
+  public void setExtensionRegistry(ExtensionRegistry registry) {
     this.registry = registry;
   }
 
-  public static Unpacker newUnpacker(ThreadContext ctx, ExtRegistry extRegistry, IRubyObject[] args) {
+  public static Unpacker newUnpacker(ThreadContext ctx, ExtensionRegistry extRegistry, IRubyObject[] args) {
     Unpacker unpacker = new Unpacker(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Unpacker"));
     unpacker.initialize(ctx, args);
-    unpacker.setExtRegistry(extRegistry);
+    unpacker.setExtensionRegistry(extRegistry);
     return unpacker;
   }
 
