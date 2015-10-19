@@ -79,9 +79,9 @@ public class Packer extends RubyObject {
           if (pair[0] != null) {
             return;
           }
-          RubyClass key = (RubyClass) keyValue;
-          IRubyObject rb_class_inherited_p = klass.include_p(runtime.getCurrentContext(), key);
-          if (rb_class_inherited_p.isTrue()) {
+          ThreadContext ctx = runtime.getCurrentContext();
+          RubyArray ancestors = (RubyArray) klass.callMethod(ctx, "ancestors");
+          if (ancestors.callMethod(ctx, "include?", keyValue).isTrue()) {
             RubyArray hit = (RubyArray) hash.fastARef(keyValue);
             cache.fastASet(klass, hit);
             pair[0] = hit.entry(1);
