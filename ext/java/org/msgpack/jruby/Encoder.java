@@ -50,6 +50,10 @@ public class Encoder {
     this.registry = registry;
   }
 
+  public boolean isCompatibilityMode() {
+    return compatibilityMode;
+  }
+
   private void ensureRemainingCapacity(int c) {
     if (buffer.remaining() < c) {
       int newLength = Math.max(buffer.capacity() + (buffer.capacity() >> 1), buffer.capacity() + c);

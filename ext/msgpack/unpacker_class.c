@@ -116,6 +116,18 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
     return self;
 }
 
+static VALUE Unpacker_symbolized_keys_p(VALUE self)
+{
+    UNPACKER(self, uk);
+    return uk->symbolize_keys ? Qtrue : Qfalse;
+}
+
+static VALUE Unpacker_allow_unknown_ext_p(VALUE self)
+{
+    UNPACKER(self, uk);
+    return uk->allow_unknown_ext ? Qtrue : Qfalse;
+}
+
 static void raise_unpacker_error(int r)
 {
     switch(r) {
@@ -455,6 +467,8 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_alloc_func(cMessagePack_Unpacker, MessagePack_Unpacker_alloc);
 
     rb_define_method(cMessagePack_Unpacker, "initialize", MessagePack_Unpacker_initialize, -1);
+    rb_define_method(cMessagePack_Unpacker, "symbolize_keys?", Unpacker_symbolized_keys_p, 0);
+    rb_define_method(cMessagePack_Unpacker, "allow_unknown_ext?", Unpacker_allow_unknown_ext_p, 0);
     rb_define_method(cMessagePack_Unpacker, "buffer", Unpacker_buffer, 0);
     rb_define_method(cMessagePack_Unpacker, "read", Unpacker_read, 0);
     rb_define_alias(cMessagePack_Unpacker, "unpack", "read");

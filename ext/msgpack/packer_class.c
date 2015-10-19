@@ -109,6 +109,12 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
     return self;
 }
 
+static VALUE Packer_compatibility_mode_p(VALUE self)
+{
+    PACKER(self, pk);
+    return pk->compatibility_mode ? Qtrue : Qfalse;
+}
+
 static VALUE Packer_buffer(VALUE self)
 {
     PACKER(self, pk);
@@ -330,6 +336,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_alloc_func(cMessagePack_Packer, MessagePack_Packer_alloc);
 
     rb_define_method(cMessagePack_Packer, "initialize", MessagePack_Packer_initialize, -1);
+    rb_define_method(cMessagePack_Packer, "compatibility_mode?", Packer_compatibility_mode_p, 0);
     rb_define_method(cMessagePack_Packer, "buffer", Packer_buffer, 0);
     rb_define_method(cMessagePack_Packer, "write", Packer_write, 1);
     rb_define_alias(cMessagePack_Packer, "pack", "write");

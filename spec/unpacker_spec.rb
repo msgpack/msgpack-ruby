@@ -14,7 +14,15 @@ describe MessagePack::Unpacker do
     MessagePack::Packer.new
   end
 
-  # TODO initialize
+  it 'gets options to specify how to unpack values' do
+    u1 = MessagePack::Unpacker.new
+    u1.symbolize_keys?.should == false
+    u1.allow_unknown_ext?.should == false
+
+    u2 = MessagePack::Unpacker.new(symbolize_keys: true, allow_unknown_ext: true)
+    u2.symbolize_keys?.should == true
+    u2.allow_unknown_ext?.should == true
+  end
 
   it 'read_array_header succeeds' do
     unpacker.feed("\x91")

@@ -123,6 +123,11 @@ public class Packer extends RubyObject {
     return packer;
   }
 
+  @JRubyMethod(name = "compatibility_mode?")
+  public IRubyObject isCompatibilityMode(ThreadContext ctx) {
+    return encoder.isCompatibilityMode() ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+  }
+
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
     return registry.hash.dup(ctx);

@@ -113,6 +113,16 @@ public class Unpacker extends RubyObject {
     return unpacker;
   }
 
+  @JRubyMethod(name = "symbolize_keys?")
+  public IRubyObject isSymbolizeKeys(ThreadContext ctx) {
+    return symbolizeKeys ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+  }
+
+  @JRubyMethod(name = "allow_unknown_ext?")
+  public IRubyObject isAllowUnknownExt(ThreadContext ctx) {
+    return allowUnknownExt ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+  }
+
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
     RubyHash mapping = RubyHash.newHash(ctx.getRuntime());

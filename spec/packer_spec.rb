@@ -19,6 +19,14 @@ describe MessagePack::Packer do
     MessagePack::Packer.new(StringIO.new, {})
   end
 
+  it 'gets options to specify how to pack values' do
+    u1 = MessagePack::Packer.new
+    u1.compatibility_mode?.should == false
+
+    u2 = MessagePack::Packer.new(compatibility_mode: true)
+    u2.compatibility_mode?.should == true
+  end
+
   it 'write' do
     packer.write([])
     packer.to_s.should == "\x90"
