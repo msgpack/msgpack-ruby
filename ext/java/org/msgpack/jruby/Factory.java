@@ -114,10 +114,10 @@ public class Factory extends RubyObject {
 
     IRubyObject packerProc = runtime.getNil();
     IRubyObject unpackerProc = runtime.getNil();
-    if (packerArg != runtime.getNil()) {
+    if (packerArg != null) {
       packerProc = packerArg.callMethod(ctx, "to_proc");
     }
-    if (unpackerArg != runtime.getNil()) {
+    if (unpackerArg != null) {
       if (unpackerArg instanceof RubyString || unpackerArg instanceof RubySymbol) {
         unpackerProc = extClass.method(unpackerArg.callMethod(ctx, "to_sym"));
       } else {
