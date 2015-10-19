@@ -66,7 +66,7 @@ public class Packer extends RubyObject {
         e = (RubyArray) cache.fastARef(klass);
       }
       if (e != null) {
-        IRubyObject[] hit = new IRubyObject[] {};
+        IRubyObject[] hit = new IRubyObject[2];
         hit[0] = e.entry(1);
         hit[1] = e.entry(0);
         return hit;
