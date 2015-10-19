@@ -47,8 +47,8 @@ public class Packer extends RubyObject {
     }
 
     public ExtRegistry dup() {
-      ExtRegistry copy = new ExtRegistry(this.runtime);
-      copy.hash = (RubyHash) this.hash.dup(runtime.getCurrentContext());
+      ExtRegistry copy = new ExtRegistry(runtime);
+      copy.hash = (RubyHash) hash.dup(runtime.getCurrentContext());
       copy.cache = RubyHash.newHash(runtime);
       return copy;
     }
@@ -59,7 +59,6 @@ public class Packer extends RubyObject {
       hash.fastASet(klass, e);
     }
 
-    // proc, typeId(Fixnum)
     public IRubyObject[] lookup(final RubyClass klass) {
       RubyArray e = (RubyArray) hash.fastARef(klass);
       if (e == null) {
@@ -126,8 +125,7 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
-    ////Nullpo
-    return this.registry.hash.dup(ctx);
+    return registry.hash.dup(ctx);
   }
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
@@ -163,7 +161,7 @@ public class Packer extends RubyObject {
     }
     RubyClass extClass = (RubyClass) klass;
 
-    this.registry.put(extClass, (int) typeId, proc, arg);
+    registry.put(extClass, (int) typeId, proc, arg);
     return runtime.getNil();
   }
 

@@ -55,8 +55,8 @@ public class Unpacker extends RubyObject {
     }
 
     public ExtRegistry dup() {
-      ExtRegistry copy = new ExtRegistry(this.runtime);
-      copy.array = Arrays.copyOf(this.array, 256);
+      ExtRegistry copy = new ExtRegistry(runtime);
+      copy.array = Arrays.copyOf(array, 256);
       return copy;
     }
 
@@ -98,7 +98,7 @@ public class Unpacker extends RubyObject {
         setStream(ctx, args[0]);
       }
     }
-    this.registry = new ExtRegistry(ctx.getRuntime());
+    registry = new ExtRegistry(ctx.getRuntime());
     return this;
   }
 
@@ -156,7 +156,7 @@ public class Unpacker extends RubyObject {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
     }
 
-    this.registry.put(extClass, (int) typeId, proc, arg);
+    registry.put(extClass, (int) typeId, proc, arg);
     return runtime.getNil();
   }
 
@@ -174,12 +174,12 @@ public class Unpacker extends RubyObject {
     if (limit == -1) {
       limit = byteList.length() - offset;
     }
-    Decoder decoder = new Decoder(ctx.getRuntime(), this.registry, byteList.unsafeBytes(), byteList.begin() + offset, limit);
+    Decoder decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin() + offset, limit);
     decoder.symbolizeKeys(symbolizeKeys);
     decoder.allowUnknownExt(allowUnknownExt);
     try {
-      this.data = null;
-      this.data = decoder.next();
+      data = null;
+      data = decoder.next();
     } catch (RaiseException re) {
       if (re.getException().getType() != underflowErrorClass) {
         throw re;
@@ -206,7 +206,7 @@ public class Unpacker extends RubyObject {
   public IRubyObject feed(ThreadContext ctx, IRubyObject data) {
     ByteList byteList = data.asString().getByteList();
     if (decoder == null) {
-      decoder = new Decoder(ctx.getRuntime(), this.registry, byteList.unsafeBytes(), byteList.begin(), byteList.length());
+      decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin(), byteList.length());
       decoder.symbolizeKeys(symbolizeKeys);
       decoder.allowUnknownExt(allowUnknownExt);
     } else {
@@ -343,7 +343,7 @@ public class Unpacker extends RubyObject {
     ByteList byteList = str.getByteList();
     this.stream = stream;
     this.decoder = null;
-    this.decoder = new Decoder(ctx.getRuntime(), this.registry, byteList.unsafeBytes(), byteList.begin(), byteList.length());
+    this.decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin(), byteList.length());
     decoder.symbolizeKeys(symbolizeKeys);
     decoder.allowUnknownExt(allowUnknownExt);
     return getStream(ctx);
