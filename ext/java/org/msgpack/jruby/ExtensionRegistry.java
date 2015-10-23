@@ -48,9 +48,10 @@ public class ExtensionRegistry {
 
   public IRubyObject toInternalUnpackerRegistry(ThreadContext ctx) {
     RubyHash hash = RubyHash.newHash(ctx.getRuntime());
-    for (ExtensionEntry entry : extensionsByClass.values()) {
-      IRubyObject typeId = RubyFixnum.newFixnum(ctx.getRuntime(), entry.getTypeId());
-      if (entry.hasUnpacker()) {
+    for (int typeIdIndex = 0 ; typeIdIndex < 256 ; typeIdIndex++) {
+      ExtensionEntry entry = extensionsByTypeId[typeIdIndex];
+      if (entry != null && entry.hasUnpacker()) {
+        IRubyObject typeId = RubyFixnum.newFixnum(ctx.getRuntime(), typeIdIndex - 128);
         hash.put(typeId, entry.toUnpackerTuple(ctx));
       }
     }
