@@ -144,11 +144,11 @@ public class ExtensionRegistry {
     }
 
     public RubyArray toPackerTuple(ThreadContext ctx) {
-      return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {cls, packerProc, packerArg});
+      return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {RubyFixnum.newFixnum(ctx.getRuntime(), typeId), packerProc, packerArg});
     }
 
     public RubyArray toUnpackerTuple(ThreadContext ctx) {
-      return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {RubyFixnum.newFixnum(ctx.getRuntime(), typeId), unpackerProc, unpackerArg});
+      return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {cls, unpackerProc, unpackerArg});
     }
 
     public IRubyObject[] toPackerProcTypeIdPair(ThreadContext ctx) {
