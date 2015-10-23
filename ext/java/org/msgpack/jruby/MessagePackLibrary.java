@@ -118,12 +118,14 @@ public class MessagePackLibrary implements Library {
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"load"})
     public static IRubyObject unpack(ThreadContext ctx, IRubyObject recv, IRubyObject[] args) {
       Unpacker.ExtensionRegistry registry = MessagePackLibrary.defaultFactory.unpackerRegistry();
-      Decoder decoder = new Decoder(ctx.getRuntime(), registry, args[0].asString().getBytes());
+      boolean symbolizeKeys = false;
       if (args.length > 1 && !args[args.length - 1].isNil()) {
         RubyHash hash = args[args.length - 1].convertToHash();
-        IRubyObject symbolizeKeys = hash.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
-        decoder.symbolizeKeys(symbolizeKeys != null && symbolizeKeys.isTrue());
+        IRubyObject symbolizeKeysVal = hash.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
+        symbolizeKeys = symbolizeKeysVal != null && symbolizeKeysVal.isTrue();
       }
+      byte[] bytes = args[0].asString().getBytes();
+      Decoder decoder = new Decoder(ctx.getRuntime(), registry, bytes, 0, bytes.length, symbolizeKeys, false);
       return decoder.next();
     }
   }

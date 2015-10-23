@@ -41,22 +41,22 @@ public class Decoder implements Iterator<IRubyObject> {
   private boolean allowUnknownExt;
 
   public Decoder(Ruby runtime) {
-    this(runtime, null, new byte[] {}, 0, 0);
+    this(runtime, null, new byte[] {}, 0, 0, false, false);
   }
 
   public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry) {
-    this(runtime, registry, new byte[] {}, 0, 0);
+    this(runtime, registry, new byte[] {}, 0, 0, false, false);
   }
 
   public Decoder(Ruby runtime, byte[] bytes) {
-    this(runtime, null, bytes, 0, bytes.length);
+    this(runtime, null, bytes, 0, bytes.length, false, false);
   }
 
   public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry, byte[] bytes) {
-    this(runtime, registry, bytes, 0, bytes.length);
+    this(runtime, registry, bytes, 0, bytes.length, false, false);
   }
 
-  public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry, byte[] bytes, int offset, int length) {
+  public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean allowUnknownExt) {
     this.runtime = runtime;
     this.registry = registry;
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
@@ -67,15 +67,9 @@ public class Decoder implements Iterator<IRubyObject> {
     this.stackErrorClass = runtime.getModule("MessagePack").getClass("StackError");
     this.unexpectedTypeErrorClass = runtime.getModule("MessagePack").getClass("UnexpectedTypeError");
     this.unknownExtTypeErrorClass = runtime.getModule("MessagePack").getClass("UnknownExtTypeError");
+    this.symbolizeKeys = symbolizeKeys;
+    this.allowUnknownExt = allowUnknownExt;
     feed(bytes, offset, length);
-  }
-
-  public void symbolizeKeys(boolean symbolize) {
-    this.symbolizeKeys = symbolize;
-  }
-
-  public void allowUnknownExt(boolean allow) {
-    this.allowUnknownExt = allow;
   }
 
   public void feed(byte[] bytes) {
