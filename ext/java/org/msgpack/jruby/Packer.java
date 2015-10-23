@@ -36,68 +36,6 @@ public class Packer extends RubyObject {
     }
   }
 
-  static class ExtensionRegistry {
-    private Ruby runtime;
-    public RubyHash hash;
-    public RubyHash cache;
-
-    public ExtensionRegistry(Ruby runtime) {
-      this.runtime = runtime;
-      hash = RubyHash.newHash(runtime);
-      cache = RubyHash.newHash(runtime);
-    }
-
-    public ExtensionRegistry dup() {
-      ExtensionRegistry copy = new ExtensionRegistry(runtime);
-      copy.hash = (RubyHash) hash.dup(runtime.getCurrentContext());
-      copy.cache = RubyHash.newHash(runtime);
-      return copy;
-    }
-
-    public void put(RubyClass klass, int typeId, IRubyObject proc, IRubyObject arg) {
-      RubyArray e = RubyArray.newArray(runtime, new IRubyObject[] { RubyFixnum.newFixnum(runtime, typeId), proc, arg });
-      cache.rb_clear();
-      hash.fastASet(klass, e);
-    }
-
-    public IRubyObject[] lookup(final RubyClass klass) {
-      RubyArray e = (RubyArray) hash.fastARef(klass);
-      if (e == null) {
-        e = (RubyArray) cache.fastARef(klass);
-      }
-      if (e != null) {
-        return new IRubyObject[] {e.entry(1), e.entry(0)};
-      }
-      IRubyObject[] pair = findEntryByClassOrAncestor(hash, klass);
-      if (pair != null) {
-        cache.fastASet(pair[0], RubyArray.newArray(runtime, pair));
-      }
-      return pair;
-    }
-
-    private IRubyObject[] findEntryByClassOrAncestor(final RubyHash hash, final RubyClass klass) {
-      final IRubyObject[] pair = new IRubyObject[2];
-      hash.visitAll(new RubyHash.Visitor() {
-        public void visit(IRubyObject keyValue, IRubyObject value) {
-          if (pair[0] == null) {
-            ThreadContext ctx = runtime.getCurrentContext();
-            RubyArray ancestors = (RubyArray) klass.callMethod(ctx, "ancestors");
-            if (ancestors.callMethod(ctx, "include?", keyValue).isTrue()) {
-              RubyArray hit = (RubyArray) hash.fastARef(keyValue);
-              pair[0] = hit.entry(1);
-              pair[1] = hit.entry(0);
-            }
-          }
-        }
-      });
-      if (pair[0] == null) {
-        return null;
-      } else {
-        return pair;
-      }
-    }
-  }
-
   @JRubyMethod(name = "initialize", optional = 2)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
     boolean compatibilityMode = false;
@@ -109,7 +47,7 @@ public class Packer extends RubyObject {
     this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode, registry);
     this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
-    this.registry = new ExtensionRegistry(ctx.getRuntime());
+    this.registry = new ExtensionRegistry();
     return this;
   }
 
@@ -126,7 +64,7 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
-    return registry.hash.dup(ctx);
+    return registry.toRubyHash(ctx);
   }
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)

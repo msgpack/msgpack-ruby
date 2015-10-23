@@ -23,7 +23,7 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 @JRubyClass(name="MessagePack::Factory")
 public class Factory extends RubyObject {
   private Ruby runtime;
-  private Packer.ExtensionRegistry packerExtensionRegistry;
+  private ExtensionRegistry packerExtensionRegistry;
   private Unpacker.ExtensionRegistry unpackerExtensionRegistry;
 
   public Factory(Ruby runtime, RubyClass type) {
@@ -39,12 +39,12 @@ public class Factory extends RubyObject {
 
   @JRubyMethod(name = "initialize")
   public IRubyObject initialize(ThreadContext ctx) {
-    this.packerExtensionRegistry = new Packer.ExtensionRegistry(ctx.getRuntime());
+    this.packerExtensionRegistry = new ExtensionRegistry();
     this.unpackerExtensionRegistry = new Unpacker.ExtensionRegistry(ctx.getRuntime());
     return this;
   }
 
-  public Packer.ExtensionRegistry packerRegistry() {
+  public ExtensionRegistry packerRegistry() {
     return this.packerExtensionRegistry.dup();
   }
 
@@ -72,7 +72,7 @@ public class Factory extends RubyObject {
       }
     }
 
-    IRubyObject[] ary = { packerRegistry().hash, mapping };
+    IRubyObject[] ary = { packerExtensionRegistry.toRubyHash(ctx), mapping };
     return RubyArray.newArray(ctx.getRuntime(), ary);
   }
 
