@@ -56,9 +56,19 @@ public class Decoder implements Iterator<IRubyObject> {
     this(runtime, registry, bytes, 0, bytes.length, false, false);
   }
 
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, boolean symbolizeKeys, boolean allowUnknownExt) {
+    this(runtime, registry, bytes, 0, bytes.length, symbolizeKeys, allowUnknownExt);
+  }
+
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length) {
+    this(runtime, registry, bytes, offset, length, false, false);
+  }
+
   public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean allowUnknownExt) {
     this.runtime = runtime;
     this.registry = registry;
+    this.symbolizeKeys = symbolizeKeys;
+    this.allowUnknownExt = allowUnknownExt;
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.unpackErrorClass = runtime.getModule("MessagePack").getClass("UnpackError");
