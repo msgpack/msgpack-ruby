@@ -35,7 +35,7 @@ public class Decoder implements Iterator<IRubyObject> {
   private final RubyClass unexpectedTypeErrorClass;
   private final RubyClass unknownExtTypeErrorClass;
 
-  private Unpacker.ExtensionRegistry registry;
+  private ExtensionRegistry registry;
   private ByteBuffer buffer;
   private boolean symbolizeKeys;
   private boolean allowUnknownExt;
@@ -44,7 +44,7 @@ public class Decoder implements Iterator<IRubyObject> {
     this(runtime, null, new byte[] {}, 0, 0, false, false);
   }
 
-  public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry) {
+  public Decoder(Ruby runtime, ExtensionRegistry registry) {
     this(runtime, registry, new byte[] {}, 0, 0, false, false);
   }
 
@@ -52,11 +52,11 @@ public class Decoder implements Iterator<IRubyObject> {
     this(runtime, null, bytes, 0, bytes.length, false, false);
   }
 
-  public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry, byte[] bytes) {
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes) {
     this(runtime, registry, bytes, 0, bytes.length, false, false);
   }
 
-  public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean allowUnknownExt) {
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean allowUnknownExt) {
     this.runtime = runtime;
     this.registry = registry;
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
@@ -136,7 +136,7 @@ public class Decoder implements Iterator<IRubyObject> {
     byte[] payload = readBytes(size);
 
     if (registry != null) {
-      IRubyObject proc = registry.lookup(type);
+      IRubyObject proc = registry.lookupUnpackerByTypeId(type);
       if (proc != null) {
         ByteList byteList = new ByteList(payload, runtime.getEncodingService().getAscii8bitEncoding());
         return proc.callMethod(runtime.getCurrentContext(), "call", runtime.newString(byteList));

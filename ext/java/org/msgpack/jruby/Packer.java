@@ -64,7 +64,7 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
-    return registry.toRubyHash(ctx);
+    return registry.toInternalPackerRegistry(ctx);
   }
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
@@ -98,7 +98,7 @@ public class Packer extends RubyObject {
     }
     RubyClass extClass = (RubyClass) klass;
 
-    registry.put(extClass, (int) typeId, proc, arg);
+    registry.put(extClass, (int) typeId, proc, arg, null, null);
     return runtime.getNil();
   }
 

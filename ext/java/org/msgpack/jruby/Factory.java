@@ -22,13 +22,13 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Factory")
 public class Factory extends RubyObject {
-  private Ruby runtime;
-  private ExtensionRegistry packerExtensionRegistry;
-  private Unpacker.ExtensionRegistry unpackerExtensionRegistry;
+  private final Ruby runtime;
+  private final ExtensionRegistry extensionRegistry;
 
   public Factory(Ruby runtime, RubyClass type) {
     super(runtime, type);
     this.runtime = runtime;
+    this.extensionRegistry = new ExtensionRegistry();
   }
 
   static class FactoryAllocator implements ObjectAllocator {
@@ -37,43 +37,31 @@ public class Factory extends RubyObject {
     }
   }
 
+  public ExtensionRegistry extensionRegistry() {
+    return extensionRegistry.dup();
+  }
+
   @JRubyMethod(name = "initialize")
   public IRubyObject initialize(ThreadContext ctx) {
-    this.packerExtensionRegistry = new ExtensionRegistry();
-    this.unpackerExtensionRegistry = new Unpacker.ExtensionRegistry(ctx.getRuntime());
     return this;
-  }
-
-  public ExtensionRegistry packerRegistry() {
-    return this.packerExtensionRegistry.dup();
-  }
-
-  public Unpacker.ExtensionRegistry unpackerRegistry() {
-    return this.unpackerExtensionRegistry.dup();
   }
 
   @JRubyMethod(name = "packer", optional = 1)
   public Packer packer(ThreadContext ctx, IRubyObject[] args) {
-    return Packer.newPacker(ctx, packerRegistry(), args);
+    return Packer.newPacker(ctx, extensionRegistry(), args);
   }
 
   @JRubyMethod(name = "unpacker", optional = 1)
   public Unpacker unpacker(ThreadContext ctx, IRubyObject[] args) {
-    return Unpacker.newUnpacker(ctx, unpackerRegistry(), args);
+    return Unpacker.newUnpacker(ctx, extensionRegistry(), args);
   }
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
-    Unpacker.ExtensionRegistry reg = unpackerRegistry();
-    RubyHash mapping = RubyHash.newHash(ctx.getRuntime());
-    for (int i = 0; i < 256; i++) {
-      if (reg.array[i] != null) {
-        mapping.fastASet(RubyFixnum.newFixnum(ctx.getRuntime(), i - 128), reg.array[i]);
-      }
-    }
-
-    IRubyObject[] ary = { packerExtensionRegistry.toRubyHash(ctx), mapping };
-    return RubyArray.newArray(ctx.getRuntime(), ary);
+    return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {
+      extensionRegistry.toInternalPackerRegistry(ctx),
+      extensionRegistry.toInternalUnpackerRegistry(ctx)
+    });
   }
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
@@ -122,8 +110,7 @@ public class Factory extends RubyObject {
       }
     }
 
-    this.packerExtensionRegistry.put(extClass, (int) typeId, packerProc, packerArg);
-    this.unpackerExtensionRegistry.put(extClass, (int) typeId, unpackerProc, unpackerArg);
+    extensionRegistry.put(extClass, (int) typeId, packerProc, packerArg, unpackerProc, unpackerArg);
 
     return runtime.getNil();
   }

@@ -26,7 +26,8 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Unpacker")
 public class Unpacker extends RubyObject {
-  public ExtensionRegistry registry;
+  private final ExtensionRegistry registry;
+
   private IRubyObject stream;
   private IRubyObject data;
   private Decoder decoder;
@@ -35,46 +36,18 @@ public class Unpacker extends RubyObject {
   private boolean allowUnknownExt;
 
   public Unpacker(Ruby runtime, RubyClass type) {
+    this(runtime, type, new ExtensionRegistry());
+  }
+
+  public Unpacker(Ruby runtime, RubyClass type, ExtensionRegistry registry) {
     super(runtime, type);
+    this.registry = registry;
     this.underflowErrorClass = runtime.getModule("MessagePack").getClass("UnderflowError");
   }
 
   static class UnpackerAllocator implements ObjectAllocator {
     public IRubyObject allocate(Ruby runtime, RubyClass klass) {
       return new Unpacker(runtime, klass);
-    }
-  }
-
-  static class ExtensionRegistry {
-    private Ruby runtime;
-    public RubyArray[] array;
-
-    public ExtensionRegistry(Ruby runtime) {
-      this.runtime = runtime;
-      this.array = new RubyArray[256];
-    }
-
-    public ExtensionRegistry dup() {
-      ExtensionRegistry copy = new ExtensionRegistry(runtime);
-      copy.array = Arrays.copyOf(array, 256);
-      return copy;
-    }
-
-    public void put(RubyClass klass, int typeId, IRubyObject proc, IRubyObject arg) {
-      IRubyObject k = klass;
-      if (k == null) {
-        k = runtime.getNil();
-      }
-      RubyArray e = RubyArray.newArray(runtime, new IRubyObject[] { k, proc, arg });
-      array[typeId + 128] = e;
-    }
-
-    public IRubyObject lookup(int type) {
-      RubyArray e = array[type + 128];
-      if (e == null) {
-        return null;
-      }
-      return e.entry(1);
     }
   }
 
@@ -97,18 +70,12 @@ public class Unpacker extends RubyObject {
         setStream(ctx, args[0]);
       }
     }
-    registry = new ExtensionRegistry(ctx.getRuntime());
     return this;
   }
 
-  public void setExtensionRegistry(ExtensionRegistry registry) {
-    this.registry = registry;
-  }
-
   public static Unpacker newUnpacker(ThreadContext ctx, ExtensionRegistry extRegistry, IRubyObject[] args) {
-    Unpacker unpacker = new Unpacker(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Unpacker"));
+    Unpacker unpacker = new Unpacker(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Unpacker"), extRegistry);
     unpacker.initialize(ctx, args);
-    unpacker.setExtensionRegistry(extRegistry);
     return unpacker;
   }
 
@@ -124,13 +91,7 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
   public IRubyObject registeredTypesInternal(ThreadContext ctx) {
-    RubyHash mapping = RubyHash.newHash(ctx.getRuntime());
-    for (int i = 0; i < 256; i++) {
-      if (registry.array[i] != null) {
-        mapping.fastASet(RubyFixnum.newFixnum(ctx.getRuntime(), i - 128), registry.array[i].dup());
-      }
-    }
-    return mapping;
+    return registry.toInternalUnpackerRegistry(ctx);
   }
 
   @JRubyMethod(name = "register_type", required = 1, optional = 2)
@@ -163,7 +124,7 @@ public class Unpacker extends RubyObject {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
     }
 
-    registry.put(extClass, (int) typeId, proc, arg);
+    registry.put(extClass, (int) typeId, null, null, proc, arg);
     return runtime.getNil();
   }
 
