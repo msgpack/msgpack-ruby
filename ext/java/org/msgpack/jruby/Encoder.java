@@ -34,19 +34,16 @@ public class Encoder {
   private final Encoding binaryEncoding;
   private final Encoding utf8Encoding;
   private final boolean compatibilityMode;
+  private final Packer.ExtensionRegistry registry;
 
-  private Packer.ExtensionRegistry registry;
   private ByteBuffer buffer;
 
-  public Encoder(Ruby runtime, boolean compatibilityMode) {
+  public Encoder(Ruby runtime, boolean compatibilityMode, Packer.ExtensionRegistry registry) {
     this.runtime = runtime;
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.compatibilityMode = compatibilityMode;
-  }
-
-  public void setRegistry(Packer.ExtensionRegistry registry) {
     this.registry = registry;
   }
 

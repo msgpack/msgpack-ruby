@@ -25,13 +25,14 @@ public class Packer extends RubyObject {
   private Buffer buffer;
   private Encoder encoder;
 
-  public Packer(Ruby runtime, RubyClass type) {
+  public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry) {
     super(runtime, type);
+    this.registry = registry;
   }
 
   static class PackerAllocator implements ObjectAllocator {
     public IRubyObject allocate(Ruby runtime, RubyClass type) {
-      return new Packer(runtime, type);
+      return new Packer(runtime, type, null);
     }
   }
 
@@ -104,22 +105,16 @@ public class Packer extends RubyObject {
       IRubyObject mode = options.fastARef(ctx.getRuntime().newSymbol("compatibility_mode"));
       compatibilityMode = (mode != null) && mode.isTrue();
     }
-    this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode);
+    this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode, registry);
     this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
     this.registry = new ExtensionRegistry(ctx.getRuntime());
     return this;
   }
 
-  public void setExtensionRegistry(ExtensionRegistry registry) {
-    this.registry = registry;
-    this.encoder.setRegistry(registry);
-  }
-
   public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, IRubyObject[] args) {
-    Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"));
+    Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"), extRegistry);
     packer.initialize(ctx, args);
-    packer.setExtensionRegistry(extRegistry);
     return packer;
   }
 
