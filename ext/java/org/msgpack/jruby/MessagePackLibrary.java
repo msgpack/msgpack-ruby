@@ -118,12 +118,18 @@ public class MessagePackLibrary implements Library {
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"load"})
     public static IRubyObject unpack(ThreadContext ctx, IRubyObject recv, IRubyObject[] args) {
       Unpacker.ExtensionRegistry registry = MessagePackLibrary.defaultFactory.unpackerRegistry();
-      Decoder decoder = new Decoder(ctx.getRuntime(), registry, args[0].asString().getBytes());
+
+      boolean symbolizeKeys = false;
+      boolean allowUnknownExt = false;
       if (args.length > 1 && !args[args.length - 1].isNil()) {
         RubyHash hash = args[args.length - 1].convertToHash();
-        IRubyObject symbolizeKeys = hash.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
-        decoder.symbolizeKeys(symbolizeKeys != null && symbolizeKeys.isTrue());
+        IRubyObject symbolizeKeysOpt = hash.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
+        symbolizeKeys = (symbolizeKeysOpt != null && symbolizeKeysOpt.isTrue());
+        IRubyObject allowUnknownExtOpt = hash.fastARef(ctx.getRuntime().newSymbol("allow_unknown_ext"));
+        allowUnknownExt = (allowUnknownExtOpt != null && allowUnknownExtOpt.isTrue());
       }
+
+      Decoder decoder = new Decoder(ctx.getRuntime(), registry, args[0].asString().getBytes(), symbolizeKeys, allowUnknownExt);
       return decoder.next();
     }
   }

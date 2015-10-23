@@ -56,9 +56,19 @@ public class Decoder implements Iterator<IRubyObject> {
     this(runtime, registry, bytes, 0, bytes.length);
   }
 
+  public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry, byte[] bytes, boolean symbolizeKeys, boolean allowUnknownExt) {
+    this(runtime, registry, bytes, 0, bytes.length, symbolizeKeys, allowUnknownExt);
+  }
+
   public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry, byte[] bytes, int offset, int length) {
+    this(runtime, registry, bytes, offset, length, false, false);
+  }
+
+  public Decoder(Ruby runtime, Unpacker.ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean allowUnknownExt) {
     this.runtime = runtime;
     this.registry = registry;
+    this.symbolizeKeys = symbolizeKeys;
+    this.allowUnknownExt = allowUnknownExt;
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.unpackErrorClass = runtime.getModule("MessagePack").getClass("UnpackError");
@@ -68,14 +78,6 @@ public class Decoder implements Iterator<IRubyObject> {
     this.unexpectedTypeErrorClass = runtime.getModule("MessagePack").getClass("UnexpectedTypeError");
     this.unknownExtTypeErrorClass = runtime.getModule("MessagePack").getClass("UnknownExtTypeError");
     feed(bytes, offset, length);
-  }
-
-  public void symbolizeKeys(boolean symbolize) {
-    this.symbolizeKeys = symbolize;
-  }
-
-  public void allowUnknownExt(boolean allow) {
-    this.allowUnknownExt = allow;
   }
 
   public void feed(byte[] bytes) {
