@@ -278,10 +278,6 @@ public class Unpacker extends RubyObject {
     }
   }
 
-  /*
-    skip & skip_nil don't exist in JRuby implementation:
-    these depend on CRuby msgpack implemntation too highly.
-   */
   @JRubyMethod(name = "skip")
   public IRubyObject skip(ThreadContext ctx) {
     throw ctx.getRuntime().newNotImplementedError("Not supported yet in JRuby implementation");
