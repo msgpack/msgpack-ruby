@@ -117,18 +117,18 @@ RSpec.describe MessagePack::Unpacker do
     unpacker.reset
     unpacker.feed("\x01")
 
-    expect { x }.to  == [1]
+    expect(unpacker.each.map{|x| x }).to eq [1]
   end
 
   it 'reset clears internal state' do
     # 1-element array
     unpacker.feed("\x91")
-    expect { x }.to  == []
+    expect(unpacker.each.map{|x| x }).to eq []
 
     unpacker.reset
-
     unpacker.feed("\x01")
-    expect { x }.to  == [1]
+
+    expect(unpacker.each.map{|x| x }).to eq [1]
   end
 
   it 'frozen short strings' do
@@ -439,7 +439,7 @@ RSpec.describe MessagePack::Unpacker do
         subject.feed(buffer2)
         subject.feed(buffer3)
         enum = subject.each
-        expect { obj.keys.first }.to  == %w[foo hello x]
+        expect(enum.map{|obj| obj.keys.first }).to eq %w[foo hello x]
       end
     end
 
