@@ -1,8 +1,6 @@
 # encoding: ascii-8bit
 require 'spec_helper'
 
-eval("return") if java?
-
 describe MessagePack::Factory do
   subject do
     described_class.new
@@ -220,7 +218,6 @@ describe MessagePack::Factory do
     require_relative 'exttypes'
 
     it 'should be referred by MessagePack.pack and MessagePack.unpack' do
-      skip("not supported yet in JRuby implementation") if java?
       MessagePack::DefaultFactory.register_type(DummyTimeStamp1::TYPE, DummyTimeStamp1)
       MessagePack::DefaultFactory.register_type(DummyTimeStamp2::TYPE, DummyTimeStamp2, packer: :serialize, unpacker: :deserialize)
 

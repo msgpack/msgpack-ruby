@@ -34,15 +34,21 @@ public class Encoder {
   private final Encoding binaryEncoding;
   private final Encoding utf8Encoding;
   private final boolean compatibilityMode;
+  private final ExtensionRegistry registry;
 
   private ByteBuffer buffer;
 
-  public Encoder(Ruby runtime, boolean compatibilityMode) {
+  public Encoder(Ruby runtime, boolean compatibilityMode, ExtensionRegistry registry) {
     this.runtime = runtime;
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.compatibilityMode = compatibilityMode;
+    this.registry = registry;
+  }
+
+  public boolean isCompatibilityMode() {
+    return compatibilityMode;
   }
 
   private void ensureRemainingCapacity(int c) {
@@ -107,7 +113,7 @@ public class Encoder {
     } else if (object instanceof ExtensionValue) {
       appendExtensionValue((ExtensionValue) object);
     } else {
-      appendCustom(object, destination);
+      appendOther(object, destination);
     }
   }
 
@@ -295,12 +301,7 @@ public class Encoder {
     }
   }
 
-  private void appendExtensionValue(ExtensionValue object) {
-    long type = ((RubyFixnum)object.get_type()).getLongValue();
-    if (type < -128 || type > 127) {
-	    throw object.getRuntime().newRangeError(String.format("integer %d too big to convert to `signed char'", type));
-    }
-    ByteList payloadBytes = ((RubyString)object.payload()).getByteList();
+  private void appendExt(int type, ByteList payloadBytes) {
     int payloadSize = payloadBytes.length();
     int outputSize = 0;
     boolean fixSize = payloadSize == 1 || payloadSize == 2 || payloadSize == 4 || payloadSize == 8 || payloadSize == 16;
@@ -336,6 +337,28 @@ public class Encoder {
     }
     buffer.put((byte) type);
     buffer.put(payloadBytes.unsafeBytes(), payloadBytes.begin(), payloadSize);
+  }
+
+  private void appendExtensionValue(ExtensionValue object) {
+    long type = ((RubyFixnum)object.get_type()).getLongValue();
+    if (type < -128 || type > 127) {
+      throw object.getRuntime().newRangeError(String.format("integer %d too big to convert to `signed char'", type));
+    }
+    ByteList payloadBytes = ((RubyString)object.payload()).getByteList();
+    appendExt((int) type, payloadBytes);
+  }
+
+  private void appendOther(IRubyObject object, IRubyObject destination) {
+    if (registry != null) {
+      IRubyObject[] pair = registry.lookupPackerByClass(object.getType());
+      if (pair != null) {
+        RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
+        int type = (int) ((RubyFixnum) pair[1]).getLongValue();
+        appendExt(type, bytes.getByteList());
+        return;
+      }
+    }
+    appendCustom(object, destination);
   }
 
   private void appendCustom(IRubyObject object, IRubyObject destination) {

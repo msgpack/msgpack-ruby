@@ -12,6 +12,7 @@ import org.jruby.RubyObject;
 import org.jruby.RubyClass;
 import org.jruby.RubyBignum;
 import org.jruby.RubyString;
+import org.jruby.RubyArray;
 import org.jruby.RubyHash;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -29,31 +30,56 @@ public class Decoder implements Iterator<IRubyObject> {
   private final Encoding utf8Encoding;
   private final RubyClass unpackErrorClass;
   private final RubyClass underflowErrorClass;
+  private final RubyClass malformedFormatErrorClass;
+  private final RubyClass stackErrorClass;
   private final RubyClass unexpectedTypeErrorClass;
+  private final RubyClass unknownExtTypeErrorClass;
 
+  private ExtensionRegistry registry;
   private ByteBuffer buffer;
   private boolean symbolizeKeys;
+  private boolean allowUnknownExt;
 
   public Decoder(Ruby runtime) {
-    this(runtime, new byte[] {}, 0, 0);
+    this(runtime, null, new byte[] {}, 0, 0, false, false);
+  }
+
+  public Decoder(Ruby runtime, ExtensionRegistry registry) {
+    this(runtime, registry, new byte[] {}, 0, 0, false, false);
   }
 
   public Decoder(Ruby runtime, byte[] bytes) {
-    this(runtime, bytes, 0, bytes.length);
+    this(runtime, null, bytes, 0, bytes.length, false, false);
   }
 
-  public Decoder(Ruby runtime, byte[] bytes, int offset, int length) {
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes) {
+    this(runtime, registry, bytes, 0, bytes.length, false, false);
+  }
+
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, boolean symbolizeKeys, boolean allowUnknownExt) {
+    this(runtime, registry, bytes, 0, bytes.length, symbolizeKeys, allowUnknownExt);
+  }
+
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length) {
+    this(runtime, registry, bytes, offset, length, false, false);
+  }
+
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean allowUnknownExt) {
     this.runtime = runtime;
+    this.registry = registry;
+    this.symbolizeKeys = symbolizeKeys;
+    this.allowUnknownExt = allowUnknownExt;
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.unpackErrorClass = runtime.getModule("MessagePack").getClass("UnpackError");
     this.underflowErrorClass = runtime.getModule("MessagePack").getClass("UnderflowError");
+    this.malformedFormatErrorClass = runtime.getModule("MessagePack").getClass("MalformedFormatError");
+    this.stackErrorClass = runtime.getModule("MessagePack").getClass("StackError");
     this.unexpectedTypeErrorClass = runtime.getModule("MessagePack").getClass("UnexpectedTypeError");
+    this.unknownExtTypeErrorClass = runtime.getModule("MessagePack").getClass("UnknownExtTypeError");
+    this.symbolizeKeys = symbolizeKeys;
+    this.allowUnknownExt = allowUnknownExt;
     feed(bytes, offset, length);
-  }
-
-  public void symbolizeKeys(boolean symbolize) {
-    this.symbolizeKeys = symbolize;
   }
 
   public void feed(byte[] bytes) {
@@ -73,7 +99,7 @@ public class Decoder implements Iterator<IRubyObject> {
   }
 
   public void reset() {
-    buffer.rewind();
+    buffer = null;
   }
 
   public int offset() {
@@ -118,7 +144,20 @@ public class Decoder implements Iterator<IRubyObject> {
   private IRubyObject consumeExtension(int size) {
     int type = buffer.get();
     byte[] payload = readBytes(size);
-    return ExtensionValue.newExtensionValue(runtime, type, payload);
+
+    if (registry != null) {
+      IRubyObject proc = registry.lookupUnpackerByTypeId(type);
+      if (proc != null) {
+        ByteList byteList = new ByteList(payload, runtime.getEncodingService().getAscii8bitEncoding());
+        return proc.callMethod(runtime.getCurrentContext(), "call", runtime.newString(byteList));
+      }
+    }
+
+    if (this.allowUnknownExt) {
+      return ExtensionValue.newExtensionValue(runtime, type, payload);
+    }
+
+    throw runtime.newRaiseException(unknownExtTypeErrorClass, "unexpected extension type");
   }
 
   private byte[] readBytes(int size) {
@@ -142,11 +181,11 @@ public class Decoder implements Iterator<IRubyObject> {
     try {
       byte b = buffer.get();
       if ((b & 0xf0) == 0x90) {
-	return runtime.newFixnum(b & 0x0f);
+        return runtime.newFixnum(b & 0x0f);
       } else if (b == ARY16) {
-	return runtime.newFixnum(buffer.getShort() & 0xffff);
+        return runtime.newFixnum(buffer.getShort() & 0xffff);
       } else if (b == ARY32) {
-	return runtime.newFixnum(buffer.getInt());
+        return runtime.newFixnum(buffer.getInt());
       }
       throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
@@ -163,11 +202,11 @@ public class Decoder implements Iterator<IRubyObject> {
     try {
       byte b = buffer.get();
       if ((b & 0xf0) == 0x80) {
-	return runtime.newFixnum(b & 0x0f);
+        return runtime.newFixnum(b & 0x0f);
       } else if (b == MAP16) {
-	return runtime.newFixnum(buffer.getShort() & 0xffff);
+        return runtime.newFixnum(buffer.getShort() & 0xffff);
       } else if (b == MAP32) {
-	return runtime.newFixnum(buffer.getInt());
+        return runtime.newFixnum(buffer.getInt());
       }
       throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
@@ -233,7 +272,7 @@ public class Decoder implements Iterator<IRubyObject> {
       default: return runtime.newFixnum(b);
       }
       buffer.position(position);
-      throw runtime.newRaiseException(unpackErrorClass, "Illegal byte sequence");
+      throw runtime.newRaiseException(malformedFormatErrorClass, "Illegal byte sequence");
     } catch (RaiseException re) {
       buffer.position(position);
       throw re;

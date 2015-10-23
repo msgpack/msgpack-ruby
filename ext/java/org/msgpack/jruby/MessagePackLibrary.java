@@ -20,15 +20,20 @@ import org.jruby.internal.runtime.methods.DynamicMethod;
 
 
 public class MessagePackLibrary implements Library {
+  public static Factory defaultFactory;
+
   public void load(Ruby runtime, boolean wrap) {
     RubyModule msgpackModule = runtime.defineModule("MessagePack");
     msgpackModule.defineAnnotatedMethods(MessagePackModule.class);
     RubyClass standardErrorClass = runtime.getStandardError();
     RubyClass unpackErrorClass = msgpackModule.defineClassUnder("UnpackError", standardErrorClass, standardErrorClass.getAllocator());
     RubyClass underflowErrorClass = msgpackModule.defineClassUnder("UnderflowError", unpackErrorClass, unpackErrorClass.getAllocator());
+    RubyClass malformedFormatErrorClass = msgpackModule.defineClassUnder("MalformedFormatError", unpackErrorClass, unpackErrorClass.getAllocator());
+    RubyClass stackErrorClass = msgpackModule.defineClassUnder("StackError", unpackErrorClass, unpackErrorClass.getAllocator());
     RubyModule typeErrorModule = msgpackModule.defineModuleUnder("TypeError");
-    RubyClass unexpectedTypeErrorClass = msgpackModule.defineClassUnder("UnexpetedTypeError", unpackErrorClass, standardErrorClass.getAllocator());
+    RubyClass unexpectedTypeErrorClass = msgpackModule.defineClassUnder("UnexpectedTypeError", unpackErrorClass, unpackErrorClass.getAllocator());
     unexpectedTypeErrorClass.includeModule(typeErrorModule);
+    RubyClass unknownExtTypeErrorClass = msgpackModule.defineClassUnder("UnknownExtTypeError", unpackErrorClass, unpackErrorClass.getAllocator());
     RubyClass extensionValueClass = msgpackModule.defineClassUnder("ExtensionValue", runtime.getObject(), new ExtensionValue.ExtensionValueAllocator());
     extensionValueClass.defineAnnotatedMethods(ExtensionValue.class);
     RubyClass packerClass = msgpackModule.defineClassUnder("Packer", runtime.getObject(), new Packer.PackerAllocator());
@@ -37,6 +42,11 @@ public class MessagePackLibrary implements Library {
     unpackerClass.defineAnnotatedMethods(Unpacker.class);
     RubyClass bufferClass = msgpackModule.defineClassUnder("Buffer", runtime.getObject(), new Buffer.BufferAllocator());
     bufferClass.defineAnnotatedMethods(Buffer.class);
+    RubyClass factoryClass = msgpackModule.defineClassUnder("Factory", runtime.getObject(), new Factory.FactoryAllocator());
+    factoryClass.defineAnnotatedMethods(Factory.class);
+    defaultFactory = new Factory(runtime, factoryClass);
+    defaultFactory.initialize(runtime.getCurrentContext());
+    msgpackModule.defineConstant("DefaultFactory", defaultFactory);
     installCoreExtensions(runtime);
   }
 
@@ -100,20 +110,27 @@ public class MessagePackLibrary implements Library {
         extraArgs = new IRubyObject[args.length - 1];
         System.arraycopy(args, 1, extraArgs, 0, args.length - 1);
       }
-      Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"));
-      packer.initialize(ctx, extraArgs);
+      Packer packer = MessagePackLibrary.defaultFactory.packer(ctx, extraArgs);
       packer.write(ctx, args[0]);
       return packer.toS(ctx);
     }
 
     @JRubyMethod(module = true, required = 1, optional = 1, alias = {"load"})
     public static IRubyObject unpack(ThreadContext ctx, IRubyObject recv, IRubyObject[] args) {
-      Decoder decoder = new Decoder(ctx.getRuntime(), args[0].asString().getBytes());
+      ExtensionRegistry registry = MessagePackLibrary.defaultFactory.extensionRegistry();
+
+      boolean symbolizeKeys = false;
+      boolean allowUnknownExt = false;
       if (args.length > 1 && !args[args.length - 1].isNil()) {
         RubyHash hash = args[args.length - 1].convertToHash();
-        IRubyObject symbolizeKeys = hash.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
-        decoder.symbolizeKeys(symbolizeKeys != null && symbolizeKeys.isTrue());
+        IRubyObject symbolizeKeysVal = hash.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
+        symbolizeKeys = symbolizeKeysVal != null && symbolizeKeysVal.isTrue();
+        IRubyObject allowUnknownExtVal = hash.fastARef(ctx.getRuntime().newSymbol("allow_unknown_ext"));
+        allowUnknownExt = (allowUnknownExtVal != null && allowUnknownExtVal.isTrue());
       }
+      byte[] bytes = args[0].asString().getBytes();
+      Decoder decoder = new Decoder(ctx.getRuntime(), registry, bytes, 0, bytes.length, symbolizeKeys, allowUnknownExt);
+
       return decoder.next();
     }
   }
