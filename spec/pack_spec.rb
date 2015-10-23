@@ -6,16 +6,16 @@ if defined?(Encoding)
   Encoding.default_external = 'ASCII-8BIT'
 end
 
-describe MessagePack do
+RSpec.describe MessagePack do
   it 'to_msgpack returns String' do
-    nil.to_msgpack.class.should == String
-    true.to_msgpack.class.should == String
-    false.to_msgpack.class.should == String
-    1.to_msgpack.class.should == String
-    1.0.to_msgpack.class.should == String
-    "".to_msgpack.class.should == String
-    Hash.new.to_msgpack.class.should == String
-    Array.new.to_msgpack.class.should == String
+    expect(nil.to_msgpack.class).to eq String
+    expect(true.to_msgpack.class).to eq String
+    expect(false.to_msgpack.class).to eq String
+    expect(1.to_msgpack.class).to eq String
+    expect(1.0.to_msgpack.class).to eq String
+    expect("".to_msgpack.class).to eq String
+    expect(Hash.new.to_msgpack.class).to eq String
+    expect(Array.new.to_msgpack.class).to eq String
   end
 
   class CustomPack01
@@ -35,27 +35,27 @@ describe MessagePack do
   end
 
   it 'calls custom to_msgpack method' do
-    MessagePack.pack(CustomPack01.new).should == [1,2].to_msgpack
-    MessagePack.pack(CustomPack02.new).should == [1,2].to_msgpack
-    CustomPack01.new.to_msgpack.should == [1,2].to_msgpack
-    CustomPack02.new.to_msgpack.should == [1,2].to_msgpack
+    expect(MessagePack.pack(CustomPack01.new)).to eq [1,2].to_msgpack
+    expect(MessagePack.pack(CustomPack02.new)).to eq [1,2].to_msgpack
+    expect(CustomPack01.new.to_msgpack).to eq [1,2].to_msgpack
+    expect(CustomPack02.new.to_msgpack).to eq [1,2].to_msgpack
   end
 
   it 'calls custom to_msgpack method with io' do
     s01 = StringIO.new
     MessagePack.pack(CustomPack01.new, s01)
-    s01.string.should == [1,2].to_msgpack
+    expect(s01.string).to eq [1,2].to_msgpack
 
     s02 = StringIO.new
     MessagePack.pack(CustomPack02.new, s02)
-    s02.string.should == [1,2].to_msgpack
+    expect(s02.string).to eq [1,2].to_msgpack
 
     s03 = StringIO.new
     CustomPack01.new.to_msgpack(s03)
-    s03.string.should == [1,2].to_msgpack
+    expect(s03.string).to eq [1,2].to_msgpack
 
     s04 = StringIO.new
     CustomPack02.new.to_msgpack(s04)
-    s04.string.should == [1,2].to_msgpack
+    expect(s04.string).to eq [1,2].to_msgpack
   end
 end

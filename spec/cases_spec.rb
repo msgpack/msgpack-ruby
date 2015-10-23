@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'json'
 
-describe MessagePack do
+RSpec.describe MessagePack do
   here = File.dirname(__FILE__)
   CASES         = File.read("#{here}/cases.msg")
   CASES_JSON    = File.read("#{here}/cases.json")
@@ -16,7 +16,7 @@ describe MessagePack do
     js = JSON.load(CASES_JSON)
 
     ms.zip(js) {|m,j|
-      m.should == j
+      expect(m).to eq j
     }
   end
 
@@ -32,7 +32,7 @@ describe MessagePack do
     }
 
     ms.zip(cs) {|m,c|
-      m.should == c
+      expect(m).to eq c
     }
   end
 end

@@ -1,40 +1,40 @@
 # encoding: ascii-8bit
 require 'spec_helper'
 
-describe MessagePack::Factory do
+RSpec.describe MessagePack::Factory do
   subject do
     described_class.new
   end
 
   describe '#packer' do
     it 'creates a Packer instance' do
-      subject.packer.should be_kind_of(MessagePack::Packer)
+      expect(subject.packer).to be_kind_of(MessagePack::Packer)
     end
 
     it 'creates new instance' do
-      subject.packer.object_id.should_not == subject.packer.object_id
+      expect(subject.packer.object_id).not_to eq subject.packer.object_id
     end
   end
 
   describe '#unpacker' do
     it 'creates a Unpacker instance' do
-      subject.unpacker.should be_kind_of(MessagePack::Unpacker)
+      expect(subject.unpacker).to be_kind_of(MessagePack::Unpacker)
     end
 
     it 'creates new instance' do
-      subject.unpacker.object_id.should_not == subject.unpacker.object_id
+      expect(subject.unpacker.object_id).not_to eq subject.unpacker.object_id
     end
 
     it 'creates unpacker with symbolize_keys option' do
       unpacker = subject.unpacker(symbolize_keys: true)
       unpacker.feed(MessagePack.pack({'k'=>'v'}))
-      unpacker.read.should == {k: 'v'}
+      expect(unpacker.read).to eq({k: 'v'})
     end
 
     it 'creates unpacker with allow_unknown_ext option' do
       unpacker = subject.unpacker(allow_unknown_ext: true)
       unpacker.feed(MessagePack::ExtensionValue.new(1, 'a').to_msgpack)
-      unpacker.read.should == MessagePack::ExtensionValue.new(1, 'a')
+      expect(unpacker.read).to eq MessagePack::ExtensionValue.new(1, 'a')
     end
 
     it 'creates unpacker without allow_unknown_ext option' do
@@ -163,8 +163,8 @@ describe MessagePack::Factory do
 
       data = subject.packer.write(src).to_s
       my = subject.unpacker.feed(data).read
-      my.a.should == 1
-      my.b.should == 2
+      expect(my.a).to eq 1
+      expect(my.b).to eq 2
     end
 
     it 'registers custom packer method name' do
@@ -172,8 +172,8 @@ describe MessagePack::Factory do
 
       data = subject.packer.write(src).to_s
       my = subject.unpacker.feed(data).read
-      my.a.should == 1
-      my.b.should == 0
+      expect(my.a).to eq 1
+      expect(my.b).to eq 0
     end
 
     it 'registers custom unpacker method name' do
@@ -181,8 +181,8 @@ describe MessagePack::Factory do
 
       data = subject.packer.write(src).to_s
       my = subject.unpacker.feed(data).read
-      my.a.should == 0
-      my.b.should == 2
+      expect(my.a).to eq 0
+      expect(my.b).to eq 2
     end
 
     it 'registers custom proc objects' do
@@ -192,8 +192,8 @@ describe MessagePack::Factory do
 
       data = subject.packer.write(src).to_s
       my = subject.unpacker.feed(data).read
-      my.a.should == 3
-      my.b.should == -1
+      expect(my.a).to eq 3
+      expect(my.b).to eq -1
     end
 
     it 'does not affect existent packer and unpackers' do
@@ -205,14 +205,14 @@ describe MessagePack::Factory do
 
       data = packer.write(src).to_s
       my = unpacker.feed(data).read
-      my.a.should == 1
-      my.b.should == 2
+      expect(my.a).to eq 1
+      expect(my.b).to eq 2
     end
   end
 
   describe 'DefaultFactory' do
     it 'is a factory' do
-      MessagePack::DefaultFactory.should be_kind_of(MessagePack::Factory)
+      expect(MessagePack::DefaultFactory).to be_kind_of(MessagePack::Factory)
     end
 
     require_relative 'exttypes'

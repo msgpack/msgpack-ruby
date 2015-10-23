@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'random_compat'
 
-describe Buffer do
+RSpec.describe Buffer do
   STATIC_EXAMPLES = {}
   STATIC_EXAMPLES[:empty01] = ''
   STATIC_EXAMPLES[:empty02] = ''
@@ -217,13 +217,13 @@ describe Buffer do
   end
 
   it 'empty?' do
-    empty01.empty?.should == true
-    empty02.empty?.should == true
+    expect(empty01.empty?).to eq true
+    expect(empty02.empty?).to eq true
   end
 
   it 'size' do
     case_keys.each {|k|
-      cases[k].size.should == examples[k].size
+      expect(cases[k].size).to eq examples[k].size
     }
   end
 
@@ -233,7 +233,7 @@ describe Buffer do
       10.times do |i|
         cases[k].write 'short'
         sz += 'short'.size
-        cases[k].size.should == sz
+        expect(cases[k].size).to eq sz
       end
     }
   end
@@ -243,13 +243,13 @@ describe Buffer do
       sz = examples[k].size
       next if sz < 2
 
-      cases[k].read(1).should == examples[k][0,1]
+      expect(cases[k].read(1)).to eq examples[k][0,1]
       sz -= 1
-      cases[k].size.should == sz
+      expect(cases[k].size).to eq sz
 
-      cases[k].read(1).should == examples[k][1,1]
+      expect(cases[k].read(1)).to eq examples[k][1,1]
       sz -= 1
-      cases[k].size.should == sz
+      expect(cases[k].size).to eq sz
     }
   end
 
@@ -258,13 +258,13 @@ describe Buffer do
       sz = examples[k].size
       next if sz < 2
 
-      cases[k].read_all(1).should == examples[k][0,1]
+      expect(cases[k].read_all(1)).to eq examples[k][0,1]
       sz -= 1
-      cases[k].size.should == sz
+      expect(cases[k].size).to eq sz
 
-      cases[k].read_all(1).should == examples[k][1,1]
+      expect(cases[k].read_all(1)).to eq examples[k][1,1]
       sz -= 1
-      cases[k].size.should == sz
+      expect(cases[k].size).to eq sz
     }
   end
 
@@ -273,13 +273,13 @@ describe Buffer do
       sz = examples[k].size
       next if sz < 2
 
-      cases[k].skip(1).should == 1
+      expect(cases[k].skip(1)).to eq 1
       sz -= 1
-      cases[k].size.should == sz
+      expect(cases[k].size).to eq sz
 
-      cases[k].skip(1).should == 1
+      expect(cases[k].skip(1)).to eq 1
       sz -= 1
-      cases[k].size.should == sz
+      expect(cases[k].size).to eq sz
     }
   end
 
@@ -290,27 +290,27 @@ describe Buffer do
 
       cases[k].skip_all(1)
       sz -= 1
-      cases[k].size.should == sz
+      expect(cases[k].size).to eq sz
 
       cases[k].skip_all(1)
       sz -= 1
-      cases[k].size.should == sz
+      expect(cases[k].size).to eq sz
     }
   end
 
   it 'read_all against insufficient buffer raises EOFError and consumes nothing' do
     case_keys.each {|k|
       sz = examples[k].size
-      -> { cases[k].read_all(sz+1) }.should raise_error(EOFError)
-      cases[k].size.should == sz
+      expect { cases[k].read_all(sz+1) }.to raise_error(EOFError)
+      expect(cases[k].size).to eq sz
     }
   end
 
   it 'skip_all against insufficient buffer raises EOFError and consumes nothing' do
     case_keys.each {|k|
       sz = examples[k].size
-      -> { cases[k].skip_all(sz+1) }.should raise_error(EOFError)
-      cases[k].size.should == sz
+      expect { cases[k].skip_all(sz+1) }.to raise_error(EOFError)
+      expect(cases[k].size).to eq sz
     }
   end
 
@@ -318,40 +318,40 @@ describe Buffer do
     case_keys.each {|k|
       sz = examples[k].size
       if sz == 0
-        cases[k].read(sz+1).should == nil
+        expect(cases[k].read(sz+1)).to eq nil
       else
-        cases[k].read(sz+1).should == examples[k]
+        expect(cases[k].read(sz+1)).to eq examples[k]
       end
-      cases[k].size.should == 0
+      expect(cases[k].size).to eq 0
     }
   end
 
   it 'skip against insufficient buffer consumes all buffer' do
     case_keys.each {|k|
       sz = examples[k].size
-      cases[k].skip(sz+1).should == examples[k].size
-      cases[k].size.should == 0
+      expect(cases[k].skip(sz+1)).to eq examples[k].size
+      expect(cases[k].size).to eq 0
     }
   end
 
   it 'read with no arguments consumes all buffer and returns string and do not return nil' do
     case_keys.each {|k|
-      cases[k].read_all.should == examples[k]
-      cases[k].size.should == 0
+      expect(cases[k].read_all).to eq examples[k]
+      expect(cases[k].size).to eq 0
     }
   end
 
   it 'read_all with no arguments consumes all buffer and returns string' do
     case_keys.each {|k|
-      cases[k].read_all.should == examples[k]
-      cases[k].size.should == 0
+      expect(cases[k].read_all).to eq examples[k]
+      expect(cases[k].size).to eq 0
     }
   end
 
   it 'to_s returns a string and consume nothing' do
     case_keys.each {|k|
-      cases[k].to_s.should == examples[k]
-      cases[k].size.should == examples[k].size
+      expect(cases[k].to_s).to eq examples[k]
+      expect(cases[k].size).to eq examples[k].size
     }
   end
 
@@ -359,7 +359,7 @@ describe Buffer do
     case_keys.each {|k|
       s = cases[k].to_s
       s << 'x'
-      cases[k].to_s.should == examples[k]
+      expect(cases[k].to_s).to eq examples[k]
     }
   end
 
@@ -370,7 +370,7 @@ describe Buffer do
       big1 = "a" * (1024*1024 + 2)
       cases[k].write(big1)
       big1 << 'x'
-      cases[k].read.should == examples[k] + big2
+      expect(cases[k].read).to eq examples[k] + big2
     }
   end
 
@@ -381,14 +381,14 @@ describe Buffer do
       sz = examples[k].size
 
       cases[k].write big1
-      cases[k].size.should == sz + big1.size
+      expect(cases[k].size).to eq sz + big1.size
 
       cases[k].write("c")
-      cases[k].size.should == sz + big1.size + 1
+      expect(cases[k].size).to eq sz + big1.size + 1
 
-      cases[k].read_all.should == examples[k] + big1 + "c"
-      cases[k].size.should == 0
-      cases[k].empty?.should == true
+      expect(cases[k].read_all).to eq examples[k] + big1 + "c"
+      expect(cases[k].size).to eq 0
+      expect(cases[k].empty?).to eq true
     }
   end
 
@@ -401,51 +401,51 @@ describe Buffer do
 
       cases[k].write big1
       cases[k].write big2
-      cases[k].size.should == sz + big1.size + big2.size
+      expect(cases[k].size).to eq sz + big1.size + big2.size
 
-      cases[k].read_all(sz + big1.size).should == examples[k] + big1
-      cases[k].size.should == big2.size
+      expect(cases[k].read_all(sz + big1.size)).to eq examples[k] + big1
+      expect(cases[k].size).to eq big2.size
 
-      cases[k].read.should == big2
-      cases[k].size.should == 0
-      cases[k].empty?.should == true
+      expect(cases[k].read).to eq big2
+      expect(cases[k].size).to eq 0
+      expect(cases[k].empty?).to eq true
     }
   end
 
   it 'read 0' do
     case_keys.each {|k|
-      cases[k].read(0).should == ''
-      cases[k].read.should == examples[k]
+      expect(cases[k].read(0)).to eq ''
+      expect(cases[k].read).to eq examples[k]
     }
   end
 
   it 'skip 0' do
     case_keys.each {|k|
-      cases[k].skip(0).should == 0
-      cases[k].read.should == examples[k]
+      expect(cases[k].skip(0)).to eq 0
+      expect(cases[k].read).to eq examples[k]
     }
   end
 
   it 'read_all 0' do
     case_keys.each {|k|
-      cases[k].read_all(0).should == ''
-      cases[k].read_all.should == examples[k]
+      expect(cases[k].read_all(0)).to eq ''
+      expect(cases[k].read_all).to eq examples[k]
     }
   end
 
   it 'skip_all 0' do
     case_keys.each {|k|
       cases[k].skip_all(0)
-      cases[k].read_all.should == examples[k]
+      expect(cases[k].read_all).to eq examples[k]
     }
   end
 
   it 'write_to' do
     case_keys.each {|k|
       sio = StringIO.new
-      cases[k].write_to(sio).should == examples[k].size
-      cases[k].size.should == 0
-      sio.string.should == examples[k]
+      expect(cases[k].write_to(sio)).to eq examples[k].size
+      expect(cases[k].size).to eq 0
+      expect(sio.string).to eq examples[k]
     }
   end
 
@@ -470,8 +470,8 @@ describe Buffer do
         ex = nil if ex.empty?
         x = b.read(n)
         x.size == ex.size if x != nil
-        x.should == ex
-        b.size.should == s.size
+        expect(x).to eq ex
+        expect(b.size).to eq s.size
       end
     }
   end
@@ -497,11 +497,11 @@ describe Buffer do
           x = b.read_all(n)
           ex = s.slice!(0, n)
           x.size == n
-          x.should == ex
-          b.size.should == s.size
+          expect(x).to eq ex
+          expect(b.size).to eq s.size
         rescue EOFError
-          b.size.should == s.size
-          b.read.should == s
+          expect(b.size).to eq s.size
+          expect(b.read).to eq s
           s.clear
           break
         end
@@ -527,8 +527,8 @@ describe Buffer do
       r.rand(3).times do
         n = r.rand(1024*1400)
         ex = s.slice!(0, n)
-        b.skip(n).should == ex.size
-        b.size.should == s.size
+        expect(b.skip(n)).to eq ex.size
+        expect(b.size).to eq s.size
       end
     }
   end
@@ -553,10 +553,10 @@ describe Buffer do
         begin
           b.skip_all(n)
           s.slice!(0, n)
-          b.size.should == s.size
+          expect(b.size).to eq s.size
         ensure EOFError
-          b.size.should == s.size
-          b.read.should == s
+          expect(b.size).to eq s.size
+          expect(b.read).to eq s
           s.clear
           break
         end

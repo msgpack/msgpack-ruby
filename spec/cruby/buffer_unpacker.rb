@@ -1,7 +1,7 @@
 # encoding: ascii-8bit
 require 'spec_helper'
 
-describe Unpacker do
+RSpec.describe Unpacker do
   let :unpacker do
     Unpacker.new
   end
@@ -13,7 +13,7 @@ describe Unpacker do
   it 'buffer' do
     o1 = unpacker.buffer.object_id
     unpacker.buffer << 'frsyuki'
-    unpacker.buffer.to_s.should == 'frsyuki'
-    unpacker.buffer.object_id.should == o1
+    expect(unpacker.buffer.to_s).to eq 'frsyuki'
+    expect(unpacker.buffer.object_id).to eq o1
   end
 end

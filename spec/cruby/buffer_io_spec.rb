@@ -6,7 +6,7 @@ if defined?(Encoding)
   Encoding.default_external = 'ASCII-8BIT'
 end
 
-describe Buffer do
+RSpec.describe Buffer do
   r = Random.new
   random_seed = r.seed
   puts "buffer_io random seed: 0x#{random_seed.to_s(16)}"
@@ -28,7 +28,7 @@ describe Buffer do
   end
 
   it 'io returns internal io' do
-    buffer.io.should == io
+    expect(buffer.io).to eq io
   end
 
   it 'close closes internal io' do
@@ -38,63 +38,63 @@ describe Buffer do
 
   it 'short feed and read all' do
     set_source 'aa'
-    buffer.read.should == 'aa'
+    expect(buffer.read).to eq 'aa'
   end
 
   it 'short feed and read short' do
     set_source 'aa'
-    buffer.read(1).should == 'a'
-    buffer.read(1).should == 'a'
-    buffer.read(1).should == nil
+    expect(buffer.read(1)).to eq 'a'
+    expect(buffer.read(1)).to eq 'a'
+    expect(buffer.read(1)).to eq nil
   end
 
   it 'long feed and read all' do
     set_source ' '*(1024*1024)
     s = buffer.read
-    s.size.should == source.size
-    s.should == source
+    expect(s.size).to eq source.size
+    expect(s).to eq source
   end
 
   it 'long feed and read mixed' do
     set_source ' '*(1024*1024)
-    buffer.read(10).should == source.slice!(0, 10)
-    buffer.read(10).should == source.slice!(0, 10)
-    buffer.read(10).should == source.slice!(0, 10)
+    expect(buffer.read(10)).to eq source.slice!(0, 10)
+    expect(buffer.read(10)).to eq source.slice!(0, 10)
+    expect(buffer.read(10)).to eq source.slice!(0, 10)
     s = buffer.read
-    s.size.should == source.size
-    s.should == source
+    expect(s.size).to eq source.size
+    expect(s).to eq source
   end
 
   it 'eof' do
     set_source ''
-    buffer.read.should == ''
+    expect(buffer.read).to eq ''
   end
 
   it 'eof 2' do
     set_source 'a'
-    buffer.read.should == 'a'
-    buffer.read.should == ''
+    expect(buffer.read).to eq 'a'
+    expect(buffer.read).to eq ''
   end
 
   it 'write short once and flush' do
     buffer.write('aa')
     buffer.flush
-    io.string.should == 'aa'
+    expect(io.string).to eq 'aa'
   end
 
   it 'write short twice and flush' do
     buffer.write('a')
     buffer.write('a')
     buffer.flush
-    io.string.should == 'aa'
+    expect(io.string).to eq 'aa'
   end
 
   it 'write long once and flush' do
     s = ' '*(1024*1024)
     buffer.write s
     buffer.flush
-    io.string.size.should == s.size
-    io.string.should == s
+    expect(io.string.size).to eq s.size
+    expect(io.string).to eq s
   end
 
   it 'write short multi and flush' do
@@ -103,8 +103,8 @@ describe Buffer do
       buffer.write ' '*1024
     }
     buffer.flush
-    io.string.size.should == s.size
-    io.string.should == s
+    expect(io.string.size).to eq s.size
+    expect(io.string).to eq s
   end
 
   it 'random read' do
@@ -124,11 +124,11 @@ describe Buffer do
 
       fragments.each {|s|
         x = b.read(s.size)
-        x.size.should == s.size
-        x.should == s
+        expect(x.size).to eq s.size
+        expect(x).to eq s
       }
-      b.empty?.should == true
-      b.read.should == ''
+      expect(b.empty?).to eq true
+      expect(b.read).to eq ''
     }
   end
 
@@ -150,11 +150,11 @@ describe Buffer do
 
       fragments.each {|s|
         x = b.read_all(s.size)
-        x.size.should == s.size
-        x.should == s
+        expect(x.size).to eq s.size
+        expect(x).to eq s
       }
-      b.empty?.should == true
-      -> { b.read_all(1) }.should raise_error(EOFError)
+      expect(b.empty?).to eq true
+      expect { b.read_all(1) }.to raise_error(EOFError)
     }
   end
 
@@ -174,10 +174,10 @@ describe Buffer do
       b = Buffer.new(io)
 
       fragments.each {|s|
-        b.skip(s.size).should == s.size
+        expect(b.skip(s.size)).to eq s.size
       }
-      b.empty?.should == true
-      b.skip(1).should == 0
+      expect(b.empty?).to eq true
+      expect(b.skip(1)).to eq 0
     }
   end
 
@@ -197,10 +197,10 @@ describe Buffer do
       b = Buffer.new(io)
 
       fragments.each {|s|
-        -> { b.skip_all(s.size) }.should_not raise_error
+        expect { b.skip_all(s.size) }.not_to raise_error
       }
-      b.empty?.should == true
-      -> { b.skip_all(1) }.should raise_error(EOFError)
+      expect(b.empty?).to eq true
+      expect { b.skip_all(1) }.to raise_error(EOFError)
     }
   end
 
@@ -219,12 +219,12 @@ describe Buffer do
         b.write(x)
       end
 
-      (io.string.size + b.size).should == s.size
+      expect((io.string.size + b.size)).to eq s.size
 
       b.flush
 
-      io.string.size.should == s.size
-      io.string.should == s
+      expect(io.string.size).to eq s.size
+      expect(io.string).to eq s
     }
   end
 
@@ -242,7 +242,7 @@ describe Buffer do
         b.write(x)
       end
 
-      b.size.should == s.size
+      expect(b.size).to eq s.size
       b.clear
     }
   end

@@ -1,7 +1,7 @@
 # encoding: ascii-8bit
 require 'spec_helper'
 
-describe Unpacker do
+RSpec.describe Unpacker do
   let :unpacker do
     Unpacker.new
   end
@@ -12,12 +12,12 @@ describe Unpacker do
 
   it 'skip_nil succeeds' do
     unpacker.feed("\xc0")
-    unpacker.skip_nil.should == true
+    expect(unpacker.skip_nil).to eq true
   end
 
   it 'skip_nil fails' do
     unpacker.feed("\x90")
-    unpacker.skip_nil.should == false
+    expect(unpacker.skip_nil).to eq false
   end
 
   it 'skip skips objects' do
@@ -30,19 +30,19 @@ describe Unpacker do
     unpacker = Unpacker.new
     unpacker.feed(packer.to_s)
 
-    unpacker.read.should == 1
+    expect(unpacker.read).to eq 1
     unpacker.skip
-    unpacker.read.should == 3
+    expect(unpacker.read).to eq 3
     unpacker.skip
-    unpacker.read.should == 5
+    expect(unpacker.read).to eq 5
   end
 
   it 'skip raises EOFError' do
-    -> { unpacker.skip }.should raise_error(EOFError)
+    expect { unpacker.skip }.to raise_error(EOFError)
   end
 
   it 'skip_nil raises EOFError' do
-    -> { unpacker.skip_nil }.should raise_error(EOFError)
+    expect { unpacker.skip_nil }.to raise_error(EOFError)
   end
 
   it 'skip raises level stack too deep error' do
@@ -51,12 +51,12 @@ describe Unpacker do
 
     unpacker = Unpacker.new
     unpacker.feed(packer.to_s)
-    -> { unpacker.skip }.should raise_error(MessagePack::StackError)
+    expect { unpacker.skip }.to raise_error(MessagePack::StackError)
   end
 
   it 'skip raises invalid byte error' do
     unpacker.feed("\xc1")
-    -> { unpacker.skip }.should raise_error(MessagePack::MalformedFormatError)
+    expect { unpacker.skip }.to raise_error(MessagePack::MalformedFormatError)
   end
 end
 

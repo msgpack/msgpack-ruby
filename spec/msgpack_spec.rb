@@ -10,7 +10,7 @@ def asciienc(str)
   str.encode('ASCII-8BIT')
 end
 
-describe MessagePack do
+RSpec.describe MessagePack do
   tests = {
     'constant values' => [
       ['true', true, "\xC3"],
@@ -65,11 +65,11 @@ describe MessagePack do
     context("with #{ctx}") do
       its.each do |desc, unpacked, packed|
         it("encodes #{desc}") do
-          MessagePack.pack(unpacked).should == packed
+          expect(MessagePack.pack(unpacked)).to eq packed
         end
 
         it "decodes #{desc}" do
-          MessagePack.unpack(packed).should == unpacked
+          expect(MessagePack.unpack(packed)).to eq unpacked
         end
       end
     end
@@ -77,17 +77,17 @@ describe MessagePack do
 
   context 'using other names for .pack and .unpack' do
     it 'can unpack with .load' do
-      MessagePack.load("\xABhello world").should == 'hello world'
+      expect(MessagePack.load("\xABhello world")).to eq 'hello world'
     end
 
     it 'can pack with .dump' do
-      MessagePack.dump(utf8enc('hello world')).should == "\xABhello world"
+      expect(MessagePack.dump(utf8enc('hello world'))).to eq "\xABhello world"
     end
   end
 
   context 'with symbols' do
     it 'encodes symbols as strings' do
-      MessagePack.pack(:symbol).should == "\xA6symbol"
+      expect(MessagePack.pack(:symbol)).to eq "\xA6symbol"
     end
   end
 
@@ -106,7 +106,7 @@ describe MessagePack do
 
     it 'transcodes strings when encoding' do
       input = "sk\xE5l".force_encoding(Encoding::ISO_8859_1)
-      MessagePack.pack(input).should == "\xA5sk\xC3\xA5l"
+      expect(MessagePack.pack(input)).to eq "\xA5sk\xC3\xA5l"
     end
   end
 
@@ -125,38 +125,38 @@ describe MessagePack do
     it 'can unpack hashes with symbolized keys' do
       packed = MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
       unpacked = MessagePack.unpack(packed, symbolize_keys: true)
-      unpacked.should == {hello: 'world', nested: ['object', {structure: true}]}
+      expect(unpacked).to eq({hello: 'world', nested: ['object', {structure: true}]})
     end
 
     it 'does not symbolize keys even if other options are present' do
       packed = MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
       unpacked = MessagePack.unpack(packed, other_option: false)
-      unpacked.should == {'hello' => 'world', 'nested' => ['object', {'structure' => true}]}
+      expect(unpacked).to eq({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
     end
 
     it 'can unpack strings with a specified encoding', :encodings do
       packed = MessagePack.pack({utf8enc('hello') => utf8enc('world')})
       unpacked = MessagePack.unpack(packed)
-      unpacked['hello'].encoding.should == Encoding::UTF_8
+      expect(unpacked['hello'].encoding).to eq Encoding::UTF_8
     end
 
     it 'can pack strings with a specified encoding', :encodings do
       packed = MessagePack.pack({'hello' => "w\xE5rld".force_encoding(Encoding::ISO_8859_1)})
-      packed.index("w\xC3\xA5rld").should_not be_nil
+      expect(packed.index("w\xC3\xA5rld")).not_to be_nil
     end
   end
 
   context 'in compatibility mode' do
     it 'does not use the bin types' do
       packed = MessagePack.pack('hello'.force_encoding(Encoding::BINARY), compatibility_mode: true)
-      packed.should eq("\xA5hello")
+      expect(packed).to eq("\xA5hello")
       packed = MessagePack.pack(('hello' * 100).force_encoding(Encoding::BINARY), compatibility_mode: true)
-      packed.should start_with("\xDA\x01\xF4")
+      expect(packed).to start_with("\xDA\x01\xF4")
     end
 
     it 'does not use the str8 type' do
       packed = MessagePack.pack('x' * 32, compatibility_mode: true)
-      packed.should start_with("\xDA\x00\x20")
+      expect(packed).to start_with("\xDA\x00\x20")
     end
   end
 end

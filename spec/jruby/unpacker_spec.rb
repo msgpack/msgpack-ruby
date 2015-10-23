@@ -5,7 +5,7 @@ require 'tempfile'
 
 require 'spec_helper'
 
-describe MessagePack::Unpacker do
+RSpec.describe MessagePack::Unpacker do
   let :unpacker do
     MessagePack::Unpacker.new
   end
@@ -33,35 +33,35 @@ describe MessagePack::Unpacker do
 
     it 'extracts an object from the buffer' do
       subject.execute(buffer, 0)
-      subject.data.should == {'foo' => 'bar'}
+      expect(subject.data).to eq({'foo' => 'bar'})
     end
 
     it 'extracts an object from the buffer, starting at an offset' do
       subject.execute(buffer, buffer1.length)
-      subject.data.should == {'hello' => {'world' => [1, 2, 3]}}
+      expect(subject.data).to eq({'hello' => {'world' => [1, 2, 3]}})
     end
 
     it 'extracts an object from the buffer, starting at an offset reading bytes up to a limit' do
       subject.execute_limit(buffer, buffer1.length, buffer2.length)
-      subject.data.should == {'hello' => {'world' => [1, 2, 3]}}
+      expect(subject.data).to eq({'hello' => {'world' => [1, 2, 3]}})
     end
 
     it 'extracts nothing if the limit cuts an object in half' do
       subject.execute_limit(buffer, buffer1.length, 3)
-      subject.data.should be_nil
+      expect(subject.data).to be_nil
     end
 
     it 'returns the offset where the object ended' do
-      subject.execute(buffer, 0).should == buffer1.length
-      subject.execute(buffer, buffer1.length).should == buffer1.length + buffer2.length
+      expect(subject.execute(buffer, 0)).to eq buffer1.length
+      expect(subject.execute(buffer, buffer1.length)).to eq buffer1.length + buffer2.length
     end
 
     it 'is finished if #data returns an object' do
       subject.execute_limit(buffer, buffer1.length, buffer2.length)
-      subject.should be_finished
+      expect(subject).to be_finished
 
       subject.execute_limit(buffer, buffer1.length, 3)
-      subject.should_not be_finished
+      expect(subject).not_to be_finished
     end
   end
 
@@ -73,7 +73,7 @@ describe MessagePack::Unpacker do
         subject.each do |obj|
           objects << obj
         end
-        objects.should == [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
+        expect(objects).to eq [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
       end
     end
 
@@ -89,7 +89,7 @@ describe MessagePack::Unpacker do
         subject.each do |obj|
           objects << obj
         end
-        objects.should == [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
+        expect(objects).to eq [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
       end
     end
   end
@@ -115,12 +115,12 @@ describe MessagePack::Unpacker do
   end
 
   context 'encoding', :encodings do
-    before :all do
+    before(:context) do
       @default_internal = Encoding.default_internal
       @default_external = Encoding.default_external
     end
 
-    after :all do
+    after(:context) do
       Encoding.default_internal = @default_internal
       Encoding.default_external = @default_external
     end
@@ -141,12 +141,12 @@ describe MessagePack::Unpacker do
     it 'produces results with encoding as binary or string(utf8)' do
       unpacker.execute(buffer, 0)
       strings = flatten(unpacker.data).grep(String)
-      strings.map(&:encoding).uniq.should =~ [Encoding::ASCII_8BIT, Encoding::UTF_8]
+      expect(strings.map(&:encoding).uniq).to match_array [Encoding::ASCII_8BIT, Encoding::UTF_8]
     end
 
     it 'recodes to internal encoding' do
       unpacker.execute(buffer, 0)
-      unpacker.data['nested'][1].keys.should == ["sk\xC3\xA5l".force_encoding(Encoding::UTF_8)]
+      expect(unpacker.data['nested'][1].keys).to eq ["sk\xC3\xA5l".force_encoding(Encoding::UTF_8)]
     end
   end
 
@@ -162,7 +162,7 @@ describe MessagePack::Unpacker do
 
       it 'can symbolize keys when using #execute' do
         unpacker.execute(buffer, 0)
-        unpacker.data.should == {hello: 'world', nested: ['object', {structure: true}]}
+        expect(unpacker.data).to eq({hello: 'world', nested: ['object', {structure: true}]})
       end
     end
 
@@ -178,8 +178,8 @@ describe MessagePack::Unpacker do
       it 'decode binary as ascii-8bit string when using #execute' do
         unpacker.execute(buffer, 0)
         strings = flatten(unpacker.data).grep(String)
-        strings.should == %w[hello world nested object structure]
-        strings.map(&:encoding).uniq.should == [Encoding::ASCII_8BIT]
+        expect(strings).to eq %w[hello world nested object structure]
+        expect(strings.map(&:encoding).uniq).to eq [Encoding::ASCII_8BIT]
       end
     end
   end
