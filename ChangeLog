@@ -1,3 +1,11 @@
+2015-10-24 version 0.7.0:
+
+* Add extention types support.
+* Fix to share almost all test cases between CRuby and JRuby implementations.
+* Fixed JRuby implementation to raise UnknownExtTypeError for unregistered ext type ids
+  instead to generate MessagePack::ExtensionValue instances.
+  (Specify `allow_unknown_ext: true` as unpacker option for v0.6.x behavior.)
+
 2015-07-22 version 0.6.2:
 
 * Fix release workflow: Ruby 2.1 and 2.2 are supported for Windows (2.0 is omitted)
