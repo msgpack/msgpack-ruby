@@ -6,18 +6,18 @@
 <title>
   Class: MessagePack::Unpacker
   
-    &mdash; Documentation by YARD 0.8.3
+    &mdash; Documentation by YARD 0.8.7.6
   
 </title>
 
-  <link rel="stylesheet" href="../css/style.css" type="text/css" media="screen" charset="utf-8" />
+  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
 
-  <link rel="stylesheet" href="../css/common.css" type="text/css" media="screen" charset="utf-8" />
+  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
 
 <script type="text/javascript" charset="utf-8">
   hasFrames = window.top.frames.main ? true : false;
   relpath = '../';
-  framesUrl = "../frames.html#!" + escape(window.location.href);
+  framesUrl = "../frames.html#!MessagePack/Unpacker.html";
 </script>
 
 
@@ -102,8 +102,7 @@
 <h2>Overview</h2><div class="docstring">
   <div class="discussion">
     
-<p>MessagePack::Unpacker is an interface to deserialize objects from an
-internal buffer, which is a MessagePack::Buffer.</p>
+<p>MessagePack::Unpacker is a class to deserialize objects.</p>
 
 
   </div>
@@ -278,7 +277,7 @@ internal buffer, which is a MessagePack::Buffer.</p>
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Deserializes an object from internal buffer and returns it.</p>
+<p>Deserializes an object from the io or internal buffer and returns it.</p>
 </div></span>
   
 </li>
@@ -335,6 +334,54 @@ internal buffer, which is a MessagePack::Buffer.</p>
         <li class="public ">
   <span class="summary_signature">
     
+      <a href="#register_type-instance_method" title="#register_type (instance method)">- (Object) <strong>register_type</strong>(type, klass, method_name, &amp;block) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Register a new ext type to deserialize it.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#registered_types-instance_method" title="#registered_types (instance method)">- (Object) <strong>registered_types</strong> </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns a list of registered types, ordered by type id.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#reset-instance_method" title="#reset (instance method)">- (Object) <strong>reset</strong> </a>
     
 
@@ -350,8 +397,8 @@ internal buffer, which is a MessagePack::Buffer.</p>
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Resets deserialization state of the unpacker and clears the internal
-buffer.</p>
+<p>Clears the internal buffer and resets deserialization state of the
+unpacker.</p>
 </div></span>
   
 </li>
@@ -405,6 +452,31 @@ buffer.</p>
 </li>
 
       
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#type_registered%3F-instance_method" title="#type_registered? (instance method)">- (Boolean) <strong>type_registered?</strong>(klass_or_type) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns true/false which indicate specified class or type id is registered
+or not.</p>
+</div></span>
+  
+</li>
+
+      
     </ul>
   
 
@@ -431,8 +503,12 @@ buffer.</p>
 
 <p>Supported options:</p>
 <ul><li>
-<p><b>:symbolize_keys</b> deserialize keys of Hash objects as Symbol instead
-of String</p>
+<p><strong>:symbolize_keys</strong> deserialize keys of Hash objects as Symbol
+instead of String</p>
+</li><li>
+<p><strong>:allow_unknown_ext</strong> allow to deserialize ext type object
+with unknown type id as ExtensionValue instance. Otherwise (by default),
+unpacker throws UnknownExtTypeError.</p>
 </li></ul>
 
 <p>See also Buffer#initialize for other options.</p>
@@ -465,6 +541,8 @@ of String</p>
       
         <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
       
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
       
       
     </li>
@@ -510,6 +588,8 @@ of String</p>
       
         <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
       
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
       
       
     </li>
@@ -588,12 +668,12 @@ of String</p>
       <pre class="lines">
 
 
-34
-35
-36</pre>
+70
+71
+72</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 34</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 70</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_buffer'>buffer</span>
   <span class='ivar'>@buffer</span>
@@ -624,7 +704,8 @@ of String</p>
     
 <p>Repeats to deserialize objects.</p>
 
-<p>It repeats until the internal buffer does not include any complete objects.</p>
+<p>It repeats until the io or internal buffer does not include any complete
+objects.</p>
 
 <p>If the an IO is set, it repeats to read data from the IO when the buffer
 becomes empty until the IO raises EOFError.</p>
@@ -681,11 +762,11 @@ becomes empty until the IO raises EOFError.</p>
       <pre class="lines">
 
 
-119
-120</pre>
+160
+161</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 119</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 160</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_each'>each</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -706,8 +787,8 @@ becomes empty until the IO raises EOFError.</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Appends data into the internal buffer. This method calls
-buffer.append(data).</p>
+<p>Appends data into the internal buffer. This method is equivalent to
+unpacker.buffer.append(data).</p>
 
 
   </div>
@@ -754,11 +835,11 @@ buffer.append(data).</p>
       <pre class="lines">
 
 
-103
-104</pre>
+144
+145</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 103</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 144</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_feed'>feed</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -780,7 +861,8 @@ buffer.append(data).</p>
   <div class="discussion">
     
 <p>Appends data into the internal buffer and repeats to deserialize objects.
-This method is equals to feed(data) &amp;&amp; each.</p>
+This method is equivalent to unpacker.feed(data) &amp;&amp; unpacker.each {
+… }.</p>
 
 
   </div>
@@ -847,11 +929,11 @@ This method is equals to feed(data) &amp;&amp; each.</p>
       <pre class="lines">
 
 
-130
-131</pre>
+171
+172</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 130</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 171</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_feed_each'>feed_each</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -876,11 +958,17 @@ This method is equals to feed(data) &amp;&amp; each.</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Deserializes an object from internal buffer and returns it.</p>
+<p>Deserializes an object from the io or internal buffer and returns it.</p>
 
-<p>If there're not enough buffer, this method raises EOFError. If data format
-is invalid, this method raises MessagePack::MalformedFormatError. If the
-stack is too deep, this method raises MessagePack::StackError.</p>
+<p>This method reads data from io into the internal buffer and deserializes an
+object from the buffer. It repeats reading data from the io until enough
+data is available to deserialize at least one object. After deserializing
+one object, unused data is left in the internal buffer.</p>
+
+<p>If there&#39;re not enough data to deserialize one object, this method
+raises EOFError. If data format is invalid, this method raises
+MessagePack::MalformedFormatError. If the object nests too deeply, this
+method raises MessagePack::StackError.</p>
 
 
   </div>
@@ -912,11 +1000,11 @@ stack is too deep, this method raises MessagePack::StackError.</p>
       <pre class="lines">
 
 
-45
-46</pre>
+86
+87</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 45</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 86</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read'>read</span>
 <span class='kw'>end</span></pre>
@@ -940,8 +1028,9 @@ stack is too deep, this method raises MessagePack::StackError.</p>
 <p>Read a header of an array and returns its size. It converts a serialized
 array into a stream of elements.</p>
 
-<p>If the serialized object is not an array, it raises MessagePack::TypeError.
-If there're not enough buffer, this method raises EOFError.</p>
+<p>If the serialized object is not an array, it raises
+MessagePack::UnexpectedTypeError. If there&#39;re not enough data, this
+method raises EOFError.</p>
 
 
   </div>
@@ -973,11 +1062,11 @@ If there're not enough buffer, this method raises EOFError.</p>
       <pre class="lines">
 
 
-81
-82</pre>
+122
+123</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 81</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 122</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read_array_header'>read_array_header</span>
 <span class='kw'>end</span></pre>
@@ -1001,8 +1090,9 @@ If there're not enough buffer, this method raises EOFError.</p>
 <p>Reads a header of an map and returns its size. It converts a serialized map
 into a stream of key-value pairs.</p>
 
-<p>If the serialized object is not a map, it raises MessagePack::TypeError. If
-there're not enough buffer, this method raises EOFError.</p>
+<p>If the serialized object is not a map, it raises
+MessagePack::UnexpectedTypeError. If there&#39;re not enough data, this
+method raises EOFError.</p>
 
 
   </div>
@@ -1034,13 +1124,261 @@ there're not enough buffer, this method raises EOFError.</p>
       <pre class="lines">
 
 
-93
-94</pre>
+134
+135</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 93</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 134</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read_map_header'>read_map_header</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="register_type-instance_method">
+  
+    
+      <span class="overload">- (<tt>Object</tt>) <strong>register_type</strong>(type) {|data| ... }</span>
+    
+      <span class="overload">- (<tt>Object</tt>) <strong>register_type</strong>(type, klass, class_method_name) </span>
+    
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Register a new ext type to deserialize it. This method should be called
+with Class and its class method name, or block, which returns a instance
+object.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+  <p class="tag_title">Overloads:</p>
+  <ul class="overload">
+    
+      
+      <li class="overload_item">
+        <span class="signature">- (<tt>Object</tt>) <strong>register_type</strong>(type) {|data| ... }</span>
+        <div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>type</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Fixnum.html" title="Fixnum (class)">Fixnum</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>type id (0-127) user defined type id for specified deserializer block</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Yield Parameters:</p>
+<ul class="yieldparam">
+  
+    <li>
+      
+        <span class='name'>data</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../String.html" title="String (class)">String</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>bytes(ASCII-8BIT String) represents serialized object, to be deserialized</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div>
+      </li>
+    
+      
+      <li class="overload_item">
+        <span class="signature">- (<tt>Object</tt>) <strong>register_type</strong>(type, klass, class_method_name) </span>
+        <div class="docstring">
+  <div class="discussion">
+    
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>type</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Fixnum.html" title="Fixnum (class)">Fixnum</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>type id (0-127) user defined type id for specified Class</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>klass</span>
+      
+      
+        <span class='type'>(<tt>Class</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Class to be serialized with speicifed type id</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>class_method_name</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Symbol.html" title="Symbol (class)">Symbol</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>class method which returns an instance object</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+
+</div>
+      </li>
+    
+  </ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'></span>
+      
+      
+      
+        
+        <div class='inline'>
+<p>nil</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+44
+45</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 44</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span><span class='id identifier rubyid_type'>type</span><span class='comma'>,</span> <span class='id identifier rubyid_klass'>klass</span><span class='comma'>,</span> <span class='id identifier rubyid_method_name'>method_name</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="registered_types-instance_method">
+  
+    - (<tt>Object</tt>) <strong>registered_types</strong> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns a list of registered types, ordered by type id. Each element is a
+Hash object includes keys :type, :class and :unpacker.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'></span>
+      
+      
+      
+        
+        <div class='inline'>
+<p>Array</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+53
+54</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 53</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_registered_types'>registered_types</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -1059,8 +1397,8 @@ there're not enough buffer, this method raises EOFError.</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Resets deserialization state of the unpacker and clears the internal
-buffer.</p>
+<p>Clears the internal buffer and resets deserialization state of the
+unpacker.</p>
 
 
   </div>
@@ -1092,11 +1430,11 @@ buffer.</p>
       <pre class="lines">
 
 
-138
-139</pre>
+179
+180</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 138</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 179</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset'>reset</span>
 <span class='kw'>end</span></pre>
@@ -1120,7 +1458,7 @@ buffer.</p>
 <p>Deserializes an object and ignores it. This method is faster than
 <em>read</em>.</p>
 
-<p>This method could raise same errors with <em>read</em>.</p>
+<p>This method could raise the same errors with <em>read</em>.</p>
 
 
   </div>
@@ -1152,11 +1490,11 @@ buffer.</p>
       <pre class="lines">
 
 
-57
-58</pre>
+98
+99</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 57</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 98</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_skip'>skip</span>
 <span class='kw'>end</span></pre>
@@ -1178,10 +1516,10 @@ buffer.</p>
   <div class="discussion">
     
 <p>Deserializes a nil value if it exists and returns <em>true</em>. Otherwise,
-if a byte exists but the byte doesn't represent nil value, returns
+if a byte exists but the byte doesn&#39;t represent nil value, returns
 <em>false</em>.</p>
 
-<p>If there're not enough buffer, this method raises EOFError.</p>
+<p>If there&#39;re not enough data, this method raises EOFError.</p>
 
 
   </div>
@@ -1208,13 +1546,91 @@ if a byte exists but the byte doesn't represent nil value, returns
       <pre class="lines">
 
 
-69
-70</pre>
+110
+111</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 69</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 110</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_skip_nil'>skip_nil</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="type_registered?-instance_method">
+  
+    - (<tt>Boolean</tt>) <strong>type_registered?</strong>(klass_or_type) 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns true/false which indicate specified class or type id is registered
+or not.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>klass_or_type</span>
+      
+      
+        <span class='type'>(<tt>Class or <span class='object_link'><a href="../Fixnum.html" title="Fixnum (class)">Fixnum</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Class or type id (0-127) to be checked</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Boolean</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>true or false</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+62
+63</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 62</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_type_registered?'>type_registered?</span><span class='lparen'>(</span><span class='id identifier rubyid_klass_or_type'>klass_or_type</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -1226,9 +1642,9 @@ if a byte exists but the byte doesn't represent nil value, returns
 </div>
 
     <div id="footer">
-  Generated on Sat Dec 14 15:08:13 2013 by
+  Generated on Fri Oct 23 11:52:29 2015 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.8.3 (ruby-1.9.3).
+  0.8.7.6 (ruby-2.2.2).
 </div>
 
   </body>

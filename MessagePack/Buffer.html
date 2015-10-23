@@ -6,18 +6,18 @@
 <title>
   Class: MessagePack::Buffer
   
-    &mdash; Documentation by YARD 0.8.3
+    &mdash; Documentation by YARD 0.8.7.6
   
 </title>
 
-  <link rel="stylesheet" href="../css/style.css" type="text/css" media="screen" charset="utf-8" />
+  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
 
-  <link rel="stylesheet" href="../css/common.css" type="text/css" media="screen" charset="utf-8" />
+  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
 
 <script type="text/javascript" charset="utf-8">
   hasFrames = window.top.frames.main ? true : false;
   relpath = '../';
-  framesUrl = "../frames.html#!" + escape(window.location.href);
+  framesUrl = "../frames.html#!MessagePack/Buffer.html";
 </script>
 
 
@@ -541,17 +541,18 @@ method and write(string) or append(string) method.</p>
 
 <p>Supported options:</p>
 <ul><li>
-<p><b>:io_buffer_size</b> buffer size to read data from the internal IO.
-(default: 32768)</p>
+<p><strong>:io_buffer_size</strong> buffer size to read data from the internal
+IO. (default: 32768)</p>
 </li><li>
-<p><b>:read_reference_threshold</b> the threshold size to enable zero-copy
-deserialize optimization. Read strings longer than this threshold will
-refer the original string instead of copying it. (default: 256) (supported
-in MRI only)</p>
+<p><strong>:read_reference_threshold</strong> the threshold size to enable
+zero-copy deserialize optimization. Read strings longer than this threshold
+will refer the original string instead of copying it. (default: 256)
+(supported in MRI only)</p>
 </li><li>
-<p><b>:write_reference_threshold</b> the threshold size to enable zero-copy
-serialize optimization. The buffer refers written strings longer than this
-threshold instead of copying it. (default: 524288) (supported in MRI only)</p>
+<p><strong>:write_reference_threshold</strong> the threshold size to enable
+zero-copy serialize optimization. The buffer refers written strings longer
+than this threshold instead of copying it. (default: 524288) (supported in
+MRI only)</p>
 </li></ul>
 
 
@@ -582,6 +583,8 @@ threshold instead of copying it. (default: 524288) (supported in MRI only)</p>
       
         <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
       
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
       
       
     </li>
@@ -626,6 +629,8 @@ reads data from the IO when it is empty.</p>
       
         <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
       
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
       
       
     </li>
@@ -1821,9 +1826,9 @@ respond to write(data) method.</p>
 </div>
 
     <div id="footer">
-  Generated on Sat Dec 14 15:08:13 2013 by
+  Generated on Fri Oct 23 11:52:28 2015 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.8.3 (ruby-1.9.3).
+  0.8.7.6 (ruby-2.2.2).
 </div>
 
   </body>
