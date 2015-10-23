@@ -71,29 +71,33 @@ public class Packer extends RubyObject {
         hit[1] = e.entry(0);
         return hit;
       }
+      IRubyObject[] pair = findEntryByClassOrAncestor(hash, klass);
+      if (pair != null) {
+        cache.fastASet(pair[0], RubyArray.newArray(runtime, pair));
+      }
+      return pair;
+    }
 
+    private IRubyObject[] findEntryByClassOrAncestor(final RubyHash hash, final RubyClass klass) {
       final IRubyObject[] pair = new IRubyObject[2];
-      // check all keys whether it's super class of klass, or not
       hash.visitAll(new RubyHash.Visitor() {
         public void visit(IRubyObject keyValue, IRubyObject value) {
-          if (pair[0] != null) {
-            return;
-          }
-          ThreadContext ctx = runtime.getCurrentContext();
-          RubyArray ancestors = (RubyArray) klass.callMethod(ctx, "ancestors");
-          if (ancestors.callMethod(ctx, "include?", keyValue).isTrue()) {
-            RubyArray hit = (RubyArray) hash.fastARef(keyValue);
-            cache.fastASet(klass, hit);
-            pair[0] = hit.entry(1);
-            pair[1] = hit.entry(0);
+          if (pair[0] == null) {
+            ThreadContext ctx = runtime.getCurrentContext();
+            RubyArray ancestors = (RubyArray) klass.callMethod(ctx, "ancestors");
+            if (ancestors.callMethod(ctx, "include?", keyValue).isTrue()) {
+              RubyArray hit = (RubyArray) hash.fastARef(keyValue);
+              pair[0] = hit.entry(1);
+              pair[1] = hit.entry(0);
+            }
           }
         }
       });
-
       if (pair[0] == null) {
         return null;
+      } else {
+        return pair;
       }
-      return pair;
     }
   }
 
