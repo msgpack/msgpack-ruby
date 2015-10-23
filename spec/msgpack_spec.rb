@@ -124,13 +124,13 @@ describe MessagePack do
   context 'extensions' do
     it 'can unpack hashes with symbolized keys' do
       packed = MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
-      unpacked = MessagePack.unpack(packed, :symbolize_keys => true)
-      unpacked.should == {:hello => 'world', :nested => ['object', {:structure => true}]}
+      unpacked = MessagePack.unpack(packed, symbolize_keys: true)
+      unpacked.should == {hello: 'world', nested: ['object', {structure: true}]}
     end
 
     it 'does not symbolize keys even if other options are present' do
       packed = MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
-      unpacked = MessagePack.unpack(packed, :other_option => false)
+      unpacked = MessagePack.unpack(packed, other_option: false)
       unpacked.should == {'hello' => 'world', 'nested' => ['object', {'structure' => true}]}
     end
 

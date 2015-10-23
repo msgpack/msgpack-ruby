@@ -31,12 +31,8 @@ describe MessagePack::Unpacker do
 
   it 'read_array_header fails' do
     unpacker.feed("\x81")
-    lambda {
-      unpacker.read_array_header
-    }.should raise_error(MessagePack::TypeError)  # TypeError is included in UnexpectedTypeError
-    lambda {
-      unpacker.read_array_header
-    }.should raise_error(MessagePack::UnexpectedTypeError)
+    -> { unpacker.read_array_header }.should raise_error(MessagePack::TypeError)  # TypeError is included in UnexpectedTypeError
+    -> { unpacker.read_array_header }.should raise_error(MessagePack::UnexpectedTypeError)
   end
 
   it 'read_map_header converts an map to key-value sequence' do
@@ -68,18 +64,12 @@ describe MessagePack::Unpacker do
 
   it 'read_map_header fails' do
     unpacker.feed("\x91")
-    lambda {
-      unpacker.read_map_header
-    }.should raise_error(MessagePack::TypeError)  # TypeError is included in UnexpectedTypeError
-    lambda {
-      unpacker.read_map_header
-    }.should raise_error(MessagePack::UnexpectedTypeError)
+    -> { unpacker.read_map_header }.should raise_error(MessagePack::TypeError)  # TypeError is included in UnexpectedTypeError
+    -> { unpacker.read_map_header }.should raise_error(MessagePack::UnexpectedTypeError)
   end
 
   it 'read raises EOFError before feeding' do
-    lambda {
-      unpacker.read
-    }.should raise_error(EOFError)
+    -> { unpacker.read }.should raise_error(EOFError)
   end
 
   let :sample_object do
@@ -143,23 +133,17 @@ describe MessagePack::Unpacker do
 
   it 'frozen short strings' do
     raw = sample_object.to_msgpack.to_s.force_encoding('UTF-8')
-    lambda {
-      unpacker.feed_each(raw.freeze) { }
-    }.should_not raise_error
+    -> { unpacker.feed_each(raw.freeze) { } }.should_not raise_error
   end
 
   it 'frozen long strings' do
     raw = (sample_object.to_msgpack.to_s * 10240).force_encoding('UTF-8')
-    lambda {
-      unpacker.feed_each(raw.freeze) { }
-    }.should_not raise_error
+    -> { unpacker.feed_each(raw.freeze) { } }.should_not raise_error
   end
 
   it 'read raises invalid byte error' do
     unpacker.feed("\xc1")
-    lambda {
-      unpacker.read
-    }.should raise_error(MessagePack::MalformedFormatError)
+    -> { unpacker.read }.should raise_error(MessagePack::MalformedFormatError)
   end
 
   it "gc mark" do
@@ -207,14 +191,14 @@ describe MessagePack::Unpacker do
   end
 
   it 'MessagePack.unpack symbolize_keys' do
-    symbolized_hash = {:a => 'b', :c => 'd'}
-    MessagePack.load(MessagePack.pack(symbolized_hash), :symbolize_keys => true).should == symbolized_hash
-    MessagePack.unpack(MessagePack.pack(symbolized_hash), :symbolize_keys => true).should == symbolized_hash
+    symbolized_hash = {a: 'b', c: 'd'}
+    MessagePack.load(MessagePack.pack(symbolized_hash), symbolize_keys: true).should == symbolized_hash
+    MessagePack.unpack(MessagePack.pack(symbolized_hash), symbolize_keys: true).should == symbolized_hash
   end
 
   it 'Unpacker#unpack symbolize_keys' do
-    unpacker = MessagePack::Unpacker.new(:symbolize_keys => true)
-    symbolized_hash = {:a => 'b', :c => 'd'}
+    unpacker = MessagePack::Unpacker.new(symbolize_keys: true)
+    symbolized_hash = {a: 'b', c: 'd'}
     unpacker.feed(MessagePack.pack(symbolized_hash)).read.should == symbolized_hash
   end
 
@@ -401,15 +385,15 @@ describe MessagePack::Unpacker do
   end
 
   let :buffer1 do
-    MessagePack.pack(:foo => 'bar')
+    MessagePack.pack(foo: 'bar')
   end
 
   let :buffer2 do
-    MessagePack.pack(:hello => {:world => [1, 2, 3]})
+    MessagePack.pack(hello: {world: [1, 2, 3]})
   end
 
   let :buffer3 do
-    MessagePack.pack(:x => 'y')
+    MessagePack.pack(x: 'y')
   end
 
   describe '#read' do
@@ -506,7 +490,7 @@ describe MessagePack::Unpacker do
       end
 
       let :unpacker do
-        described_class.new(:symbolize_keys => true)
+        described_class.new(symbolize_keys: true)
       end
 
       it 'can symbolize keys when using #each' do
@@ -515,7 +499,7 @@ describe MessagePack::Unpacker do
         unpacker.each do |obj|
           objs << obj
         end
-        objs.should == [{:hello => 'world', :nested => ['object', {:structure => true}]}]
+        objs.should == [{hello: 'world', nested: ['object', {structure: true}]}]
       end
 
       it 'can symbolize keys when using #feed_each' do
@@ -523,7 +507,7 @@ describe MessagePack::Unpacker do
         unpacker.feed_each(buffer) do |obj|
           objs << obj
         end
-        objs.should == [{:hello => 'world', :nested => ['object', {:structure => true}]}]
+        objs.should == [{hello: 'world', nested: ['object', {structure: true}]}]
       end
     end
 

@@ -38,15 +38,11 @@ describe Unpacker do
   end
 
   it 'skip raises EOFError' do
-    lambda {
-      unpacker.skip
-    }.should raise_error(EOFError)
+    -> { unpacker.skip }.should raise_error(EOFError)
   end
 
   it 'skip_nil raises EOFError' do
-    lambda {
-      unpacker.skip_nil
-    }.should raise_error(EOFError)
+    -> { unpacker.skip_nil }.should raise_error(EOFError)
   end
 
   it 'skip raises level stack too deep error' do
@@ -55,16 +51,12 @@ describe Unpacker do
 
     unpacker = Unpacker.new
     unpacker.feed(packer.to_s)
-    lambda {
-      unpacker.skip
-    }.should raise_error(MessagePack::StackError)
+    -> { unpacker.skip }.should raise_error(MessagePack::StackError)
   end
 
   it 'skip raises invalid byte error' do
     unpacker.feed("\xc1")
-    lambda {
-      unpacker.skip
-    }.should raise_error(MessagePack::MalformedFormatError)
+    -> { unpacker.skip }.should raise_error(MessagePack::MalformedFormatError)
   end
 end
 

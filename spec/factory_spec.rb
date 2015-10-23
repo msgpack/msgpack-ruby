@@ -28,7 +28,7 @@ describe MessagePack::Factory do
     it 'creates unpacker with symbolize_keys option' do
       unpacker = subject.unpacker(symbolize_keys: true)
       unpacker.feed(MessagePack.pack({'k'=>'v'}))
-      unpacker.read.should == {:k => 'v'}
+      unpacker.read.should == {k: 'v'}
     end
 
     it 'creates unpacker with allow_unknown_ext option' do
@@ -186,8 +186,8 @@ describe MessagePack::Factory do
     end
 
     it 'registers custom proc objects' do
-      pk = lambda {|obj| [obj.a + obj.b].pack('C') }
-      uk = lambda {|data| ::MyType.new(data.unpack('C').first, -1) }
+      pk = ->(obj) { [obj.a + obj.b].pack('C') }
+      uk = ->(data) { ::MyType.new(data.unpack('C').first, -1) }
       subject.register_type(0x7f, ::MyType, packer: pk, unpacker: uk)
 
       data = subject.packer.write(src).to_s

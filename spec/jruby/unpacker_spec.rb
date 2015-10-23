@@ -15,15 +15,15 @@ describe MessagePack::Unpacker do
   end
 
   let :buffer1 do
-    MessagePack.pack(:foo => 'bar')
+    MessagePack.pack(foo: 'bar')
   end
 
   let :buffer2 do
-    MessagePack.pack(:hello => {:world => [1, 2, 3]})
+    MessagePack.pack(hello: {world: [1, 2, 3]})
   end
 
   let :buffer3 do
-    MessagePack.pack(:x => 'y')
+    MessagePack.pack(x: 'y')
   end
 
   describe '#execute/#execute_limit/#finished?' do
@@ -141,7 +141,7 @@ describe MessagePack::Unpacker do
     it 'produces results with encoding as binary or string(utf8)' do
       unpacker.execute(buffer, 0)
       strings = flatten(unpacker.data).grep(String)
-      strings.map(&:encoding).uniq.sort{|a,b| a.to_s <=> b.to_s}.should == [Encoding::ASCII_8BIT, Encoding::UTF_8]
+      strings.map(&:encoding).uniq.should =~ [Encoding::ASCII_8BIT, Encoding::UTF_8]
     end
 
     it 'recodes to internal encoding' do
@@ -157,12 +157,12 @@ describe MessagePack::Unpacker do
       end
 
       let :unpacker do
-        described_class.new(:symbolize_keys => true)
+        described_class.new(symbolize_keys: true)
       end
 
       it 'can symbolize keys when using #execute' do
         unpacker.execute(buffer, 0)
-        unpacker.data.should == {:hello => 'world', :nested => ['object', {:structure => true}]}
+        unpacker.data.should == {hello: 'world', nested: ['object', {structure: true}]}
       end
     end
 

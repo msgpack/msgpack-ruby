@@ -301,9 +301,7 @@ describe Buffer do
   it 'read_all against insufficient buffer raises EOFError and consumes nothing' do
     case_keys.each {|k|
       sz = examples[k].size
-      lambda {
-        cases[k].read_all(sz+1)
-      }.should raise_error(EOFError)
+      -> { cases[k].read_all(sz+1) }.should raise_error(EOFError)
       cases[k].size.should == sz
     }
   end
@@ -311,9 +309,7 @@ describe Buffer do
   it 'skip_all against insufficient buffer raises EOFError and consumes nothing' do
     case_keys.each {|k|
       sz = examples[k].size
-      lambda {
-        cases[k].skip_all(sz+1)
-      }.should raise_error(EOFError)
+      -> { cases[k].skip_all(sz+1) }.should raise_error(EOFError)
       cases[k].size.should == sz
     }
   end

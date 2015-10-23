@@ -154,9 +154,7 @@ describe Buffer do
         x.should == s
       }
       b.empty?.should == true
-      lambda {
-        b.read_all(1)
-      }.should raise_error(EOFError)
+      -> { b.read_all(1) }.should raise_error(EOFError)
     }
   end
 
@@ -199,14 +197,10 @@ describe Buffer do
       b = Buffer.new(io)
 
       fragments.each {|s|
-        lambda {
-          b.skip_all(s.size)
-        }.should_not raise_error
+        -> { b.skip_all(s.size) }.should_not raise_error
       }
       b.empty?.should == true
-      lambda {
-        b.skip_all(1)
-      }.should raise_error(EOFError)
+      -> { b.skip_all(1) }.should raise_error(EOFError)
     }
   end
 

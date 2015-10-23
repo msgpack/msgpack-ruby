@@ -80,7 +80,7 @@ describe MessagePack::ExtensionValue do
     [-129, -65540, -(2**40), 128, 65540, 2**40].each do |type|
       context "with invalid type (#{type})" do
         it 'raises RangeError' do
-          lambda { MessagePack::ExtensionValue.new(type, "a").to_msgpack }.should raise_error(RangeError)
+          -> { MessagePack::ExtensionValue.new(type, "a").to_msgpack }.should raise_error(RangeError)
         end
       end
     end
