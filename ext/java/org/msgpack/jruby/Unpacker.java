@@ -69,7 +69,6 @@ public class Unpacker extends RubyObject {
       array[typeId + 128] = e;
     }
 
-    // proc, typeId(Fixnum)
     public IRubyObject lookup(int type) {
       RubyArray e = array[type + 128];
       if (e == null) {
@@ -136,8 +135,6 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod(name = "register_type", required = 1, optional = 2)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
-    // register_type(type){|data| ExtClass.deserialize(...) }
-    // register_type(type, Class, :from_msgpack_ext)
     Ruby runtime = ctx.getRuntime();
     IRubyObject type = args[0];
 

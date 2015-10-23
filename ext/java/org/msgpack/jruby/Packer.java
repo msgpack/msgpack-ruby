@@ -130,8 +130,6 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
-    // register_type(type, Class){|obj| how_to_serialize.... }
-    // register_type(type, Class, :to_msgpack_ext)
     Ruby runtime = ctx.getRuntime();
     IRubyObject type = args[0];
     IRubyObject klass = args[1];
