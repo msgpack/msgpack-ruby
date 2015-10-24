@@ -129,6 +129,15 @@ MessagePack mingw32/64 rubygems build process uses {rake-compiler-dock}[https://
 
 Once this step successes, target gems exist in pkg/msgpack-*-{x86,x64}-mingw32.gem.
 
+== Updating documents
+
+Online documents (http://ruby.msgpack.org) is generated from gh-pages branch.
+Following commands update documents in gh-pages branch:
+
+    bundle exec rake doc
+    git checkout gh-pages
+    cp doc/* ./ -a
+
 = Copyright
 
 Author::    Sadayuki Furuhashi <frsyuki@gmail.com>
