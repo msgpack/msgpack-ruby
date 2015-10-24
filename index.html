@@ -2,22 +2,22 @@
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>
   File: README
   
-    &mdash; Documentation by YARD 0.8.3
+    &mdash; Documentation by YARD 0.8.7.6
   
 </title>
 
-  <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" charset="utf-8" />
+  <link rel="stylesheet" href="css/style.css" type="text/css" charset="utf-8" />
 
-  <link rel="stylesheet" href="css/common.css" type="text/css" media="screen" charset="utf-8" />
+  <link rel="stylesheet" href="css/common.css" type="text/css" charset="utf-8" />
 
 <script type="text/javascript" charset="utf-8">
   hasFrames = window.top.frames.main ? true : false;
   relpath = '';
-  framesUrl = "frames.html#!" + escape(window.location.href);
+  framesUrl = "frames.html#!file.README.html";
 </script>
 
 
@@ -62,34 +62,40 @@
     <iframe id="search_frame"></iframe>
 
     <div id="content"><div id='filecontents'>
-<h1>MessagePack</h1>
+<h1 id="label-MessagePack">MessagePack</h1>
 
 <p><a href="http://msgpack.org">MessagePack</a> is an efficient binary
 serialization format. It lets you exchange data among multiple languages
-like JSON but it's faster and smaller. For example, small integers (like
-flags or error code) are encoded into a single byte, and typical short
-strings only require an extra byte in addition to the strings themselves.</p>
+like JSON but it&#39;s faster and smaller. For example, small integers
+(like flags or error code) are encoded into a single byte, and typical
+short strings only require an extra byte in addition to the strings
+themselves.</p>
 
 <p>If you ever wished to use JSON for convenience (storing an image with
-metadata) but could not for technical reasons (binary data, size,
-speed...), MessagePack is a perfect replacement.</p>
+metadata) but could not for technical reasons (binary data, size, speed…),
+MessagePack is a perfect replacement.</p>
 
-<pre class="code ruby"><code><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>'</span><span class='tstring_content'>msgpack</span><span class='tstring_end'>'</span></span>
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>msgpack</span><span class='tstring_end'>&#39;</span></span>
 <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='lbracket'>[</span><span class='int'>1</span><span class='comma'>,</span><span class='int'>2</span><span class='comma'>,</span><span class='int'>3</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_to_msgpack'>to_msgpack</span>  <span class='comment'>#=&gt; &quot;\x93\x01\x02\x03&quot;
-</span><span class='const'>MessagePack</span><span class='period'>.</span><span class='id identifier rubyid_unpack'>unpack</span><span class='lparen'>(</span><span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span>   <span class='comment'>#=&gt; [1,2,3]</span></code></pre>
+</span><span class='const'>MessagePack</span><span class='period'>.</span><span class='id identifier rubyid_unpack'>unpack</span><span class='lparen'>(</span><span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span>   <span class='comment'>#=&gt; [1,2,3]
+</span></code></pre>
 
 <p>Use RubyGems to install:</p>
 
-<pre class="code ruby"><code><span class='id identifier rubyid_gem'>gem</span> <span class='id identifier rubyid_install'>install</span> <span class='id identifier rubyid_msgpack'>msgpack</span></code></pre>
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_gem'>gem</span> <span class='id identifier rubyid_install'>install</span> <span class='id identifier rubyid_msgpack'>msgpack</span>
+</code></pre>
 
 <p>or build msgpack-ruby and install:</p>
 
-<pre class="code ruby"><code>bundle
+<pre class="code ruby"><code class="ruby">bundle
 rake
 gem install --local pkg/msgpack</code></pre>
 
-<h1>Use cases</h1>
+<h1 id="label-Use+cases">Use cases</h1>
 <ul><li>
+<p>Create REST API returing MessagePack using Rails + [RABL](<a
+href="https://github.com/nesquena/rabl">github.com/nesquena/rabl</a>)</p>
+</li><li>
 <p>Store objects efficiently serialized by msgpack on memcached or Redis</p>
 <ul><li>
 <p>In fact Redis supports msgpack in <a
@@ -107,17 +113,17 @@ href="https://github.com/msgpack/msgpack-java">Java</a> implementations</p>
 <ul><li>
 <p>Check also <a href="http://fluentd.org/">Fluentd</a> which is a log
 collector which uses msgpack for the log format (they say it uses JSON but
-actually it's msgpack, which is compatible with JSON)</p>
+actually it&#39;s msgpack, which is compatible with JSON)</p>
 </li></ul>
 </li><li>
 <p>Exchange objects between software components written in different languages</p>
 <ul><li>
-<p>You'll need a flexible but efficient format so that components exchange
+<p>You&#39;ll need a flexible but efficient format so that components exchange
 objects while keeping compatibility</p>
 </li></ul>
 </li></ul>
 
-<h1>Portability</h1>
+<h1 id="label-Portability">Portability</h1>
 
 <p>MessagePack for Ruby should run on x86, ARM, PowerPC, SPARC and other CPU
 architectures.</p>
@@ -125,56 +131,61 @@ architectures.</p>
 <p>And it works with MRI (CRuby) and Rubinius. Patches to improve portability
 is highly welcomed.</p>
 
-<h1>Serializing objects</h1>
+<h1 id="label-Serializing+objects">Serializing objects</h1>
 
-<p>Use <b>MessagePack.pack</b> or <b>to_msgpack</b>:</p>
+<p>Use <strong>MessagePack.pack</strong> or <strong>to_msgpack</strong>:</p>
 
-<pre class="code ruby"><code><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>'</span><span class='tstring_content'>msgpack</span><span class='tstring_end'>'</span></span>
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>msgpack</span><span class='tstring_end'>&#39;</span></span>
 <span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='const'>MessagePack</span><span class='period'>.</span><span class='id identifier rubyid_pack'>pack</span><span class='lparen'>(</span><span class='id identifier rubyid_obj'>obj</span><span class='rparen'>)</span>  <span class='comment'># or
-</span><span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_obj'>obj</span><span class='period'>.</span><span class='id identifier rubyid_to_msgpack'>to_msgpack</span></code></pre>
+</span><span class='id identifier rubyid_msg'>msg</span> <span class='op'>=</span> <span class='id identifier rubyid_obj'>obj</span><span class='period'>.</span><span class='id identifier rubyid_to_msgpack'>to_msgpack</span>
+</code></pre>
 
-<h2>Streaming serialization</h2>
+<h2 id="label-Streaming+serialization">Streaming serialization</h2>
 
 <p>Packer provides advanced API to serialize objects in streaming style:</p>
 
-<pre class="code ruby"><code><span class='comment'># serialize a 2-element array [e1, e2]
+<pre class="code ruby"><code class="ruby"><span class='comment'># serialize a 2-element array [e1, e2]
 </span><span class='id identifier rubyid_pk'>pk</span> <span class='op'>=</span> <span class='const'>MessagePack</span><span class='op'>::</span><span class='const'>Packer</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_io'>io</span><span class='rparen'>)</span>
-<span class='id identifier rubyid_pk'>pk</span><span class='period'>.</span><span class='id identifier rubyid_write_array_header'>write_array_header</span><span class='lparen'>(</span><span class='int'>2</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span><span class='lparen'>(</span><span class='id identifier rubyid_e1'>e1</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span><span class='lparen'>(</span><span class='id identifier rubyid_e2'>e2</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_flush'>flush</span></code></pre>
+<span class='id identifier rubyid_pk'>pk</span><span class='period'>.</span><span class='id identifier rubyid_write_array_header'>write_array_header</span><span class='lparen'>(</span><span class='int'>2</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span><span class='lparen'>(</span><span class='id identifier rubyid_e1'>e1</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span><span class='lparen'>(</span><span class='id identifier rubyid_e2'>e2</span><span class='rparen'>)</span><span class='period'>.</span><span class='id identifier rubyid_flush'>flush</span>
+</code></pre>
 
 <p>See <a href="http://ruby.msgpack.org/MessagePack/Packer.html">API
 reference</a> for details.</p>
 
-<h1>Deserializing objects</h1>
+<h1 id="label-Deserializing+objects">Deserializing objects</h1>
 
-<p>Use <b>MessagePack.unpack</b>:</p>
+<p>Use <strong>MessagePack.unpack</strong>:</p>
 
-<pre class="code ruby"><code><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>'</span><span class='tstring_content'>msgpack</span><span class='tstring_end'>'</span></span>
-<span class='id identifier rubyid_obj'>obj</span> <span class='op'>=</span> <span class='const'>MessagePack</span><span class='period'>.</span><span class='id identifier rubyid_unpack'>unpack</span><span class='lparen'>(</span><span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span></code></pre>
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_require'>require</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>msgpack</span><span class='tstring_end'>&#39;</span></span>
+<span class='id identifier rubyid_obj'>obj</span> <span class='op'>=</span> <span class='const'>MessagePack</span><span class='period'>.</span><span class='id identifier rubyid_unpack'>unpack</span><span class='lparen'>(</span><span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span>
+</code></pre>
 
-<h2>Streaming deserialization</h2>
+<h2 id="label-Streaming+deserialization">Streaming deserialization</h2>
 
 <p>Unpacker provides advanced API to deserialize objects in streaming style:</p>
 
-<pre class="code ruby"><code><span class='comment'># deserialize objects from an IO
+<pre class="code ruby"><code class="ruby"><span class='comment'># deserialize objects from an IO
 </span><span class='id identifier rubyid_u'>u</span> <span class='op'>=</span> <span class='const'>MessagePack</span><span class='op'>::</span><span class='const'>Unpacker</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_io'>io</span><span class='rparen'>)</span>
 <span class='id identifier rubyid_u'>u</span><span class='period'>.</span><span class='id identifier rubyid_each'>each</span> <span class='kw'>do</span> <span class='op'>|</span><span class='id identifier rubyid_obj'>obj</span><span class='op'>|</span>
   <span class='comment'># ...
-</span><span class='kw'>end</span></code></pre>
+</span><span class='kw'>end</span>
+</code></pre>
 
 <p>or event-driven style which works well with EventMachine:</p>
 
-<pre class="code ruby"><code><span class='comment'># event-driven deserialization
+<pre class="code ruby"><code class="ruby"><span class='comment'># event-driven deserialization
 </span><span class='kw'>def</span> <span class='id identifier rubyid_on_read'>on_read</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='rparen'>)</span>
   <span class='ivar'>@u</span> <span class='op'>||=</span> <span class='const'>MessagePack</span><span class='op'>::</span><span class='const'>Unpacker</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span>
   <span class='ivar'>@u</span><span class='period'>.</span><span class='id identifier rubyid_feed_each'>feed_each</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='rparen'>)</span> <span class='lbrace'>{</span><span class='op'>|</span><span class='id identifier rubyid_obj'>obj</span><span class='op'>|</span>
      <span class='comment'># ...
 </span>  <span class='rbrace'>}</span>
-<span class='kw'>end</span></code></pre>
+<span class='kw'>end</span>
+</code></pre>
 
 <p>See <a href="http://ruby.msgpack.org/MessagePack/Unpacker.html">API
 reference</a> for details.</p>
 
-<h1>Buffer API</h1>
+<h1 id="label-Buffer+API">Buffer API</h1>
 
 <p>MessagePack for Ruby provides a buffer API so that you can read or write
 data by hand, not via Packer or Unpacker API.</p>
@@ -185,45 +196,61 @@ is backed with a fixed-length shared memory pool which is very fast for
 small data (&lt;= 4KB), and has zero-copy capability which significantly
 affects performance to handle large binary data.</p>
 
-<h1>How to build and run tests</h1>
+<h1 id="label-How+to+build+and+run+tests">How to build and run tests</h1>
 
 <p>Before building msgpack, you need to install bundler and dependencies.</p>
 
-<pre class="code ruby"><code><span class='id identifier rubyid_gem'>gem</span> <span class='id identifier rubyid_install'>install</span> <span class='id identifier rubyid_bundler'>bundler</span>
-<span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_install'>install</span></code></pre>
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_gem'>gem</span> <span class='id identifier rubyid_install'>install</span> <span class='id identifier rubyid_bundler'>bundler</span>
+<span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_install'>install</span>
+</code></pre>
 
 <p>Then, you can run the tasks as follows:</p>
 <ul><li>
 <p>Build</p>
 
-<pre class="code ruby"><code><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_build'>build</span></code></pre>
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_build'>build</span>
+</code></pre>
 </li><li>
 <p>Run tests</p>
 
-<pre class="code ruby"><code><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_spec'>spec</span></code></pre>
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_spec'>spec</span>
+</code></pre>
 </li><li>
 <p>Generating docs</p>
 
-<pre class="code ruby"><code><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_doc'>doc</span></code></pre>
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_bundle'>bundle</span> <span class='id identifier rubyid_exec'>exec</span> <span class='id identifier rubyid_rake'>rake</span> <span class='id identifier rubyid_doc'>doc</span>
+</code></pre>
 </li></ul>
 
-<h1>Copyright</h1>
-<table class="rdoc-list"><tr><td class="rdoc-term"><p>Author</p></td>
-<td>
+<h2 id="label-How+to+build+-mingw32+rubygems">How to build -mingw32 rubygems</h2>
+
+<p>MessagePack mingw32/64 rubygems build process uses <a
+href="https://github.com/rake-compiler/rake-compiler-dock">rake-compiler-dock</a>.
+Run:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_rake'>rake</span> <span class='label'>build:</span><span class='id identifier rubyid_windows'>windows</span>
+</code></pre>
+
+<p>Once this step successes, target gems exist in
+pkg/msgpack-*-x86,x64-mingw32.gem.</p>
+
+<h1 id="label-Copyright">Copyright</h1>
+<dl class="rdoc-list note-list"><dt>Author
+<dd>
 <p>Sadayuki Furuhashi &lt;frsyuki@gmail.com&gt;</p>
-</td></tr><tr><td class="rdoc-term"><p>Copyright</p></td>
-<td>
-<p>Copyright (c) 2008-2013 Sadayuki Furuhashi</p>
-</td></tr><tr><td class="rdoc-term"><p>License</p></td>
-<td>
+</dd><dt>Copyright
+<dd>
+<p>Copyright © 2008-2013 Sadayuki Furuhashi</p>
+</dd><dt>License
+<dd>
 <p>Apache License, Version 2.0</p>
-</td></tr></table>
+</dd></dl>
 </div></div>
 
     <div id="footer">
-  Generated on Sat Dec 14 15:08:13 2013 by
+  Generated on Fri Oct 23 11:52:28 2015 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.8.3 (ruby-1.9.3).
+  0.8.7.6 (ruby-2.2.2).
 </div>
 
   </body>
