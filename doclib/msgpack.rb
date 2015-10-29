@@ -73,5 +73,15 @@ module MessagePack
   #
   def self.unpack(src, options={})
   end
+
+  #
+  # An instance of Factory class. DefaultFactory is also used
+  # by global pack/unpack methods such as MessagePack.dump/load,
+  # Hash#to_msgpack, and other to_msgpack methods.
+  #
+  # Calling DefaultFactory.register_type lets you add an extension
+  # type globally.
+  #
+  DefaultFactory = Factory.new
 end
 
