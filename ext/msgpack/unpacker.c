@@ -68,7 +68,7 @@ void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
     /*memset(uk->stack, 0, MSGPACK_UNPACKER_STACK_CAPACITY);*/
 #else
     /*uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_t));*/
-    uk->stack = malloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_t));
+    uk->stack = xmalloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_t));
 #endif
     uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
 }
@@ -78,7 +78,7 @@ void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 #ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_free(&s_stack_rmem, uk->stack);
 #else
-    free(uk->stack);
+    xfree(uk->stack);
 #endif
 
     msgpack_buffer_destroy(UNPACKER_BUFFER_(uk));

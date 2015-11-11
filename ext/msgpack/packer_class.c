@@ -45,7 +45,7 @@ static void Packer_free(msgpack_packer_t* pk)
     }
     msgpack_packer_ext_registry_destroy(&pk->ext_registry);
     msgpack_packer_destroy(pk);
-    free(pk);
+    xfree(pk);
 }
 
 static void Packer_mark(msgpack_packer_t* pk)

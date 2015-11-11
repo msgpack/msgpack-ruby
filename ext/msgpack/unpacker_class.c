@@ -47,7 +47,7 @@ static void Unpacker_free(msgpack_unpacker_t* uk)
     }
     msgpack_unpacker_ext_registry_destroy(&uk->ext_registry);
     _msgpack_unpacker_destroy(uk);
-    free(uk);
+    xfree(uk);
 }
 
 static void Unpacker_mark(msgpack_unpacker_t* uk)

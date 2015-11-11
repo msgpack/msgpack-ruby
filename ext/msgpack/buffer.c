@@ -74,13 +74,13 @@ static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
     if(c->mem != NULL) {
 #ifndef DISABLE_RMEM
         if(!msgpack_rmem_free(&s_rmem, c->mem)) {
-            free(c->mem);
+            xfree(c->mem);
         }
         /* no needs to update rmem_owner because chunks will not be
          * free()ed (left in free_list) and thus *rmem_owner is
          * always valid. */
 #else
-        free(c->mem);
+        xfree(c->mem);
 #endif
     }
     c->first = NULL;
@@ -95,7 +95,7 @@ void msgpack_buffer_destroy(msgpack_buffer_t* b)
     while(c != &b->tail) {
         msgpack_buffer_chunk_t* n = c->next;
         _msgpack_buffer_chunk_destroy(c);
-        free(c);
+        xfree(c);
         c = n;
     }
     _msgpack_buffer_chunk_destroy(c);
@@ -103,7 +103,7 @@ void msgpack_buffer_destroy(msgpack_buffer_t* b)
     c = b->free_list;
     while(c != NULL) {
         msgpack_buffer_chunk_t* n = c->next;
-        free(c);
+        xfree(c);
         c = n;
     }
 }
@@ -259,7 +259,7 @@ static inline msgpack_buffer_chunk_t* _msgpack_buffer_alloc_new_chunk(msgpack_bu
 {
     msgpack_buffer_chunk_t* reuse = b->free_list;
     if(reuse == NULL) {
-        return malloc(sizeof(msgpack_buffer_chunk_t));
+        return xmalloc(sizeof(msgpack_buffer_chunk_t));
     }
     b->free_list = b->free_list->next;
     return reuse;
@@ -403,7 +403,7 @@ static inline void* _msgpack_buffer_chunk_malloc(
 
     // TODO alignment?
     *allocated_size = required_size;
-    void* mem = malloc(required_size);
+    void* mem = xmalloc(required_size);
     c->mem = mem;
     return mem;
 }
@@ -421,7 +421,7 @@ static inline void* _msgpack_buffer_chunk_realloc(
         next_size *= 2;
     }
     *current_size = next_size;
-    mem = realloc(mem, next_size);
+    mem = xrealloc(mem, next_size);
 
     c->mem = mem;
     return mem;

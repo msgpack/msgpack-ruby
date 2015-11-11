@@ -49,7 +49,7 @@ static void Buffer_free(void* data)
     }
     msgpack_buffer_t* b = (msgpack_buffer_t*) data;
     msgpack_buffer_destroy(b);
-    free(b);
+    xfree(b);
 }
 
 static VALUE Buffer_alloc(VALUE klass)

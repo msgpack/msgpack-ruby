@@ -48,7 +48,7 @@ static void Factory_free(msgpack_factory_t* fc)
     }
     msgpack_packer_ext_registry_destroy(&fc->pkrg);
     msgpack_unpacker_ext_registry_destroy(&fc->ukrg);
-    free(fc);
+    xfree(fc);
 }
 
 void Factory_mark(msgpack_factory_t* fc)
