@@ -13,6 +13,8 @@ os:
   - linux
   - osx
 
+sudo: false
+
 branches:
   only:
     - master
