@@ -1,3 +1,7 @@
+2015-11-20 version 0.7.1:
+
+* Fixed bug to pack/unpack ext type objects larger than 256bytes incorrectly.
+
 2015-10-24 version 0.7.0:
 
 * Add extention types support.
