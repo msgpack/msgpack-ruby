@@ -236,8 +236,8 @@ public class Decoder implements Iterator<IRubyObject> {
         case BIN8:     return consumeString(buffer.get() & 0xff, binaryEncoding);
         case BIN16:    return consumeString(buffer.getShort() & 0xffff, binaryEncoding);
         case BIN32:    return consumeString(buffer.getInt(), binaryEncoding);
-        case VAREXT8:  return consumeExtension(buffer.get());
-        case VAREXT16: return consumeExtension(buffer.getShort());
+        case VAREXT8:  return consumeExtension(buffer.get() & 0xff);
+        case VAREXT16: return consumeExtension(buffer.getShort() & 0xffff);
         case VAREXT32: return consumeExtension(buffer.getInt());
         case FLOAT32:  return runtime.newFloat(buffer.getFloat());
         case FLOAT64:  return runtime.newFloat(buffer.getDouble());

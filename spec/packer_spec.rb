@@ -223,4 +223,34 @@ describe MessagePack::Packer do
       expect(two[:packer]).to eq(:to_msgpack_ext)
     end
   end
+
+  describe "ext formats" do
+    [1, 2, 4, 8, 16].zip([0xd4, 0xd5, 0xd6, 0xd7, 0xd8]).each do |n,b|
+      it "msgpack fixext #{n} format" do
+        MessagePack::ExtensionValue.new(1, "a"*n).to_msgpack.should ==
+          [b, 1].pack('CC') + "a"*n
+      end
+    end
+
+    it "msgpack ext 8 format" do
+      MessagePack::ExtensionValue.new(1, "").to_msgpack.should ==
+        [0xc7, 0, 1].pack('CCC') + ""
+      MessagePack::ExtensionValue.new(-1, "a"*255).to_msgpack.should ==
+        [0xc7, 255, -1].pack('CCC') + "a"*255
+    end
+
+    it "msgpack ext 16 format" do
+      MessagePack::ExtensionValue.new(1, "a"*256).to_msgpack.should ==
+        [0xc8, 256, 1].pack('CnC') + "a"*256
+      MessagePack::ExtensionValue.new(-1, "a"*65535).to_msgpack.should ==
+        [0xc8, 65535, -1].pack('CnC') + "a"*65535
+    end
+
+    it "msgpack ext 32 format" do
+      MessagePack::ExtensionValue.new(1, "a"*65536).to_msgpack.should ==
+        [0xc9, 65536, 1].pack('CNC') + "a"*65536
+      MessagePack::ExtensionValue.new(-1, "a"*65538).to_msgpack.should ==
+        [0xc9, 65538, -1].pack('CNC') + "a"*65538
+    end
+  end
 end
