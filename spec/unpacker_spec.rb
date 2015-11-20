@@ -260,6 +260,33 @@ describe MessagePack::Unpacker do
     MessagePack.unpack([0xc6, 0x00, 0x00, 0x00, 0x02].pack('C*') + 'aa').should == "aa"
   end
 
+  describe "ext formats" do
+    let(:unpacker) { MessagePack::Unpacker.new(allow_unknown_ext: true) }
+
+    [1, 2, 4, 8, 16].zip([0xd4, 0xd5, 0xd6, 0xd7, 0xd8]).each do |n,b|
+      it "msgpack fixext #{n} format" do
+        unpacker.feed([b, 1].pack('CC') + "a"*n).unpack.should == MessagePack::ExtensionValue.new(1, "a"*n)
+        unpacker.feed([b, -1].pack('CC') + "a"*n).unpack.should == MessagePack::ExtensionValue.new(-1, "a"*n)
+      end
+    end
+
+    it "msgpack ext 8 format" do
+      unpacker.feed([0xc7, 0, 1].pack('CCC')).unpack.should == MessagePack::ExtensionValue.new(1, "")
+      unpacker.feed([0xc7, 255, -1].pack('CCC') + "a"*255).unpack.should == MessagePack::ExtensionValue.new(-1, "a"*255)
+    end
+
+    it "msgpack ext 16 format" do
+      unpacker.feed([0xc8, 0, 1].pack('CnC')).unpack.should == MessagePack::ExtensionValue.new(1, "")
+      unpacker.feed([0xc8, 256, -1].pack('CnC') + "a"*256).unpack.should == MessagePack::ExtensionValue.new(-1, "a"*256)
+    end
+
+    it "msgpack ext 32 format" do
+      unpacker.feed([0xc9, 0, 1].pack('CNC')).unpack.should == MessagePack::ExtensionValue.new(1, "")
+      unpacker.feed([0xc9, 256, -1].pack('CNC') + "a"*256).unpack.should == MessagePack::ExtensionValue.new(-1, "a"*256)
+      unpacker.feed([0xc9, 65536, -1].pack('CNC') + "a"*65536).unpack.should == MessagePack::ExtensionValue.new(-1, "a"*65536)
+    end
+  end
+
   class ValueOne
     attr_reader :num
     def initialize(num)

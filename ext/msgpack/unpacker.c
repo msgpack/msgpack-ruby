@@ -380,7 +380,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc8: // ext 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
-                uint16_t length = cb->u16;
+                uint16_t length = _msgpack_be16(cb->u16);
                 int ext_type = cb->buffer[2];
                 if(length == 0) {
                     return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
@@ -392,7 +392,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc9: // ext 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
-                uint32_t length = cb->u32;
+                uint32_t length = _msgpack_be32(cb->u32);
                 int ext_type = cb->buffer[4];
                 if(length == 0) {
                     return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
