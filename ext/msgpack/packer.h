@@ -255,6 +255,18 @@ static inline void msgpack_packer_write_u64(msgpack_packer_t* pk, uint64_t v)
     }
 }
 
+static inline void msgpack_packer_write_float(msgpack_packer_t* pk, float v)
+{
+    msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 5);
+    union {
+        float f;
+        uint32_t u32;
+        char mem[4];
+    } castbuf = { v };
+    castbuf.u32 = _msgpack_be_float(castbuf.u32);
+    msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xca, castbuf.mem, 4);
+}
+
 static inline void msgpack_packer_write_double(msgpack_packer_t* pk, double v)
 {
     msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 9);

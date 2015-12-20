@@ -7,6 +7,7 @@ import org.jruby.RubyObject;
 import org.jruby.RubyArray;
 import org.jruby.RubyHash;
 import org.jruby.RubyIO;
+import org.jruby.RubyNumeric;
 import org.jruby.RubyInteger;
 import org.jruby.RubyFixnum;
 import org.jruby.runtime.Block;
@@ -111,6 +112,16 @@ public class Packer extends RubyObject {
   @JRubyMethod(name = "write_nil")
   public IRubyObject writeNil(ThreadContext ctx) {
     write(ctx, null);
+    return this;
+  }
+
+  @JRubyMethod(name = "write_float32")
+  public IRubyObject writeFloat32(ThreadContext ctx, IRubyObject numeric) {
+    Ruby runtime = ctx.runtime;
+    if (!(numeric instanceof RubyNumeric)) {
+      throw runtime.newArgumentError("Expected numeric");
+    }
+    buffer.write(ctx, encoder.encodeFloat32((RubyNumeric) numeric));
     return this;
   }
 
