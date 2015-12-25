@@ -2,6 +2,9 @@
 require 'spec_helper'
 
 require 'stringio'
+require 'tempfile'
+require 'zlib'
+
 if defined?(Encoding)
   Encoding.default_external = 'ASCII-8BIT'
 end
@@ -17,6 +20,79 @@ describe MessagePack::Packer do
     MessagePack::Packer.new(StringIO.new)
     MessagePack::Packer.new({})
     MessagePack::Packer.new(StringIO.new, {})
+  end
+
+  it 'gets IO or object which has #write to write/append data to it' do
+    sample_data = {"message" => "morning!", "num" => 1}
+    sample_packed = MessagePack.pack(sample_data)
+
+    Tempfile.create("for_io") do |file|
+      file.sync = true
+      p1 = MessagePack::Packer.new(file)
+      p1.write sample_data
+      p1.flush
+
+      file.rewind
+      expect(file.read).to eql(sample_packed)
+    end
+
+    dio = StringIO.new
+    p2 = MessagePack::Packer.new(dio)
+    p2.write sample_data
+    p2.flush
+    dio.rewind
+    expect(dio.string).to eql(sample_packed)
+
+    unless defined? JRUBY_VERSION
+      # JRuby seems to have bug not to flush GzipWriter buffer correctly (both of 1.7 and 9.0)
+      dio = StringIO.new
+      writer = Zlib::GzipWriter.new(dio)
+      writer.sync = true
+      p3 = MessagePack::Packer.new(writer)
+      p3.write sample_data
+      p3.flush
+      writer.flush(Zlib::FINISH)
+      writer.close
+      dio.rewind
+      compressed = dio.string
+      str = Zlib::GzipReader.wrap(StringIO.new(compressed)){|gz| gz.read }
+      expect(str).to eql(sample_packed)
+    end
+
+    class DummyIO
+      def initialize
+        @buf = "".force_encoding('ASCII-8BIT')
+        @pos = 0
+      end
+      def write(val)
+        @buf << val.to_s
+      end
+      def read(length=nil,outbuf="")
+        if @pos == @buf.size
+          nil
+        elsif length.nil?
+          val = @buf[@pos..(@buf.size)]
+          @pos = @buf.size
+          outbuf << val
+          outbuf
+        else
+          val = @buf[@pos..(@pos + length)]
+          @pos += val.size
+          @pos = @buf.size if @pos > @buf.size
+          outbuf << val
+          outbuf
+        end
+      end
+      def flush
+        # nop
+      end
+    end
+
+    dio = DummyIO.new
+    p4 = MessagePack::Packer.new(dio)
+    p4.write sample_data
+    p4.flush
+    expect(dio.read).to eql(sample_packed)
   end
 
   it 'gets options to specify how to pack values' do
