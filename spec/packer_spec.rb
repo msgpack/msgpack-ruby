@@ -26,7 +26,7 @@ describe MessagePack::Packer do
     sample_data = {"message" => "morning!", "num" => 1}
     sample_packed = MessagePack.pack(sample_data)
 
-    Tempfile.create("for_io") do |file|
+    Tempfile.open("for_io") do |file|
       file.sync = true
       p1 = MessagePack::Packer.new(file)
       p1.write sample_data
@@ -34,6 +34,7 @@ describe MessagePack::Packer do
 
       file.rewind
       expect(file.read).to eql(sample_packed)
+      file.unlink
     end
 
     dio = StringIO.new

@@ -29,7 +29,7 @@ describe MessagePack::Unpacker do
     sample_data = {"message" => "morning!", "num" => 1}
     sample_packed = MessagePack.pack(sample_data).force_encoding('ASCII-8BIT')
 
-    Tempfile.create("for_io") do |file|
+    Tempfile.open("for_io") do |file|
       file.sync = true
       file.write sample_packed
       file.rewind
@@ -38,6 +38,7 @@ describe MessagePack::Unpacker do
       u1.each do |obj|
         expect(obj).to eql(sample_data)
       end
+      file.unlink
     end
 
     sio = StringIO.new(sample_packed)
