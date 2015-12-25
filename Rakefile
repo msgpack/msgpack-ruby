@@ -37,14 +37,6 @@ if RUBY_PLATFORM =~ /java/
     ext.source_version = '1.6'
     ext.target_version = '1.6'
   end
-
-  RSpec::Core::RakeTask.new(:spec) do |t|
-    t.rspec_opts = ["-c", "-f progress"]
-    t.rspec_opts << "-Ilib"
-    t.pattern = 'spec/{,jruby/}*_spec.rb'
-    t.verbose = true
-  end
-
 else
   require 'rake/extensiontask'
 
@@ -55,13 +47,18 @@ else
     # cross_platform names are of MRI's platform name
     ext.cross_platform = ['x86-mingw32', 'x64-mingw32']
   end
+end
 
-  RSpec::Core::RakeTask.new(:spec) do |t|
-    t.rspec_opts = ["-c", "-f progress"]
-    t.rspec_opts << "-Ilib"
-    t.pattern = 'spec/{,cruby/}*_spec.rb'
-    t.verbose = true
-  end
+test_pattern = case
+               when RUBY_PLATFORM =~ /java/ then 'spec/{,jruby/}*_spec.rb'
+               when RUBY_ENGINE =~ /rbx/ then 'spec/*_spec.rb'
+               else 'spec/{,cruby/}*_spec.rb' # MRI
+               end
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.rspec_opts = ["-c", "-f progress"]
+  t.rspec_opts << "-Ilib"
+  t.pattern = test_pattern
+  t.verbose = true
 end
 
 namespace :build do
