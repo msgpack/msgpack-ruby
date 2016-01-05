@@ -5,7 +5,6 @@ rvm:
   - 2.1.6
   - 2.2.2
   - ruby-head
-  - rbx-2
   - jruby-19mode
   - jruby-head
 
@@ -28,3 +27,4 @@ matrix:
     - rvm: jruby-head
     - rvm: jruby-19mode
       os: osx
+    - rvm: rbx-2

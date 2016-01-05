@@ -2,6 +2,7 @@
 
 require 'stringio'
 require 'tempfile'
+require 'zlib'
 
 require 'spec_helper'
 
@@ -22,6 +23,73 @@ describe MessagePack::Unpacker do
     u2 = MessagePack::Unpacker.new(symbolize_keys: true, allow_unknown_ext: true)
     u2.symbolize_keys?.should == true
     u2.allow_unknown_ext?.should == true
+  end
+
+  it 'gets IO or object which has #read to read data from it' do
+    sample_data = {"message" => "morning!", "num" => 1}
+    sample_packed = MessagePack.pack(sample_data).force_encoding('ASCII-8BIT')
+
+    Tempfile.open("for_io") do |file|
+      file.sync = true
+      file.write sample_packed
+      file.rewind
+
+      u1 = MessagePack::Unpacker.new(file)
+      u1.each do |obj|
+        expect(obj).to eql(sample_data)
+      end
+      file.unlink
+    end
+
+    sio = StringIO.new(sample_packed)
+    u2 = MessagePack::Unpacker.new(sio)
+    u2.each do |obj|
+      expect(obj).to eql(sample_data)
+    end
+
+    dio = StringIO.new
+    Zlib::GzipWriter.wrap(dio){|gz| gz.write sample_packed }
+    reader = Zlib::GzipReader.new(StringIO.new(dio.string))
+    u3 = MessagePack::Unpacker.new(reader)
+    u3.each do |obj|
+      expect(obj).to eql(sample_data)
+    end
+
+    class DummyIO
+      def initialize
+        @buf = "".force_encoding('ASCII-8BIT')
+        @pos = 0
+      end
+      def write(val)
+        @buf << val.to_s
+      end
+      def read(length=nil,outbuf="")
+        if @pos == @buf.size
+          nil
+        elsif length.nil?
+          val = @buf[@pos..(@buf.size)]
+          @pos = @buf.size
+          outbuf << val
+          outbuf
+        else
+          val = @buf[@pos..(@pos + length)]
+          @pos += val.size
+          @pos = @buf.size if @pos > @buf.size
+          outbuf << val
+          outbuf
+        end
+      end
+      def flush
+        # nop
+      end
+    end
+
+    dio = DummyIO.new
+    dio.write sample_packed
+    u4 = MessagePack::Unpacker.new(dio)
+    u4.each do |obj|
+      expect(obj).to eql(sample_data)
+    end
   end
 
   it 'read_array_header succeeds' do

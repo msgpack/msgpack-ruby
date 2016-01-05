@@ -297,6 +297,8 @@ public class Unpacker extends RubyObject {
       str = stream.callMethod(ctx, "string").asString();
     } else if (stream instanceof RubyIO) {
       str = stream.callMethod(ctx, "read").asString();
+    } else if (stream.respondsTo("read")) {
+      str = stream.callMethod(ctx, "read").asString();
     } else {
       throw ctx.getRuntime().newTypeError(stream, "IO");
     }
