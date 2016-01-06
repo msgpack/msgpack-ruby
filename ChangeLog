@@ -1,3 +1,8 @@
+2016-01-06 version 0.7.2:
+
+* Improved compatibility of Unpacker between CRuby and JRuby to accept stream-like object
+  by checking respond_to(:read) in addition to class check
+
 2015-11-20 version 0.7.1:
 
 * Fixed bug to pack/unpack ext type objects larger than 256bytes incorrectly.
