@@ -149,6 +149,17 @@ static VALUE Packer_write_map_header(VALUE self, VALUE n)
     return self;
 }
 
+static VALUE Packer_write_float32(VALUE self, VALUE numeric)
+{
+    if(!rb_obj_is_kind_of(numeric, rb_cNumeric)) {
+      rb_raise(rb_eArgError, "Expected numeric");
+    }
+
+    PACKER(self, pk);
+    msgpack_packer_write_float(pk, (float)rb_num2dbl(numeric));
+    return self;
+}
+
 static VALUE Packer_write_ext(VALUE self, VALUE type, VALUE data)
 {
     PACKER(self, pk);
@@ -344,6 +355,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
     rb_define_method(cMessagePack_Packer, "write_ext", Packer_write_ext, 2);
+    rb_define_method(cMessagePack_Packer, "write_float32", Packer_write_float32, 1);
     rb_define_method(cMessagePack_Packer, "flush", Packer_flush, 0);
 
     /* delegation methods */

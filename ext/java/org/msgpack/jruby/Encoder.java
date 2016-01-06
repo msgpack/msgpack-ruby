@@ -8,6 +8,7 @@ import org.jruby.Ruby;
 import org.jruby.RubyObject;
 import org.jruby.RubyNil;
 import org.jruby.RubyBoolean;
+import org.jruby.RubyNumeric;
 import org.jruby.RubyBignum;
 import org.jruby.RubyInteger;
 import org.jruby.RubyFixnum;
@@ -82,6 +83,11 @@ public class Encoder {
 
   public IRubyObject encodeMapHeader(int size) {
     appendHashHeader(size);
+    return readRubyString();
+  }
+
+  public IRubyObject encodeFloat32(RubyNumeric numeric) {
+    appendFloat32(numeric);
     return readRubyString();
   }
 
@@ -182,8 +188,8 @@ public class Encoder {
 
   private void appendFloat(RubyFloat object) {
     double value = object.getDoubleValue();
-    float f = (float) value;
     //TODO: msgpack-ruby original does encode this value as Double, not float
+    // float f = (float) value;
     // if (Double.compare(f, value) == 0) {
     //   ensureRemainingCapacity(5);
     //   buffer.put(FLOAT32);
@@ -193,6 +199,13 @@ public class Encoder {
       buffer.put(FLOAT64);
       buffer.putDouble(value);
     // }
+  }
+
+  private void appendFloat32(RubyNumeric object) {
+    float value = (float) object.getDoubleValue();
+    ensureRemainingCapacity(5);
+    buffer.put(FLOAT32);
+    buffer.putFloat(value);
   }
 
   private void appendString(RubyString object) {

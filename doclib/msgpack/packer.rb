@@ -110,6 +110,18 @@ module MessagePack
     end
 
     #
+    # Serializes _value_ as 32-bit single precision float into internal buffer.
+    # _value_ will be approximated with the nearest possible single precision float, thus
+    # being potentially lossy. However, the serialized string will only take up 5 bytes
+    # instead of 9 bytes compared to directly serializing a 64-bit double precision Ruby Float.
+    #
+    # @param value [Numeric]
+    # @return [Packer] self
+    #
+    def write_float32(value)
+    end
+
+    #
     # Flushes data in the internal buffer to the internal IO. Same as _buffer.flush.
     # If internal IO is not set, it does nothing.
     #

@@ -134,6 +134,30 @@ describe MessagePack::Packer do
     packer.to_s.should == "\x81"
   end
 
+  describe '#write_float32' do
+    tests = [
+      ['small floats', 3.14, "\xCA\x40\x48\xF5\xC3"],
+      ['big floats', Math::PI * 1_000_000_000_000_000_000, "\xCA\x5E\x2E\x64\xB7"],
+      ['negative floats', -2.1, "\xCA\xC0\x06\x66\x66"],
+      ['integer', 123, "\xCA\x42\xF6\x00\x00"],
+    ]
+
+    tests.each do |ctx, numeric, packed|
+      context("with #{ctx}") do
+        it("encodes #{numeric} as float32") do
+          packer.write_float32(numeric)
+          packer.to_s.should == packed
+        end
+      end
+    end
+
+    context 'with non numeric' do
+      it 'raises argument error' do
+        expect { packer.write_float32('abc') }.to raise_error(ArgumentError)
+      end
+    end
+  end
+
   it 'flush' do
     io = StringIO.new
     pk = MessagePack::Packer.new(io)
