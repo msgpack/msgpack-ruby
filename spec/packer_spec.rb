@@ -44,21 +44,18 @@ describe MessagePack::Packer do
     dio.rewind
     expect(dio.string).to eql(sample_packed)
 
-    unless defined? JRUBY_VERSION
-      # JRuby seems to have bug not to flush GzipWriter buffer correctly (both of 1.7 and 9.0)
-      dio = StringIO.new
-      writer = Zlib::GzipWriter.new(dio)
-      writer.sync = true
-      p3 = MessagePack::Packer.new(writer)
-      p3.write sample_data
-      p3.flush
-      writer.flush(Zlib::FINISH)
-      writer.close
-      dio.rewind
-      compressed = dio.string
-      str = Zlib::GzipReader.wrap(StringIO.new(compressed)){|gz| gz.read }
-      expect(str).to eql(sample_packed)
-    end
+    dio = StringIO.new
+    writer = Zlib::GzipWriter.new(dio)
+    writer.sync = true
+    p3 = MessagePack::Packer.new(writer)
+    p3.write sample_data
+    p3.flush
+    writer.flush(Zlib::FINISH)
+    writer.close
+    dio.rewind
+    compressed = dio.string
+    str = Zlib::GzipReader.wrap(StringIO.new(compressed)){|gz| gz.read }
+    expect(str).to eql(sample_packed)
 
     class DummyIO
       def initialize
@@ -85,6 +82,9 @@ describe MessagePack::Packer do
         end
       end
       def flush
+        # nop
+      end
+      def close
         # nop
       end
     end
