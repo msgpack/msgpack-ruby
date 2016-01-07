@@ -1,3 +1,7 @@
+2016-01-07 version 0.7.3:
+
+* Add Packer#write_float32 method to pack floating point numbers into FLOAT of messagepack.
+
 2016-01-06 version 0.7.2:
 
 * Improved compatibility of Unpacker between CRuby and JRuby to accept stream-like object
