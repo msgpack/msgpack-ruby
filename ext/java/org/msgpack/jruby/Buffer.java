@@ -42,8 +42,9 @@ public class Buffer extends RubyObject {
   @JRubyMethod(name = "initialize", optional = 2)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
     if (args.length > 0) {
-      if (args[0].respondsTo("read") && args[0].respondsTo("write")) {
-        this.io = args[0];
+      IRubyObject io = args[0];
+      if (io.respondsTo("close") && (io.respondsTo("read") || (io.respondsTo("write") && io.respondsTo("flush")))) {
+        this.io = io;
       }
     }
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
