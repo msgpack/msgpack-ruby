@@ -1,3 +1,7 @@
+2016-01-08 version 0.7.4:
+
+* Improved compatibility of Packer between CRuby and JRuby about argument IO-ish object values.
+
 2016-01-07 version 0.7.3:
 
 * Add Packer#write_float32 method to pack floating point numbers into FLOAT of messagepack.
