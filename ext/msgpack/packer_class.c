@@ -334,6 +334,41 @@ static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
     return MessagePack_pack(argc, argv);
 }
 
+void pack_from_json(msgpack_packer_t* pk, const char *p, const char *pend);
+
+/*
+ * @overload from_json(str)
+ *   @param str [String] JSON string
+ *
+ * returns MessagePack string
+ */
+static VALUE MessagePack_from_json_module_method(VALUE mod, VALUE str)
+{
+    VALUE retval;
+    VALUE self = MessagePack_Factory_packer(0, NULL, cMessagePack_DefaultFactory);
+    PACKER(self, pk);
+    StringValue(str);
+
+    pack_from_json(pk, RSTRING_PTR(str), RSTRING_END(str));
+
+    if(msgpack_buffer_has_io(PACKER_BUFFER_(pk))) {
+        msgpack_buffer_flush(PACKER_BUFFER_(pk));
+        retval = Qnil;
+    } else {
+        retval = msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
+    }
+
+    msgpack_buffer_clear(PACKER_BUFFER_(pk)); /* to free rmem before GC */
+
+#ifdef RB_GC_GUARD
+    /* This prevents compilers from optimizing out the `self` variable
+     * from stack. Otherwise GC free()s it. */
+    RB_GC_GUARD(self);
+#endif
+
+    return retval;
+}
+
 void MessagePack_Packer_module_init(VALUE mMessagePack)
 {
     s_to_msgpack = rb_intern("to_msgpack");
@@ -379,5 +414,6 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     /* MessagePack.pack(x) */
     rb_define_module_function(mMessagePack, "pack", MessagePack_pack_module_method, -1);
     rb_define_module_function(mMessagePack, "dump", MessagePack_dump_module_method, -1);
+    rb_define_module_function(mMessagePack, "from_json", MessagePack_from_json_module_method, 1);
 }
 
