@@ -1,0 +1,3 @@
+{
+  "Did you know this is valid in JS (but not in JSON)?" : "99"++
+}
