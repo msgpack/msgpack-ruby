@@ -369,7 +369,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint8_t length = cb->u8;
-                int ext_type = cb->buffer[1];
+                int ext_type = (signed char) cb->buffer[1];
                 if(length == 0) {
                     return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
                 }
@@ -381,7 +381,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
                 uint16_t length = _msgpack_be16(cb->u16);
-                int ext_type = cb->buffer[2];
+                int ext_type = (signed char) cb->buffer[2];
                 if(length == 0) {
                     return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
                 }
@@ -393,7 +393,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
                 uint32_t length = _msgpack_be32(cb->u32);
-                int ext_type = cb->buffer[4];
+                int ext_type = (signed char) cb->buffer[4];
                 if(length == 0) {
                     return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
                 }
