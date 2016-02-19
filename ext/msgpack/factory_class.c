@@ -161,7 +161,7 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 2..3)", argc);
     }
 
-    ext_type = rb_num2int(argv[0]);
+    ext_type = NUM2INT(argv[0]);
     if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
