@@ -31,4 +31,6 @@ matrix:
     - rvm: jruby-head
     - rvm: jruby-19mode
       os: osx
+    - rvm: jruby-9.0.5.0
+      os: osx
     - rvm: rbx-2
