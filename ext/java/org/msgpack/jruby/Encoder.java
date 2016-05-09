@@ -3,6 +3,7 @@ package org.msgpack.jruby;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.jruby.Ruby;
 import org.jruby.RubyObject;
@@ -131,6 +132,12 @@ public class Encoder {
     ensureRemainingCapacity(9);
     buffer.put(value.signum() < 0 ? INT64 : UINT64);
     byte[] b = value.toByteArray();
+    if (b.length < 8) {
+      byte[] bb = b;
+      b = new byte[8];
+      Arrays.fill(b, (byte) (value.signum() < 0 ? 255 : 0));
+      System.arraycopy(bb, 0, b, 8 - bb.length, bb.length);
+    }
     buffer.put(b, b.length - 8, 8);
   }
 

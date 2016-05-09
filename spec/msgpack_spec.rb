@@ -159,4 +159,32 @@ describe MessagePack do
       packed.should start_with("\xDA\x00\x20")
     end
   end
+
+  if java?
+    context 'when a Bignum has a small positive value' do
+      it 'encodes it as a INT64' do
+        bignum = Java::OrgJruby::RubyBignum.long2big(1)
+        MessagePack.pack(bignum).should eq("\xCF\x00\x00\x00\x00\x00\x00\x00\x01".force_encoding(Encoding::BINARY))
+      end
+
+      it 'decodes it to a Fixnum' do
+        n = MessagePack.unpack("\xCF\x00\x00\x00\x00\x00\x00\x00\x01".force_encoding(Encoding::BINARY))
+        n.should be_a(Fixnum)
+        n.should eq(1)
+      end
+    end
+
+    context 'when a Bignum has a small negative value' do
+      it 'encodes it as a UINT64' do
+        bignum = Java::OrgJruby::RubyBignum.long2big(-2)
+        MessagePack.pack(bignum).should eq("\xD3\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE".force_encoding(Encoding::BINARY))
+      end
+
+      it 'decodes it to a Fixnum' do
+        n = MessagePack.unpack("\xD3\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE".force_encoding(Encoding::BINARY))
+        n.should be_a(Fixnum)
+        n.should eq(-2)
+      end
+    end
+  end
 end
