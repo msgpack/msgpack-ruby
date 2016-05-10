@@ -159,4 +159,13 @@ describe MessagePack do
       packed.should start_with("\xDA\x00\x20")
     end
   end
+
+  context 'when a Bignum has a small value' do
+    tests['numbers'].take(10).each do |desc, unpacked, packed|
+      it("encodes #{desc} to the smallest representation") do
+        bignum = (1 << 64).coerce(unpacked)[0]
+        MessagePack.pack(bignum).should eq(packed)
+      end
+    end
+  end
 end
