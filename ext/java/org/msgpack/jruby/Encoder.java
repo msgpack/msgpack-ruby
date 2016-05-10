@@ -125,20 +125,18 @@ public class Encoder {
   }
 
   private void appendBignum(RubyBignum object) {
-    BigInteger value = ((RubyBignum) object).getBigIntegerValue();
-    if (value.bitLength() > 64 || (value.bitLength() > 63 && value.signum() < 0)) {
-      throw runtime.newArgumentError(String.format("Cannot pack big integer: %s", value));
+    BigInteger value = object.getBigIntegerValue();
+    if (value.compareTo(RubyBignum.LONG_MIN) < 0 || value.compareTo(RubyBignum.LONG_MAX) > 0) {
+      if (value.bitLength() > 64 || (value.bitLength() > 63 && value.signum() < 0)) {
+        throw runtime.newArgumentError(String.format("Cannot pack big integer: %s", value));
+      }
+      ensureRemainingCapacity(9);
+      buffer.put(value.signum() < 0 ? INT64 : UINT64);
+      byte[] b = value.toByteArray();
+      buffer.put(b, b.length - 8, 8);
+    } else {
+      appendInteger(object);
     }
-    ensureRemainingCapacity(9);
-    buffer.put(value.signum() < 0 ? INT64 : UINT64);
-    byte[] b = value.toByteArray();
-    if (b.length < 8) {
-      byte[] bb = b;
-      b = new byte[8];
-      Arrays.fill(b, (byte) (value.signum() < 0 ? 255 : 0));
-      System.arraycopy(bb, 0, b, 8 - bb.length, bb.length);
-    }
-    buffer.put(b, b.length - 8, 8);
   }
 
   private void appendInteger(RubyInteger object) {
