@@ -15,3 +15,4 @@ end
 require "msgpack/packer"
 require "msgpack/unpacker"
 require "msgpack/factory"
+require "msgpack/symbol"
