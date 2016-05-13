@@ -32,6 +32,7 @@ struct msgpack_packer_t {
     msgpack_buffer_t buffer;
 
     bool compatibility_mode;
+    bool has_symbol_ext_type;
 
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
@@ -448,7 +449,7 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
 #endif
 }
 
-static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)
+static inline void msgpack_packer_write_symbol_string_value(msgpack_packer_t* pk, VALUE v)
 {
 #ifdef HAVE_RB_SYM2STR
     /* rb_sym2str is added since MRI 2.2.0 */
@@ -460,6 +461,17 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
     }
     msgpack_packer_write_string_value(pk, str);
 #endif
+}
+
+void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v);
+
+static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE v)
+{
+    if (pk->has_symbol_ext_type) {
+        msgpack_packer_write_other_value(pk, v);
+    } else {
+        msgpack_packer_write_symbol_string_value(pk, v);
+    }
 }
 
 static inline void msgpack_packer_write_fixnum_value(msgpack_packer_t* pk, VALUE v)

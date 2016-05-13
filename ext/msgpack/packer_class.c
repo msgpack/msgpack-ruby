@@ -286,6 +286,10 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
 
     msgpack_packer_ext_registry_put(&pk->ext_registry, ext_class, ext_type, proc, arg);
 
+    if (ext_class == rb_cSymbol) {
+        pk->has_symbol_ext_type = true;
+    }
+
     return Qnil;
 }
 

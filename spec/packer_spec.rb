@@ -323,6 +323,14 @@ describe MessagePack::Packer do
       expect(two[:class]).to eq(ValueTwo)
       expect(two[:packer]).to eq(:to_msgpack_ext)
     end
+
+    context 'when registering a type for symbols' do
+      before { packer.register_type(0x00, ::Symbol, :to_msgpack_ext) }
+
+      it 'packs symbols in an ext type' do
+        expect(packer.pack(:symbol).to_s).to eq "\xc7\x06\x00symbol"
+      end
+    end
   end
 
   describe "ext formats" do
