@@ -325,6 +325,34 @@ describe MessagePack::Packer do
     end
   end
 
+  describe "fixnum and bignum" do
+    it "fixnum.to_msgpack" do
+      23.to_msgpack.should == "\x17"
+    end
+
+    it "fixnum.to_msgpack(packer)" do
+      23.to_msgpack(packer)
+      packer.to_s.should == "\x17"
+    end
+
+    it "bignum.to_msgpack" do
+      -4294967296.to_msgpack.should == "\xD3\xFF\xFF\xFF\xFF\x00\x00\x00\x00"
+    end
+
+    it "bignum.to_msgpack(packer)" do
+      -4294967296.to_msgpack(packer)
+      packer.to_s.should == "\xD3\xFF\xFF\xFF\xFF\x00\x00\x00\x00"
+    end
+
+    it "unpack(fixnum)" do
+      MessagePack.unpack("\x17").should == 23
+    end
+
+    it "unpack(bignum)" do
+      MessagePack.unpack("\xD3\xFF\xFF\xFF\xFF\x00\x00\x00\x00").should == -4294967296
+    end
+  end
+
   describe "ext formats" do
     [1, 2, 4, 8, 16].zip([0xd4, 0xd5, 0xd6, 0xd7, 0xd8]).each do |n,b|
       it "msgpack fixext #{n} format" do
