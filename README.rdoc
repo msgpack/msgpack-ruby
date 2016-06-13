@@ -91,6 +91,36 @@ or event-driven style which works well with EventMachine:
 
 See {API reference}[http://ruby.msgpack.org/MessagePack/Unpacker.html] for details.
 
+= Serializing and deserializing symbols
+
+By default, symbols are serialized as strings:
+
+    packed = :symbol.to_msgpack     # => "\xA6symbol"
+    MessagePack.unpack(packed)      # => "symbol"
+
+This can be customized by registering an extension type for them:
+
+    MessagePack::DefaultFactory.register_type(0x00, Symbol)
+
+    # symbols now survive round trips
+    packed = :symbol.to_msgpack     # => "\xc7\x06\x00symbol"
+    MessagePack.unpack(packed)      # => :symbol
+
+The extension type for symbols is configurable like any other extension type.
+For example, to customize how symbols are packed you can just redefine
+Symbol#to_msgpack_ext. Doing this gives you an option to prevent symbols from
+being serialized altogether by throwing an exception:
+
+    class Symbol
+        def to_msgpack_ext
+            raise "Serialization of symbols prohibited"
+        end
+    end
+
+    MessagePack::DefaultFactory.register_type(0x00, Symbol)
+
+    [1, :symbol, 'string'].to_msgpack  # => RuntimeError: Serialization of symbols prohibited
+
 = Extension Types
 
 Packer and Unpacker support {Extension types of MessagePack}[https://github.com/msgpack/msgpack/blob/master/spec.md#types-extension-type].
