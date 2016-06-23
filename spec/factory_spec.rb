@@ -210,6 +210,66 @@ describe MessagePack::Factory do
     end
   end
 
+  describe 'the special treatment of symbols with ext type' do
+    let(:packer) { subject.packer }
+    let(:unpacker) { subject.unpacker }
+
+    def symbol_after_roundtrip
+      packed_symbol = packer.pack(:symbol).to_s
+      unpacker.feed(packed_symbol).unpack
+    end
+
+    context 'if no ext type is registered for symbols' do
+      it 'converts symbols to string' do
+        expect(symbol_after_roundtrip).to eq 'symbol'
+      end
+    end
+
+    context 'if an ext type is registered for symbols' do
+      context 'if using the default serializer' do
+        before { subject.register_type(0x00, ::Symbol) }
+
+        it 'lets symbols survive a roundtrip' do
+          expect(symbol_after_roundtrip).to be :symbol
+        end
+      end
+
+      context 'if using a custom serializer' do
+        before do
+          class Symbol
+            alias_method :to_msgpack_ext_orig, :to_msgpack_ext
+            def to_msgpack_ext
+              [object_id].pack('l')
+            end
+          end
+
+          class << Symbol
+            alias_method :from_msgpack_ext_orig, :from_msgpack_ext
+            def from_msgpack_ext(data)
+              ObjectSpace._id2ref data.unpack('l').first
+            end
+          end
+        end
+
+        before { subject.register_type(0x00, ::Symbol) }
+
+        it 'lets symbols survive a roundtrip' do
+          expect(symbol_after_roundtrip).to be :symbol
+        end
+
+        after do
+          class Symbol
+            alias_method :to_msgpack_ext, :to_msgpack_ext_orig
+          end
+
+          class << Symbol
+            alias_method :from_msgpack_ext, :from_msgpack_ext_orig
+          end
+        end
+      end
+    end
+  end
+
   describe 'DefaultFactory' do
     it 'is a factory' do
       MessagePack::DefaultFactory.should be_kind_of(MessagePack::Factory)
