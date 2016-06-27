@@ -239,7 +239,7 @@ describe MessagePack::Factory do
           class Symbol
             alias_method :to_msgpack_ext_orig, :to_msgpack_ext
             def to_msgpack_ext
-              self.to_s.codepoints.pack('n*')
+              self.to_s.codepoints.to_a.pack('n*')
             end
           end
 
