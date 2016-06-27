@@ -45,10 +45,14 @@ public class Packer extends RubyObject {
       IRubyObject mode = options.fastARef(ctx.getRuntime().newSymbol("compatibility_mode"));
       compatibilityMode = (mode != null) && mode.isTrue();
     }
-    this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode, registry);
+    if (registry == null) {
+        // registry is null when allocate -> initialize
+        // registry is already initialized (and somthing might be registered) when newPacker from Factory
+        this.registry = new ExtensionRegistry();
+    }
+    this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode, registry, hasSymbolExtType);
     this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
-    this.registry = new ExtensionRegistry();
     return this;
   }
 
