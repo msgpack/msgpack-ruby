@@ -239,14 +239,14 @@ describe MessagePack::Factory do
           class Symbol
             alias_method :to_msgpack_ext_orig, :to_msgpack_ext
             def to_msgpack_ext
-              [object_id].pack('l')
+              self.to_s.codepoints.pack('n*')
             end
           end
 
           class << Symbol
             alias_method :from_msgpack_ext_orig, :from_msgpack_ext
             def from_msgpack_ext(data)
-              ObjectSpace._id2ref data.unpack('l').first
+              data.unpack('n*').map(&:chr).join.to_sym
             end
           end
         end
