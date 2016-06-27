@@ -25,15 +25,17 @@ public class Packer extends RubyObject {
   public ExtensionRegistry registry;
   private Buffer buffer;
   private Encoder encoder;
+  private boolean hasSymbolExtType;
 
-  public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry) {
+  public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry, boolean hasSymbolExtType) {
     super(runtime, type);
     this.registry = registry;
+    this.hasSymbolExtType = hasSymbolExtType;
   }
 
   static class PackerAllocator implements ObjectAllocator {
     public IRubyObject allocate(Ruby runtime, RubyClass type) {
-      return new Packer(runtime, type, null);
+      return new Packer(runtime, type, null, false);
     }
   }
 
@@ -56,8 +58,8 @@ public class Packer extends RubyObject {
     return this;
   }
 
-  public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, IRubyObject[] args) {
-    Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"), extRegistry);
+  public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, boolean hasSymbolExtType, IRubyObject[] args) {
+    Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"), extRegistry, hasSymbolExtType);
     packer.initialize(ctx, args);
     return packer;
   }
@@ -104,6 +106,11 @@ public class Packer extends RubyObject {
     RubyClass extClass = (RubyClass) klass;
 
     registry.put(extClass, (int) typeId, proc, arg, null, null);
+
+    if (extClass == runtime.getSymbol()) {
+      encoder.hasSymbolExtType = true;
+    }
+
     return runtime.getNil();
   }
 

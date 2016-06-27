@@ -24,11 +24,13 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 public class Factory extends RubyObject {
   private final Ruby runtime;
   private final ExtensionRegistry extensionRegistry;
+  private boolean hasSymbolExtType;
 
   public Factory(Ruby runtime, RubyClass type) {
     super(runtime, type);
     this.runtime = runtime;
     this.extensionRegistry = new ExtensionRegistry();
+    this.hasSymbolExtType = false;
   }
 
   static class FactoryAllocator implements ObjectAllocator {
@@ -48,7 +50,7 @@ public class Factory extends RubyObject {
 
   @JRubyMethod(name = "packer", optional = 1)
   public Packer packer(ThreadContext ctx, IRubyObject[] args) {
-    return Packer.newPacker(ctx, extensionRegistry(), args);
+    return Packer.newPacker(ctx, extensionRegistry(), hasSymbolExtType, args);
   }
 
   @JRubyMethod(name = "unpacker", optional = 1)
@@ -111,6 +113,10 @@ public class Factory extends RubyObject {
     }
 
     extensionRegistry.put(extClass, (int) typeId, packerProc, packerArg, unpackerProc, unpackerArg);
+
+    if (extClass == runtime.getSymbol()) {
+      hasSymbolExtType = true;
+    }
 
     return runtime.getNil();
   }
