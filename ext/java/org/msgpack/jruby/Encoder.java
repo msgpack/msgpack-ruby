@@ -38,15 +38,18 @@ public class Encoder {
   private final boolean compatibilityMode;
   private final ExtensionRegistry registry;
 
+  public boolean hasSymbolExtType;
+
   private ByteBuffer buffer;
 
-  public Encoder(Ruby runtime, boolean compatibilityMode, ExtensionRegistry registry) {
+  public Encoder(Ruby runtime, boolean compatibilityMode, ExtensionRegistry registry, boolean hasSymbolExtType) {
     this.runtime = runtime;
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
     this.compatibilityMode = compatibilityMode;
     this.registry = registry;
+    this.hasSymbolExtType = hasSymbolExtType;
   }
 
   public boolean isCompatibilityMode() {
@@ -112,7 +115,11 @@ public class Encoder {
     } else if (object instanceof RubyString) {
       appendString((RubyString) object);
     } else if (object instanceof RubySymbol) {
-      appendString(((RubySymbol) object).asString());
+      if (hasSymbolExtType) {
+        appendOther(object, destination);
+      } else {
+        appendString(((RubySymbol) object).asString());
+      }
     } else if (object instanceof RubyArray) {
       appendArray((RubyArray) object);
     } else if (object instanceof RubyHash) {

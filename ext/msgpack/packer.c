@@ -121,7 +121,7 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 #endif
 }
 
-static void _msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
+void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
 {
     int ext_type;
     VALUE proc = msgpack_packer_ext_registry_lookup(&pk->ext_registry,
@@ -169,7 +169,7 @@ void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v)
         msgpack_packer_write_float_value(pk, v);
         break;
     default:
-        _msgpack_packer_write_other_value(pk, v);
+        msgpack_packer_write_other_value(pk, v);
     }
 }
 
