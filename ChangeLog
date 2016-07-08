@@ -1,3 +1,8 @@
+2016-07-08 version 1.0.0:
+
+* Fix to be able to pack Symbol with ext types
+* Fix for MRI 2.4 (Integer unification)
+
 2016-05-10 version 0.7.6:
 
 * Fix bug to raise IndexOutOfBoundsException for Bignum value with small int in JRuby
