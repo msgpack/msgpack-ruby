@@ -8,6 +8,8 @@ import org.jruby.RubyString;
 import org.jruby.RubyNil;
 import org.jruby.RubyBoolean;
 import org.jruby.RubyHash;
+import org.jruby.RubySymbol;
+import org.jruby.javasupport.JavaEmbedUtils;
 import org.jruby.runtime.load.Library;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.runtime.ThreadContext;
@@ -52,7 +54,9 @@ public class MessagePackLibrary implements Library {
 
   private void installCoreExtensions(Ruby runtime) {
     RubyClass extensionValueClass = runtime.getModule("MessagePack").getClass("ExtensionValue");
-    installCoreExtensions(
+    RubyClass symbolClass = runtime.getSymbol();
+
+    installToMsgpackExtensions(
       runtime,
       runtime.getNilClass(),
       runtime.getTrueClass(),
@@ -63,12 +67,14 @@ public class MessagePackLibrary implements Library {
       runtime.getString(),
       runtime.getArray(),
       runtime.getHash(),
-      runtime.getSymbol(),
+      symbolClass,
       extensionValueClass
     );
+
+    symbolClass.defineAnnotatedMethods(SymbolExtensions.class);
   }
 
-  private void installCoreExtensions(Ruby runtime, RubyClass... classes) {
+  private void installToMsgpackExtensions(Ruby runtime, RubyClass... classes) {
     for (RubyClass cls : classes) {
       cls.addMethod("to_msgpack", createToMsgpackMethod(runtime, cls));
     }
@@ -97,6 +103,19 @@ public class MessagePackLibrary implements Library {
         return this;
       }
     };
+  }
+
+  private static class SymbolExtensions {
+    @JRubyMethod(name = "to_msgpack_ext", required = 0)
+    public static IRubyObject toMsgpackExt(ThreadContext ctx, IRubyObject self) {
+      RubySymbol s = (RubySymbol) JavaEmbedUtils.rubyToJava(ctx.getRuntime(), self, RubySymbol.class);
+      return s.to_s();
+    }
+
+    @JRubyMethod(meta = true, name = "from_msgpack_ext", required = 1)
+    public static IRubyObject fromMsgpackExt(ThreadContext ctx, IRubyObject self, IRubyObject data) {
+      return RubySymbol.newSymbol(ctx.getRuntime(), data);
+    }
   }
 
   @JRubyModule(name = "MessagePack")
