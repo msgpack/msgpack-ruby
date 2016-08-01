@@ -51,7 +51,7 @@ public class Unpacker extends RubyObject {
     }
   }
 
-  @JRubyMethod(name = "initialize", optional = 1, visibility = PRIVATE)
+  @JRubyMethod(name = "initialize", optional = 2, visibility = PRIVATE)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
     symbolizeKeys = false;
     allowUnknownExt = false;
@@ -66,7 +66,8 @@ public class Unpacker extends RubyObject {
         if (au != null) {
           allowUnknownExt = au.isTrue();
         }
-      } else if (!(args[0] instanceof RubyHash)) {
+      }
+      if (!(args[0] instanceof RubyHash)) {
         setStream(ctx, args[0]);
       }
     }
