@@ -564,6 +564,17 @@ describe MessagePack::Unpacker do
         objects.should == [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
       end
     end
+
+    context 'with a stream and symbolize_keys passed to the constructor' do
+      it 'yields each object in the stream, with symbolized keys' do
+        objects = []
+        unpacker = described_class.new(StringIO.new(buffer1 + buffer2 + buffer3), symbolize_keys: true)
+        unpacker.each do |obj|
+          objects << obj
+        end
+        objects.should == [{:foo => 'bar'}, {:hello => {:world => [1, 2, 3]}}, {:x => 'y'}]
+      end
+    end
   end
 
   describe '#feed_each' do
