@@ -85,8 +85,10 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
 
     VALUE superclass = args[1];
     if(superclass != Qnil) {
-        rb_hash_aset(pkrg->cache, ext_class, superclass);
-        return superclass;
+        VALUE superclass_type = rb_hash_lookup(pkrg->hash, superclass);
+        rb_hash_aset(pkrg->cache, ext_class, superclass_type);
+        *ext_type_result = FIX2INT(rb_ary_entry(superclass_type, 0));
+        return rb_ary_entry(superclass_type, 1);
     }
 
     return Qnil;

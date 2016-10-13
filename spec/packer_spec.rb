@@ -324,6 +324,32 @@ describe MessagePack::Packer do
       expect(two[:packer]).to eq(:to_msgpack_ext)
     end
 
+    context 'when it has no ext type but a super class has' do
+      before { stub_const('Value', Class.new) }
+      before do
+        Value.class_eval do
+          def to_msgpack_ext
+            'value_msgpacked'
+          end
+        end
+      end
+      before { packer.register_type(0x01, Value, :to_msgpack_ext) }
+
+      context "when it is a child class" do
+        before { stub_const('InheritedValue', Class.new(Value)) }
+        subject { packer.pack(InheritedValue.new).to_s }
+
+        it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+
+        context "when it is a grandchild class" do
+          before { stub_const('InheritedTwiceValue', Class.new(InheritedValue)) }
+          subject { packer.pack(InheritedTwiceValue.new).to_s }
+
+          it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+        end
+      end
+    end
+
     context 'when registering a type for symbols' do
       before { packer.register_type(0x00, ::Symbol, :to_msgpack_ext) }
 
