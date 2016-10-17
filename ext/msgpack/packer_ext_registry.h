@@ -26,10 +26,7 @@ typedef struct msgpack_packer_ext_registry_t msgpack_packer_ext_registry_t;
 
 struct msgpack_packer_ext_registry_t {
     VALUE hash;
-    /*
-     * lookup cache for subclasses of registered classes
-     */
-    VALUE cache;
+    VALUE cache; // lookup cache for ext types inherited from a super class
 };
 
 void msgpack_packer_ext_registry_static_init();
@@ -49,7 +46,7 @@ void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_class, int ext_type, VALUE proc, VALUE arg);
 
-static int msgpack_packer_ext_find_inherited(VALUE key, VALUE value, VALUE arg)
+static int msgpack_packer_ext_find_superclass(VALUE key, VALUE value, VALUE arg)
 {
     VALUE *args = (VALUE *) arg;
     if(key == Qundef) {
@@ -66,16 +63,16 @@ static int msgpack_packer_ext_find_inherited(VALUE key, VALUE value, VALUE arg)
 static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_class, int* ext_type_result)
 {
-    VALUE e = rb_hash_lookup(pkrg->hash, ext_class);
-    if(e != Qnil) {
-        *ext_type_result = FIX2INT(rb_ary_entry(e, 0));
-        return rb_ary_entry(e, 1);
+    VALUE type = rb_hash_lookup(pkrg->hash, ext_class);
+    if(type != Qnil) {
+        *ext_type_result = FIX2INT(rb_ary_entry(type, 0));
+        return rb_ary_entry(type, 1);
     }
 
-    VALUE c = rb_hash_lookup(pkrg->cache, ext_class);
-    if(c != Qnil) {
-        *ext_type_result = FIX2INT(rb_ary_entry(c, 0));
-        return rb_ary_entry(c, 1);
+    VALUE type_inht = rb_hash_lookup(pkrg->cache, ext_class);
+    if(type_inht != Qnil) {
+        *ext_type_result = FIX2INT(rb_ary_entry(type_inht, 0));
+        return rb_ary_entry(type_inht, 1);
     }
 
     /*
@@ -84,12 +81,14 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
     VALUE args[2];
     args[0] = ext_class;
     args[1] = Qnil;
-    rb_hash_foreach(pkrg->hash, msgpack_packer_ext_find_inherited, (VALUE) args);
+    rb_hash_foreach(pkrg->hash, msgpack_packer_ext_find_superclass, (VALUE) args);
 
-    VALUE hit = args[1];
-    if(hit != Qnil) {
-        rb_hash_aset(pkrg->cache, ext_class, hit);
-        return hit;
+    VALUE superclass = args[1];
+    if(superclass != Qnil) {
+        VALUE superclass_type = rb_hash_lookup(pkrg->hash, superclass);
+        rb_hash_aset(pkrg->cache, ext_class, superclass_type);
+        *ext_type_result = FIX2INT(rb_ary_entry(superclass_type, 0));
+        return rb_ary_entry(superclass_type, 1);
     }
 
     return Qnil;
