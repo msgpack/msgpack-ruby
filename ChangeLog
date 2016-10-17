@@ -1,3 +1,7 @@
+2016-10-17 version 1.0.2:
+
+* Bump version up to release newer version to fix broken gem release for JRuby
+
 2016-10-17 version 1.0.1:
 
 * Fix a bug to crash at packer when ext type is registered for superclass of packed object
