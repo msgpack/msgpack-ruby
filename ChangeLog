@@ -1,3 +1,8 @@
+2016-10-17 version 1.0.1:
+
+* Fix a bug to crash at packer when ext type is registered for superclass of packed object
+* Fix JRuby implementation about inconsistent API of Unpacker constructor
+
 2016-07-08 version 1.0.0:
 
 * Fix to be able to pack Symbol with ext types
