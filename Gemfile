@@ -1,4 +1,6 @@
 source 'https://rubygems.org/'
 
 gemspec
-gem "viiite"
+
+## enable this line to run benchmarks
+# gem "viiite"
