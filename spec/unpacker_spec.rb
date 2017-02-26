@@ -477,6 +477,24 @@ describe MessagePack::Unpacker do
       expect(two[:class]).to be_nil
       expect(two[:unpacker]).to be_instance_of(Proc)
     end
+
+    describe "registering an ext type for a module" do
+      subject { unpacker.feed("\xc7\x06\x00module").unpack }
+
+      let(:unpacker) { MessagePack::Unpacker.new }
+
+      before do
+        mod = Module.new do
+          def self.from_msgpack_ext(data)
+            "unpacked #{data}"
+          end
+        end
+        stub_const('Mod', mod)
+      end
+
+      before { unpacker.register_type(0x00, Mod, :from_msgpack_ext) }
+      it { is_expected.to eq "unpacked module" }
+    end
   end
 
   def flatten(struct, results = [])
