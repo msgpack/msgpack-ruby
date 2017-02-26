@@ -350,6 +350,24 @@ describe MessagePack::Packer do
       end
     end
 
+    context 'when it has no ext type but an included module has' do
+      subject { packer.pack(Value.new).to_s }
+
+      before do
+        mod = Module.new do
+          def to_msgpack_ext
+            'value_msgpacked'
+          end
+        end
+        stub_const('Mod', mod)
+      end
+      before { packer.register_type(0x01, Mod, :to_msgpack_ext) }
+
+      before { stub_const('Value', Class.new{ include Mod }) }
+
+      it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+    end
+
     context 'when registering a type for symbols' do
       before { packer.register_type(0x00, ::Symbol, :to_msgpack_ext) }
 

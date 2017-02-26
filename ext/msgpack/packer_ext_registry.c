@@ -64,7 +64,7 @@ __rb_hash_clear_clear_i(key, value, dummy)
 #endif
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_class, int ext_type, VALUE proc, VALUE arg)
+        VALUE ext_module, int ext_type, VALUE proc, VALUE arg)
 {
     VALUE e = rb_ary_new3(3, INT2FIX(ext_type), proc, arg);
     /* clear lookup cache not to miss added type */
@@ -75,5 +75,5 @@ VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
         rb_hash_foreach(pkrg->cache, __rb_hash_clear_clear_i, 0);
     }
 #endif
-    return rb_hash_aset(pkrg->hash, ext_class, e);
+    return rb_hash_aset(pkrg->hash, ext_module, e);
 }

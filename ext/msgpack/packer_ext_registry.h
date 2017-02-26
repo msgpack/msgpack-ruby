@@ -44,7 +44,7 @@ void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst);
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_class, int ext_type, VALUE proc, VALUE arg);
+        VALUE ext_module, int ext_type, VALUE proc, VALUE arg);
 
 static int msgpack_packer_ext_find_superclass(VALUE key, VALUE value, VALUE arg)
 {
@@ -61,32 +61,32 @@ static int msgpack_packer_ext_find_superclass(VALUE key, VALUE value, VALUE arg)
 
 
 static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_class, int* ext_type_result)
+        VALUE ext_module, int* ext_type_result)
 {
-    VALUE type = rb_hash_lookup(pkrg->hash, ext_class);
+    VALUE type = rb_hash_lookup(pkrg->hash, ext_module);
     if(type != Qnil) {
         *ext_type_result = FIX2INT(rb_ary_entry(type, 0));
         return rb_ary_entry(type, 1);
     }
 
-    VALUE type_inht = rb_hash_lookup(pkrg->cache, ext_class);
+    VALUE type_inht = rb_hash_lookup(pkrg->cache, ext_module);
     if(type_inht != Qnil) {
         *ext_type_result = FIX2INT(rb_ary_entry(type_inht, 0));
         return rb_ary_entry(type_inht, 1);
     }
 
     /*
-     * check all keys whether it is super class of ext_class, or not
+     * check all keys whether it is an ancestor of ext_module, or not
      */
     VALUE args[2];
-    args[0] = ext_class;
+    args[0] = ext_module;
     args[1] = Qnil;
     rb_hash_foreach(pkrg->hash, msgpack_packer_ext_find_superclass, (VALUE) args);
 
     VALUE superclass = args[1];
     if(superclass != Qnil) {
         VALUE superclass_type = rb_hash_lookup(pkrg->hash, superclass);
-        rb_hash_aset(pkrg->cache, ext_class, superclass_type);
+        rb_hash_aset(pkrg->cache, ext_module, superclass_type);
         *ext_type_result = FIX2INT(rb_ary_entry(superclass_type, 0));
         return rb_ary_entry(superclass_type, 1);
     }
