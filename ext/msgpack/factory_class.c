@@ -141,7 +141,7 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     FACTORY(self, fc);
 
     int ext_type;
-    VALUE ext_class;
+    VALUE ext_module;
     VALUE options;
     VALUE packer_arg, unpacker_arg;
     VALUE packer_proc, unpacker_proc;
@@ -170,9 +170,9 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
-    ext_class = argv[1];
-    if(rb_type(ext_class) != T_CLASS) {
-        rb_raise(rb_eArgError, "expected Class but found %s.", rb_obj_classname(ext_class));
+    ext_module = argv[1];
+    if(rb_type(ext_module) != T_MODULE && rb_type(ext_module) != T_CLASS) {
+        rb_raise(rb_eArgError, "expected Module/Class but found %s.", rb_obj_classname(ext_module));
     }
 
     packer_proc = Qnil;
@@ -184,19 +184,19 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
 
     if(unpacker_arg != Qnil) {
         if(rb_type(unpacker_arg) == T_SYMBOL || rb_type(unpacker_arg) == T_STRING) {
-            unpacker_proc = rb_obj_method(ext_class, unpacker_arg);
+            unpacker_proc = rb_obj_method(ext_module, unpacker_arg);
         } else {
             unpacker_proc = rb_funcall(unpacker_arg, rb_intern("method"), 1, ID2SYM(rb_intern("call")));
         }
     }
 
-    msgpack_packer_ext_registry_put(&fc->pkrg, ext_class, ext_type, packer_proc, packer_arg);
+    msgpack_packer_ext_registry_put(&fc->pkrg, ext_module, ext_type, packer_proc, packer_arg);
 
-    if (ext_class == rb_cSymbol) {
+    if (ext_module == rb_cSymbol) {
         fc->has_symbol_ext_type = true;
     }
 
-    msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_class, ext_type, unpacker_proc, unpacker_arg);
+    msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_module, ext_type, unpacker_proc, unpacker_arg);
 
     return Qnil;
 }
