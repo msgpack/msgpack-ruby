@@ -7,6 +7,7 @@ import java.util.Arrays;
 
 import org.jruby.Ruby;
 import org.jruby.RubyObject;
+import org.jruby.RubyModule;
 import org.jruby.RubyNil;
 import org.jruby.RubyBoolean;
 import org.jruby.RubyNumeric;
@@ -375,7 +376,15 @@ public class Encoder {
 
   private void appendOther(IRubyObject object, IRubyObject destination) {
     if (registry != null) {
-      IRubyObject[] pair = registry.lookupPackerByModule(object.getType());
+      RubyModule lookupClass;
+
+      if (object.getType() == runtime.getSymbol()) {
+        lookupClass = object.getType();
+      } else {
+        lookupClass = object.getSingletonClass();
+      }
+
+      IRubyObject[] pair = registry.lookupPackerByModule(lookupClass);
       if (pair != null) {
         RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
         int type = (int) ((RubyFixnum) pair[1]).getLongValue();

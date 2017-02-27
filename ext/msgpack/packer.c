@@ -124,8 +124,18 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
 {
     int ext_type;
-    VALUE proc = msgpack_packer_ext_registry_lookup(&pk->ext_registry,
-            rb_obj_class(v), &ext_type);
+
+    VALUE lookup_class;
+
+    if (SYMBOL_P(v)) { /* Symbols have no singleton class */
+      lookup_class = rb_obj_class(v);
+    } else {
+      lookup_class = rb_singleton_class(v);
+    }
+
+    VALUE proc = msgpack_packer_ext_registry_lookup(&pk->ext_registry, lookup_class,
+      &ext_type);
+
     if(proc != Qnil) {
         VALUE payload = rb_funcall(proc, s_call, 1, v);
         StringValue(payload);

@@ -225,10 +225,16 @@ describe MessagePack::Factory do
       let(:factory) { described_class.new }
       before { factory.register_type(0x01, Mod) }
 
-      describe "packing an object having the module as its ancestor" do
+      describe "packing an object whose class included the module" do
         subject { factory.packer.pack(value).to_s }
         before { stub_const('Value', Class.new{ include Mod }) }
         let(:value) { Value.new }
+        it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+      end
+
+      describe "packing an object which has been extended by the module" do
+        subject { factory.packer.pack(object).to_s }
+        let(:object) { Object.new.extend Mod }
         it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
       end
 

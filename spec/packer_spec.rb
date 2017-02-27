@@ -368,6 +368,24 @@ describe MessagePack::Packer do
       it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
     end
 
+    context 'when it has no ext type but it was extended by a module which has one' do
+      subject { packer.pack(object).to_s }
+      let(:object) { Object.new.extend Mod }
+
+      before do
+        mod = Module.new do
+          def to_msgpack_ext
+            'value_msgpacked'
+          end
+        end
+        stub_const('Mod', mod)
+      end
+      before { packer.register_type(0x01, Mod, :to_msgpack_ext) }
+
+
+      it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+    end
+
     context 'when registering a type for symbols' do
       before { packer.register_type(0x00, ::Symbol, :to_msgpack_ext) }
 
