@@ -375,7 +375,7 @@ public class Encoder {
 
   private void appendOther(IRubyObject object, IRubyObject destination) {
     if (registry != null) {
-      IRubyObject[] pair = registry.lookupPackerByClass(object.getType());
+      IRubyObject[] pair = registry.lookupPackerByModule(object.getType());
       if (pair != null) {
         RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
         int type = (int) ((RubyFixnum) pair[1]).getLongValue();

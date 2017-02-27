@@ -3,7 +3,7 @@ package org.msgpack.jruby;
 import org.jruby.Ruby;
 import org.jruby.RubyHash;
 import org.jruby.RubyArray;
-import org.jruby.RubyClass;
+import org.jruby.RubyModule;
 import org.jruby.RubyFixnum;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -12,19 +12,19 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class ExtensionRegistry {
-  private final Map<RubyClass, ExtensionEntry> extensionsByClass;
-  private final Map<RubyClass, ExtensionEntry> extensionsByAncestor;
+  private final Map<RubyModule, ExtensionEntry> extensionsByModule;
+  private final Map<RubyModule, ExtensionEntry> extensionsByAncestor;
   private final ExtensionEntry[] extensionsByTypeId;
 
   public ExtensionRegistry() {
-    this(new HashMap<RubyClass, ExtensionEntry>());
+    this(new HashMap<RubyModule, ExtensionEntry>());
   }
 
-  private ExtensionRegistry(Map<RubyClass, ExtensionEntry> extensionsByClass) {
-    this.extensionsByClass = new HashMap<RubyClass, ExtensionEntry>(extensionsByClass);
-    this.extensionsByAncestor = new HashMap<RubyClass, ExtensionEntry>();
+  private ExtensionRegistry(Map<RubyModule, ExtensionEntry> extensionsByModule) {
+    this.extensionsByModule = new HashMap<RubyModule, ExtensionEntry>(extensionsByModule);
+    this.extensionsByAncestor = new HashMap<RubyModule, ExtensionEntry>();
     this.extensionsByTypeId = new ExtensionEntry[256];
-    for (ExtensionEntry entry : extensionsByClass.values()) {
+    for (ExtensionEntry entry : extensionsByModule.values()) {
       if (entry.hasUnpacker()) {
         extensionsByTypeId[entry.getTypeId() + 128] = entry;
       }
@@ -32,15 +32,15 @@ public class ExtensionRegistry {
   }
 
   public ExtensionRegistry dup() {
-    return new ExtensionRegistry(extensionsByClass);
+    return new ExtensionRegistry(extensionsByModule);
   }
 
   public IRubyObject toInternalPackerRegistry(ThreadContext ctx) {
     RubyHash hash = RubyHash.newHash(ctx.getRuntime());
-    for (RubyClass extensionClass : extensionsByClass.keySet()) {
-      ExtensionEntry entry = extensionsByClass.get(extensionClass);
+    for (RubyModule extensionModule : extensionsByModule.keySet()) {
+      ExtensionEntry entry = extensionsByModule.get(extensionModule);
       if (entry.hasPacker()) {
-        hash.put(extensionClass, entry.toPackerTuple(ctx));
+        hash.put(extensionModule, entry.toPackerTuple(ctx));
       }
     }
     return hash;
@@ -58,9 +58,9 @@ public class ExtensionRegistry {
     return hash;
   }
 
-  public void put(RubyClass cls, int typeId, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
-    ExtensionEntry entry = new ExtensionEntry(cls, typeId, packerProc, packerArg, unpackerProc, unpackerArg);
-    extensionsByClass.put(cls, entry);
+  public void put(RubyModule mod, int typeId, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
+    ExtensionEntry entry = new ExtensionEntry(mod, typeId, packerProc, packerArg, unpackerProc, unpackerArg);
+    extensionsByModule.put(mod, entry);
     extensionsByTypeId[typeId + 128] = entry;
     extensionsByAncestor.clear();
   }
@@ -74,45 +74,45 @@ public class ExtensionRegistry {
     }
   }
 
-  public IRubyObject[] lookupPackerByClass(RubyClass cls) {
-    ExtensionEntry e = extensionsByClass.get(cls);
+  public IRubyObject[] lookupPackerByModule(RubyModule mod) {
+    ExtensionEntry e = extensionsByModule.get(mod);
     if (e == null) {
-      e = extensionsByAncestor.get(cls);
+      e = extensionsByAncestor.get(mod);
     }
     if (e == null) {
-      e = findEntryByClassOrAncestor(cls);
+      e = findEntryByModuleOrAncestor(mod);
       if (e != null) {
-        extensionsByAncestor.put(e.getExtensionClass(), e);
+        extensionsByAncestor.put(e.getExtensionModule(), e);
       }
     }
     if (e != null && e.hasPacker()) {
-      return e.toPackerProcTypeIdPair(cls.getRuntime().getCurrentContext());
+      return e.toPackerProcTypeIdPair(mod.getRuntime().getCurrentContext());
     } else {
       return null;
     }
   }
 
-  private ExtensionEntry findEntryByClassOrAncestor(final RubyClass cls) {
-    ThreadContext ctx = cls.getRuntime().getCurrentContext();
-    for (RubyClass extensionClass : extensionsByClass.keySet()) {
-      RubyArray ancestors = (RubyArray) cls.callMethod(ctx, "ancestors");
-      if (ancestors.callMethod(ctx, "include?", extensionClass).isTrue()) {
-        return extensionsByClass.get(extensionClass);
+  private ExtensionEntry findEntryByModuleOrAncestor(final RubyModule mod) {
+    ThreadContext ctx = mod.getRuntime().getCurrentContext();
+    for (RubyModule extensionModule : extensionsByModule.keySet()) {
+      RubyArray ancestors = (RubyArray) mod.callMethod(ctx, "ancestors");
+      if (ancestors.callMethod(ctx, "include?", extensionModule).isTrue()) {
+        return extensionsByModule.get(extensionModule);
       }
     }
     return null;
   }
 
   private static class ExtensionEntry {
-    private final RubyClass cls;
+    private final RubyModule mod;
     private final int typeId;
     private final IRubyObject packerProc;
     private final IRubyObject packerArg;
     private final IRubyObject unpackerProc;
     private final IRubyObject unpackerArg;
 
-    public ExtensionEntry(RubyClass cls, int typeId, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
-      this.cls = cls;
+    public ExtensionEntry(RubyModule mod, int typeId, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
+      this.mod = mod;
       this.typeId = typeId;
       this.packerProc = packerProc;
       this.packerArg = packerArg;
@@ -120,8 +120,8 @@ public class ExtensionRegistry {
       this.unpackerArg = unpackerArg;
     }
 
-    public RubyClass getExtensionClass() {
-      return cls;
+    public RubyModule getExtensionModule() {
+      return mod;
     }
 
     public int getTypeId() {
@@ -149,7 +149,7 @@ public class ExtensionRegistry {
     }
 
     public RubyArray toUnpackerTuple(ThreadContext ctx) {
-      return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {cls, unpackerProc, unpackerArg});
+      return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {mod, unpackerProc, unpackerArg});
     }
 
     public IRubyObject[] toPackerProcTypeIdPair(ThreadContext ctx) {

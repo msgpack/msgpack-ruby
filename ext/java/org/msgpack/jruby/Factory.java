@@ -2,6 +2,7 @@ package org.msgpack.jruby;
 
 
 import org.jruby.Ruby;
+import org.jruby.RubyModule;
 import org.jruby.RubyClass;
 import org.jruby.RubyObject;
 import org.jruby.RubyArray;
@@ -70,7 +71,7 @@ public class Factory extends RubyObject {
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args) {
     Ruby runtime = ctx.getRuntime();
     IRubyObject type = args[0];
-    IRubyObject klass = args[1];
+    IRubyObject mod = args[1];
 
     IRubyObject packerArg;
     IRubyObject unpackerArg;
@@ -94,10 +95,10 @@ public class Factory extends RubyObject {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
     }
 
-    if (!(klass instanceof RubyClass)) {
-      throw runtime.newArgumentError(String.format("expected Class but found %s.", klass.getType().getName()));
+    if (!(mod instanceof RubyModule)) {
+      throw runtime.newArgumentError(String.format("expected Module/Class but found %s.", mod.getType().getName()));
     }
-    RubyClass extClass = (RubyClass) klass;
+    RubyModule extModule = (RubyModule) mod;
 
     IRubyObject packerProc = runtime.getNil();
     IRubyObject unpackerProc = runtime.getNil();
@@ -106,15 +107,15 @@ public class Factory extends RubyObject {
     }
     if (unpackerArg != null) {
       if (unpackerArg instanceof RubyString || unpackerArg instanceof RubySymbol) {
-        unpackerProc = extClass.method(unpackerArg.callMethod(ctx, "to_sym"));
+        unpackerProc = extModule.method(unpackerArg.callMethod(ctx, "to_sym"));
       } else {
         unpackerProc = unpackerArg.callMethod(ctx, "method", runtime.newSymbol("call"));
       }
     }
 
-    extensionRegistry.put(extClass, (int) typeId, packerProc, packerArg, unpackerProc, unpackerArg);
+    extensionRegistry.put(extModule, (int) typeId, packerProc, packerArg, unpackerProc, unpackerArg);
 
-    if (extClass == runtime.getSymbol()) {
+    if (extModule == runtime.getSymbol()) {
       hasSymbolExtType = true;
     }
 
