@@ -125,6 +125,26 @@ static VALUE Symbol_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
+
+static VALUE Symbol_to_msgpack_ext(VALUE v)
+{
+#ifdef HAVE_RB_SYM2STR
+    /* rb_sym2str is added since MRI 2.2.0 */
+    return rb_sym2str(v);
+#else
+    VALUE str = rb_id2str(SYM2ID(v));
+    if (!str) {
+       rb_raise(rb_eRuntimeError, "could not convert a symbol to string");
+    }
+    return str;
+#endif
+}
+
+static VALUE Symbol_from_msgpack_ext(VALUE dummy, VALUE v)
+{
+    return rb_str_intern(v);
+}
+
 static VALUE ExtensionValue_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -154,6 +174,7 @@ void MessagePack_core_ext_module_init()
     rb_define_method(rb_cArray,  "to_msgpack", Array_to_msgpack, -1);
     rb_define_method(rb_cHash,   "to_msgpack", Hash_to_msgpack, -1);
     rb_define_method(rb_cSymbol, "to_msgpack", Symbol_to_msgpack, -1);
+    rb_define_method(rb_cSymbol, "to_msgpack_ext", Symbol_to_msgpack_ext, 0);
+    rb_define_singleton_method(rb_cSymbol, "from_msgpack_ext", Symbol_from_msgpack_ext, 1);
     rb_define_method(cMessagePack_ExtensionValue, "to_msgpack", ExtensionValue_to_msgpack, -1);
 }
-
