@@ -77,6 +77,13 @@
 * Fixed a bug in the handling of options given to MessagePack.unpack in JRuby.
 
 
+2015-05-XX version 0.5.12:
+
+* Added support for JRuby 9K.
+* Added a benchmarking suite.
+* Fixed a bug in the handling of options given to MessagePack.unpack in JRuby.
+
+
 2015-02-04 version 0.5.11:
 
 * Fixed Encoding::CompatibilityError error when serializing a long string
