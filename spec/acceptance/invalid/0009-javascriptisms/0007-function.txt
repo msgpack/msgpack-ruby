@@ -1,0 +1,7 @@
+{
+  "prototype": {
+    "init": function() {
+      alert("invalid");
+    }
+  }
+}

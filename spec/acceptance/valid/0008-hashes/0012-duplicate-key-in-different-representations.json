@@ -1,0 +1,4 @@
+{
+  "a\\b" : "backslash-backslash",
+  "a\u005Cb" : "U+005C"
+}

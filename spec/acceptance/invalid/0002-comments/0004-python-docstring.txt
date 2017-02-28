@@ -1,0 +1,3 @@
+["""
+comments are invalid in JSON
+"""]

@@ -1,0 +1,46 @@
+{
+    "$schema"    : "http://json-schema.org/draft-04/hyper-schema#",
+    "id"         : "https://github.com/shyouhei/RFC7159/blob/master/spec/acceptance/valid/0009-complicated/0001-jsonschema.json",
+    "title"      : "Sample blog post",
+    "description": "This is a JSON Schema, see http://json-schema.org",
+    "type"       : "object",
+    "definitions": {
+	"uint64_t": {
+	    "type"   : "integer",
+	    "mininum": 0,
+	    "maximum": 18446744073709551615
+	},
+        "post": {
+            "type"      : "object",
+            "properties": {
+                "userId": { "$ref": "#/definitions/uint64_t" },
+		"title" : {
+		    "type"     : "string",
+		    "minLength": 1,
+		    "maxLength": 64
+		},
+		"body": {
+		    "type"     : "string",
+		    "minLength": 1,
+		    "maxLength": 32768
+		},
+		"tags": {
+		    "type" : "object"
+		},
+                "createdAt"  : { "$ref": "#/definitions/uint64_t" },
+                "updatedAt"  : { "$ref": "#/definitions/uint64_t" },
+                "publishedAt": {
+		    "oneOf": [
+			{ "$ref": "#/definitions/uint64_t" },
+			{ "enum": [ null ] }
+		    ]
+		}
+            },
+            "additionalProperties": false,
+            "required": [ "userId", "title", "body" ]
+        }
+    },
+    "oneOf": [
+        { "$ref": "#/definitions/post" }
+    ]
+}
