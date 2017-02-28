@@ -249,7 +249,7 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
     PACKER(self, pk);
 
     int ext_type;
-    VALUE ext_class;
+    VALUE ext_module;
     VALUE proc;
     VALUE arg;
 
@@ -279,14 +279,14 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
-    ext_class = argv[1];
-    if(rb_type(ext_class) != T_CLASS) {
-        rb_raise(rb_eArgError, "expected Class but found %s.", rb_obj_classname(ext_class));
+    ext_module = argv[1];
+    if(rb_type(ext_module) != T_MODULE && rb_type(ext_module) != T_CLASS) {
+        rb_raise(rb_eArgError, "expected Module/Class but found %s.", rb_obj_classname(ext_module));
     }
 
-    msgpack_packer_ext_registry_put(&pk->ext_registry, ext_class, ext_type, proc, arg);
+    msgpack_packer_ext_registry_put(&pk->ext_registry, ext_module, ext_type, proc, arg);
 
-    if (ext_class == rb_cSymbol) {
+    if (ext_module == rb_cSymbol) {
         pk->has_symbol_ext_type = true;
     }
 

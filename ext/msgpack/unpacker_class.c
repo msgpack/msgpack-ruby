@@ -348,7 +348,7 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
     int ext_type;
     VALUE proc;
     VALUE arg;
-    VALUE ext_class;
+    VALUE ext_module;
 
     switch (argc) {
     case 1:
@@ -361,13 +361,13 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
         proc = rb_block_proc();
 #endif
         arg = proc;
-        ext_class = Qnil;
+        ext_module = Qnil;
         break;
     case 3:
         /* register_type(0x7f, Time, :from_msgpack_ext) */
-        ext_class = argv[1];
+        ext_module = argv[1];
         arg = argv[2];
-        proc = rb_obj_method(ext_class, arg);
+        proc = rb_obj_method(ext_module, arg);
         break;
     default:
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 1 or 3)", argc);
@@ -378,7 +378,7 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
-    msgpack_unpacker_ext_registry_put(&uk->ext_registry, ext_class, ext_type, proc, arg);
+    msgpack_unpacker_ext_registry_put(&uk->ext_registry, ext_module, ext_type, proc, arg);
 
     return Qnil;
 }

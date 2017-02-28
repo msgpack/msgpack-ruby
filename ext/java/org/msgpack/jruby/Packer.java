@@ -2,6 +2,7 @@ package org.msgpack.jruby;
 
 
 import org.jruby.Ruby;
+import org.jruby.RubyModule;
 import org.jruby.RubyClass;
 import org.jruby.RubyObject;
 import org.jruby.RubyArray;
@@ -78,7 +79,7 @@ public class Packer extends RubyObject {
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
     Ruby runtime = ctx.getRuntime();
     IRubyObject type = args[0];
-    IRubyObject klass = args[1];
+    IRubyObject mod = args[1];
 
     IRubyObject arg;
     IRubyObject proc;
@@ -100,14 +101,14 @@ public class Packer extends RubyObject {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
     }
 
-    if (!(klass instanceof RubyClass)) {
-      throw runtime.newArgumentError(String.format("expected Class but found %s.", klass.getType().getName()));
+    if (!(mod instanceof RubyModule)) {
+      throw runtime.newArgumentError(String.format("expected Module/Class but found %s.", mod.getType().getName()));
     }
-    RubyClass extClass = (RubyClass) klass;
+    RubyModule extModule = (RubyModule) mod;
 
-    registry.put(extClass, (int) typeId, proc, arg, null, null);
+    registry.put(extModule, (int) typeId, proc, arg, null, null);
 
-    if (extClass == runtime.getSymbol()) {
+    if (extModule == runtime.getSymbol()) {
       encoder.hasSymbolExtType = true;
     }
 

@@ -3,6 +3,7 @@ package org.msgpack.jruby;
 import java.util.Arrays;
 
 import org.jruby.Ruby;
+import org.jruby.RubyModule;
 import org.jruby.RubyClass;
 import org.jruby.RubyString;
 import org.jruby.RubyObject;
@@ -100,7 +101,7 @@ public class Unpacker extends RubyObject {
     Ruby runtime = ctx.getRuntime();
     IRubyObject type = args[0];
 
-    RubyClass extClass;
+    RubyModule extModule;
     IRubyObject arg;
     IRubyObject proc;
     if (args.length == 1) {
@@ -111,11 +112,11 @@ public class Unpacker extends RubyObject {
       if (proc == null)
         System.err.println("proc from Block is null");
       arg = proc;
-      extClass = null;
+      extModule = null;
     } else if (args.length == 3) {
-      extClass = (RubyClass) args[1];
+      extModule = (RubyModule) args[1];
       arg = args[2];
-      proc = extClass.method(arg);
+      proc = extModule.method(arg);
     } else {
       throw runtime.newArgumentError(String.format("wrong number of arguments (%d for 1 or 3)", 2 + args.length));
     }
@@ -125,7 +126,7 @@ public class Unpacker extends RubyObject {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
     }
 
-    registry.put(extClass, (int) typeId, null, null, proc, arg);
+    registry.put(extModule, (int) typeId, null, null, proc, arg);
     return runtime.getNil();
   }
 

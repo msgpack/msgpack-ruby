@@ -208,6 +208,41 @@ describe MessagePack::Factory do
       my.a.should == 1
       my.b.should == 2
     end
+
+    describe "registering an ext type for a module" do
+      before do
+        mod = Module.new do
+          def self.from_msgpack_ext(data)
+            "unpacked #{data}"
+          end
+
+          def to_msgpack_ext
+            'value_msgpacked'
+          end
+        end
+        stub_const('Mod', mod)
+      end
+      let(:factory) { described_class.new }
+      before { factory.register_type(0x01, Mod) }
+
+      describe "packing an object whose class included the module" do
+        subject { factory.packer.pack(value).to_s }
+        before { stub_const('Value', Class.new{ include Mod }) }
+        let(:value) { Value.new }
+        it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+      end
+
+      describe "packing an object which has been extended by the module" do
+        subject { factory.packer.pack(object).to_s }
+        let(:object) { Object.new.extend Mod }
+        it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+      end
+
+      describe "unpacking with the module" do
+        subject { factory.unpacker.feed("\xC7\x06\x01module").unpack }
+        it { is_expected.to eq "unpacked module" }
+      end
+    end
   end
 
   describe 'the special treatment of symbols with ext type' do
