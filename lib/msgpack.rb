@@ -1,4 +1,5 @@
 require "msgpack/version"
+require "msgpack/active_support/time_with_zone"
 
 if defined?(RUBY_ENGINE) && RUBY_ENGINE == "jruby" # This is same with `/java/ =~ RUBY_VERSION`
   require "java"
