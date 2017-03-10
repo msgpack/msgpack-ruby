@@ -44,27 +44,6 @@ static inline VALUE delegete_to_pack(int argc, VALUE* argv, VALUE self)
     msgpack_packer_t *pk; \
     Data_Get_Struct(packer, msgpack_packer_t, pk);
 
-static VALUE NilClass_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_nil(pk);
-    return packer;
-}
-
-static VALUE TrueClass_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_true(pk);
-    return packer;
-}
-
-static VALUE FalseClass_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_false(pk);
-    return packer;
-}
-
 static VALUE Integer_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -140,9 +119,6 @@ static VALUE ExtensionValue_to_msgpack(int argc, VALUE* argv, VALUE self)
 
 void MessagePack_core_ext_module_init()
 {
-    rb_define_method(rb_cNilClass,   "to_msgpack", NilClass_to_msgpack, -1);
-    rb_define_method(rb_cTrueClass,  "to_msgpack", TrueClass_to_msgpack, -1);
-    rb_define_method(rb_cFalseClass, "to_msgpack", FalseClass_to_msgpack, -1);
 #ifdef RUBY_INTEGER_UNIFICATION
     rb_define_method(rb_cInteger, "to_msgpack", Integer_to_msgpack, -1);
 #else

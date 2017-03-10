@@ -135,6 +135,20 @@ static VALUE Packer_write_nil(VALUE self)
     return self;
 }
 
+static VALUE Packer_write_true(VALUE self)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_true(pk);
+    return self;
+}
+
+static VALUE Packer_write_false(VALUE self)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_false(pk);
+    return self;
+}
+
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
@@ -329,6 +343,8 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write", Packer_write, 1);
     rb_define_alias(cMessagePack_Packer, "pack", "write");
     rb_define_method(cMessagePack_Packer, "write_nil", Packer_write_nil, 0);
+    rb_define_method(cMessagePack_Packer, "write_true", Packer_write_true, 0);
+    rb_define_method(cMessagePack_Packer, "write_false", Packer_write_false, 0);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
     rb_define_method(cMessagePack_Packer, "write_ext", Packer_write_ext, 2);
@@ -355,4 +371,3 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
 
     rb_define_method(cMessagePack_Packer, "full_pack", Packer_full_pack, 0);
 }
-

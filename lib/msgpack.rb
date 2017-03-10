@@ -45,3 +45,47 @@ module MessagePack
   module_function :pack
   module_function :dump
 end
+
+module MessagePack
+  module CoreExt
+    def to_msgpack(*args)
+      if args.length != 1 || !args.first.is_a?(MessagePack::Packer)
+        case args.length
+        when 0 then MessagePack.pack(self)
+        when 1 then MessagePack.pack(self, args.first)
+        else
+          raise
+        end
+      else
+        _to_msgpack args.first
+      end
+    end
+  end
+end
+
+class NilClass
+  include MessagePack::CoreExt
+
+  def _to_msgpack(packer)
+    packer.write_nil
+    packer
+  end
+end
+
+class TrueClass
+  include MessagePack::CoreExt
+
+  def _to_msgpack(packer)
+    packer.write_true
+    packer
+  end
+end
+
+class FalseClass
+  include MessagePack::CoreExt
+
+  def _to_msgpack(packer)
+    packer.write_false
+    packer
+  end
+end
