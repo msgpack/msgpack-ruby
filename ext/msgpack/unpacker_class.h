@@ -28,7 +28,5 @@ VALUE MessagePack_Unpacker_alloc(VALUE klass);
 
 VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self);
 
-VALUE MessagePack_unpack(int argc, VALUE* argv);
-
 #endif
 

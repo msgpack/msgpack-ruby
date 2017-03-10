@@ -16,3 +16,13 @@ require "msgpack/packer"
 require "msgpack/unpacker"
 require "msgpack/factory"
 require "msgpack/symbol"
+
+module MessagePack
+  def load(src, param = nil)
+    _load src, param, DefaultFactory
+  end
+  alias :unpack :load
+
+  module_function :load
+  module_function :unpack
+end

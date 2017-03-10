@@ -383,22 +383,20 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
-VALUE MessagePack_unpack(int argc, VALUE* argv)
+static VALUE MessagePack_unpack(VALUE src, VALUE param, VALUE factory)
 {
-    VALUE src;
     VALUE self;
-
-    if (argc < 0 || argc > 2) {
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..2)", argc);
-    }
-    src = argv[0];
+    VALUE argv[2];
 
     if(rb_type(src) == T_STRING) {
-        self = MessagePack_Factory_unpacker(argc - 1, argv + 1, cMessagePack_DefaultFactory);
+	argv[0] = param;
+        self = MessagePack_Factory_unpacker(1, argv, factory);
         UNPACKER(self, uk);
         msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
     } else {
-        self = MessagePack_Factory_unpacker(argc, argv, cMessagePack_DefaultFactory);
+	argv[0] = src;
+	argv[1] = param;
+        self = MessagePack_Factory_unpacker(2, argv, factory);
     }
     UNPACKER(self, uk);
 
@@ -425,16 +423,10 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
     return msgpack_unpacker_get_last_object(uk);
 }
 
-static VALUE MessagePack_load_module_method(int argc, VALUE* argv, VALUE mod)
+static VALUE MessagePack_load_module_method(VALUE mod, VALUE src, VALUE param, VALUE factory)
 {
     UNUSED(mod);
-    return MessagePack_unpack(argc, argv);
-}
-
-static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
-{
-    UNUSED(mod);
-    return MessagePack_unpack(argc, argv);
+    return MessagePack_unpack(src, param, factory);
 }
 
 VALUE MessagePack_Unpacker_new(int argc, VALUE* argv)
@@ -492,7 +484,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     //msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);
 
     /* MessagePack.unpack(x) */
-    rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);
-    rb_define_module_function(mMessagePack, "unpack", MessagePack_unpack_module_method, -1);
+    rb_define_module_function(mMessagePack, "_load", MessagePack_load_module_method, 3);
 }
 
