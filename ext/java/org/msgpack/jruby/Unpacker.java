@@ -68,7 +68,7 @@ public class Unpacker extends RubyObject {
           allowUnknownExt = au.isTrue();
         }
       }
-      if (!(args[0] instanceof RubyHash)) {
+      if (args[0] != ctx.getRuntime().getNil() && !(args[0] instanceof RubyHash)) {
         setStream(ctx, args[0]);
       }
     }
@@ -179,6 +179,11 @@ public class Unpacker extends RubyObject {
       decoder.feed(byteList.unsafeBytes(), byteList.begin(), byteList.length());
     }
     return this;
+  }
+
+  @JRubyMethod(name = "full_unpack")
+  public IRubyObject fullUnpack(ThreadContext ctx) {
+    return decoder.next();
   }
 
   @JRubyMethod(name = "feed_each", required = 1)

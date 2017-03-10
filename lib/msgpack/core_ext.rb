@@ -1,33 +1,4 @@
 module MessagePack
-  def load(src, param = nil)
-    unpacker = nil
-
-    if src.is_a? String
-      unpacker = DefaultFactory.unpacker param
-      unpacker.feed src
-    else
-      unpacker = DefaultFactory.unpacker src, param
-    end
-
-    unpacker.full_unpack
-  end
-  alias :unpack :load
-
-  module_function :load
-  module_function :unpack
-
-  def pack(v, *rest)
-    packer = DefaultFactory.packer(*rest)
-    packer.write v
-    packer.full_pack
-  end
-  alias :dump :pack
-
-  module_function :pack
-  module_function :dump
-end
-
-module MessagePack
   module CoreExt
     def to_msgpack(packer_or_io = nil)
       if packer_or_io
@@ -145,8 +116,6 @@ else
 end
 
 module MessagePack
-  DefaultFactory = MessagePack::Factory.new
-
   class ExtensionValue
     include CoreExt
 

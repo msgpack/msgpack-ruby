@@ -115,10 +115,20 @@ public class Packer extends RubyObject {
     return runtime.getNil();
   }
 
-  @JRubyMethod(name = "write", alias = { "pack" })
+  @JRubyMethod(name = "write", alias = { "pack", "write_array", "write_hash", "write_int", "write_float", "write_string", "write_symbol", "write_extension" })
   public IRubyObject write(ThreadContext ctx, IRubyObject obj) {
     buffer.write(ctx, encoder.encode(obj, this));
     return this;
+  }
+
+  @JRubyMethod(name = "write_true")
+  public IRubyObject writeTrue(ThreadContext ctx) {
+    return write(ctx, ctx.getRuntime().getTrue());
+  }
+
+  @JRubyMethod(name = "write_false")
+  public IRubyObject writeFalse(ThreadContext ctx) {
+    return write(ctx, ctx.getRuntime().getFalse());
   }
 
   @JRubyMethod(name = "write_nil")
@@ -149,6 +159,11 @@ public class Packer extends RubyObject {
     int s = (int) size.convertToInteger().getLongValue();
     buffer.write(ctx, encoder.encodeMapHeader(s));
     return this;
+  }
+
+  @JRubyMethod(name = "full_pack")
+  public IRubyObject fullPack(ThreadContext ctx) {
+    return toS(ctx);
   }
 
   @JRubyMethod(name = "to_s", alias = { "to_str" })
