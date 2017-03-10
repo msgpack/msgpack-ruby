@@ -178,6 +178,17 @@ describe MessagePack::Packer do
     Array.new.to_msgpack.class.should == String
   end
 
+  it 'to_msgpack with packer equals to_msgpack' do
+    nil.to_msgpack(MessagePack::Packer.new).to_str.should == nil.to_msgpack
+    true.to_msgpack(MessagePack::Packer.new).to_str.should == true.to_msgpack
+    false.to_msgpack(MessagePack::Packer.new).to_str.should == false.to_msgpack
+    1.to_msgpack(MessagePack::Packer.new).to_str.should == 1.to_msgpack
+    1.0.to_msgpack(MessagePack::Packer.new).to_str.should == 1.0.to_msgpack
+    "".to_msgpack(MessagePack::Packer.new).to_str.should == "".to_msgpack
+    Hash.new.to_msgpack(MessagePack::Packer.new).to_str.should == Hash.new.to_msgpack
+    Array.new.to_msgpack(MessagePack::Packer.new).to_str.should == Array.new.to_msgpack
+  end
+
   class CustomPack01
     def to_msgpack(pk=nil)
       return MessagePack.pack(self, pk) unless pk.class == MessagePack::Packer
