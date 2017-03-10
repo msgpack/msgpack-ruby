@@ -216,6 +216,7 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
 
     cMessagePack_DefaultFactory = Factory_alloc(cMessagePack_Factory);
+    rb_gc_register_address(&cMessagePack_DefaultFactory);
     Factory_initialize(0, NULL, cMessagePack_DefaultFactory);
     rb_define_const(mMessagePack, "DefaultFactory", cMessagePack_DefaultFactory);
 }
