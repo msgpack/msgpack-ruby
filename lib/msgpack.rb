@@ -28,10 +28,20 @@ module MessagePack
       unpacker = DefaultFactory.unpacker src, param
     end
 
-    _load unpacker
+    unpacker.full_unpack
   end
   alias :unpack :load
 
   module_function :load
   module_function :unpack
+
+  def pack(v, *rest)
+    packer = DefaultFactory.packer(*rest)
+    packer.write v
+    packer.full_pack
+  end
+  alias :dump :pack
+
+  module_function :pack
+  module_function :dump
 end

@@ -383,7 +383,7 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
-static VALUE MessagePack_unpack(VALUE self)
+static VALUE Unpacker_full_unpack(VALUE self)
 {
     UNPACKER(self, uk);
 
@@ -401,19 +401,7 @@ static VALUE MessagePack_unpack(VALUE self)
         rb_raise(eMalformedFormatError, "%zd extra bytes after the deserialized object", extra);
     }
 
-#ifdef RB_GC_GUARD
-    /* This prevents compilers from optimizing out the `self` variable
-     * from stack. Otherwise GC free()s it. */
-    RB_GC_GUARD(self);
-#endif
-
     return msgpack_unpacker_get_last_object(uk);
-}
-
-static VALUE MessagePack_load_module_method(VALUE mod, VALUE self)
-{
-    UNUSED(mod);
-    return MessagePack_unpack(self);
 }
 
 VALUE MessagePack_Unpacker_new(int argc, VALUE* argv)
@@ -470,7 +458,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     /* prefer reference than copying */
     //msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);
 
-    /* MessagePack.unpack(x) */
-    rb_define_module_function(mMessagePack, "_load", MessagePack_load_module_method, 1);
+    rb_define_method(cMessagePack_Unpacker, "full_unpack", Unpacker_full_unpack, 0);
 }
 

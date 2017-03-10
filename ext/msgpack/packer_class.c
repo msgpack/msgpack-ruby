@@ -293,21 +293,12 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
-VALUE MessagePack_pack(int argc, VALUE* argv)
+VALUE Packer_full_pack(VALUE self)
 {
-    VALUE v;
+    VALUE retval;
 
-    if (argc < 0 || argc > 3) {
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..3)", argc);
-    }
-    v = argv[0];
-
-    VALUE self = MessagePack_Factory_packer(argc - 1, argv + 1, cMessagePack_DefaultFactory);
     PACKER(self, pk);
 
-    msgpack_packer_write_value(pk, v);
-
-    VALUE retval;
     if(msgpack_buffer_has_io(PACKER_BUFFER_(pk))) {
         msgpack_buffer_flush(PACKER_BUFFER_(pk));
         retval = Qnil;
@@ -317,25 +308,7 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 
     msgpack_buffer_clear(PACKER_BUFFER_(pk)); /* to free rmem before GC */
 
-#ifdef RB_GC_GUARD
-    /* This prevents compilers from optimizing out the `self` variable
-     * from stack. Otherwise GC free()s it. */
-    RB_GC_GUARD(self);
-#endif
-
     return retval;
-}
-
-static VALUE MessagePack_dump_module_method(int argc, VALUE* argv, VALUE mod)
-{
-    UNUSED(mod);
-    return MessagePack_pack(argc, argv);
-}
-
-static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
-{
-    UNUSED(mod);
-    return MessagePack_pack(argc, argv);
 }
 
 void MessagePack_Packer_module_init(VALUE mMessagePack)
@@ -380,8 +353,6 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     //rb_gc_register_address(&s_packer_value);
     //Data_Get_Struct(s_packer_value, msgpack_packer_t, s_packer);
 
-    /* MessagePack.pack(x) */
-    rb_define_module_function(mMessagePack, "pack", MessagePack_pack_module_method, -1);
-    rb_define_module_function(mMessagePack, "dump", MessagePack_dump_module_method, -1);
+    rb_define_method(cMessagePack_Packer, "full_pack", Packer_full_pack, 0);
 }
 
