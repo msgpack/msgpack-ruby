@@ -134,3 +134,32 @@ class Symbol
     packer
   end
 end
+
+if 1.class.name == "Integer"
+  class Integer
+    include MessagePack::CoreExt
+
+    def _to_msgpack(packer)
+      packer.write_int self
+      packer
+    end
+  end
+else
+  class Fixnum
+    include MessagePack::CoreExt
+
+    def _to_msgpack(packer)
+      packer.write_int self
+      packer
+    end
+  end
+
+  class Bignum
+    include MessagePack::CoreExt
+
+    def _to_msgpack(packer)
+      packer.write_int self
+      packer
+    end
+  end
+end

@@ -184,6 +184,18 @@ static VALUE Packer_write_symbol(VALUE self, VALUE obj)
     return self;
 }
 
+static VALUE Packer_write_int(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+
+    if (FIXNUM_P(obj)) {
+        msgpack_packer_write_fixnum_value(pk, obj);
+    } else {
+        msgpack_packer_write_bignum_value(pk, obj);
+    }
+    return self;
+}
+
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
@@ -385,6 +397,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_array", Packer_write_array, 1);
     rb_define_method(cMessagePack_Packer, "write_hash", Packer_write_hash, 1);
     rb_define_method(cMessagePack_Packer, "write_symbol", Packer_write_symbol, 1);
+    rb_define_method(cMessagePack_Packer, "write_int", Packer_write_int, 1);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
     rb_define_method(cMessagePack_Packer, "write_ext", Packer_write_ext, 2);

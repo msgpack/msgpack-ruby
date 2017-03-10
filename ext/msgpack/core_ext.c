@@ -44,31 +44,6 @@ static inline VALUE delegete_to_pack(int argc, VALUE* argv, VALUE self)
     msgpack_packer_t *pk; \
     Data_Get_Struct(packer, msgpack_packer_t, pk);
 
-static VALUE Integer_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    if (FIXNUM_P(self)) {
-        msgpack_packer_write_fixnum_value(pk, self);
-    } else {
-        msgpack_packer_write_bignum_value(pk, self);
-    }
-    return packer;
-}
-
-static VALUE Fixnum_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_fixnum_value(pk, self);
-    return packer;
-}
-
-static VALUE Bignum_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_bignum_value(pk, self);
-    return packer;
-}
-
 static VALUE ExtensionValue_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -84,12 +59,6 @@ static VALUE ExtensionValue_to_msgpack(int argc, VALUE* argv, VALUE self)
 
 void MessagePack_core_ext_module_init()
 {
-#ifdef RUBY_INTEGER_UNIFICATION
-    rb_define_method(rb_cInteger, "to_msgpack", Integer_to_msgpack, -1);
-#else
-    rb_define_method(rb_cFixnum, "to_msgpack", Fixnum_to_msgpack, -1);
-    rb_define_method(rb_cBignum, "to_msgpack", Bignum_to_msgpack, -1);
-#endif
     rb_define_method(cMessagePack_ExtensionValue, "to_msgpack", ExtensionValue_to_msgpack, -1);
 }
 
