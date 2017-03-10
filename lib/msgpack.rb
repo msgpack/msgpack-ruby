@@ -89,3 +89,48 @@ class FalseClass
     packer
   end
 end
+
+class Float
+  include MessagePack::CoreExt
+
+  def _to_msgpack(packer)
+    packer.write_float self
+    packer
+  end
+end
+
+class String
+  include MessagePack::CoreExt
+
+  def _to_msgpack(packer)
+    packer.write_string self
+    packer
+  end
+end
+
+class Array
+  include MessagePack::CoreExt
+
+  def _to_msgpack(packer)
+    packer.write_array self
+    packer
+  end
+end
+
+class Hash
+  include MessagePack::CoreExt
+
+  def _to_msgpack(packer)
+    packer.write_hash self
+    packer
+  end
+end
+
+class Symbol
+  include MessagePack::CoreExt
+
+  def _to_msgpack(packer)
+    packer.write_symbol self
+    packer
+  end
+end

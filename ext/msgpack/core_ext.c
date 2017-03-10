@@ -69,41 +69,6 @@ static VALUE Bignum_to_msgpack(int argc, VALUE* argv, VALUE self)
     return packer;
 }
 
-static VALUE Float_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_float_value(pk, self);
-    return packer;
-}
-
-static VALUE String_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_string_value(pk, self);
-    return packer;
-}
-
-static VALUE Array_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_array_value(pk, self);
-    return packer;
-}
-
-static VALUE Hash_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_hash_value(pk, self);
-    return packer;
-}
-
-static VALUE Symbol_to_msgpack(int argc, VALUE* argv, VALUE self)
-{
-    ENSURE_PACKER(argc, argv, packer, pk);
-    msgpack_packer_write_symbol_value(pk, self);
-    return packer;
-}
-
 static VALUE ExtensionValue_to_msgpack(int argc, VALUE* argv, VALUE self)
 {
     ENSURE_PACKER(argc, argv, packer, pk);
@@ -125,11 +90,6 @@ void MessagePack_core_ext_module_init()
     rb_define_method(rb_cFixnum, "to_msgpack", Fixnum_to_msgpack, -1);
     rb_define_method(rb_cBignum, "to_msgpack", Bignum_to_msgpack, -1);
 #endif
-    rb_define_method(rb_cFloat,  "to_msgpack", Float_to_msgpack, -1);
-    rb_define_method(rb_cString, "to_msgpack", String_to_msgpack, -1);
-    rb_define_method(rb_cArray,  "to_msgpack", Array_to_msgpack, -1);
-    rb_define_method(rb_cHash,   "to_msgpack", Hash_to_msgpack, -1);
-    rb_define_method(rb_cSymbol, "to_msgpack", Symbol_to_msgpack, -1);
     rb_define_method(cMessagePack_ExtensionValue, "to_msgpack", ExtensionValue_to_msgpack, -1);
 }
 

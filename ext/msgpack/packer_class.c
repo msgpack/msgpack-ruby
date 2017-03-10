@@ -149,6 +149,41 @@ static VALUE Packer_write_false(VALUE self)
     return self;
 }
 
+static VALUE Packer_write_float(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_float_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_string(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_string_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_array(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_array_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_hash(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_hash_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_symbol(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_symbol_value(pk, obj);
+    return self;
+}
+
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
@@ -345,6 +380,11 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_nil", Packer_write_nil, 0);
     rb_define_method(cMessagePack_Packer, "write_true", Packer_write_true, 0);
     rb_define_method(cMessagePack_Packer, "write_false", Packer_write_false, 0);
+    rb_define_method(cMessagePack_Packer, "write_float", Packer_write_float, 1);
+    rb_define_method(cMessagePack_Packer, "write_string", Packer_write_string, 1);
+    rb_define_method(cMessagePack_Packer, "write_array", Packer_write_array, 1);
+    rb_define_method(cMessagePack_Packer, "write_hash", Packer_write_hash, 1);
+    rb_define_method(cMessagePack_Packer, "write_symbol", Packer_write_symbol, 1);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
     rb_define_method(cMessagePack_Packer, "write_ext", Packer_write_ext, 2);
