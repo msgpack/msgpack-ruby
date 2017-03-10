@@ -383,21 +383,8 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
-static VALUE MessagePack_unpack(VALUE src, VALUE param, VALUE factory)
+static VALUE MessagePack_unpack(VALUE self)
 {
-    VALUE self;
-    VALUE argv[2];
-
-    if(rb_type(src) == T_STRING) {
-	argv[0] = param;
-        self = MessagePack_Factory_unpacker(1, argv, factory);
-        UNPACKER(self, uk);
-        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
-    } else {
-	argv[0] = src;
-	argv[1] = param;
-        self = MessagePack_Factory_unpacker(2, argv, factory);
-    }
     UNPACKER(self, uk);
 
     /* prefer reference than copying; see MessagePack_Unpacker_module_init */
@@ -423,10 +410,10 @@ static VALUE MessagePack_unpack(VALUE src, VALUE param, VALUE factory)
     return msgpack_unpacker_get_last_object(uk);
 }
 
-static VALUE MessagePack_load_module_method(VALUE mod, VALUE src, VALUE param, VALUE factory)
+static VALUE MessagePack_load_module_method(VALUE mod, VALUE self)
 {
     UNUSED(mod);
-    return MessagePack_unpack(src, param, factory);
+    return MessagePack_unpack(self);
 }
 
 VALUE MessagePack_Unpacker_new(int argc, VALUE* argv)
@@ -484,6 +471,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     //msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);
 
     /* MessagePack.unpack(x) */
-    rb_define_module_function(mMessagePack, "_load", MessagePack_load_module_method, 3);
+    rb_define_module_function(mMessagePack, "_load", MessagePack_load_module_method, 1);
 }
 

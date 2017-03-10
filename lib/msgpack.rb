@@ -19,7 +19,16 @@ require "msgpack/symbol"
 
 module MessagePack
   def load(src, param = nil)
-    _load src, param, DefaultFactory
+    unpacker = nil
+
+    if src.is_a? String
+      unpacker = DefaultFactory.unpacker param
+      unpacker.feed src
+    else
+      unpacker = DefaultFactory.unpacker src, param
+    end
+
+    _load unpacker
   end
   alias :unpack :load
 
