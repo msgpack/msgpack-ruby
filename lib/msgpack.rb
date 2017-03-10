@@ -163,3 +163,14 @@ else
     end
   end
 end
+
+module MessagePack
+  class ExtensionValue
+    include CoreExt
+
+    def _to_msgpack(packer)
+      packer.write_extension self
+      packer
+    end
+  end
+end

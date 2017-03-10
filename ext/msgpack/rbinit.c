@@ -21,7 +21,6 @@
 #include "unpacker_class.h"
 #include "factory_class.h"
 #include "extension_value_class.h"
-#include "core_ext.h"
 
 VALUE mMessagePack;
 
@@ -39,6 +38,5 @@ void Init_msgpack(void)
     MessagePack_Unpacker_module_init(mMessagePack);
     MessagePack_Factory_module_init(mMessagePack);
     MessagePack_ExtensionValue_module_init(mMessagePack);
-    MessagePack_core_ext_module_init();
 }
 

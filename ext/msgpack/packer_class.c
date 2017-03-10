@@ -196,6 +196,21 @@ static VALUE Packer_write_int(VALUE self, VALUE obj)
     return self;
 }
 
+static VALUE Packer_write_extension(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+
+    int ext_type = FIX2INT(RSTRUCT_GET(obj, 0));
+    if(ext_type < -128 || ext_type > 127) {
+        rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
+    }
+    VALUE payload = RSTRUCT_GET(obj, 1);
+    StringValue(payload);
+    msgpack_packer_write_ext(pk, ext_type, payload);
+
+    return self;
+}
+
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
@@ -398,6 +413,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_hash", Packer_write_hash, 1);
     rb_define_method(cMessagePack_Packer, "write_symbol", Packer_write_symbol, 1);
     rb_define_method(cMessagePack_Packer, "write_int", Packer_write_int, 1);
+    rb_define_method(cMessagePack_Packer, "write_extension", Packer_write_extension, 1);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
     rb_define_method(cMessagePack_Packer, "write_ext", Packer_write_ext, 2);
