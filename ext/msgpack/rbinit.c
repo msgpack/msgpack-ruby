@@ -22,16 +22,9 @@
 #include "factory_class.h"
 #include "extension_value_class.h"
 
-VALUE mMessagePack;
-
-VALUE MessagePack_pack(int argc, VALUE* argv)
-{
-    return rb_funcallv(mMessagePack, rb_intern("pack"), argc, argv);
-}
-
 void Init_msgpack(void)
 {
-    mMessagePack = rb_define_module("MessagePack");
+    VALUE mMessagePack = rb_define_module("MessagePack");
 
     MessagePack_Buffer_module_init(mMessagePack);
     MessagePack_Packer_module_init(mMessagePack);
