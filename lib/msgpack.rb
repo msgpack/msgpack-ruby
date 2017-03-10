@@ -165,6 +165,8 @@ else
 end
 
 module MessagePack
+  DefaultFactory = MessagePack::Factory.new
+
   class ExtensionValue
     include CoreExt
 

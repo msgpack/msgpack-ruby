@@ -24,7 +24,6 @@
 #include "unpacker_class.h"
 
 VALUE cMessagePack_Factory;
-VALUE cMessagePack_DefaultFactory;
 
 struct msgpack_factory_t;
 typedef struct msgpack_factory_t msgpack_factory_t;
@@ -214,8 +213,4 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
 
     rb_define_private_method(cMessagePack_Factory, "registered_types_internal", Factory_registered_types_internal, 0);
     rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
-
-    cMessagePack_DefaultFactory = Factory_alloc(cMessagePack_Factory);
-    Factory_initialize(0, NULL, cMessagePack_DefaultFactory);
-    rb_define_const(mMessagePack, "DefaultFactory", cMessagePack_DefaultFactory);
 }
