@@ -29,16 +29,15 @@ end
 
 module MessagePack
   module CoreExt
-    def to_msgpack(*args)
-      if args.length != 1 || !args.first.is_a?(MessagePack::Packer)
-        case args.length
-        when 0 then MessagePack.pack(self)
-        when 1 then MessagePack.pack(self, args.first)
+    def to_msgpack(packer_or_io = nil)
+      if packer_or_io
+        if packer_or_io.is_a?(MessagePack::Packer)
+          _to_msgpack packer_or_io
         else
-          raise
+          MessagePack.pack(self, packer_or_io)
         end
       else
-        _to_msgpack args.first
+        MessagePack.pack(self)
       end
     end
   end
