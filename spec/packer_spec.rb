@@ -189,6 +189,17 @@ describe MessagePack::Packer do
     Array.new.to_msgpack(MessagePack::Packer.new).to_str.should == Array.new.to_msgpack
   end
 
+  it 'raises type error on wrong type' do
+    packer = MessagePack::Packer.new
+    expect { packer.write_float "hello" }.to raise_error(TypeError)
+    expect { packer.write_string 1 }.to raise_error(TypeError)
+    expect { packer.write_array "hello" }.to raise_error(TypeError)
+    expect { packer.write_hash "hello" }.to raise_error(TypeError)
+    expect { packer.write_symbol "hello" }.to raise_error(TypeError)
+    expect { packer.write_int "hello" }.to raise_error(TypeError)
+    expect { packer.write_extension "hello" }.to raise_error(TypeError)
+  end
+
   class CustomPack01
     def to_msgpack(pk=nil)
       return MessagePack.pack(self, pk) unless pk.class == MessagePack::Packer

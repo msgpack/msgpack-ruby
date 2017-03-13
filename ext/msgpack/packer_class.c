@@ -159,6 +159,7 @@ static VALUE Packer_write_float(VALUE self, VALUE obj)
 static VALUE Packer_write_string(VALUE self, VALUE obj)
 {
     PACKER(self, pk);
+    Check_Type(obj, T_STRING);
     msgpack_packer_write_string_value(pk, obj);
     return self;
 }
@@ -166,6 +167,7 @@ static VALUE Packer_write_string(VALUE self, VALUE obj)
 static VALUE Packer_write_array(VALUE self, VALUE obj)
 {
     PACKER(self, pk);
+    Check_Type(obj, T_ARRAY);
     msgpack_packer_write_array_value(pk, obj);
     return self;
 }
@@ -173,6 +175,7 @@ static VALUE Packer_write_array(VALUE self, VALUE obj)
 static VALUE Packer_write_hash(VALUE self, VALUE obj)
 {
     PACKER(self, pk);
+    Check_Type(obj, T_HASH);
     msgpack_packer_write_hash_value(pk, obj);
     return self;
 }
@@ -180,6 +183,7 @@ static VALUE Packer_write_hash(VALUE self, VALUE obj)
 static VALUE Packer_write_symbol(VALUE self, VALUE obj)
 {
     PACKER(self, pk);
+    Check_Type(obj, T_SYMBOL);
     msgpack_packer_write_symbol_value(pk, obj);
     return self;
 }
@@ -191,6 +195,7 @@ static VALUE Packer_write_int(VALUE self, VALUE obj)
     if (FIXNUM_P(obj)) {
         msgpack_packer_write_fixnum_value(pk, obj);
     } else {
+        Check_Type(obj, T_BIGNUM);
         msgpack_packer_write_bignum_value(pk, obj);
     }
     return self;
@@ -199,6 +204,7 @@ static VALUE Packer_write_int(VALUE self, VALUE obj)
 static VALUE Packer_write_extension(VALUE self, VALUE obj)
 {
     PACKER(self, pk);
+    Check_Type(obj, T_STRUCT);
 
     int ext_type = FIX2INT(RSTRUCT_GET(obj, 0));
     if(ext_type < -128 || ext_type > 127) {
