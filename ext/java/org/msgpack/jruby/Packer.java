@@ -18,6 +18,8 @@ import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.util.ByteList;
+import org.jruby.util.TypeConverter;
+import org.msgpack.jruby.ExtensionValue;
 
 import static org.jruby.runtime.Visibility.PRIVATE;
 
@@ -115,10 +117,56 @@ public class Packer extends RubyObject {
     return runtime.getNil();
   }
 
-  @JRubyMethod(name = "write", alias = { "pack", "write_array", "write_hash", "write_int", "write_float", "write_string", "write_symbol", "write_extension" })
+  @JRubyMethod(name = "write", alias = { "pack" })
   public IRubyObject write(ThreadContext ctx, IRubyObject obj) {
     buffer.write(ctx, encoder.encode(obj, this));
     return this;
+  }
+
+  @JRubyMethod(name = "write_float")
+  public IRubyObject writeFloat(ThreadContext ctx, IRubyObject obj) {
+    TypeConverter.checkType(ctx, obj, ctx.getRuntime().getFloat());
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_array")
+  public IRubyObject writeArray(ThreadContext ctx, IRubyObject obj) {
+    TypeConverter.checkType(ctx, obj, ctx.getRuntime().getArray());
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_string")
+  public IRubyObject writeString(ThreadContext ctx, IRubyObject obj) {
+    TypeConverter.checkType(ctx, obj, ctx.getRuntime().getString());
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_hash")
+  public IRubyObject writeHash(ThreadContext ctx, IRubyObject obj) {
+    TypeConverter.checkType(ctx, obj, ctx.getRuntime().getHash());
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_symbol")
+  public IRubyObject writeSymbol(ThreadContext ctx, IRubyObject obj) {
+    TypeConverter.checkType(ctx, obj, ctx.getRuntime().getSymbol());
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_int")
+  public IRubyObject writeInt(ThreadContext ctx, IRubyObject obj) {
+    if (!(obj instanceof RubyFixnum)) {
+      TypeConverter.checkType(ctx, obj, ctx.getRuntime().getBignum());
+    }
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_extension")
+  public IRubyObject writeExtension(ThreadContext ctx, IRubyObject obj) {
+    if (!(obj instanceof ExtensionValue)) {
+      throw ctx.runtime.newTypeError("Expected extension");
+    }
+    return write(ctx, obj);
   }
 
   @JRubyMethod(name = "write_true")
