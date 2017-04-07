@@ -350,6 +350,34 @@ describe MessagePack::Packer do
       end
     end
 
+    context 'when it and its super class has an ext type' do
+      before { stub_const('Value', Class.new) }
+      before do
+        Value.class_eval do
+          def to_msgpack_ext
+            'value_msgpacked'
+          end
+        end
+      end
+      before { packer.register_type(0x01, Value, :to_msgpack_ext) }
+
+      context "when it is a child class" do
+        before { stub_const('InheritedValue', Class.new(Value)) }
+        before do
+          InheritedValue.class_eval do
+            def to_msgpack_ext
+              'inherited_value_msgpacked'
+            end
+          end
+        end
+
+        before { packer.register_type(0x02, InheritedValue, :to_msgpack_ext) }
+        subject { packer.pack(InheritedValue.new).to_s }
+
+        it { is_expected.to eq "\xC7\x19\x02inherited_value_msgpacked" }
+      end
+    end
+
     context 'when it has no ext type but an included module has' do
       subject { packer.pack(Value.new).to_s }
 
