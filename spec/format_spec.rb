@@ -72,10 +72,10 @@ describe MessagePack do
   end
 
   it "double" do
-    check 9, 1.0
+    check 5, 1.0                # fits in a float
     check 9, 0.1
     check 9, -0.1
-    check 9, -1.0
+    check 5, -1.0               # fits in a float
   end
 
   it "fixraw" do
@@ -222,7 +222,7 @@ describe MessagePack do
   end
 
   it "1.0" do
-    match 1.0, "\xcb\x3f\xf0\x00\x00\x00\x00\x00\x00"
+    match 1.0, "\xca\x3f\x80\x00\x00"
   end
 
   it "[]" do

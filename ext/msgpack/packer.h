@@ -270,6 +270,17 @@ static inline void msgpack_packer_write_float(msgpack_packer_t* pk, float v)
 
 static inline void msgpack_packer_write_double(msgpack_packer_t* pk, double v)
 {
+  float fv = v;
+  if (fv == v) {
+    msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 5);
+    union {
+        float f;
+        uint32_t u32;
+        char mem[4];
+    } castbuf = { fv };
+    castbuf.u32 = _msgpack_be_float(castbuf.u32);
+    msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xca, castbuf.mem, 4);
+  } else {
     msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 9);
     union {
         double d;
@@ -278,6 +289,7 @@ static inline void msgpack_packer_write_double(msgpack_packer_t* pk, double v)
     } castbuf = { v };
     castbuf.u64 = _msgpack_be_double(castbuf.u64);
     msgpack_buffer_write_byte_and_data(PACKER_BUFFER_(pk), 0xcb, castbuf.mem, 8);
+  }
 }
 
 static inline void msgpack_packer_write_raw_header(msgpack_packer_t* pk, unsigned int n)
