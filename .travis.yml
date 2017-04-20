@@ -13,7 +13,7 @@ rvm:
 
 os:
   - linux
-  - osx
+#  - osx
 
 sudo: false
 
@@ -45,6 +45,13 @@ env:
   global:
     - secure: "bWJR/alkUhovaZVn4EySamXsWsvAngLh/krZf3Jha6gYWGaf6HXFwB5gM9EaBIQsZKGECL9AKN0v8rX6tqSnXMKX2FgA9ClYvO0F60JviY6Ur6OT2rG0pm+WZZ1jzyGmf+5gVqiWF1/lM/tokdnj0Nw68OQwlNdc+DqxGXormO8="  # travis encrypt COVERITY_SCAN_TOKEN=...
 
-after_success:
-  - ci/travis_submit_coverity_scan.sh
+addons:
+  coverity_scan:
+    project:
+      name: "msgpack/msgpack-ruby"
+      description: "Build submitted via Travis CI"
+    notification_email: frsyuki@gmail.com
+    build_command_prepend: "bundle exec rake compile; cd tmp/x86_64-linux-*/msgpack/*/; make clean"
+    build_command: "cd tmp/x86_64-linux-*/msgpack/*/; make clean; make"
+    branch_pattern: coverity_scan
 
