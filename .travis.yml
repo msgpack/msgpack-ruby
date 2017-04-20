@@ -55,7 +55,7 @@ addons:
       name: "msgpack/msgpack-ruby"
       description: "Build submitted via Travis CI"
     notification_email: frsyuki@gmail.com
-    build_command_prepend: "bundle exec rake compile && cd tmp/x86_64-linux*/msgpack/*/ && make clean"
-    build_command: "bash -c 'cd tmp/x86_64-linux*/msgpack/*/ && make clean && make'"
+    build_command_prepend: "bundle exec rake compile && make -C tmp/x86_64-linux*/msgpack/*/ clean"
+    build_command: "make -C tmp/x86_64-linux*/msgpack/*/"
     branch_pattern: coverity_scan
 
