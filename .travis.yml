@@ -1,15 +1,15 @@
 language: ruby
 
 rvm:
-  - 2.0.0
-  - 2.1.6
-  - 2.2.2
-  - 2.3.0
+  #  - 2.0.0
+  #  - 2.1.6
+  #  - 2.2.2
+  #  - 2.3.0
   - 2.4.0
-  - ruby-head
-  - jruby-19mode
-  - jruby-9.1.5.0
-  - jruby-head
+  #  - ruby-head
+  #  - jruby-19mode
+  #  - jruby-9.1.5.0
+  #  - jruby-head
 
 os:
   - linux
@@ -20,6 +20,7 @@ sudo: false
 branches:
   only:
     - master
+    - coverity_scan
 
 gemfile:
   - Gemfile
@@ -39,3 +40,11 @@ matrix:
     - rvm: jruby-head
     - rvm: jruby-19mode
       os: osx
+
+env:
+  global:
+    - secure: "bWJR/alkUhovaZVn4EySamXsWsvAngLh/krZf3Jha6gYWGaf6HXFwB5gM9EaBIQsZKGECL9AKN0v8rX6tqSnXMKX2FgA9ClYvO0F60JviY6Ur6OT2rG0pm+WZZ1jzyGmf+5gVqiWF1/lM/tokdnj0Nw68OQwlNdc+DqxGXormO8="  # travis encrypt COVERITY_SCAN_TOKEN=...
+
+after_success:
+  - ci/travis_submit_coverity_scan.sh
+
