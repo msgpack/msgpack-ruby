@@ -6,7 +6,7 @@ if defined?(Encoding)
   Encoding.default_external = 'ASCII-8BIT'
 end
 
-describe Packer do
+RSpec.describe Packer do
   let :packer do
     Packer.new
   end
@@ -22,8 +22,8 @@ describe Packer do
   it 'buffer' do
     o1 = packer.buffer.object_id
     packer.buffer << 'frsyuki'
-    packer.buffer.to_s.should == 'frsyuki'
-    packer.buffer.object_id.should == o1
+    expect(packer.buffer.to_s).to eq 'frsyuki'
+    expect(packer.buffer.object_id).to eq o1
   end
 end
 

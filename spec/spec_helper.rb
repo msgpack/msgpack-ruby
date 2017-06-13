@@ -21,14 +21,15 @@ end
 
 if java?
   RSpec.configure do |c|
-    c.treat_symbols_as_metadata_keys_with_true_values = true
-    c.filter_run_excluding :encodings => !(defined? Encoding)
+    c.filter_run_excluding encodings: !(defined? Encoding)
+    c.expose_dsl_globally = false
   end
 else
   RSpec.configure do |config|
     config.expect_with :rspec do |c|
       c.syntax = [:should, :expect]
     end
+    config.expose_dsl_globally = false
   end
   Packer = MessagePack::Packer
   Unpacker = MessagePack::Unpacker

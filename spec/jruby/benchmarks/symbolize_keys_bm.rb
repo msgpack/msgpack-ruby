@@ -7,7 +7,7 @@ require 'msgpack'
 
 
 iterations = 10_000
-data = MessagePack.pack(:hello => 'world', :nested => ['structure', {:value => 42}])
+data = MessagePack.pack(hello: 'world', nested: ['structure', {value: 42}])
 
 Viiite.bm do |b|
   b.report(:strings) do
@@ -17,7 +17,7 @@ Viiite.bm do |b|
   end
 
   b.report(:symbols) do
-    options = {:symbolize_keys => true}
+    options = {symbolize_keys: true}
     iterations.times do
       MessagePack.unpack(data, options)
     end

@@ -1,7 +1,7 @@
 # encoding: ascii-8bit
 require 'spec_helper'
 
-describe MessagePack do
+RSpec.describe MessagePack do
   it "nil" do
     check 1, nil
   end
@@ -100,49 +100,49 @@ describe MessagePack do
 
   it "str encoding is UTF_8" do
     v = pack_unpack('string'.force_encoding(Encoding::UTF_8))
-    v.encoding.should == Encoding::UTF_8
+    expect(v.encoding).to eq Encoding::UTF_8
   end
 
   it "str transcode US-ASCII" do
     v = pack_unpack('string'.force_encoding(Encoding::US_ASCII))
-    v.encoding.should == Encoding::UTF_8
+    expect(v.encoding).to eq Encoding::UTF_8
   end
 
   it "str transcode UTF-16" do
     v = pack_unpack('string'.encode(Encoding::UTF_16))
-    v.encoding.should == Encoding::UTF_8
-    v.should == 'string'
+    expect(v.encoding).to eq Encoding::UTF_8
+    expect(v).to eq 'string'
   end
 
   it "str transcode EUC-JP 7bit safe" do
     v = pack_unpack('string'.force_encoding(Encoding::EUC_JP))
-    v.encoding.should == Encoding::UTF_8
-    v.should == 'string'
+    expect(v.encoding).to eq Encoding::UTF_8
+    expect(v).to eq 'string'
   end
 
   it "str transcode EUC-JP 7bit unsafe" do
     v = pack_unpack([0xa4, 0xa2].pack('C*').force_encoding(Encoding::EUC_JP))
-    v.encoding.should == Encoding::UTF_8
-    v.should == "\xE3\x81\x82".force_encoding('UTF-8')
+    expect(v.encoding).to eq Encoding::UTF_8
+    expect(v).to eq "\xE3\x81\x82".force_encoding('UTF-8')
   end
 
   it "symbol to str" do
     v = pack_unpack(:a)
-    v.should == "a".force_encoding('UTF-8')
+    expect(v).to eq "a".force_encoding('UTF-8')
   end
 
   it "symbol to str with encoding" do
     a = "\xE3\x81\x82".force_encoding('UTF-8')
     v = pack_unpack(a.encode('Shift_JIS').to_sym)
-    v.encoding.should == Encoding::UTF_8
-    v.should == a
+    expect(v.encoding).to eq Encoding::UTF_8
+    expect(v).to eq a
   end
 
   it "symbol to bin" do
     a = "\xE3\x81\x82".force_encoding('ASCII-8BIT')
     v = pack_unpack(a.to_sym)
-    v.encoding.should == Encoding::ASCII_8BIT
-    v.should == a
+    expect(v.encoding).to eq Encoding::ASCII_8BIT
+    expect(v).to eq a
   end
 
   it "bin 8" do
@@ -158,7 +158,7 @@ describe MessagePack do
   end
 
   it "bin encoding is ASCII_8BIT" do
-    pack_unpack('string'.force_encoding(Encoding::ASCII_8BIT)).encoding.should == Encoding::ASCII_8BIT
+    expect(pack_unpack('string'.force_encoding(Encoding::ASCII_8BIT)).encoding).to eq Encoding::ASCII_8BIT
   end
 
   it "fixarray" do
@@ -273,8 +273,8 @@ describe MessagePack do
 
   def check(len, obj)
     raw = obj.to_msgpack.to_s
-    raw.length.should == len
-    MessagePack.unpack(raw).should == obj
+    expect(raw.length).to eq len
+    expect(MessagePack.unpack(raw)).to eq obj
   end
 
   def check_raw(overhead, num)
@@ -291,7 +291,7 @@ describe MessagePack do
 
   def match(obj, buf)
     raw = obj.to_msgpack.to_s
-    raw.should == buf
+    expect(raw).to eq buf
   end
 
   def pack_unpack(obj)
