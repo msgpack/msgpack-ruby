@@ -135,6 +135,88 @@ static VALUE Packer_write_nil(VALUE self)
     return self;
 }
 
+static VALUE Packer_write_true(VALUE self)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_true(pk);
+    return self;
+}
+
+static VALUE Packer_write_false(VALUE self)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_false(pk);
+    return self;
+}
+
+static VALUE Packer_write_float(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_float_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_string(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    Check_Type(obj, T_STRING);
+    msgpack_packer_write_string_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_array(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    Check_Type(obj, T_ARRAY);
+    msgpack_packer_write_array_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_hash(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    Check_Type(obj, T_HASH);
+    msgpack_packer_write_hash_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_symbol(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    Check_Type(obj, T_SYMBOL);
+    msgpack_packer_write_symbol_value(pk, obj);
+    return self;
+}
+
+static VALUE Packer_write_int(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+
+    if (FIXNUM_P(obj)) {
+        msgpack_packer_write_fixnum_value(pk, obj);
+    } else {
+        Check_Type(obj, T_BIGNUM);
+        msgpack_packer_write_bignum_value(pk, obj);
+    }
+    return self;
+}
+
+static VALUE Packer_write_extension(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    Check_Type(obj, T_STRUCT);
+
+    int ext_type = FIX2INT(RSTRUCT_GET(obj, 0));
+    if(ext_type < -128 || ext_type > 127) {
+        rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
+    }
+    VALUE payload = RSTRUCT_GET(obj, 1);
+    StringValue(payload);
+    msgpack_packer_write_ext(pk, ext_type, payload);
+
+    return self;
+}
+
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
@@ -293,21 +375,12 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
-VALUE MessagePack_pack(int argc, VALUE* argv)
+VALUE Packer_full_pack(VALUE self)
 {
-    VALUE v;
+    VALUE retval;
 
-    if (argc < 0 || argc > 3) {
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..3)", argc);
-    }
-    v = argv[0];
-
-    VALUE self = MessagePack_Factory_packer(argc - 1, argv + 1, cMessagePack_DefaultFactory);
     PACKER(self, pk);
 
-    msgpack_packer_write_value(pk, v);
-
-    VALUE retval;
     if(msgpack_buffer_has_io(PACKER_BUFFER_(pk))) {
         msgpack_buffer_flush(PACKER_BUFFER_(pk));
         retval = Qnil;
@@ -317,25 +390,7 @@ VALUE MessagePack_pack(int argc, VALUE* argv)
 
     msgpack_buffer_clear(PACKER_BUFFER_(pk)); /* to free rmem before GC */
 
-#ifdef RB_GC_GUARD
-    /* This prevents compilers from optimizing out the `self` variable
-     * from stack. Otherwise GC free()s it. */
-    RB_GC_GUARD(self);
-#endif
-
     return retval;
-}
-
-static VALUE MessagePack_dump_module_method(int argc, VALUE* argv, VALUE mod)
-{
-    UNUSED(mod);
-    return MessagePack_pack(argc, argv);
-}
-
-static VALUE MessagePack_pack_module_method(int argc, VALUE* argv, VALUE mod)
-{
-    UNUSED(mod);
-    return MessagePack_pack(argc, argv);
 }
 
 void MessagePack_Packer_module_init(VALUE mMessagePack)
@@ -356,6 +411,15 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write", Packer_write, 1);
     rb_define_alias(cMessagePack_Packer, "pack", "write");
     rb_define_method(cMessagePack_Packer, "write_nil", Packer_write_nil, 0);
+    rb_define_method(cMessagePack_Packer, "write_true", Packer_write_true, 0);
+    rb_define_method(cMessagePack_Packer, "write_false", Packer_write_false, 0);
+    rb_define_method(cMessagePack_Packer, "write_float", Packer_write_float, 1);
+    rb_define_method(cMessagePack_Packer, "write_string", Packer_write_string, 1);
+    rb_define_method(cMessagePack_Packer, "write_array", Packer_write_array, 1);
+    rb_define_method(cMessagePack_Packer, "write_hash", Packer_write_hash, 1);
+    rb_define_method(cMessagePack_Packer, "write_symbol", Packer_write_symbol, 1);
+    rb_define_method(cMessagePack_Packer, "write_int", Packer_write_int, 1);
+    rb_define_method(cMessagePack_Packer, "write_extension", Packer_write_extension, 1);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
     rb_define_method(cMessagePack_Packer, "write_ext", Packer_write_ext, 2);
@@ -380,8 +444,5 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     //rb_gc_register_address(&s_packer_value);
     //Data_Get_Struct(s_packer_value, msgpack_packer_t, s_packer);
 
-    /* MessagePack.pack(x) */
-    rb_define_module_function(mMessagePack, "pack", MessagePack_pack_module_method, -1);
-    rb_define_module_function(mMessagePack, "dump", MessagePack_dump_module_method, -1);
+    rb_define_method(cMessagePack_Packer, "full_pack", Packer_full_pack, 0);
 }
-

@@ -18,6 +18,8 @@ import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.util.ByteList;
+import org.jruby.util.TypeConverter;
+import org.msgpack.jruby.ExtensionValue;
 
 import static org.jruby.runtime.Visibility.PRIVATE;
 
@@ -121,6 +123,62 @@ public class Packer extends RubyObject {
     return this;
   }
 
+  @JRubyMethod(name = "write_float")
+  public IRubyObject writeFloat(ThreadContext ctx, IRubyObject obj) {
+    checkType(ctx, obj, org.jruby.RubyFloat.class);
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_array")
+  public IRubyObject writeArray(ThreadContext ctx, IRubyObject obj) {
+    checkType(ctx, obj, org.jruby.RubyArray.class);
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_string")
+  public IRubyObject writeString(ThreadContext ctx, IRubyObject obj) {
+    checkType(ctx, obj, org.jruby.RubyString.class);
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_hash")
+  public IRubyObject writeHash(ThreadContext ctx, IRubyObject obj) {
+    checkType(ctx, obj, org.jruby.RubyHash.class);
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_symbol")
+  public IRubyObject writeSymbol(ThreadContext ctx, IRubyObject obj) {
+    checkType(ctx, obj, org.jruby.RubySymbol.class);
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_int")
+  public IRubyObject writeInt(ThreadContext ctx, IRubyObject obj) {
+    if (!(obj instanceof RubyFixnum)) {
+      checkType(ctx, obj, org.jruby.RubyBignum.class);
+    }
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_extension")
+  public IRubyObject writeExtension(ThreadContext ctx, IRubyObject obj) {
+    if (!(obj instanceof ExtensionValue)) {
+      throw ctx.runtime.newTypeError("Expected extension");
+    }
+    return write(ctx, obj);
+  }
+
+  @JRubyMethod(name = "write_true")
+  public IRubyObject writeTrue(ThreadContext ctx) {
+    return write(ctx, ctx.getRuntime().getTrue());
+  }
+
+  @JRubyMethod(name = "write_false")
+  public IRubyObject writeFalse(ThreadContext ctx) {
+    return write(ctx, ctx.getRuntime().getFalse());
+  }
+
   @JRubyMethod(name = "write_nil")
   public IRubyObject writeNil(ThreadContext ctx) {
     write(ctx, null);
@@ -151,6 +209,11 @@ public class Packer extends RubyObject {
     return this;
   }
 
+  @JRubyMethod(name = "full_pack")
+  public IRubyObject fullPack(ThreadContext ctx) {
+    return toS(ctx);
+  }
+
   @JRubyMethod(name = "to_s", alias = { "to_str" })
   public IRubyObject toS(ThreadContext ctx) {
     return buffer.toS(ctx);
@@ -174,5 +237,12 @@ public class Packer extends RubyObject {
   @JRubyMethod(name = "clear")
   public IRubyObject clear(ThreadContext ctx) {
     return buffer.clear(ctx);
+  }
+
+  private void checkType(ThreadContext ctx, IRubyObject obj, Class<? extends IRubyObject> expectedType) {
+    if (!expectedType.isInstance(obj)) {
+      String expectedName = expectedType.getName().substring("org.jruby.Ruby".length());
+      throw ctx.runtime.newTypeError(String.format("wrong argument type %s (expected %s)", obj.getMetaClass().toString(), expectedName));
+    }
   }
 }

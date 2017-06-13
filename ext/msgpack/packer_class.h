@@ -28,7 +28,5 @@ VALUE MessagePack_Packer_alloc(VALUE klass);
 
 VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self);
 
-VALUE MessagePack_pack(int argc, VALUE* argv);
-
 #endif
 

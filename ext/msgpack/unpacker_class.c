@@ -383,23 +383,8 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
-VALUE MessagePack_unpack(int argc, VALUE* argv)
+static VALUE Unpacker_full_unpack(VALUE self)
 {
-    VALUE src;
-    VALUE self;
-
-    if (argc < 0 || argc > 2) {
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1..2)", argc);
-    }
-    src = argv[0];
-
-    if(rb_type(src) == T_STRING) {
-        self = MessagePack_Factory_unpacker(argc - 1, argv + 1, cMessagePack_DefaultFactory);
-        UNPACKER(self, uk);
-        msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), src);
-    } else {
-        self = MessagePack_Factory_unpacker(argc, argv, cMessagePack_DefaultFactory);
-    }
     UNPACKER(self, uk);
 
     /* prefer reference than copying; see MessagePack_Unpacker_module_init */
@@ -416,25 +401,7 @@ VALUE MessagePack_unpack(int argc, VALUE* argv)
         rb_raise(eMalformedFormatError, "%zd extra bytes after the deserialized object", extra);
     }
 
-#ifdef RB_GC_GUARD
-    /* This prevents compilers from optimizing out the `self` variable
-     * from stack. Otherwise GC free()s it. */
-    RB_GC_GUARD(self);
-#endif
-
     return msgpack_unpacker_get_last_object(uk);
-}
-
-static VALUE MessagePack_load_module_method(int argc, VALUE* argv, VALUE mod)
-{
-    UNUSED(mod);
-    return MessagePack_unpack(argc, argv);
-}
-
-static VALUE MessagePack_unpack_module_method(int argc, VALUE* argv, VALUE mod)
-{
-    UNUSED(mod);
-    return MessagePack_unpack(argc, argv);
 }
 
 VALUE MessagePack_Unpacker_new(int argc, VALUE* argv)
@@ -491,8 +458,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     /* prefer reference than copying */
     //msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);
 
-    /* MessagePack.unpack(x) */
-    rb_define_module_function(mMessagePack, "load", MessagePack_load_module_method, -1);
-    rb_define_module_function(mMessagePack, "unpack", MessagePack_unpack_module_method, -1);
+    rb_define_method(cMessagePack_Unpacker, "full_unpack", Unpacker_full_unpack, 0);
 }
 
