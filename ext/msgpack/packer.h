@@ -33,6 +33,7 @@ struct msgpack_packer_t {
 
     bool compatibility_mode;
     bool has_symbol_ext_type;
+    int depth;
 
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
@@ -42,6 +43,7 @@ struct msgpack_packer_t {
     /* options */
     bool comaptibility_mode;
     msgpack_packer_ext_registry_t ext_registry;
+    int max_depth;
 };
 
 #define PACKER_BUFFER_(pk) (&(pk)->buffer)
@@ -68,6 +70,11 @@ void msgpack_packer_reset(msgpack_packer_t* pk);
 static inline void msgpack_packer_set_compat(msgpack_packer_t* pk, bool enable)
 {
     pk->compatibility_mode = enable;
+}
+
+static inline void msgpack_packer_set_max_depth(msgpack_packer_t* pk, int max_depth)
+{
+    pk->max_depth = max_depth;
 }
 
 static inline void msgpack_packer_write_nil(msgpack_packer_t* pk)

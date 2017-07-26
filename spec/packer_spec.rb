@@ -474,4 +474,16 @@ describe MessagePack::Packer do
         [0xc9, 65538, -1].pack('CNC') + "a"*65538
     end
   end
+
+  it "gracefully fails on a cyclic hash" do
+    cyclic = {}
+    cyclic[:cyclic] = cyclic
+    expect { cyclic.to_msgpack(max_depth: 32) }.to raise_error(ArgumentError)
+  end
+
+  it "gracefully fails on a cyclic array" do
+    cyclic = []
+    cyclic[0] = cyclic
+    expect { cyclic.to_msgpack(max_depth: 32) }.to raise_error(ArgumentError)
+  end
 end

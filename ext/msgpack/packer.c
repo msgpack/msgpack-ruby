@@ -27,6 +27,25 @@ static ID s_value;
 
 static ID s_call;
 
+static void msgpack_packer_increment_depth(msgpack_packer_t* pk)
+{
+    if(!pk->max_depth) {
+        return;
+    }
+
+    if(pk->depth >= pk->max_depth) {
+        rb_raise(rb_eArgError, "stack level too deep");
+    }
+
+    pk->depth += 1;
+}
+
+static VALUE msgpack_packer_decrement_depth(VALUE p) {
+    msgpack_packer_t* pk = (void*) p;
+    pk->depth -= 1;
+    return Qnil;
+}
+
 void msgpack_packer_static_init()
 {
 #ifdef RUBINIUS
@@ -68,9 +87,16 @@ void msgpack_packer_reset(msgpack_packer_t* pk)
     pk->buffer_ref = Qnil;
 }
 
+struct msgpack_packer_write_collection_args {
+    msgpack_packer_t* pk;
+    VALUE v;
+};
 
-void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)
-{
+static VALUE msgpack_packer_write_array_value_cleared(VALUE p) {
+    struct msgpack_packer_write_collection_args* args = (void*) p;
+    msgpack_packer_t* pk = args->pk;
+    VALUE v = args->v;
+
     /* actual return type of RARRAY_LEN is long */
     unsigned long len = RARRAY_LEN(v);
     if(len > 0xffffffffUL) {
@@ -84,6 +110,20 @@ void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)
         VALUE e = rb_ary_entry(v, i);
         msgpack_packer_write_value(pk, e);
     }
+
+    return Qnil;
+}
+
+void msgpack_packer_write_array_value(msgpack_packer_t* pk, VALUE v)
+{
+    msgpack_packer_increment_depth(pk);
+
+    struct msgpack_packer_write_collection_args args = (struct msgpack_packer_write_collection_args){
+        .pk = pk,
+        .v = v,
+    };
+    rb_ensure(msgpack_packer_write_array_value_cleared, (VALUE) &args,
+            msgpack_packer_decrement_depth, (VALUE) pk);
 }
 
 static int write_hash_foreach(VALUE key, VALUE value, VALUE pk_value)
@@ -97,8 +137,12 @@ static int write_hash_foreach(VALUE key, VALUE value, VALUE pk_value)
     return ST_CONTINUE;
 }
 
-void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
+static VALUE msgpack_packer_write_hash_value_cleared(VALUE p)
 {
+    struct msgpack_packer_write_collection_args* args = (void*) p;
+    msgpack_packer_t* pk = args->pk;
+    VALUE v = args->v;
+
     /* actual return type of RHASH_SIZE is long (if SIZEOF_LONG == SIZEOF_VOIDP
      * or long long (if SIZEOF_LONG_LONG == SIZEOF_VOIDP. See st.h. */
     unsigned long len = RHASH_SIZE(v);
@@ -119,6 +163,19 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 #else
     rb_hash_foreach(v, write_hash_foreach, (VALUE) pk);
 #endif
+
+    return Qnil;
+}
+
+void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v) {
+    msgpack_packer_increment_depth(pk);
+
+    struct msgpack_packer_write_collection_args args = (struct msgpack_packer_write_collection_args){
+        .pk = pk,
+        .v = v,
+    };
+    rb_ensure(msgpack_packer_write_hash_value_cleared, (VALUE) &args,
+            msgpack_packer_decrement_depth, (VALUE) pk);
 }
 
 void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
