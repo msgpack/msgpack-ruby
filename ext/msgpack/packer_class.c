@@ -104,6 +104,11 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
 
         v = rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode")));
         msgpack_packer_set_compat(pk, RTEST(v));
+
+        v = rb_hash_aref(options, ID2SYM(rb_intern("max_depth")));
+        if(RTEST(v)) {
+            msgpack_packer_set_max_depth(pk, NUM2INT(v));
+        }
     }
 
     return self;
