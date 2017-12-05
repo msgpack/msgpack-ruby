@@ -5,3 +5,5 @@ Gemfile*
 *~
 /msgpack-ruby
 /vendor
+/.yardoc
+/doc
