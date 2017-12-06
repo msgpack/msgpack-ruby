@@ -75,6 +75,11 @@ public class Factory extends RubyObject {
 
     IRubyObject packerArg;
     IRubyObject unpackerArg;
+
+    if (isFrozen()) {
+        throw runtime.newRuntimeError("can't modify frozen Factory");
+    }
+
     if (args.length == 2) {
       packerArg = runtime.newSymbol("to_msgpack_ext");
       unpackerArg = runtime.newSymbol("from_msgpack_ext");
