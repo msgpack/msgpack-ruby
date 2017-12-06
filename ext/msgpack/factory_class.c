@@ -145,6 +145,10 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     VALUE packer_arg, unpacker_arg;
     VALUE packer_proc, unpacker_proc;
 
+    if (OBJ_FROZEN(self)) {
+        rb_raise(rb_eRuntimeError, "can't modify frozen Factory");
+    }
+
     switch (argc) {
     case 2:
         /* register_type(0x7f, Time) */
