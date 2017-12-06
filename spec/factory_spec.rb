@@ -44,6 +44,23 @@ describe MessagePack::Factory do
     end
   end
 
+  describe '#dump and #load' do
+    it 'can be used like a standard coder' do
+      subject.register_type(0x00, Symbol)
+      expect(subject.load(subject.dump(:symbol))).to be == :symbol
+    end
+
+    it 'is alias as pack and unpack' do
+      subject.register_type(0x00, Symbol)
+      expect(subject.unpack(subject.pack(:symbol))).to be == :symbol
+    end
+
+    it 'accept options' do
+      hash = subject.unpack(MessagePack.pack('k' => 'v'), symbolize_keys: true)
+      expect(hash).to be == { k: 'v' }
+    end
+  end
+
   class MyType
     def initialize(a, b)
       @a = a

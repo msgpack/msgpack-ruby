@@ -56,5 +56,26 @@ module MessagePack
         raise ArgumentError, "class or type id"
       end
     end
+
+    def load(src, param = nil)
+      unpacker = nil
+
+      if src.is_a? String
+        unpacker = unpacker(param)
+        unpacker.feed(src)
+      else
+        unpacker = unpacker(src, param)
+      end
+
+      unpacker.full_unpack
+    end
+    alias :unpack :load
+
+    def pack(v, *rest)
+      packer = packer(*rest)
+      packer.write(v)
+      packer.full_pack
+    end
+    alias :dump :pack
   end
 end
