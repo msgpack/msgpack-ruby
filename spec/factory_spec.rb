@@ -61,6 +61,15 @@ describe MessagePack::Factory do
     end
   end
 
+  describe '#freeze' do
+    it 'can freeze factory instance to deny new registrations anymore' do
+      subject.register_type(0x00, Symbol)
+      subject.freeze
+      expect(subject.frozen?).to be_truthy
+      expect{ subject.register_type(0x01, Array) }.to raise_error(RuntimeError, "can't modify frozen Factory")
+    end
+  end
+
   class MyType
     def initialize(a, b)
       @a = a
