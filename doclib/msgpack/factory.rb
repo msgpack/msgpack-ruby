@@ -20,6 +20,22 @@ module MessagePack
     end
 
     #
+    # Serialize the passed value
+    #
+    # If it could not serialize the object, it raises
+    # NoMethodError: undefined method `to_msgpack' for #<the_object>.
+    #
+    # @param obj [Object] object to serialize
+    # @param options [Hash]
+    # @return [String] serialized object
+    #
+    # See Packer#initialize for supported options.
+    #
+    def dump(obj, options={})
+    end
+    alias pack dump
+
+    #
     # Creates a MessagePack::Unpacker instance, which has ext types already registered.
     # Options are passed to MessagePack::Unpacker#initialized.
     #
@@ -27,6 +43,23 @@ module MessagePack
     #
     def unpacker(*args)
     end
+
+    #
+    # Deserializes an object from the string or io and returns it.
+    #
+    # If there're not enough data to deserialize one object, this method raises EOFError.
+    # If data format is invalid, this method raises MessagePack::MalformedFormatError.
+    # If the object nests too deeply, this method raises MessagePack::StackError.
+    #
+    # @param data [String]
+    # @param options [Hash]
+    # @return [Object] deserialized object
+    #
+    # See Unpacker#initialize for supported options.
+    #
+    def load(data, options={})
+    end
+    alias unpack load
 
     #
     # Register a type and Class to be registered for packer and/or unpacker.

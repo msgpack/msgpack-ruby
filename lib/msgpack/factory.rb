@@ -71,11 +71,11 @@ module MessagePack
     end
     alias :unpack :load
 
-    def pack(v, *rest)
+    def dump(v, *rest)
       packer = packer(*rest)
       packer.write(v)
       packer.full_pack
     end
-    alias :dump :pack
+    alias :pack :dump
   end
 end
