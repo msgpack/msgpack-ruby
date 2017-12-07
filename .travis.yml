@@ -1,20 +1,5 @@
 language: ruby
 
-rvm:
-  - 2.0.0
-  - 2.1.6
-  - 2.2.2
-  - 2.3.0
-  - 2.4.0
-  - ruby-head
-  - jruby-19mode
-  - jruby-9.1.5.0
-  - jruby-head
-
-os:
-  - linux
-  - osx
-
 sudo: false
 
 branches:
@@ -24,18 +9,30 @@ branches:
 gemfile:
   - Gemfile
 
+# http://rubies.travis-ci.org/
 matrix:
-  exclude:
-    - rvm: 2.0.0
+  include:
+    - rvm: 2.1.10
+      os: linux
+    - rvm: 2.2.8
+      os: linux
+    - rvm: 2.3.5
+      os: linux
+    - rvm: 2.3.5
       os: osx
-    - rvm: jruby-19mode
+    - rvm: 2.4.2
+      os: linux
+    - rvm: 2.4.2
       os: osx
-    - rvm: jruby-9.1.5.0
-      os: osx
+    - rvm: ruby-head
+      os: linux
+    - rvm: jruby-9.1.9.0
+      os: linux
     - rvm: jruby-head
-      os: osx
+      os: linux
+    - rvm: jruby-19mode
+      os: linux
   allow_failures:
     - rvm: ruby-head
     - rvm: jruby-head
     - rvm: jruby-19mode
-      os: osx
