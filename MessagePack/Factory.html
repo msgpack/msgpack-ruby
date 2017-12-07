@@ -129,6 +129,32 @@ same set of ext types.</p>
         <li class="public ">
   <span class="summary_signature">
     
+      <a href="#dump-instance_method" title="#dump (instance method)">- (String) <strong>dump</strong>(obj, options = {}) </a>
+    
+
+    
+      (also: #pack)
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Serialize the passed value.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#initialize-instance_method" title="#initialize (instance method)">- (Factory) <strong>initialize</strong> </a>
     
 
@@ -147,6 +173,32 @@ same set of ext types.</p>
   
     <span class="summary_desc"><div class='inline'>
 <p>Creates a MessagePack::Factory instance.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#load-instance_method" title="#load (instance method)">- (Object) <strong>load</strong>(data, options = {}) </a>
+    
+
+    
+      (also: #unpack)
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Deserializes an object from the string or io and returns it.</p>
 </div></span>
   
 </li>
@@ -328,7 +380,202 @@ registered.</p>
 
     
       <div class="method_details first">
-  <h3 class="signature first" id="packer-instance_method">
+  <h3 class="signature first" id="dump-instance_method">
+  
+    - (<tt><span class='object_link'><a href="../String.html" title="String (class)">String</a></span></tt>) <strong>dump</strong>(obj, options = {}) 
+  
+
+  
+    <span class="aliases">Also known as:
+    <span class="names"><span id='pack-instance_method'>pack</span></span>
+    </span>
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Serialize the passed value</p>
+
+<p>If it could not serialize the object, it raises NoMethodError: undefined
+method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
+
+<p>See Packer#initialize for supported options.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>obj</span>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>object to serialize</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../String.html" title="String (class)">String</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>serialized object</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+34
+35</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 34</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_dump'>dump</span><span class='lparen'>(</span><span class='id identifier rubyid_obj'>obj</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="load-instance_method">
+  
+    - (<tt>Object</tt>) <strong>load</strong>(data, options = {}) 
+  
+
+  
+    <span class="aliases">Also known as:
+    <span class="names"><span id='unpack-instance_method'>unpack</span></span>
+    </span>
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Deserializes an object from the string or io and returns it.</p>
+
+<p>If there&#39;re not enough data to deserialize one object, this method
+raises EOFError. If data format is invalid, this method raises
+MessagePack::MalformedFormatError. If the object nests too deeply, this
+method raises MessagePack::StackError.</p>
+
+<p>See Unpacker#initialize for supported options.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>data</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../String.html" title="String (class)">String</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>{}</tt>)</em>
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt>Object</tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>deserialized object</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+60
+61</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 60</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_load'>load</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="packer-instance_method">
   
     - (<tt>Object</tt>) <strong>packer</strong>(*args) 
   
@@ -476,11 +723,11 @@ and :from_msgpack_ext for unpacker.</p>
       <pre class="lines">
 
 
-46
-47</pre>
+79
+80</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 46</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 79</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span><span class='id identifier rubyid_type'>type</span><span class='comma'>,</span> <span class='id identifier rubyid_klass'>klass</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -555,11 +802,11 @@ and :from_msgpack_ext for unpacker.</p>
       <pre class="lines">
 
 
-55
-56</pre>
+88
+89</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 55</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 88</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_registered_types'>registered_types</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='op'>=</span><span class='symbol'>:both</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -651,11 +898,11 @@ or not.</p>
       <pre class="lines">
 
 
-65
-66</pre>
+98
+99</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 65</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 98</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_type_registered?'>type_registered?</span><span class='lparen'>(</span><span class='id identifier rubyid_klass_or_type'>klass_or_type</span><span class='comma'>,</span> <span class='id identifier rubyid_selector'>selector</span><span class='op'>=</span><span class='symbol'>:both</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -693,11 +940,11 @@ registered. Options are passed to MessagePack::Unpacker#initialized.</p>
       <pre class="lines">
 
 
-28
-29</pre>
+44
+45</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 28</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 44</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_unpacker'>unpacker</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -711,9 +958,9 @@ registered. Options are passed to MessagePack::Unpacker#initialized.</p>
 </div>
 
     <div id="footer">
-  Generated on Thu Oct 29 10:16:06 2015 by
+  Generated on Thu Dec  7 11:57:39 2017 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.8.7.6 (ruby-2.2.2).
+  0.8.7.6 (ruby-2.4.2).
 </div>
 
   </body>

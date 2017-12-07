@@ -185,6 +185,39 @@ reference</a> for details.</p>
 <p>See <a href="http://ruby.msgpack.org/MessagePack/Unpacker.html">API
 reference</a> for details.</p>
 
+<h1 id="label-Serializing+and+deserializing+symbols">Serializing and deserializing symbols</h1>
+
+<p>By default, symbols are serialized as strings:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_packed'>packed</span> <span class='op'>=</span> <span class='symbol'>:symbol</span><span class='period'>.</span><span class='id identifier rubyid_to_msgpack'>to_msgpack</span>     <span class='comment'># =&gt; &quot;\xA6symbol&quot;
+</span><span class='const'>MessagePack</span><span class='period'>.</span><span class='id identifier rubyid_unpack'>unpack</span><span class='lparen'>(</span><span class='id identifier rubyid_packed'>packed</span><span class='rparen'>)</span>      <span class='comment'># =&gt; &quot;symbol&quot;
+</span></code></pre>
+
+<p>This can be customized by registering an extension type for them:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='const'>MessagePack</span><span class='op'>::</span><span class='const'>DefaultFactory</span><span class='period'>.</span><span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span><span class='int'>0x00</span><span class='comma'>,</span> <span class='const'>Symbol</span><span class='rparen'>)</span>
+
+<span class='comment'># symbols now survive round trips
+</span><span class='id identifier rubyid_packed'>packed</span> <span class='op'>=</span> <span class='symbol'>:symbol</span><span class='period'>.</span><span class='id identifier rubyid_to_msgpack'>to_msgpack</span>     <span class='comment'># =&gt; &quot;\xc7\x06\x00symbol&quot;
+</span><span class='const'>MessagePack</span><span class='period'>.</span><span class='id identifier rubyid_unpack'>unpack</span><span class='lparen'>(</span><span class='id identifier rubyid_packed'>packed</span><span class='rparen'>)</span>      <span class='comment'># =&gt; :symbol
+</span></code></pre>
+
+<p>The extension type for symbols is configurable like any other extension
+type. For example, to customize how symbols are packed you can just
+redefine Symbol#to_msgpack_ext. Doing this gives you an option to prevent
+symbols from being serialized altogether by throwing an exception:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='kw'>class</span> <span class='const'>Symbol</span>
+    <span class='kw'>def</span> <span class='id identifier rubyid_to_msgpack_ext'>to_msgpack_ext</span>
+        <span class='id identifier rubyid_raise'>raise</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Serialization of symbols prohibited</span><span class='tstring_end'>&quot;</span></span>
+    <span class='kw'>end</span>
+<span class='kw'>end</span>
+
+<span class='const'>MessagePack</span><span class='op'>::</span><span class='const'>DefaultFactory</span><span class='period'>.</span><span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span><span class='int'>0x00</span><span class='comma'>,</span> <span class='const'>Symbol</span><span class='rparen'>)</span>
+
+<span class='lbracket'>[</span><span class='int'>1</span><span class='comma'>,</span> <span class='symbol'>:symbol</span><span class='comma'>,</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>string</span><span class='tstring_end'>&#39;</span></span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_to_msgpack'>to_msgpack</span>  <span class='comment'># =&gt; RuntimeError: Serialization of symbols prohibited
+</span></code></pre>
+
 <h1 id="label-Extension+Types">Extension Types</h1>
 
 <p>Packer and Unpacker support <a
@@ -295,9 +328,9 @@ cp doc/* ./ -a</code></pre>
 </div></div>
 
     <div id="footer">
-  Generated on Thu Oct 29 10:16:06 2015 by
+  Generated on Thu Dec  7 11:57:38 2017 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.8.7.6 (ruby-2.2.2).
+  0.8.7.6 (ruby-2.4.2).
 </div>
 
   </body>
