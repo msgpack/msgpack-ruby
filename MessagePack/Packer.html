@@ -457,6 +457,31 @@ or not.</p>
         <li class="public ">
   <span class="summary_signature">
     
+      <a href="#write_float32-instance_method" title="#write_float32 (instance method)">- (Packer) <strong>write_float32</strong>(value) </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Serializes <em>value</em> as 32-bit single precision float into internal
+buffer.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
       <a href="#write_map_header-instance_method" title="#write_map_header (instance method)">- (Packer) <strong>write_map_header</strong>(n) </a>
     
 
@@ -785,11 +810,11 @@ method.</p>
       <pre class="lines">
 
 
-126
-127</pre>
+138
+139</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 126</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 138</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_clear'>clear</span>
 <span class='kw'>end</span></pre>
@@ -838,11 +863,11 @@ buffer.empty?. This method is slightly faster than <em>size</em>.</p>
       <pre class="lines">
 
 
-143
-144</pre>
+155
+156</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 143</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 155</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_empty?'>empty?</span>
 <span class='kw'>end</span></pre>
@@ -896,11 +921,11 @@ _buffer.flush. If internal IO is not set, it does nothing.</p>
       <pre class="lines">
 
 
-118
-119</pre>
+130
+131</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 118</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 130</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_flush'>flush</span>
 <span class='kw'>end</span></pre>
@@ -1212,11 +1237,11 @@ Hash object includes keys :type, :class and :packer.</p>
       <pre class="lines">
 
 
-134
-135</pre>
+146
+147</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 134</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 146</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_size'>size</span>
 <span class='kw'>end</span></pre>
@@ -1270,11 +1295,11 @@ buffer.to_a. This method is faster than <em>to_str</em>.</p>
       <pre class="lines">
 
 
-162
-163</pre>
+174
+175</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 162</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 174</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_a'>to_a</span>
 <span class='kw'>end</span></pre>
@@ -1326,11 +1351,11 @@ buffer.to_a. This method is faster than <em>to_str</em>.</p>
       <pre class="lines">
 
 
-151
-152</pre>
+163
+164</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 151</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 163</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_str'>to_str</span>
 <span class='kw'>end</span></pre>
@@ -1560,6 +1585,82 @@ write_array_header(1).write(true) is same as write([ true ]).</p>
 </div>
     
       <div class="method_details ">
+  <h3 class="signature " id="write_float32-instance_method">
+  
+    - (<tt><span class='object_link'><a href="" title="MessagePack::Packer (class)">Packer</a></span></tt>) <strong>write_float32</strong>(value) 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Serializes <em>value</em> as 32-bit single precision float into internal
+buffer. <em>value</em> will be approximated with the nearest possible
+single precision float, thus being potentially lossy. However, the
+serialized string will only take up 5 bytes instead of 9 bytes compared to
+directly serializing a 64-bit double precision Ruby Float.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>value</span>
+      
+      
+        <span class='type'>(<tt>Numeric</tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="" title="MessagePack::Packer (class)">Packer</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>self</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+121
+122</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 121</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_write_float32'>write_float32</span><span class='lparen'>(</span><span class='id identifier rubyid_value'>value</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
   <h3 class="signature " id="write_map_header-instance_method">
   
     - (<tt><span class='object_link'><a href="" title="MessagePack::Packer (class)">Packer</a></span></tt>) <strong>write_map_header</strong>(n) 
@@ -1718,11 +1819,11 @@ internal buffer. <em>io</em> must respond to write(data) method.</p>
       <pre class="lines">
 
 
-173
-174</pre>
+185
+186</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 173</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 185</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_write_to'>write_to</span><span class='lparen'>(</span><span class='id identifier rubyid_io'>io</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -1736,9 +1837,9 @@ internal buffer. <em>io</em> must respond to write(data) method.</p>
 </div>
 
     <div id="footer">
-  Generated on Thu Oct 29 10:16:06 2015 by
+  Generated on Thu Dec  7 11:57:39 2017 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.8.7.6 (ruby-2.2.2).
+  0.8.7.6 (ruby-2.4.2).
 </div>
 
   </body>
