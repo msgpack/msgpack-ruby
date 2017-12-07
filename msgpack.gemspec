@@ -23,12 +23,12 @@ Gem::Specification.new do |s|
   s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
 
   s.add_development_dependency 'bundler', ['~> 1.0']
-  s.add_development_dependency 'rake', ['~> 0.9.2']
+  s.add_development_dependency 'rake'
   s.add_development_dependency 'rake-compiler', ['~> 1.0']
   if /java/ !~ RUBY_PLATFORM
     s.add_development_dependency 'rake-compiler-dock', ['~> 0.6.0']
   end
   s.add_development_dependency 'rspec', ['~> 3.3']
-  s.add_development_dependency 'yard', ['~> 0.8.2']
+  s.add_development_dependency 'yard'
   s.add_development_dependency 'json'
 end
