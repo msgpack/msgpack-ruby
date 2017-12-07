@@ -1,3 +1,9 @@
+2017-12-07 version 1.2.0:
+
+* Add MessagePack::Factory#dump and MessagePack::Factory#load as convenient methods
+  like MessagePack.dump and MessagePack.load
+* Fix bug to accept MessagePack::Factory#register_type after #freeze
+
 2017-02-28 version 1.1.0:
 
 * Fix the extention type handling to accept modules in addition to classes
