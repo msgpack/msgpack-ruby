@@ -1,3 +1,7 @@
+2017-12-08 version 1.2.1:
+
+* Hotfix release only for JRuby: 1.2.0-java was built in incorrect way
+
 2017-12-07 version 1.2.0:
 
 * Add MessagePack::Factory#dump and MessagePack::Factory#load as convenient methods
