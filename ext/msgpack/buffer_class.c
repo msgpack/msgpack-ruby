@@ -54,7 +54,7 @@ static void Buffer_free(void* data)
 
 static VALUE Buffer_alloc(VALUE klass)
 {
-    msgpack_buffer_t* b = ALLOC_N(msgpack_buffer_t, 1);
+    msgpack_buffer_t* b = ZALLOC_N(msgpack_buffer_t, 1);
     msgpack_buffer_init(b);
 
     return Data_Wrap_Struct(klass, msgpack_buffer_mark, Buffer_free, b);

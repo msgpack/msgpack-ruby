@@ -59,10 +59,7 @@ void Factory_mark(msgpack_factory_t* fc)
 
 static VALUE Factory_alloc(VALUE klass)
 {
-    msgpack_factory_t* fc = ALLOC_N(msgpack_factory_t, 1);
-
-    msgpack_packer_ext_registry_init(&fc->pkrg);
-    msgpack_unpacker_ext_registry_init(&fc->ukrg);
+    msgpack_factory_t* fc = ZALLOC_N(msgpack_factory_t, 1);
 
     VALUE self = Data_Wrap_Struct(klass, Factory_mark, Factory_free, fc);
     return self;
@@ -71,6 +68,9 @@ static VALUE Factory_alloc(VALUE klass)
 static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
+
+    msgpack_packer_ext_registry_init(&fc->pkrg);
+    msgpack_unpacker_ext_registry_init(&fc->ukrg);
 
     fc->has_symbol_ext_type = false;
 
