@@ -58,14 +58,10 @@ static void Unpacker_mark(msgpack_unpacker_t* uk)
 
 VALUE MessagePack_Unpacker_alloc(VALUE klass)
 {
-    msgpack_unpacker_t* uk = ALLOC_N(msgpack_unpacker_t, 1);
+    msgpack_unpacker_t* uk = ZALLOC_N(msgpack_unpacker_t, 1);
     _msgpack_unpacker_init(uk);
 
     VALUE self = Data_Wrap_Struct(klass, Unpacker_mark, Unpacker_free, uk);
-
-    msgpack_unpacker_ext_registry_init(&uk->ext_registry);
-    uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
-
     return self;
 }
 
@@ -100,6 +96,9 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
     }
 
     UNPACKER(self, uk);
+
+    msgpack_unpacker_ext_registry_init(&uk->ext_registry);
+    uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
 
     MessagePack_Buffer_set_options(UNPACKER_BUFFER_(uk), io, options);
 

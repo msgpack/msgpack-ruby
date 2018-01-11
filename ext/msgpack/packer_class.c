@@ -56,14 +56,12 @@ static void Packer_mark(msgpack_packer_t* pk)
 
 VALUE MessagePack_Packer_alloc(VALUE klass)
 {
-    msgpack_packer_t* pk = ALLOC_N(msgpack_packer_t, 1);
+    msgpack_packer_t* pk = ZALLOC_N(msgpack_packer_t, 1);
     msgpack_packer_init(pk);
 
     VALUE self = Data_Wrap_Struct(klass, Packer_mark, Packer_free, pk);
 
     msgpack_packer_set_to_msgpack_method(pk, s_to_msgpack, self);
-    msgpack_packer_ext_registry_init(&pk->ext_registry);
-    pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
 
     return self;
 }
@@ -96,6 +94,9 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
     }
 
     PACKER(self, pk);
+
+    msgpack_packer_ext_registry_init(&pk->ext_registry);
+    pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
 
     MessagePack_Buffer_set_options(PACKER_BUFFER_(pk), io, options);
 

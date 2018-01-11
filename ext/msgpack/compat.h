@@ -29,6 +29,16 @@
 
 
 /*
+ * ZALLOC_N (ruby 2.2 or later)
+ */
+#ifndef RB_ZALLOC_N
+#  define RB_ZALLOC_N(type,n) ((type*)ruby_xcalloc((size_t)(n),sizeof(type)))
+#endif
+#ifndef ZALLOC_N
+#  define ZALLOC_N(type,n) RB_ZALLOC_N(type,n)
+#endif
+
+/*
  * COMPAT_HAVE_ENCODING
  */
 #ifdef HAVE_RUBY_ENCODING_H

@@ -331,6 +331,19 @@ describe MessagePack::Factory do
     end
   end
 
+  describe 'under stressful GC' do
+    it 'works well' do
+      begin
+        GC.stress = true
+
+        f = MessagePack::Factory.new
+        f.register_type(0x0a, Symbol)
+      ensure
+        GC.stress = false
+      end
+    end
+  end
+
   describe 'DefaultFactory' do
     it 'is a factory' do
       MessagePack::DefaultFactory.should be_kind_of(MessagePack::Factory)
