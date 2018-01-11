@@ -5,6 +5,7 @@ import org.jruby.RubyHash;
 import org.jruby.RubyArray;
 import org.jruby.RubyModule;
 import org.jruby.RubyFixnum;
+import org.jruby.RubySymbol;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 
@@ -74,22 +75,50 @@ public class ExtensionRegistry {
     }
   }
 
-  public IRubyObject[] lookupPackerByModule(RubyModule mod) {
+  public IRubyObject[] lookupPackerForObject(IRubyObject object) {
+    RubyModule lookupClass = null;
+    IRubyObject[] pair;
+    /*
+     * Objects of type Integer (Fixnum, Bignum), Float, Symbol and frozen
+     * String have no singleton class and raise a TypeError when trying to get
+     * it.
+     *
+     * Since all but symbols are already filtered out when reaching this code
+     * only symbols are checked here.
+     */
+    if (!(object instanceof RubySymbol)) {
+      lookupClass = object.getSingletonClass();
+      pair = fetchEntryByModule(lookupClass);
+      if (pair != null) {
+          return pair;
+      }
+    }
+
+    pair = fetchEntryByModule(object.getType());
+    if (pair != null) {
+      return pair;
+    }
+
+    if (lookupClass == null) {
+      lookupClass = object.getType(); // only for Symbol
+    }
+    ExtensionEntry e = findEntryByModuleOrAncestor(lookupClass);
+    if (e != null && e.hasPacker()) {
+      extensionsByAncestor.put(e.getExtensionModule(), e);
+      return e.toPackerProcTypeIdPair(lookupClass.getRuntime().getCurrentContext());
+    }
+    return null;
+  }
+
+  private IRubyObject[] fetchEntryByModule(final RubyModule mod) {
     ExtensionEntry e = extensionsByModule.get(mod);
     if (e == null) {
       e = extensionsByAncestor.get(mod);
     }
-    if (e == null) {
-      e = findEntryByModuleOrAncestor(mod);
-      if (e != null) {
-        extensionsByAncestor.put(e.getExtensionModule(), e);
-      }
-    }
     if (e != null && e.hasPacker()) {
       return e.toPackerProcTypeIdPair(mod.getRuntime().getCurrentContext());
-    } else {
-      return null;
     }
+    return null;
   }
 
   private ExtensionEntry findEntryByModuleOrAncestor(final RubyModule mod) {
