@@ -1,3 +1,8 @@
+2018-01-11 version 1.2.2:
+
+* Fix bug to occur SEGV occasionally (depends on GC timing) when exttype is used
+* Fix bug to encode an ext type with wrong type id if superclass is also registered as ext type 
+
 2017-12-08 version 1.2.1:
 
 * Hotfix release only for JRuby: 1.2.0-java was built in incorrect way
