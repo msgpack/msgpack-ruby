@@ -59,24 +59,64 @@ static int msgpack_packer_ext_find_superclass(VALUE key, VALUE value, VALUE arg)
     return ST_CONTINUE;
 }
 
-
-static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_registry_t* pkrg,
+static inline VALUE msgpack_packer_ext_registry_fetch(msgpack_packer_ext_registry_t* pkrg,
         VALUE lookup_class, int* ext_type_result)
 {
+    // fetch lookup_class from hash, which is a hash to register classes
     VALUE type = rb_hash_lookup(pkrg->hash, lookup_class);
     if(type != Qnil) {
         *ext_type_result = FIX2INT(rb_ary_entry(type, 0));
         return rb_ary_entry(type, 1);
     }
 
+    // fetch lookup_class from cache, which stores results of searching ancestors from pkrg->hash
     VALUE type_inht = rb_hash_lookup(pkrg->cache, lookup_class);
     if(type_inht != Qnil) {
         *ext_type_result = FIX2INT(rb_ary_entry(type_inht, 0));
         return rb_ary_entry(type_inht, 1);
     }
 
+    return Qnil;
+}
+
+static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_registry_t* pkrg,
+        VALUE instance, int* ext_type_result)
+{
+    VALUE lookup_class;
+    VALUE type;
+
     /*
-     * check all keys whether it is an ancestor of lookup_class, or not
+     * 1. check whether singleton_class of this instance is registered (or resolved in past) or not.
+     *
+     * Objects of type Integer (Fixnum, Bignum), Float, Symbol and frozen
+     * String have no singleton class and raise a TypeError when trying to get
+     * it. See implementation of #singleton_class in ruby's source code:
+     * VALUE rb_singleton_class(VALUE obj);
+     *
+     * Since all but symbols are already filtered out when reaching this code
+     * only symbols are checked here.
+     */
+    if (!SYMBOL_P(instance)) {
+      lookup_class = rb_singleton_class(instance);
+
+      type = msgpack_packer_ext_registry_fetch(pkrg, lookup_class, ext_type_result);
+
+      if(type != Qnil) {
+          return type;
+      }
+    }
+
+    /*
+     * 2. check the class of instance is registered (or resolved in past) or not.
+     */
+    type = msgpack_packer_ext_registry_fetch(pkrg, rb_obj_class(instance), ext_type_result);
+
+    if(type != Qnil) {
+        return type;
+    }
+
+    /*
+     * 3. check all keys whether it is an ancestor of lookup_class, or not
      */
     VALUE args[2];
     args[0] = lookup_class;

@@ -384,7 +384,7 @@ public class Encoder {
         lookupClass = object.getSingletonClass();
       }
 
-      IRubyObject[] pair = registry.lookupPackerByModule(lookupClass);
+      IRubyObject[] pair = registry.lookupPackerForObject(object);
       if (pair != null) {
         RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
         int type = (int) ((RubyFixnum) pair[1]).getLongValue();
