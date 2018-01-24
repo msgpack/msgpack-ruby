@@ -12,7 +12,7 @@ gemfile:
 before_install:
   # This is only for Ruby 2.5.0, Bundler 1.16.1 and rubygems 2.7.3
   # See https://github.com/travis-ci/travis-ci/issues/8969
-  - [ "x2.7.3" = "x"$(gem --version) ] && gem update --system --no-document
+  - "[ \"x2.7.3\" = \"x\"$(gem --version) ] && gem update --system --no-document"
 
 # http://rubies.travis-ci.org/
 matrix:
