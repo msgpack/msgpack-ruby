@@ -65,7 +65,7 @@ namespace :build do
   desc 'Build gems for Windows per rake-compiler-dock'
   task :windows do
     require 'rake_compiler_dock'
-    RakeCompilerDock.sh 'bundle && gem i json && rake cross native gem RUBY_CC_VERSION=1.9.3:2.0.0:2.1.6:2.2.2:2.3.0:2.4.0'
+    RakeCompilerDock.sh 'bundle && gem i json && rake cross native gem RUBY_CC_VERSION=1.9.3:2.0.0:2.1.10:2.2.9:2.3.6:2.4.3:2.5.0'
   end
 end
 
