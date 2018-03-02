@@ -1,3 +1,7 @@
+2018-03-02 version 1.2.3:
+
+* Add Ruby 2.5.0 binary in gem releases for Windows
+
 2018-01-11 version 1.2.2:
 
 * Fix bug to occur SEGV occasionally (depends on GC timing) when exttype is used
