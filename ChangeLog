@@ -19,7 +19,7 @@
 
 2017-02-28 version 1.1.0:
 
-* Fix the extention type handling to accept modules in addition to classes
+* Fix the extension type handling to accept modules in addition to classes
 
 2017-01-24 version 1.0.3:
 
@@ -67,7 +67,7 @@
 
 2015-10-24 version 0.7.0:
 
-* Add extention types support.
+* Add extension types support.
 * Fix to share almost all test cases between CRuby and JRuby implementations.
 * Fixed JRuby implementation to raise UnknownExtTypeError for unregistered ext type ids
   instead to generate MessagePack::ExtensionValue instances.
