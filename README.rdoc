@@ -135,7 +135,7 @@ Packer and Unpacker support {Extension types of MessagePack}[https://github.com/
     uk.register_type(0x01, MyClass1, :from_msgpack_ext)
     uk.register_type(0x02){|data| MyClass2.create_from_serialized_data(data) }
 
-MessagePack::Factory is to create packer and unpacker which have same extention types.
+MessagePack::Factory is to create packer and unpacker which have same extension types.
 
     factory = MessagePack::Factory.new
     factory.register_type(0x01, MyClass1) # same with next line
