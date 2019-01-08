@@ -17,17 +17,15 @@ before_install:
 # http://rubies.travis-ci.org/
 matrix:
   include:
-    - rvm: 2.1.10
+    - rvm: 2.3.8
       os: linux
-    - rvm: 2.2.9
+    - rvm: 2.4.5
       os: linux
-    - rvm: 2.3.6
+    - rvm: 2.5.3
       os: linux
-    - rvm: 2.4.3
+    - rvm: 2.6.0
       os: linux
-    - rvm: 2.5.0
-      os: linux
-    - rvm: 2.5.0
+    - rvm: 2.6.0
       os: osx
     - rvm: ruby-head
       os: linux
