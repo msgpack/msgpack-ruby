@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   end
   s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
 
-  s.add_development_dependency 'bundler', ['~> 1.0']
+  s.add_development_dependency 'bundler'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rake-compiler', ['~> 1.0']
   if /java/ !~ RUBY_PLATFORM
