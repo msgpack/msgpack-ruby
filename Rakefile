@@ -66,7 +66,7 @@ namespace :build do
   task :windows do
     require 'rake_compiler_dock'
     # See RUBY_CC_VERSION in https://github.com/rake-compiler/rake-compiler-dock/blob/master/Dockerfile
-    RakeCompilerDock.sh 'bundle && gem i json && rake cross native gem RUBY_CC_VERSION=2.0.0:2.1.6:2.2.2:2.3.0:2.4.0:2.5.0'
+    RakeCompilerDock.sh 'bundle && gem i json && rake cross native gem RUBY_CC_VERSION=2.2.2:2.3.0:2.4.0:2.5.0:2.6.0'
   end
 end
 
