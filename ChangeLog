@@ -1,3 +1,7 @@
+2019-01-08 verison 1.2.5:
+
+* Update Ruby version dependency (especially for Windows environment)
+
 2018-03-02 version 1.2.3:
 
 * Add Ruby 2.5.0 binary in gem releases for Windows
