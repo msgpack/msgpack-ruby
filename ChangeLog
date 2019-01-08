@@ -1,6 +1,7 @@
-2019-01-08 verison 1.2.5:
+2019-01-08 verison 1.2.6:
 
-* Update Ruby version dependency (especially for Windows environment)
+* Update Ruby version 2.6 dependency (especially for Windows environment)
+* (version 1.2.4 and 1.2.5 were also releases for updated Ruby versions)
 
 2018-03-02 version 1.2.3:
 
@@ -9,7 +10,7 @@
 2018-01-11 version 1.2.2:
 
 * Fix bug to occur SEGV occasionally (depends on GC timing) when exttype is used
-* Fix bug to encode an ext type with wrong type id if superclass is also registered as ext type 
+* Fix bug to encode an ext type with wrong type id if superclass is also registered as ext type
 
 2017-12-08 version 1.2.1:
 
