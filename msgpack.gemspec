@@ -11,7 +11,6 @@ Gem::Specification.new do |s|
   s.license = "Apache 2.0"
   s.homepage = "http://msgpack.org/"
   s.rubyforge_project = "msgpack"
-  s.has_rdoc = false
   s.require_paths = ["lib"]
   if /java/ =~ RUBY_PLATFORM
     s.files = Dir['lib/**/*.rb', 'lib/**/*.jar']
