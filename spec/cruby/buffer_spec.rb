@@ -1,6 +1,11 @@
 require 'spec_helper'
 require 'random_compat'
 
+require 'stringio'
+if defined?(Encoding)
+  Encoding.default_external = 'ASCII-8BIT'
+end
+
 describe Buffer do
   STATIC_EXAMPLES = {}
   STATIC_EXAMPLES[:empty01] = ''
