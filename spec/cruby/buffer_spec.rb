@@ -45,7 +45,7 @@ describe Buffer do
         b.read(n)
         s.slice!(0, n)
       end
-      key = :"random#{"%02d"%i}"
+      key = :"random#{"%02d" % i}"
       cases[key] = b
       examples[key] = s
     end
