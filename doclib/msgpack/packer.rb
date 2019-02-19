@@ -110,6 +110,20 @@ module MessagePack
     end
 
     #
+    # Write a header of a binary string whose size is _n_. Useful if you want to append large binary data without loading it into memory at once.
+    # For example,
+    # MessagePack::Packer.new(io).write_bin_header(12).flush
+    # io.write('chunk1')
+    # io.write('chunk2')
+    # is the same as
+    # write('chunk1chunk2'.force_encoding(Encoding::BINARY)).
+    #
+    # @return [Packer] self
+    #
+    def write_bin_header(n)
+    end
+
+    #
     # Serializes _value_ as 32-bit single precision float into internal buffer.
     # _value_ will be approximated with the nearest possible single precision float, thus
     # being potentially lossy. However, the serialized string will only take up 5 bytes

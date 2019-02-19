@@ -91,6 +91,11 @@ public class Encoder {
     return readRubyString();
   }
 
+  public IRubyObject encodeBinHeader(int size) {
+    appendStringHeader(size, true);
+    return readRubyString();
+  }
+
   public IRubyObject encodeFloat32(RubyNumeric numeric) {
     appendFloat32(numeric);
     return readRubyString();
@@ -221,14 +226,7 @@ public class Encoder {
     buffer.putFloat(value);
   }
 
-  private void appendString(RubyString object) {
-    Encoding encoding = object.getEncoding();
-    boolean binary = !compatibilityMode && encoding == binaryEncoding;
-    if (encoding != utf8Encoding && encoding != binaryEncoding) {
-      object = (RubyString) ((RubyString) object).encode(runtime.getCurrentContext(), runtime.getEncodingService().getEncoding(utf8Encoding));
-    }
-    ByteList bytes = object.getByteList();
-    int length = bytes.length();
+  private void appendStringHeader(int length, boolean binary) {
     if (length < 32 && !binary) {
       ensureRemainingCapacity(1 + length);
       buffer.put((byte) (length | FIXSTR));
@@ -245,6 +243,17 @@ public class Encoder {
       buffer.put(binary ? BIN32 : STR32);
       buffer.putInt((int) length);
     }
+  }
+
+  private void appendString(RubyString object) {
+    Encoding encoding = object.getEncoding();
+    boolean binary = !compatibilityMode && encoding == binaryEncoding;
+    if (encoding != utf8Encoding && encoding != binaryEncoding) {
+      object = (RubyString) ((RubyString) object).encode(runtime.getCurrentContext(), runtime.getEncodingService().getEncoding(utf8Encoding));
+    }
+    ByteList bytes = object.getByteList();
+    int length = bytes.length();
+    appendStringHeader(length, binary);
     buffer.put(bytes.unsafeBytes(), bytes.begin(), length);
   }
 

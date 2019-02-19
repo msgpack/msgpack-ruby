@@ -209,6 +209,13 @@ public class Packer extends RubyObject {
     return this;
   }
 
+  @JRubyMethod(name = "write_bin_header")
+  public IRubyObject writeBinHeader(ThreadContext ctx, IRubyObject size) {
+    int s = (int) size.convertToInteger().getLongValue();
+    buffer.write(ctx, encoder.encodeBinHeader(s));
+    return this;
+  }
+
   @JRubyMethod(name = "full_pack")
   public IRubyObject fullPack(ThreadContext ctx) {
     return toS(ctx);
