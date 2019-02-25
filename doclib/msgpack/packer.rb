@@ -92,6 +92,12 @@ module MessagePack
     end
 
     #
+    # Serializes a string object as binary data. Same as write("string".encode(Encoding::BINARY)).
+    #
+    def write_bin(obj)
+    end
+
+    #
     # Write a header of an array whose size is _n_.
     # For example, write_array_header(1).write(true) is same as write([ true ]).
     #
@@ -116,7 +122,7 @@ module MessagePack
     # io.write('chunk1')
     # io.write('chunk2')
     # is the same as
-    # write('chunk1chunk2'.force_encoding(Encoding::BINARY)).
+    # write('chunk1chunk2'.encode(Encoding::BINARY)).
     #
     # @return [Packer] self
     #

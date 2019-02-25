@@ -165,6 +165,18 @@ static VALUE Packer_write_string(VALUE self, VALUE obj)
     return self;
 }
 
+static VALUE Packer_write_bin(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    Check_Type(obj, T_STRING);
+
+    VALUE enc = rb_enc_from_encoding(rb_ascii8bit_encoding());
+    obj = rb_str_encode(obj, enc, 0, Qnil);
+
+    msgpack_packer_write_string_value(pk, obj);
+    return self;
+}
+
 static VALUE Packer_write_array(VALUE self, VALUE obj)
 {
     PACKER(self, pk);
@@ -423,6 +435,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_false", Packer_write_false, 0);
     rb_define_method(cMessagePack_Packer, "write_float", Packer_write_float, 1);
     rb_define_method(cMessagePack_Packer, "write_string", Packer_write_string, 1);
+    rb_define_method(cMessagePack_Packer, "write_bin", Packer_write_bin, 1);
     rb_define_method(cMessagePack_Packer, "write_array", Packer_write_array, 1);
     rb_define_method(cMessagePack_Packer, "write_hash", Packer_write_hash, 1);
     rb_define_method(cMessagePack_Packer, "write_symbol", Packer_write_symbol, 1);
