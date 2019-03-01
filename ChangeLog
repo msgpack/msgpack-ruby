@@ -1,3 +1,7 @@
+2019-03-01 version 1.2.7:
+
+* Add Packer#write_bin and Packer#write_bin_header methods
+
 2019-01-08 verison 1.2.6:
 
 * Update Ruby version 2.6 dependency (especially for Windows environment)
