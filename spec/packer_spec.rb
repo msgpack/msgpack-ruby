@@ -134,6 +134,41 @@ describe MessagePack::Packer do
     packer.to_s.should == "\x81"
   end
 
+  it 'write_bin_header 0' do
+    packer.write_bin_header(0)
+    packer.to_s.should == "\xC4\x00"
+  end
+
+  it 'write_bin_header 255' do
+    packer.write_bin_header(255)
+    packer.to_s.should == "\xC4\xFF"
+  end
+
+  it 'write_bin_header 256' do
+    packer.write_bin_header(256)
+    packer.to_s.should == "\xC5\x01\x00"
+  end
+
+  it 'write_bin_header 65535' do
+    packer.write_bin_header(65535)
+    packer.to_s.should == "\xC5\xFF\xFF"
+  end
+
+  it 'write_bin_header 65536' do
+    packer.write_bin_header(65536)
+    packer.to_s.should == "\xC6\x00\x01\x00\x00"
+  end
+
+  it 'write_bin_header 999999' do
+    packer.write_bin_header(999999)
+    packer.to_s.should == "\xC6\x00\x0F\x42\x3F"
+  end
+
+  it 'write_bin' do
+    packer.write_bin("hello")
+    packer.to_s.should == "\xC4\x05hello"
+  end
+
   describe '#write_float32' do
     tests = [
       ['small floats', 3.14, "\xCA\x40\x48\xF5\xC3"],
@@ -193,6 +228,7 @@ describe MessagePack::Packer do
     packer = MessagePack::Packer.new
     expect { packer.write_float "hello" }.to raise_error(TypeError)
     expect { packer.write_string 1 }.to raise_error(TypeError)
+    expect { packer.write_bin 1 }.to raise_error(TypeError)
     expect { packer.write_array "hello" }.to raise_error(TypeError)
     expect { packer.write_hash "hello" }.to raise_error(TypeError)
     expect { packer.write_symbol "hello" }.to raise_error(TypeError)

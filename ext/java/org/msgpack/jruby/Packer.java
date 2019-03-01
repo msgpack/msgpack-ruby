@@ -21,6 +21,8 @@ import org.jruby.util.ByteList;
 import org.jruby.util.TypeConverter;
 import org.msgpack.jruby.ExtensionValue;
 
+import org.jcodings.Encoding;
+
 import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Packer")
@@ -29,6 +31,7 @@ public class Packer extends RubyObject {
   private Buffer buffer;
   private Encoder encoder;
   private boolean hasSymbolExtType;
+  private Encoding binaryEncoding;
 
   public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry, boolean hasSymbolExtType) {
     super(runtime, type);
@@ -58,6 +61,7 @@ public class Packer extends RubyObject {
     this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode, registry, hasSymbolExtType);
     this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
+    this.binaryEncoding = ctx.getRuntime().getEncodingService().getAscii8bitEncoding();
     return this;
   }
 
@@ -141,6 +145,13 @@ public class Packer extends RubyObject {
     return write(ctx, obj);
   }
 
+  @JRubyMethod(name = "write_bin")
+  public IRubyObject writeBin(ThreadContext ctx, IRubyObject obj) {
+    checkType(ctx, obj, org.jruby.RubyString.class);
+    obj = ((org.jruby.RubyString) obj).encode(ctx, ctx.runtime.getEncodingService().getEncoding(binaryEncoding));
+    return write(ctx, obj);
+  }
+
   @JRubyMethod(name = "write_hash")
   public IRubyObject writeHash(ThreadContext ctx, IRubyObject obj) {
     checkType(ctx, obj, org.jruby.RubyHash.class);
@@ -206,6 +217,13 @@ public class Packer extends RubyObject {
   public IRubyObject writeMapHeader(ThreadContext ctx, IRubyObject size) {
     int s = (int) size.convertToInteger().getLongValue();
     buffer.write(ctx, encoder.encodeMapHeader(s));
+    return this;
+  }
+
+  @JRubyMethod(name = "write_bin_header")
+  public IRubyObject writeBinHeader(ThreadContext ctx, IRubyObject size) {
+    int s = (int) size.convertToInteger().getLongValue();
+    buffer.write(ctx, encoder.encodeBinHeader(s));
     return this;
   }
 

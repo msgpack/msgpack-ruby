@@ -165,6 +165,18 @@ static VALUE Packer_write_string(VALUE self, VALUE obj)
     return self;
 }
 
+static VALUE Packer_write_bin(VALUE self, VALUE obj)
+{
+    PACKER(self, pk);
+    Check_Type(obj, T_STRING);
+
+    VALUE enc = rb_enc_from_encoding(rb_ascii8bit_encoding());
+    obj = rb_str_encode(obj, enc, 0, Qnil);
+
+    msgpack_packer_write_string_value(pk, obj);
+    return self;
+}
+
 static VALUE Packer_write_array(VALUE self, VALUE obj)
 {
     PACKER(self, pk);
@@ -229,6 +241,13 @@ static VALUE Packer_write_map_header(VALUE self, VALUE n)
 {
     PACKER(self, pk);
     msgpack_packer_write_map_header(pk, NUM2UINT(n));
+    return self;
+}
+
+static VALUE Packer_write_bin_header(VALUE self, VALUE n)
+{
+    PACKER(self, pk);
+    msgpack_packer_write_bin_header(pk, NUM2UINT(n));
     return self;
 }
 
@@ -416,6 +435,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_false", Packer_write_false, 0);
     rb_define_method(cMessagePack_Packer, "write_float", Packer_write_float, 1);
     rb_define_method(cMessagePack_Packer, "write_string", Packer_write_string, 1);
+    rb_define_method(cMessagePack_Packer, "write_bin", Packer_write_bin, 1);
     rb_define_method(cMessagePack_Packer, "write_array", Packer_write_array, 1);
     rb_define_method(cMessagePack_Packer, "write_hash", Packer_write_hash, 1);
     rb_define_method(cMessagePack_Packer, "write_symbol", Packer_write_symbol, 1);
@@ -423,6 +443,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "write_extension", Packer_write_extension, 1);
     rb_define_method(cMessagePack_Packer, "write_array_header", Packer_write_array_header, 1);
     rb_define_method(cMessagePack_Packer, "write_map_header", Packer_write_map_header, 1);
+    rb_define_method(cMessagePack_Packer, "write_bin_header", Packer_write_bin_header, 1);
     rb_define_method(cMessagePack_Packer, "write_ext", Packer_write_ext, 2);
     rb_define_method(cMessagePack_Packer, "write_float32", Packer_write_float32, 1);
     rb_define_method(cMessagePack_Packer, "flush", Packer_flush, 0);
