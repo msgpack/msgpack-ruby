@@ -54,7 +54,7 @@ public class Factory extends RubyObject {
     return Packer.newPacker(ctx, extensionRegistry(), hasSymbolExtType, args);
   }
 
-  @JRubyMethod(name = "unpacker", optional = 1)
+  @JRubyMethod(name = "unpacker", optional = 2)
   public Unpacker unpacker(ThreadContext ctx, IRubyObject[] args) {
     return Unpacker.newUnpacker(ctx, extensionRegistry(), args);
   }
