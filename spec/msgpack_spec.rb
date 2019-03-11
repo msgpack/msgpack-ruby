@@ -179,7 +179,7 @@ describe MessagePack do
         return_value.should be_nil
 
         io.rewind
-        io.read.should eq("\xABhello world".force_encoding(Encoding::UTF_8))
+        io.read.force_encoding(Encoding::ASCII_8BIT).should eq("\xABhello world".force_encoding(Encoding::ASCII_8BIT))
       end
     end
 
@@ -189,7 +189,7 @@ describe MessagePack do
       return_value.should be_nil
 
       io.rewind
-      io.read.should eq("\xABhello world".force_encoding(Encoding::UTF_8))
+      io.read.force_encoding(Encoding::ASCII_8BIT).should eq("\xABhello world".force_encoding(Encoding::ASCII_8BIT))
     end
 
     it 'work with IO source object as source of MessagePack.unpack' do
