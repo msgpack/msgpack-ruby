@@ -179,6 +179,10 @@ public class Buffer extends RubyObject {
     return skipCommon(ctx, length, true);
   }
 
+  public boolean hasIo() {
+    return io != null;
+  }
+
   @JRubyMethod(name = "to_s", alias = {"to_str"})
   public IRubyObject toS(ThreadContext ctx) {
     ensureReadMode();

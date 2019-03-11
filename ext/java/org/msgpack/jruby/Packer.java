@@ -229,6 +229,9 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "full_pack")
   public IRubyObject fullPack(ThreadContext ctx) {
+    if (buffer.hasIo()) {
+      return null;
+    }
     return toS(ctx);
   }
 
