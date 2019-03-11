@@ -168,4 +168,47 @@ describe MessagePack do
       end
     end
   end
+
+  context 'when the source is na IO-like object' do
+    require 'tempfile'
+    require 'stringio'
+
+    it 'work with IO destination object as 2nd argument of MessagePack.pack' do
+      Tempfile.create("pack-test") do |io|
+        return_value = MessagePack.pack(utf8enc('hello world'), io)
+        return_value.should be_nil
+
+        io.rewind
+        io.read.should eq("\xABhello world".force_encoding(Encoding::UTF_8))
+      end
+    end
+
+    it 'work with IO-like StringIO destination object as 2nd argument of MessagePack.pack' do
+      io = StringIO.new
+      return_value = MessagePack.pack(utf8enc('hello world'), io)
+      return_value.should be_nil
+
+      io.rewind
+      io.read.should eq("\xABhello world".force_encoding(Encoding::UTF_8))
+    end
+
+    it 'work with IO source object as source of MessagePack.unpack' do
+      Tempfile.create("unpack-test") do |io|
+        MessagePack.pack(utf8enc('hello world'), io)
+        io.rewind
+
+        return_value = MessagePack.unpack(io)
+        return_value.should eq(utf8enc('hello world'))
+      end
+    end
+
+    it 'work with IO-like StringIO object of MessagePack.unpack' do
+      io = StringIO.new
+      MessagePack.pack(utf8enc('hello world'), io)
+      io.rewind
+
+      return_value = MessagePack.unpack(io)
+      return_value.should eq(utf8enc('hello world'))
+    end
+  end
 end
