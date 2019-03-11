@@ -12,7 +12,7 @@ module MessagePack
   #   @param obj [Object] object to be serialized
   #   @param io [IO]
   #   @param options [Hash]
-  #   @return [IO]
+  #   @return [nil]
   #
   # See Packer#initialize for supported options.
   #
@@ -31,7 +31,7 @@ module MessagePack
   #   @param obj [Object] object to be serialized
   #   @param io [IO]
   #   @param options [Hash]
-  #   @return [IO]
+  #   @return [nil]
   #
   # See Packer#initialize for supported options.
   #
