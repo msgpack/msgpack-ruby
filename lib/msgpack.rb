@@ -20,15 +20,16 @@ require "msgpack/core_ext"
 
 module MessagePack
   DefaultFactory = MessagePack::Factory.new
+  DEFAULT_EMPTY_PARAMS = {}.freeze
 
   def load(src, param = nil)
     unpacker = nil
 
     if src.is_a? String
-      unpacker = DefaultFactory.unpacker param
+      unpacker = DefaultFactory.unpacker param || DEFAULT_EMPTY_PARAMS
       unpacker.feed src
     else
-      unpacker = DefaultFactory.unpacker src, param
+      unpacker = DefaultFactory.unpacker src, param || DEFAULT_EMPTY_PARAMS
     end
 
     unpacker.full_unpack
