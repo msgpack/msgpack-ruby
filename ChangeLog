@@ -1,3 +1,7 @@
+2019-03-13 version 1.2.9:
+
+* Hotfix release only for JRuby: 1.2.8-java was built incorrectly
+
 2019-03-11 version 1.2.8:
 
 * Fix a regression that MessagePack#unpack raises error if IO is assigned as the (only) argument
