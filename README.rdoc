@@ -176,6 +176,14 @@ Then, you can run the tasks as follows:
 
     bundle exec rake doc
 
+== How to build -java rubygems
+
+To build -java gems for JRuby, run:
+
+    rake build:java
+
+If this directory has Gemfile.lock (generated with MRI), remove it beforehand.
+
 == How to build -mingw32 rubygems
 
 MessagePack mingw32/64 rubygems build process uses {rake-compiler-dock}[https://github.com/rake-compiler/rake-compiler-dock]. Run:

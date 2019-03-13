@@ -62,6 +62,9 @@ RSpec::Core::RakeTask.new(:spec) do |t|
 end
 
 namespace :build do
+  desc 'Build gem for JRuby after cleaning'
+  task :java => [:clean, :spec, :build]
+
   desc 'Build gems for Windows per rake-compiler-dock'
   task :windows do
     require 'rake_compiler_dock'
