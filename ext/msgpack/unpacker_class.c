@@ -396,9 +396,6 @@ static VALUE Unpacker_full_unpack(VALUE self)
 {
     UNPACKER(self, uk);
 
-    /* prefer reference than copying; see MessagePack_Unpacker_module_init */
-    msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(uk), 0);
-
     int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
         raise_unpacker_error(r);
