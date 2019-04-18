@@ -170,7 +170,7 @@ public class Unpacker extends RubyObject {
     return data == null ? ctx.getRuntime().getFalse() : ctx.getRuntime().getTrue();
   }
 
-  @JRubyMethod(required = 1)
+  @JRubyMethod(required = 1, name = "feed", alias = { "feed_reference" })
   public IRubyObject feed(ThreadContext ctx, IRubyObject data) {
     ByteList byteList = data.asString().getByteList();
     if (decoder == null) {

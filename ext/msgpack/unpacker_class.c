@@ -256,6 +256,17 @@ static VALUE Unpacker_feed(VALUE self, VALUE data)
     return self;
 }
 
+static VALUE Unpacker_feed_reference(VALUE self, VALUE data)
+{
+    UNPACKER(self, uk);
+
+    StringValue(data);
+
+    msgpack_buffer_append_string_reference(UNPACKER_BUFFER_(uk), data);
+
+    return self;
+}
+
 static VALUE Unpacker_each_impl(VALUE self)
 {
     UNPACKER(self, uk);
@@ -312,8 +323,7 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
     }
 #endif
 
-    // TODO optimize
-    Unpacker_feed(self, data);
+    Unpacker_feed_reference(self, data);
     return Unpacker_each(self);
 }
 
@@ -444,6 +454,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "read_map_header", Unpacker_read_map_header, 0);
     //rb_define_method(cMessagePack_Unpacker, "peek_next_type", Unpacker_peek_next_type, 0);  // TODO
     rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed, 1);
+    rb_define_method(cMessagePack_Unpacker, "feed_reference", Unpacker_feed_reference, 1);
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
     rb_define_method(cMessagePack_Unpacker, "reset", Unpacker_reset, 0);
