@@ -27,7 +27,7 @@ module MessagePack
 
     if src.is_a? String
       unpacker = DefaultFactory.unpacker param || DEFAULT_EMPTY_PARAMS
-      unpacker.feed src
+      unpacker.feed_reference src
     else
       unpacker = DefaultFactory.unpacker src, param || DEFAULT_EMPTY_PARAMS
     end
