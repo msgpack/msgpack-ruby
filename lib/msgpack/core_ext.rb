@@ -126,6 +126,19 @@ else
   end
 end
 
+class Time
+  include MessagePack::CoreExt
+
+  def self.from_msgpack_ext(payload)
+    tv = MessagePack::Timestamp.from_msgpack_ext(payload)
+    at(tv.sec, tv.nsec, :nanosecond)
+  end
+
+  def to_msgpack_ext
+    MessagePack::Timestamp.to_msgpack_ext(tv_sec, tv_nsec)
+  end
+end
+
 module MessagePack
   class ExtensionValue
     include CoreExt
