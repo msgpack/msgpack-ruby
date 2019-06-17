@@ -4,12 +4,33 @@ require 'spec_helper'
 
 describe MessagePack::Timestamp do
 
-  describe 'DefaultFactory' do
+  describe 'register_type with Time' do
+    let(:factory) do
+      factory = MessagePack::Factory.new
+      factory.register_type(MessagePack::Timestamp::TYPE, Time)
+      factory
+    end
+
     let(:time) { Time.local(2019, 6, 17, 1, 2, 3, 123_456) }
     it 'serializes and deserializes Time' do
-      packed = MessagePack.pack(time)
-      unpacked = MessagePack.unpack(packed)
+      packed = factory.pack(time)
+      unpacked = factory.unpack(packed)
       expect(unpacked).to eq(time)
+    end
+  end
+
+  describe 'register_type with MessagePack::Timestamp' do
+    let(:factory) do
+      factory = MessagePack::Factory.new
+      factory.register_type(MessagePack::Timestamp::TYPE, MessagePack::Timestamp)
+      factory
+    end
+
+    let(:timestamp) { MessagePack::Timestamp.new(Time.now.tv_sec, 123_456_789) }
+    it 'serializes and deserializes MessagePack::Timestamp' do
+      packed = factory.pack(timestamp)
+      unpacked = factory.unpack(packed)
+      expect(unpacked).to eq(timestamp)
     end
   end
 

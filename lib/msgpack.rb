@@ -23,8 +23,6 @@ module MessagePack
   DefaultFactory = MessagePack::Factory.new
   DEFAULT_EMPTY_PARAMS = {}.freeze
 
-  DefaultFactory.register_type(Timestamp::TYPE, Time)
-
   def load(src, param = nil)
     unpacker = nil
 
