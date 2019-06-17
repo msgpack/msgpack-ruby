@@ -12,6 +12,14 @@ module MessagePack
       end
     end
   end
+
+  # for namespacing
+  TIME_AT_3_AVAILABLE = begin
+    Time.at(0, 0, :nanosecond)
+    true
+  rescue ArgumentError
+    false
+  end
 end
 
 class NilClass
@@ -131,7 +139,12 @@ class Time
 
   def self.from_msgpack_ext(payload)
     tv = MessagePack::Timestamp.from_msgpack_ext(payload)
-    at(tv.sec, tv.nsec, :nanosecond)
+
+    if MessagePack::TIME_AT_3_AVAILABLE
+      at(tv.sec, tv.nsec, :nanosecond)
+    else
+      at(tv.sec, tv.nsec / 1000.0)
+    end
   end
 
   def to_msgpack_ext
