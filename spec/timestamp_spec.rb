@@ -5,11 +5,10 @@ require 'spec_helper'
 describe MessagePack::Timestamp do
 
   describe 'DefaultFactory' do
-    let(:time) { Time.gm(2019, 6, 17, 1, 2, 3, 123_456.789) }
+    let(:time) { Time.local(2019, 6, 17, 1, 2, 3, 123_456) }
     it 'serializes and deserializes Time' do
       packed = MessagePack.pack(time)
       unpacked = MessagePack.unpack(packed)
-
       expect(unpacked).to eq(time)
     end
   end
