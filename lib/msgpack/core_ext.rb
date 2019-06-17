@@ -13,7 +13,7 @@ module MessagePack
     end
   end
 
-  # for namespacing
+  # 3-arg Time.at is available Ruby >= 2.5
   TIME_AT_3_AVAILABLE = begin
     Time.at(0, 0, :nanosecond)
     true
