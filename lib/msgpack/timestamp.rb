@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 module MessagePack
-  Timestamp = Struct.new(:sec, :nsec)
-
   class Timestamp # a.k.a. "TimeSpec"
     # Because the byte-order of MessagePack is big-endian in,
     # pack() and unpack() specifies ">".
@@ -14,6 +12,19 @@ module MessagePack
 
     TIMESTAMP32_MAX_SEC = (1 << 32) - 1
     TIMESTAMP64_MAX_SEC = (1 << 34) - 1
+
+    # @return [Integer]
+    attr_reader :sec
+
+    # @return [Integer]
+    attr_reader :nsec
+
+    # @param [Integer] sec
+    # @param [Integer] nsec
+    def initialize(sec, nsec)
+      @sec = sec
+      @nsec = nsec
+    end
 
     def self.from_msgpack_ext(data)
       case data.length
@@ -56,6 +67,10 @@ module MessagePack
 
     def to_msgpack_ext
       self.class.to_msgpack_ext(sec, nsec)
+    end
+
+    def ==(other)
+      other.class == self.class && sec == other.sec && nsec == other.nsec
     end
   end
 end
