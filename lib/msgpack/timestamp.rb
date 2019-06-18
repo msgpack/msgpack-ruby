@@ -37,9 +37,10 @@ module MessagePack
           [sec].pack('L>')
         else
           # timestamp64 (nsec: uint30be, sec: uint34be)
-          sec_high = sec << 32
-          sec_low = sec & 0xffffffff
-          [(nsec << 2) | (sec_high & 0b11), sec_low].pack('L>2')
+          nsec30 = nsec << 2
+          sec_high2 = sec << 32 # high 2 bits (`x & 0b11` is redandunt)
+          sec_low32 = sec & 0xffffffff # low 32 bits
+          [nsec30 | sec_high2, sec_low32].pack('L>2')
         end
       else
         # timestamp96 (nsec: uint32be, sec: int64be)
