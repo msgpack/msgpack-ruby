@@ -43,7 +43,7 @@ module MessagePack
         nsec, sec = data.unpack('L>q>')
         new(sec, nsec)
       else
-        raise "Invalid timestamp data size: #{data.length}"
+        raise MalformedFormatError, "Invalid timestamp data size: #{data.length}"
       end
     end
 

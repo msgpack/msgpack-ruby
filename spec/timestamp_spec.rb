@@ -3,6 +3,14 @@
 require 'spec_helper'
 
 describe MessagePack::Timestamp do
+  describe 'malformed format' do
+    it do
+      expect do
+        MessagePack::Timestamp.from_msgpack_ext([0xd4, 0x00].pack("C*"))
+      end.to raise_error(MessagePack::MalformedFormatError)
+    end
+  end
+
   describe 'register_type with Time' do
     let(:factory) do
       factory = MessagePack::Factory.new
