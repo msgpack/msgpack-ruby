@@ -5,10 +5,10 @@ module MessagePack
   module Time
     # 3-arg Time.at is available Ruby >= 2.5
     TIME_AT_3_AVAILABLE = begin
-      !!::Time.at(0, 0, :nanosecond)
+                            !!::Time.at(0, 0, :nanosecond)
                           rescue ArgumentError
                             false
-    end
+                          end
 
     Unpacker = if TIME_AT_3_AVAILABLE
                  lambda do |payload|
