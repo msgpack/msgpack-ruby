@@ -121,6 +121,22 @@ being serialized altogether by throwing an exception:
 
     [1, :symbol, 'string'].to_msgpack  # => RuntimeError: Serialization of symbols prohibited
 
+= Serializing and deserializing Time instances
+
+There are the timestamp extension type in MessagePack,
+but it is not registered by default.
+
+To map Ruby's Time to MessagePack's timestamp for the default factory:
+
+    MessagePack::DefaultFactory.register_type(
+      MessagePack::Timestamp::TYPE, # or just -1
+      Time,
+      packer: MessagePack::Time::Packer,
+      unpacker: MessagePack::Time::Unpacker
+    )
+
+See {API reference}[http://ruby.msgpack.org/] for details.
+
 = Extension Types
 
 Packer and Unpacker support {Extension types of MessagePack}[https://github.com/msgpack/msgpack/blob/master/spec.md#types-extension-type].
