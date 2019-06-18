@@ -4,7 +4,13 @@ module MessagePack
   Timestamp = Struct.new(:sec, :nsec)
 
   class Timestamp # a.k.a. "TimeSpec"
-    TYPE = -1 # timestamp extension type
+    # Because the byte-order of MessagePack is big-endian in,
+    # pack() and unpack() specifies ">".
+    # See https://docs.ruby-lang.org/en/trunk/Array.html#method-i-pack for details.
+
+    # The timestamp extension type defined in the MessagePack spec.
+    # See https://github.com/msgpack/msgpack/blob/master/spec.md#timestamp-extension-type for details.
+    TYPE = -1
 
     TIMESTAMP32_MAX_SEC = (1 << 32) - 1
     TIMESTAMP64_MAX_SEC = (1 << 34) - 1
