@@ -12,14 +12,6 @@ module MessagePack
       end
     end
   end
-
-  # 3-arg Time.at is available Ruby >= 2.5
-  TIME_AT_3_AVAILABLE = begin
-    Time.at(0, 0, :nanosecond)
-    true
-  rescue ArgumentError
-    false
-  end
 end
 
 class NilClass
@@ -131,24 +123,6 @@ else
       packer.write_int self
       packer
     end
-  end
-end
-
-class Time
-  include MessagePack::CoreExt
-
-  def self.from_msgpack_ext(payload)
-    tv = MessagePack::Timestamp.from_msgpack_ext(payload)
-
-    if MessagePack::TIME_AT_3_AVAILABLE
-      at(tv.sec, tv.nsec, :nanosecond)
-    else
-      at(tv.sec, tv.nsec / 1000.0)
-    end
-  end
-
-  def to_msgpack_ext
-    MessagePack::Timestamp.to_msgpack_ext(tv_sec, tv_nsec)
   end
 end
 

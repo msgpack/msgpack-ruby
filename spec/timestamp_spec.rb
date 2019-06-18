@@ -3,11 +3,15 @@
 require 'spec_helper'
 
 describe MessagePack::Timestamp do
-
   describe 'register_type with Time' do
     let(:factory) do
       factory = MessagePack::Factory.new
-      factory.register_type(MessagePack::Timestamp::TYPE, Time)
+      factory.register_type(
+        MessagePack::Timestamp::TYPE,
+        Time,
+        packer: MessagePack::Time::Packer,
+        unpacker: MessagePack::Time::Unpacker
+      )
       factory
     end
 

@@ -13,7 +13,7 @@ module MessagePack
       case data.length
       when 4
         # timestamp32 = (uint32be)
-        sec = data.unpack('L>').first
+        sec = data.unpack1('L>')
         new(sec, 0)
       when 8
         # timestamp64 = (uint32be, uint32be)
