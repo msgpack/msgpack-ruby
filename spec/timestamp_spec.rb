@@ -23,11 +23,38 @@ describe MessagePack::Timestamp do
       factory
     end
 
-    let(:time) { Time.local(2019, 6, 17, 1, 2, 3, 123_456) }
+    let(:time) { Time.local(2019, 6, 17, 1, 2, 3, 123_456_789 / 1000.0) }
     it 'serializes and deserializes Time' do
+      prefix_fixext8_with_type_id = [0xd7, -1].pack("c*")
+
       packed = factory.pack(time)
+      expect(packed).to start_with(prefix_fixext8_with_type_id)
+      expect(packed.size).to eq(10)
       unpacked = factory.unpack(packed)
-      expect(unpacked).to eq(time)
+      expect(unpacked.to_i).to eq(time.to_i)
+      expect(unpacked.to_f).to eq(time.to_f)
+      # expect(unpacked).to eq(time) # we can't do it because of nsec (rational vs float?)
+    end
+
+    let(:time_without_nsec) { Time.local(2019, 6, 17, 1, 2, 3, 0) }
+    it 'serializes time without nanosec as fixext4' do
+      prefix_fixext4_with_type_id = [0xd6, -1].pack("c*")
+
+      packed = factory.pack(time_without_nsec)
+      expect(packed).to start_with(prefix_fixext4_with_type_id)
+      expect(packed.size).to eq(6)
+      unpacked = factory.unpack(packed)
+      expect(unpacked).to eq(time_without_nsec)
+    end
+
+    let(:time_after_2514) { Time.at(1 << 34) } # the max num of 34bit int means 2514-05-30 01:53:04 UTC
+    it 'serializes time after 2038 as ext8' do
+      prefix_ext8_with_12bytes_payload_and_type_id = [0xc7, 12, -1].pack("c*")
+
+      expect(time_after_2514.to_i).to be > 0xffffffff
+      packed = factory.pack(time_after_2514)
+      expect(packed).to start_with(prefix_ext8_with_12bytes_payload_and_type_id)
+      expect(packed.size).to eq(15)
     end
   end
 
