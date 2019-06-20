@@ -17,6 +17,8 @@ require "msgpack/unpacker"
 require "msgpack/factory"
 require "msgpack/symbol"
 require "msgpack/core_ext"
+require "msgpack/timestamp"
+require "msgpack/time"
 
 module MessagePack
   DefaultFactory = MessagePack::Factory.new
