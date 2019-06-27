@@ -15,7 +15,7 @@ module MessagePack
     }
 
     # An unpacker function that unpacks a MessagePack timestamp to a Time instance.
-    Unpcker = lambda { |time|
+    Unpacker = lambda { |time|
       # ...
     }
   end
