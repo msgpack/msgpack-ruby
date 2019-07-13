@@ -10,7 +10,6 @@ Gem::Specification.new do |s|
   s.email = ["frsyuki@gmail.com", "theo@iconara.net", "tagomoris@gmail.com"]
   s.license = "Apache 2.0"
   s.homepage = "http://msgpack.org/"
-  s.rubyforge_project = "msgpack"
   s.require_paths = ["lib"]
   if /java/ =~ RUBY_PLATFORM
     s.files = Dir['lib/**/*.rb', 'lib/**/*.jar']
