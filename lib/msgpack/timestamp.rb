@@ -55,7 +55,7 @@ module MessagePack
         else
           # timestamp64 (nsec: uint30be, sec: uint34be)
           nsec30 = nsec << 2
-          sec_high2 = sec << 32 # high 2 bits (`x & 0b11` is redandunt)
+          sec_high2 = sec >> 32 # high 2 bits (`x & 0b11` is redandunt)
           sec_low32 = sec & 0xffffffff # low 32 bits
           [nsec30 | sec_high2, sec_low32].pack('L>2')
         end

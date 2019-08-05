@@ -56,6 +56,10 @@ describe MessagePack::Timestamp do
       expect(packed).to start_with(prefix_ext8_with_12bytes_payload_and_type_id)
       expect(packed.size).to eq(15)
     end
+
+    it 'runs correctly (regression)' do
+      expect(factory.unpack(factory.pack(Time.utc(2200)))).to eq(Time.utc(2200))
+    end
   end
 
   describe 'register_type with MessagePack::Timestamp' do
