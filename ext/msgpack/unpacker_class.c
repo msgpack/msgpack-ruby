@@ -77,9 +77,6 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
         VALUE v = argv[0];
         if(rb_type(v) == T_HASH) {
             options = v;
-            if(rb_type(options) != T_HASH) {
-                rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
-            }
         } else {
             io = v;
         }
