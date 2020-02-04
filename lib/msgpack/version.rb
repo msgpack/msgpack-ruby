@@ -1,5 +1,5 @@
 module MessagePack
-  VERSION = "1.3.1"
+  VERSION = "1.3.2"
 
   # NOTE for msgpack-ruby maintainer:
   # Check these things to release new binaryes for new Ruby versions (especially for Windows):
