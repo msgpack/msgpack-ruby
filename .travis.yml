@@ -1,7 +1,5 @@
 language: ruby
 
-sudo: false
-
 branches:
   only:
     - master
