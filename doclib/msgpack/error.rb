@@ -1,5 +1,4 @@
 module MessagePack
-
   class UnpackError < StandardError
   end
 

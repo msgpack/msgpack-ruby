@@ -16,8 +16,7 @@ module MessagePack
 
     # @param [Integer] sec
     # @param [Integer] nsec
-    def initialize(sec, nsec)
-    end
+    def initialize(sec, nsec); end
 
     # @example An unpacker implementation for the Time class
     #   lambda do |payload|
@@ -27,8 +26,7 @@ module MessagePack
     #
     # @param [String] data
     # @return [MessagePack::Timestamp]
-    def self.from_msgpack_ext(data)
-    end
+    def self.from_msgpack_ext(data); end
 
     # @example A packer implementation for the Time class
     #   unpacker = lambda do |time|
@@ -38,7 +36,6 @@ module MessagePack
     # @param [Integer] sec
     # @param [Integer] nsec
     # @return [String]
-    def self.to_msgpack_ext(sec, nsec)
-    end
+    def self.to_msgpack_ext(sec, nsec); end
   end
 end

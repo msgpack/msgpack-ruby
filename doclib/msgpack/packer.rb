@@ -1,5 +1,4 @@
 module MessagePack
-
   #
   # MessagePack::Packer is a class to serialize objects.
   #
@@ -23,8 +22,7 @@ module MessagePack
     #
     # See also Buffer#initialize for other options.
     #
-    def initialize(*args)
-    end
+    def initialize(*args); end
 
     #
     # Register a new ext type to serialize it. This method should be called with one of
@@ -43,8 +41,7 @@ module MessagePack
     #
     # @return nil
     #
-    def register_type(type, klass, method_name, &block)
-    end
+    def register_type(type, klass, method_name, &block); end
 
     #
     # Returns a list of registered types, ordered by type id.
@@ -52,8 +49,7 @@ module MessagePack
     #
     # @return Array
     #
-    def registered_types
-    end
+    def registered_types; end
 
     #
     # Returns true/false which indicate specified class or type id is registered or not.
@@ -61,8 +57,7 @@ module MessagePack
     # @param klass_or_type [Class or Fixnum] Class or type id (0-127) to be checked
     # @return true or false
     #
-    def type_registered?(klass_or_type)
-    end
+    def type_registered?(klass_or_type); end
 
     #
     # Internal buffer
@@ -80,22 +75,19 @@ module MessagePack
     # @param obj [Object] object to serialize
     # @return [Packer] self
     #
-    def write(obj)
-    end
+    def write(obj); end
 
     alias pack write
 
     #
     # Serializes a nil object. Same as write(nil).
     #
-    def write_nil
-    end
+    def write_nil; end
 
     #
     # Serializes a string object as binary data. Same as write("string".encode(Encoding::BINARY)).
     #
-    def write_bin(obj)
-    end
+    def write_bin(obj); end
 
     #
     # Write a header of an array whose size is _n_.
@@ -103,8 +95,7 @@ module MessagePack
     #
     # @return [Packer] self
     #
-    def write_array_header(n)
-    end
+    def write_array_header(n); end
 
     #
     # Write a header of an map whose size is _n_.
@@ -112,8 +103,7 @@ module MessagePack
     #
     # @return [Packer] self
     #
-    def write_map_header(n)
-    end
+    def write_map_header(n); end
 
     #
     # Write a header of a binary string whose size is _n_. Useful if you want to append large binary data without loading it into memory at once.
@@ -126,8 +116,7 @@ module MessagePack
     #
     # @return [Packer] self
     #
-    def write_bin_header(n)
-    end
+    def write_bin_header(n); end
 
     #
     # Serializes _value_ as 32-bit single precision float into internal buffer.
@@ -138,8 +127,7 @@ module MessagePack
     # @param value [Numeric]
     # @return [Packer] self
     #
-    def write_float32(value)
-    end
+    def write_float32(value); end
 
     #
     # Flushes data in the internal buffer to the internal IO. Same as _buffer.flush.
@@ -147,24 +135,21 @@ module MessagePack
     #
     # @return [Packer] self
     #
-    def flush
-    end
+    def flush; end
 
     #
     # Makes the internal buffer empty. Same as _buffer.clear_.
     #
     # @return nil
     #
-    def clear
-    end
+    def clear; end
 
     #
     # Returns size of the internal buffer. Same as buffer.size.
     #
     # @return [Integer]
     #
-    def size
-    end
+    def size; end
 
     #
     # Returns _true_ if the internal buffer is empty. Same as buffer.empty?.
@@ -172,16 +157,14 @@ module MessagePack
     #
     # @return [Boolean]
     #
-    def empty?
-    end
+    def empty?; end
 
     #
     # Returns all data in the buffer as a string. Same as buffer.to_str.
     #
     # @return [String]
     #
-    def to_str
-    end
+    def to_str; end
 
     alias to_s to_str
 
@@ -191,8 +174,7 @@ module MessagePack
     #
     # @return [Array] array of strings
     #
-    def to_a
-    end
+    def to_a; end
 
     #
     # Writes all of data in the internal buffer into the given IO. Same as buffer.write_to(io).
@@ -202,7 +184,6 @@ module MessagePack
     # @param io [IO]
     # @return [Integer] byte size of written data
     #
-    def write_to(io)
-    end
+    def write_to(io); end
   end
 end

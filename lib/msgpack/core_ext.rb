@@ -18,6 +18,7 @@ class NilClass
   include MessagePack::CoreExt
 
   private
+
   def to_msgpack_with_packer(packer)
     packer.write_nil
     packer
@@ -28,6 +29,7 @@ class TrueClass
   include MessagePack::CoreExt
 
   private
+
   def to_msgpack_with_packer(packer)
     packer.write_true
     packer
@@ -38,6 +40,7 @@ class FalseClass
   include MessagePack::CoreExt
 
   private
+
   def to_msgpack_with_packer(packer)
     packer.write_false
     packer
@@ -48,6 +51,7 @@ class Float
   include MessagePack::CoreExt
 
   private
+
   def to_msgpack_with_packer(packer)
     packer.write_float self
     packer
@@ -58,6 +62,7 @@ class String
   include MessagePack::CoreExt
 
   private
+
   def to_msgpack_with_packer(packer)
     packer.write_string self
     packer
@@ -68,6 +73,7 @@ class Array
   include MessagePack::CoreExt
 
   private
+
   def to_msgpack_with_packer(packer)
     packer.write_array self
     packer
@@ -78,6 +84,7 @@ class Hash
   include MessagePack::CoreExt
 
   private
+
   def to_msgpack_with_packer(packer)
     packer.write_hash self
     packer
@@ -88,37 +95,41 @@ class Symbol
   include MessagePack::CoreExt
 
   private
+
   def to_msgpack_with_packer(packer)
     packer.write_symbol self
     packer
   end
 end
 
-if 1.class.name == "Integer"
-  class Integer
+if 1.class.name == 'Integer'
+  class Fixnum  # rubocop:disable Lint/UnifiedInteger
     include MessagePack::CoreExt
 
     private
+
     def to_msgpack_with_packer(packer)
       packer.write_int self
       packer
     end
   end
 else
-  class Fixnum
+  class Bignum # rubocop:disable Lint/UnifiedInteger
     include MessagePack::CoreExt
 
     private
+
     def to_msgpack_with_packer(packer)
       packer.write_int self
       packer
     end
   end
 
-  class Bignum
+  class Integer
     include MessagePack::CoreExt
 
     private
+
     def to_msgpack_with_packer(packer)
       packer.write_int self
       packer
@@ -131,6 +142,7 @@ module MessagePack
     include CoreExt
 
     private
+
     def to_msgpack_with_packer(packer)
       packer.write_extension self
       packer

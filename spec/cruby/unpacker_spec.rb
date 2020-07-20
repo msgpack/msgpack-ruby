@@ -1,4 +1,5 @@
 # encoding: ascii-8bit
+
 require 'spec_helper'
 
 describe Unpacker do
@@ -67,4 +68,3 @@ describe Unpacker do
     }.should raise_error(MessagePack::MalformedFormatError)
   end
 end
-

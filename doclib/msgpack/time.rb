@@ -1,5 +1,4 @@
 module MessagePack
-
   # MessagePack::Time provides packer and unpacker functions for a timestamp type.
   # @example Setup for DefaultFactory
   #   MessagePack::DefaultFactory.register_type(

@@ -13,11 +13,11 @@ data_structure = {
   'status' => 200,
   'bytes' => 2326,
   'referer' => 'http://www.example.com/start.html',
-  'agent' => 'Mozilla/4.08 [en] (Win98; I ;Nav)',
+  'agent' => 'Mozilla/4.08 [en] (Win98; I ;Nav)'
 }
 
 Viiite.bench do |b|
-  b.range_over([10_000, 100_000, 1000_000], :runs) do |runs|
+  b.range_over([10_000, 100_000, 1_000_000], :runs) do |runs|
     b.report(:plain) do
       runs.times do
         MessagePack.pack(data_plain)

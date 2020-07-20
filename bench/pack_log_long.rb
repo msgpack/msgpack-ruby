@@ -15,7 +15,7 @@ data_structure = {
   'status' => 200,
   'bytes' => 2326,
   'referer' => 'http://www.example.com/start.html',
-  'agent' => 'Mozilla/4.08 [en] (Win98; I ;Nav)',
+  'agent' => 'Mozilla/4.08 [en] (Win98; I ;Nav)'
 }
 
 seconds = 3600 # 1 hour
@@ -29,16 +29,16 @@ Viiite.bench do |b|
         t = Thread.new do
           packs = 0
           while Time.now < end_at
-            10000.times do
+            10_000.times do
               MessagePack.pack(data_plain)
             end
-            packs += 10000
+            packs += 10_000
           end
           packs
         end
         ths.push t
       end
-      sum = ths.reduce(0){|r,t| r + t.value }
+      sum = ths.reduce(0) { |r, t| r + t.value }
       puts "MessagePack.pack, plain, #{threads} threads: #{sum} times, #{sum / seconds} times/second."
     end
 
@@ -49,16 +49,16 @@ Viiite.bench do |b|
         t = Thread.new do
           packs = 0
           while Time.now < end_at
-            10000.times do
+            10_000.times do
               MessagePack.pack(data_structure)
             end
-            packs += 10000
+            packs += 10_000
           end
           packs
         end
         ths.push t
       end
-      sum = ths.reduce(0){|r,t| r + t.value }
+      sum = ths.reduce(0) { |r, t| r + t.value }
       puts "MessagePack.pack, structured, #{threads} threads: #{sum} times, #{sum / seconds} times/second."
     end
   end

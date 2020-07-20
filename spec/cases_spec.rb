@@ -9,31 +9,30 @@ describe MessagePack do
 
   it 'compare with json' do
     ms = []
-    MessagePack::Unpacker.new.feed_each(CASES) {|m|
+    MessagePack::Unpacker.new.feed_each(CASES) do |m|
       ms << m
-    }
+    end
 
     js = JSON.load(CASES_JSON)
 
-    ms.zip(js) {|m,j|
+    ms.zip(js) do |m, j|
       m.should == j
-    }
+    end
   end
 
   it 'compare with compat' do
     ms = []
-    MessagePack::Unpacker.new.feed_each(CASES) {|m|
+    MessagePack::Unpacker.new.feed_each(CASES) do |m|
       ms << m
-    }
+    end
 
     cs = []
-    MessagePack::Unpacker.new.feed_each(CASES_COMPACT) {|c|
+    MessagePack::Unpacker.new.feed_each(CASES_COMPACT) do |c|
       cs << c
-    }
+    end
 
-    ms.zip(cs) {|m,c|
+    ms.zip(cs) do |m, c|
       m.should == c
-    }
+    end
   end
 end
-

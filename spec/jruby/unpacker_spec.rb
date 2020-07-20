@@ -15,15 +15,15 @@ describe MessagePack::Unpacker do
   end
 
   let :buffer1 do
-    MessagePack.pack(:foo => 'bar')
+    MessagePack.pack(foo: 'bar')
   end
 
   let :buffer2 do
-    MessagePack.pack(:hello => {:world => [1, 2, 3]})
+    MessagePack.pack(hello: { world: [1, 2, 3] })
   end
 
   let :buffer3 do
-    MessagePack.pack(:x => 'y')
+    MessagePack.pack(x: 'y')
   end
 
   describe '#execute/#execute_limit/#finished?' do
@@ -33,17 +33,17 @@ describe MessagePack::Unpacker do
 
     it 'extracts an object from the buffer' do
       subject.execute(buffer, 0)
-      subject.data.should == {'foo' => 'bar'}
+      subject.data.should == { 'foo' => 'bar' }
     end
 
     it 'extracts an object from the buffer, starting at an offset' do
       subject.execute(buffer, buffer1.length)
-      subject.data.should == {'hello' => {'world' => [1, 2, 3]}}
+      subject.data.should == { 'hello' => { 'world' => [1, 2, 3] } }
     end
 
     it 'extracts an object from the buffer, starting at an offset reading bytes up to a limit' do
       subject.execute_limit(buffer, buffer1.length, buffer2.length)
-      subject.data.should == {'hello' => {'world' => [1, 2, 3]}}
+      subject.data.should == { 'hello' => { 'world' => [1, 2, 3] } }
     end
 
     it 'extracts nothing if the limit cuts an object in half' do
@@ -73,7 +73,7 @@ describe MessagePack::Unpacker do
         subject.each do |obj|
           objects << obj
         end
-        objects.should == [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
+        objects.should == [{ 'foo' => 'bar' }, { 'hello' => { 'world' => [1, 2, 3] } }, { 'x' => 'y' }]
       end
     end
 
@@ -89,7 +89,7 @@ describe MessagePack::Unpacker do
         subject.each do |obj|
           objects << obj
         end
-        objects.should == [{'foo' => 'bar'}, {'hello' => {'world' => [1, 2, 3]}}, {'x' => 'y'}]
+        objects.should == [{ 'foo' => 'bar' }, { 'hello' => { 'world' => [1, 2, 3] } }, { 'x' => 'y' }]
       end
     end
   end
@@ -126,7 +126,7 @@ describe MessagePack::Unpacker do
     end
 
     let :buffer do
-      MessagePack.pack({'hello' => 'world', 'nested' => ['object', {"sk\xC3\xA5l".force_encoding('utf-8') => true}]})
+      MessagePack.pack({ 'hello' => 'world', 'nested' => ['object', { "sk\xC3\xA5l".force_encoding('utf-8') => true }] })
     end
 
     let :unpacker do
@@ -141,7 +141,7 @@ describe MessagePack::Unpacker do
     it 'produces results with encoding as binary or string(utf8)' do
       unpacker.execute(buffer, 0)
       strings = flatten(unpacker.data).grep(String)
-      strings.map(&:encoding).uniq.sort{|a,b| a.to_s <=> b.to_s}.should == [Encoding::ASCII_8BIT, Encoding::UTF_8]
+      strings.map(&:encoding).uniq.sort { |a, b| a.to_s <=> b.to_s }.should == [Encoding::ASCII_8BIT, Encoding::UTF_8]
     end
 
     it 'recodes to internal encoding' do
@@ -153,26 +153,26 @@ describe MessagePack::Unpacker do
   context 'extensions' do
     context 'symbolized keys' do
       let :buffer do
-        MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
+        MessagePack.pack({ 'hello' => 'world', 'nested' => ['object', { 'structure' => true }] })
       end
 
       let :unpacker do
-        described_class.new(:symbolize_keys => true)
+        described_class.new(symbolize_keys: true)
       end
 
       it 'can symbolize keys when using #execute' do
         unpacker.execute(buffer, 0)
-        unpacker.data.should == {:hello => 'world', :nested => ['object', {:structure => true}]}
+        unpacker.data.should == { hello: 'world', nested: ['object', { structure: true }] }
       end
     end
 
     context 'encoding', :encodings do
       let :buffer do
-        MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
+        MessagePack.pack({ 'hello' => 'world', 'nested' => ['object', { 'structure' => true }] })
       end
 
       let :unpacker do
-        described_class.new()
+        described_class.new
       end
 
       it 'decode binary as ascii-8bit string when using #execute' do

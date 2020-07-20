@@ -1,4 +1,3 @@
-
 module MessagePack
   #
   # Serializes an object into an IO or String.
@@ -16,8 +15,7 @@ module MessagePack
   #
   # See Packer#initialize for supported options.
   #
-  def self.dump(obj)
-  end
+  def self.dump(obj); end
 
   #
   # Serializes an object into an IO or String. Alias of dump.
@@ -35,8 +33,7 @@ module MessagePack
   #
   # See Packer#initialize for supported options.
   #
-  def self.pack(obj)
-  end
+  def self.pack(obj); end
 
   #
   # Deserializes an object from an IO or String.
@@ -53,8 +50,7 @@ module MessagePack
   #
   # See Unpacker#initialize for supported options.
   #
-  def self.load(src, options={})
-  end
+  def self.load(src, options = {}); end
 
   #
   # Deserializes an object from an IO or String. Alias of load.
@@ -71,8 +67,7 @@ module MessagePack
   #
   # See Unpacker#initialize for supported options.
   #
-  def self.unpack(src, options={})
-  end
+  def self.unpack(src, options = {}); end
 
   #
   # An instance of Factory class. DefaultFactory is also used
@@ -84,4 +79,3 @@ module MessagePack
   #
   DefaultFactory = Factory.new
 end
-

@@ -1,10 +1,9 @@
 # encoding: ascii-8bit
+
 require 'spec_helper'
 
 require 'stringio'
-if defined?(Encoding)
-  Encoding.default_external = 'ASCII-8BIT'
-end
+Encoding.default_external = 'ASCII-8BIT' if defined?(Encoding)
 
 describe Packer do
   let :packer do
@@ -26,4 +25,3 @@ describe Packer do
     packer.buffer.object_id.should == o1
   end
 end
-

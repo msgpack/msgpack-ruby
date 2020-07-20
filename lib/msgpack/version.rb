@@ -1,5 +1,5 @@
 module MessagePack
-  VERSION = "1.3.3"
+  VERSION = '1.3.3'.freeze
 
   # NOTE for msgpack-ruby maintainer:
   # Check these things to release new binaryes for new Ruby versions (especially for Windows):

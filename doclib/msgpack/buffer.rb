@@ -1,5 +1,4 @@
 module MessagePack
-
   class Buffer
     #
     # Creates a MessagePack::Buffer instance.
@@ -22,24 +21,21 @@ module MessagePack
     # * *:read_reference_threshold* the threshold size to enable zero-copy deserialize optimization. Read strings longer than this threshold will refer the original string instead of copying it. (default: 256) (supported in MRI only)
     # * *:write_reference_threshold* the threshold size to enable zero-copy serialize optimization. The buffer refers written strings longer than this threshold instead of copying it. (default: 524288) (supported in MRI only)
     #
-    def initialize(*args)
-    end
+    def initialize(*args); end
 
     #
     # Makes the buffer empty
     #
     # @return nil
     #
-    def clear
-    end
+    def clear; end
 
     #
     # Returns byte size of the buffer.
     #
     # @return nil
     #
-    def size
-    end
+    def size; end
 
     #
     # Returns _true_ if the buffer is empty.
@@ -47,8 +43,7 @@ module MessagePack
     #
     # @return [Boolean]
     #
-    def empty?
-    end
+    def empty?; end
 
     #
     # Appends the given data to the buffer.
@@ -56,8 +51,7 @@ module MessagePack
     # @param data [String]
     # @return [Integer] byte size written
     #
-    def write(data)
-    end
+    def write(data); end
 
     #
     # Appends the given data to the buffer.
@@ -65,8 +59,7 @@ module MessagePack
     # @param data [String]
     # @return [Buffer] self
     #
-    def <<(data)
-    end
+    def <<(data); end
 
     #
     # Consumes _n_ bytes from the head of the buffer and returns consumed data.
@@ -86,8 +79,7 @@ module MessagePack
     #
     # @return [String]
     #
-    def read(n)
-    end
+    def read(n); end
 
     #
     # Consumes _n_ bytes from the head of the buffer and returns consumed data.
@@ -107,8 +99,7 @@ module MessagePack
     #
     # @return [String]
     #
-    def read_all(n, buffer=nil)
-    end
+    def read_all(n, buffer = nil); end
 
     #
     # Consumes _n_ bytes from the head of the buffer.
@@ -119,8 +110,7 @@ module MessagePack
     # @param n [Integer] byte size to skip
     # @return [Integer] byte size actually skipped
     #
-    def skip(n)
-    end
+    def skip(n); end
 
     #
     # Consumes _n_ bytes from the head of the buffer.
@@ -130,8 +120,7 @@ module MessagePack
     # @param n [Integer] byte size to skip
     # @return [Buffer] self
     #
-    def skip_all(n)
-    end
+    def skip_all(n); end
 
     #
     # Returns all data in the buffer as a string.
@@ -139,8 +128,7 @@ module MessagePack
     #
     # @return [String]
     #
-    def to_str
-    end
+    def to_str; end
 
     #
     # Returns content of the buffer as an array of strings.
@@ -150,8 +138,7 @@ module MessagePack
     #
     # @return [Array] array of strings
     #
-    def to_a
-    end
+    def to_a; end
 
     #
     # Internal io
@@ -166,8 +153,7 @@ module MessagePack
     #
     # @return [Buffer] self
     #
-    def flush
-    end
+    def flush; end
 
     #
     # Closes internal IO if its set.
@@ -175,8 +161,7 @@ module MessagePack
     #
     # @return nil
     #
-    def close
-    end
+    def close; end
 
     #
     # Writes all of data in the internal buffer into the given IO.
@@ -186,8 +171,6 @@ module MessagePack
     # @param io [IO]
     # @return [Integer] byte size of written data
     #
-    def write_to(io)
-    end
+    def write_to(io); end
   end
-
 end

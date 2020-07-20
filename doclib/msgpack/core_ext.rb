@@ -1,12 +1,10 @@
-
 class NilClass
   #
   # Same as MessagePack.to_msgpack(self[, packer]).
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
 class TrueClass
@@ -15,8 +13,7 @@ class TrueClass
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
 class FalseClass
@@ -25,28 +22,25 @@ class FalseClass
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
-class Fixnum < Integer
+class Fixnum < Integer # rubocop:disable Lint/UnifiedInteger
   #
   # Same as MessagePack.to_msgpack(self[, packer]).
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
-class Bignum < Integer
+class Bignum < Integer # rubocop:disable Lint/UnifiedInteger
   #
   # Same as MessagePack.to_msgpack(self[, packer]).
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
 class Float < Numeric
@@ -55,8 +49,7 @@ class Float < Numeric
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
 class String
@@ -65,8 +58,7 @@ class String
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
 class Array
@@ -75,8 +67,7 @@ class Array
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
 class Hash
@@ -85,8 +76,7 @@ class Hash
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
 
 class Symbol
@@ -95,7 +85,5 @@ class Symbol
   #
   # @return [String] serialized data
   #
-  def to_msgpack(packer=nil)
-  end
+  def to_msgpack(packer = nil); end
 end
-

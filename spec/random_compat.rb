@@ -1,7 +1,6 @@
-
 unless defined? Random
   class Random
-    def initialize(seed=Time.now.to_i)
+    def initialize(seed = Time.now.to_i)
       Kernel.srand(seed)
       @seed = seed
     end
@@ -21,4 +20,3 @@ unless defined? Random
     end
   end
 end
-

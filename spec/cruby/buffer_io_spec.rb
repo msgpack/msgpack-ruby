@@ -2,9 +2,7 @@ require 'spec_helper'
 require 'random_compat'
 
 require 'stringio'
-if defined?(Encoding)
-  Encoding.default_external = 'ASCII-8BIT'
-end
+Encoding.default_external = 'ASCII-8BIT' if defined?(Encoding)
 
 describe Buffer do
   r = Random.new
@@ -45,18 +43,18 @@ describe Buffer do
     set_source 'aa'
     buffer.read(1).should == 'a'
     buffer.read(1).should == 'a'
-    buffer.read(1).should == nil
+    buffer.read(1).should.nil?
   end
 
   it 'long feed and read all' do
-    set_source ' '*(1024*1024)
+    set_source ' ' * (1024 * 1024)
     s = buffer.read
     s.size.should == source.size
     s.should == source
   end
 
   it 'long feed and read mixed' do
-    set_source ' '*(1024*1024)
+    set_source ' ' * (1024 * 1024)
     buffer.read(10).should == source.slice!(0, 10)
     buffer.read(10).should == source.slice!(0, 10)
     buffer.read(10).should == source.slice!(0, 10)
@@ -90,7 +88,7 @@ describe Buffer do
   end
 
   it 'write long once and flush' do
-    s = ' '*(1024*1024)
+    s = ' ' * (1024 * 1024)
     buffer.write s
     buffer.flush
     io.string.size.should == s.size
@@ -98,10 +96,10 @@ describe Buffer do
   end
 
   it 'write short multi and flush' do
-    s = ' '*(1024*1024)
-    1024.times {
-      buffer.write ' '*1024
-    }
+    s = ' ' * (1024 * 1024)
+    1024.times do
+      buffer.write ' ' * 1024
+    end
     buffer.flush
     io.string.size.should == s.size
     io.string.should == s
@@ -110,11 +108,11 @@ describe Buffer do
   it 'random read' do
     r = Random.new(random_seed)
 
-    50.times {
+    50.times do
       fragments = []
 
       r.rand(4).times do
-        n = r.rand(1024*1400)
+        n = r.rand(1024 * 1400)
         s = r.bytes(n)
         fragments << s
       end
@@ -122,25 +120,25 @@ describe Buffer do
       io = StringIO.new(fragments.join)
       b = Buffer.new(io)
 
-      fragments.each {|s|
+      fragments.each do |s|
         x = b.read(s.size)
         x.size.should == s.size
         x.should == s
-      }
+      end
       b.empty?.should == true
       b.read.should == ''
-    }
+    end
   end
 
   it 'random read_all' do
     r = Random.new(random_seed)
 
-    50.times {
+    50.times do
       fragments = []
       r.bytes(0)
 
       r.rand(4).times do
-        n = r.rand(1024*1400)
+        n = r.rand(1024 * 1400)
         s = r.bytes(n)
         fragments << s
       end
@@ -148,26 +146,26 @@ describe Buffer do
       io = StringIO.new(fragments.join)
       b = Buffer.new(io)
 
-      fragments.each {|s|
+      fragments.each do |s|
         x = b.read_all(s.size)
         x.size.should == s.size
         x.should == s
-      }
+      end
       b.empty?.should == true
       lambda {
         b.read_all(1)
       }.should raise_error(EOFError)
-    }
+    end
   end
 
   it 'random skip' do
     r = Random.new(random_seed)
 
-    50.times {
+    50.times do
       fragments = []
 
       r.rand(4).times do
-        n = r.rand(1024*1400)
+        n = r.rand(1024 * 1400)
         s = r.bytes(n)
         fragments << s
       end
@@ -175,22 +173,22 @@ describe Buffer do
       io = StringIO.new(fragments.join)
       b = Buffer.new(io)
 
-      fragments.each {|s|
+      fragments.each do |s|
         b.skip(s.size).should == s.size
-      }
+      end
       b.empty?.should == true
       b.skip(1).should == 0
-    }
+    end
   end
 
   it 'random skip_all' do
     r = Random.new(random_seed)
 
-    50.times {
+    50.times do
       fragments = []
 
       r.rand(4).times do
-        n = r.rand(1024*1400)
+        n = r.rand(1024 * 1400)
         s = r.bytes(n)
         fragments << s
       end
@@ -198,28 +196,28 @@ describe Buffer do
       io = StringIO.new(fragments.join)
       b = Buffer.new(io)
 
-      fragments.each {|s|
+      fragments.each do |s|
         lambda {
           b.skip_all(s.size)
         }.should_not raise_error
-      }
+      end
       b.empty?.should == true
       lambda {
         b.skip_all(1)
       }.should raise_error(EOFError)
-    }
+    end
   end
 
   it 'random write and flush' do
     r = Random.new(random_seed)
 
-    50.times {
+    50.times do
       s = r.bytes(0)
       io = StringIO.new
       b = Buffer.new(io)
 
       r.rand(4).times do
-        n = r.rand(1024*1400)
+        n = r.rand(1024 * 1400)
         x = r.bytes(n)
         s << x
         b.write(x)
@@ -231,18 +229,18 @@ describe Buffer do
 
       io.string.size.should == s.size
       io.string.should == s
-    }
+    end
   end
 
   it 'random write and clear' do
     r = Random.new(random_seed)
     b = Buffer.new
 
-    50.times {
+    50.times do
       s = r.bytes(0)
 
       r.rand(4).times do
-        n = r.rand(1024*1400)
+        n = r.rand(1024 * 1400)
         x = r.bytes(n)
         s << x
         b.write(x)
@@ -250,6 +248,6 @@ describe Buffer do
 
       b.size.should == s.size
       b.clear
-    }
+    end
   end
 end

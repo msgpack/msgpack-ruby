@@ -7,8 +7,7 @@ module MessagePack
     #
     # Creates a MessagePack::Factory instance
     #
-    def initialize
-    end
+    def initialize; end
 
     #
     # Creates a MessagePack::Packer instance, which has ext types already registered.
@@ -16,8 +15,7 @@ module MessagePack
     #
     # See also Packer#initialize for options.
     #
-    def packer(*args)
-    end
+    def packer(*args); end
 
     #
     # Serialize the passed value
@@ -31,8 +29,7 @@ module MessagePack
     #
     # See Packer#initialize for supported options.
     #
-    def dump(obj, options={})
-    end
+    def dump(obj, options = {}); end
     alias pack dump
 
     #
@@ -41,8 +38,7 @@ module MessagePack
     #
     # See also Unpacker#initialize for options.
     #
-    def unpacker(*args)
-    end
+    def unpacker(*args); end
 
     #
     # Deserializes an object from the string or io and returns it.
@@ -57,8 +53,7 @@ module MessagePack
     #
     # See Unpacker#initialize for supported options.
     #
-    def load(data, options={})
-    end
+    def load(data, options = {}); end
     alias unpack load
 
     #
@@ -76,8 +71,7 @@ module MessagePack
     # * *:packer* specify symbol or proc object for packer
     # * *:unpacker* specify symbol or proc object for unpacker
     #
-    def register_type(type, klass, options={})
-    end
+    def register_type(type, klass, options = {}); end
 
     #
     # Returns a list of registered types, ordered by type id.
@@ -85,8 +79,7 @@ module MessagePack
     # @param selector [Symbol] specify to list types registered for :packer, :unpacker or :both (default)
     # @return Array
     #
-    def registered_types(selector=:both)
-    end
+    def registered_types(selector = :both); end
 
     #
     # Returns true/false which indicate specified class or type id is registered or not.
@@ -95,7 +88,6 @@ module MessagePack
     # @param selector [Symbol] specify to check for :packer, :unpacker or :both (default)
     # @return true or false
     #
-    def type_registered?(klass_or_type, selector=:both)
-    end
+    def type_registered?(klass_or_type, selector = :both); end
   end
 end

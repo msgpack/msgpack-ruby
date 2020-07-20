@@ -4,6 +4,6 @@ class Symbol
   end
 
   def self.from_msgpack_ext(data)
-    data.unpack('A*').first.to_sym
+    data.unpack1('A*').to_sym
   end
 end

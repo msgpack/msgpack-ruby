@@ -1,4 +1,3 @@
-
 require 'bundler'
 Bundler::GemHelper.install_tasks
 
@@ -8,22 +7,22 @@ require 'rspec/core'
 require 'rspec/core/rake_task'
 require 'yard'
 
-task :spec => :compile
+task spec: :compile
 
 desc 'Run RSpec code examples and measure coverage'
 task :coverage do |t|
   ENV['SIMPLE_COV'] = '1'
-  Rake::Task["spec"].invoke
+  Rake::Task['spec'].invoke
 end
 
 desc 'Generate YARD document'
 YARD::Rake::YardocTask.new(:doc) do |t|
-  t.files   = ['lib/msgpack/version.rb','doclib/**/*.rb']
+  t.files   = ['lib/msgpack/version.rb', 'doclib/**/*.rb']
   t.options = []
   t.options << '--debug' << '--verbose' if $trace
 end
 
-spec = eval File.read("msgpack.gemspec")
+spec = eval File.read('msgpack.gemspec')
 
 if RUBY_PLATFORM =~ /java/
   require 'rake/javaextensiontask'
@@ -45,25 +44,24 @@ else
     ext.cross_compile = true
     ext.lib_dir = File.join(*['lib', 'msgpack', ENV['FAT_DIR']].compact)
     # cross_platform names are of MRI's platform name
-    ext.cross_platform = ['x86-mingw32', 'x64-mingw32']
+    ext.cross_platform = %w[x86-mingw32 x64-mingw32]
   end
 end
 
-test_pattern = case
-               when RUBY_PLATFORM =~ /java/ then 'spec/{,jruby/}*_spec.rb'
-               when RUBY_ENGINE =~ /rbx/ then 'spec/*_spec.rb'
+test_pattern = if RUBY_PLATFORM =~ /java/ then 'spec/{,jruby/}*_spec.rb'
+               elsif RUBY_ENGINE =~ /rbx/ then 'spec/*_spec.rb'
                else 'spec/{,cruby/}*_spec.rb' # MRI
                end
 RSpec::Core::RakeTask.new(:spec) do |t|
-  t.rspec_opts = ["-c", "-f progress"]
-  t.rspec_opts << "-Ilib"
+  t.rspec_opts = ['-c', '-f progress']
+  t.rspec_opts << '-Ilib'
   t.pattern = test_pattern
   t.verbose = true
 end
 
 namespace :build do
   desc 'Build gem for JRuby after cleaning'
-  task :java => [:clean, :spec, :build]
+  task java: %i[clean spec build]
 
   desc 'Build gems for Windows per rake-compiler-dock'
   task :windows do
@@ -75,4 +73,4 @@ end
 
 CLEAN.include('lib/msgpack/msgpack.*')
 
-task :default => [:spec, :build, :doc]
+task default: %i[spec build doc]

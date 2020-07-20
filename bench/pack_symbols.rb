@@ -6,7 +6,7 @@ data = :symbol
 Viiite.bench do |b|
   b.variation_point :branch, `git rev-parse --abbrev-ref HEAD`
 
-  b.range_over([:symbol, :none], :reg_type) do |reg_type|
+  b.range_over(%i[symbol none], :reg_type) do |reg_type|
     packer = MessagePack::Packer.new
     packer.register_type(0x00, Symbol, :to_msgpack_ext) if reg_type == :symbol
 

@@ -10,7 +10,7 @@ class DummyTimeStamp1
   end
 
   def ==(other)
-    self.utime == other.utime && self.usec == other.usec
+    utime == other.utime && usec == other.usec
   end
 
   def self.type_id
@@ -22,7 +22,7 @@ class DummyTimeStamp1
   end
 
   def to_msgpack_ext
-    [@utime,@usec].pack('I*')
+    [@utime, @usec].pack('I*')
   end
 end
 
@@ -38,7 +38,7 @@ class DummyTimeStamp2
   end
 
   def ==(other)
-    self.utime == other.utime && self.usec == other.usec
+    utime == other.utime && usec == other.usec
   end
 
   def self.deserialize(data)
@@ -46,6 +46,6 @@ class DummyTimeStamp2
   end
 
   def serialize
-    [@utime,@usec].map(&:to_s).join(',')
+    [@utime, @usec].map(&:to_s).join(',')
   end
 end

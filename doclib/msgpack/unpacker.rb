@@ -1,5 +1,4 @@
 module MessagePack
-
   #
   # MessagePack::Unpacker is a class to deserialize objects.
   #
@@ -23,8 +22,7 @@ module MessagePack
     #
     # See also Buffer#initialize for other options.
     #
-    def initialize(*args)
-    end
+    def initialize(*args); end
 
     #
     # Register a new ext type to deserialize it. This method should be called with
@@ -41,8 +39,7 @@ module MessagePack
     #
     # @return nil
     #
-    def register_type(type, klass, method_name, &block)
-    end
+    def register_type(type, klass, method_name, &block); end
 
     #
     # Returns a list of registered types, ordered by type id.
@@ -50,8 +47,7 @@ module MessagePack
     #
     # @return Array
     #
-    def registered_types
-    end
+    def registered_types; end
 
     #
     # Returns true/false which indicate specified class or type id is registered or not.
@@ -59,8 +55,7 @@ module MessagePack
     # @param klass_or_type [Class or Fixnum] Class or type id (0-127) to be checked
     # @return true or false
     #
-    def type_registered?(klass_or_type)
-    end
+    def type_registered?(klass_or_type); end
 
     #
     # Internal buffer
@@ -83,8 +78,7 @@ module MessagePack
     #
     # @return [Object] deserialized object
     #
-    def read
-    end
+    def read; end
 
     alias unpack read
 
@@ -95,8 +89,7 @@ module MessagePack
     #
     # @return nil
     #
-    def skip
-    end
+    def skip; end
 
     #
     # Deserializes a nil value if it exists and returns _true_.
@@ -107,8 +100,7 @@ module MessagePack
     #
     # @return [Boolean]
     #
-    def skip_nil
-    end
+    def skip_nil; end
 
     #
     # Read a header of an array and returns its size.
@@ -119,8 +111,7 @@ module MessagePack
     #
     # @return [Integer] size of the array
     #
-    def read_array_header
-    end
+    def read_array_header; end
 
     #
     # Reads a header of an map and returns its size.
@@ -131,8 +122,7 @@ module MessagePack
     #
     # @return [Integer] size of the map
     #
-    def read_map_header
-    end
+    def read_map_header; end
 
     #
     # Appends data into the internal buffer.
@@ -141,8 +131,7 @@ module MessagePack
     # @param data [String]
     # @return [Unpacker] self
     #
-    def feed(data)
-    end
+    def feed(data); end
 
     #
     # Repeats to deserialize objects.
@@ -157,8 +146,7 @@ module MessagePack
     # @yieldparam object [Object] deserialized object
     # @return nil
     #
-    def each(&block)
-    end
+    def each(&block); end
 
     #
     # Appends data into the internal buffer and repeats to deserialize objects.
@@ -168,16 +156,13 @@ module MessagePack
     # @yieldparam object [Object] deserialized object
     # @return nil
     #
-    def feed_each(data, &block)
-    end
+    def feed_each(data, &block); end
 
     #
     # Clears the internal buffer and resets deserialization state of the unpacker.
     #
     # @return nil
     #
-    def reset
-    end
+    def reset; end
   end
-
 end

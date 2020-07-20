@@ -25,7 +25,7 @@ describe MessagePack do
       ['-1', -1, "\xFF"],
       ['-33', -33, "\xD0\xDF"],
       ['-129', -129, "\xD1\xFF\x7F"],
-      ['small integers', 42, "*"],
+      ['small integers', 42, '*'],
       ['medium integers', 333, "\xCD\x01M"],
       ['large integers', 2**31 - 1, "\xCE\x7F\xFF\xFF\xFF"],
       ['huge integers', 2**64 - 1, "\xCF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"],
@@ -47,17 +47,17 @@ describe MessagePack do
     ],
     'arrays' => [
       ['empty arrays', [], "\x90"],
-      ['arrays with strings', [utf8enc("hello"), utf8enc("world")], "\x92\xA5hello\xA5world"],
-      ['arrays with mixed values', [utf8enc("hello"), utf8enc("world"), 42], "\x93\xA5hello\xA5world*"],
+      ['arrays with strings', [utf8enc('hello'), utf8enc('world')], "\x92\xA5hello\xA5world"],
+      ['arrays with mixed values', [utf8enc('hello'), utf8enc('world'), 42], "\x93\xA5hello\xA5world*"],
       ['arrays of arrays', [[[[1, 2], 3], 4]], "\x91\x92\x92\x92\x01\x02\x03\x04"],
       ['empty arrays', [], "\x90"]
     ],
     'hashes' => [
       ['empty hashes', {}, "\x80"],
-      ['hashes', {utf8enc('foo') => utf8enc('bar')}, "\x81\xA3foo\xA3bar"],
-      ['hashes with mixed keys and values', {utf8enc('foo') => utf8enc('bar'), 3 => utf8enc('three'), utf8enc('four') => 4, utf8enc('x') => [utf8enc('y')], utf8enc('a') => utf8enc('b')}, "\x85\xA3foo\xA3bar\x03\xA5three\xA4four\x04\xA1x\x91\xA1y\xA1a\xA1b"],
-      ['hashes of hashes', {{utf8enc('x') => {utf8enc('y') => utf8enc('z')}} => utf8enc('s')}, "\x81\x81\xA1x\x81\xA1y\xA1z\xA1s"],
-      ['hashes with nils', {utf8enc('foo') => nil}, "\x81\xA3foo\xC0"]
+      ['hashes', { utf8enc('foo') => utf8enc('bar') }, "\x81\xA3foo\xA3bar"],
+      ['hashes with mixed keys and values', { utf8enc('foo') => utf8enc('bar'), 3 => utf8enc('three'), utf8enc('four') => 4, utf8enc('x') => [utf8enc('y')], utf8enc('a') => utf8enc('b') }, "\x85\xA3foo\xA3bar\x03\xA5three\xA4four\x04\xA1x\x91\xA1y\xA1a\xA1b"],
+      ['hashes of hashes', { { utf8enc('x') => { utf8enc('y') => utf8enc('z') } } => utf8enc('s') }, "\x81\x81\xA1x\x81\xA1y\xA1z\xA1s"],
+      ['hashes with nils', { utf8enc('foo') => nil }, "\x81\xA3foo\xC0"]
     ]
   }
 
@@ -116,32 +116,32 @@ describe MessagePack do
     end
 
     it 'rasies an error on #unpack with garbage' do
-      skip "but nothing was raised. why?"
+      skip 'but nothing was raised. why?'
       expect { MessagePack.unpack('asdka;sd') }.to raise_error(MessagePack::UnpackError)
     end
   end
 
   context 'extensions' do
     it 'can unpack hashes with symbolized keys' do
-      packed = MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
-      unpacked = MessagePack.unpack(packed, :symbolize_keys => true)
-      unpacked.should == {:hello => 'world', :nested => ['object', {:structure => true}]}
+      packed = MessagePack.pack({ 'hello' => 'world', 'nested' => ['object', { 'structure' => true }] })
+      unpacked = MessagePack.unpack(packed, symbolize_keys: true)
+      unpacked.should == { hello: 'world', nested: ['object', { structure: true }] }
     end
 
     it 'does not symbolize keys even if other options are present' do
-      packed = MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
-      unpacked = MessagePack.unpack(packed, :other_option => false)
-      unpacked.should == {'hello' => 'world', 'nested' => ['object', {'structure' => true}]}
+      packed = MessagePack.pack({ 'hello' => 'world', 'nested' => ['object', { 'structure' => true }] })
+      unpacked = MessagePack.unpack(packed, other_option: false)
+      unpacked.should == { 'hello' => 'world', 'nested' => ['object', { 'structure' => true }] }
     end
 
     it 'can unpack strings with a specified encoding', :encodings do
-      packed = MessagePack.pack({utf8enc('hello') => utf8enc('world')})
+      packed = MessagePack.pack({ utf8enc('hello') => utf8enc('world') })
       unpacked = MessagePack.unpack(packed)
       unpacked['hello'].encoding.should == Encoding::UTF_8
     end
 
     it 'can pack strings with a specified encoding', :encodings do
-      packed = MessagePack.pack({'hello' => "w\xE5rld".force_encoding(Encoding::ISO_8859_1)})
+      packed = MessagePack.pack({ 'hello' => "w\xE5rld".force_encoding(Encoding::ISO_8859_1) })
       packed.index("w\xC3\xA5rld").should_not be_nil
     end
   end
@@ -174,7 +174,7 @@ describe MessagePack do
     require 'stringio'
 
     it 'work with IO destination object as 2nd argument of MessagePack.pack' do
-      Tempfile.create("pack-test") do |io|
+      Tempfile.create('pack-test') do |io|
         return_value = MessagePack.pack(utf8enc('hello world'), io)
         return_value.should be_nil
 
@@ -193,7 +193,7 @@ describe MessagePack do
     end
 
     it 'work with IO source object as source of MessagePack.unpack' do
-      Tempfile.create("unpack-test") do |io|
+      Tempfile.create('unpack-test') do |io|
         MessagePack.pack(utf8enc('hello world'), io)
         io.rewind
 

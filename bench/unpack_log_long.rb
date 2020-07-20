@@ -4,21 +4,21 @@ require 'viiite'
 require 'msgpack'
 
 data_plain = MessagePack.pack({
-    'message' => '127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"'
-})
+                                'message' => '127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"'
+                              })
 data_structure = MessagePack.pack({
-  'remote_host' => '127.0.0.1',
-  'remote_user' => '-',
-  'date' => '10/Oct/2000:13:55:36 -0700',
-  'request' => 'GET /apache_pb.gif HTTP/1.0',
-  'method' => 'GET',
-  'path' => '/apache_pb.gif',
-  'protocol' => 'HTTP/1.0',
-  'status' => 200,
-  'bytes' => 2326,
-  'referer' => 'http://www.example.com/start.html',
-  'agent' => 'Mozilla/4.08 [en] (Win98; I ;Nav)',
-})
+                                    'remote_host' => '127.0.0.1',
+                                    'remote_user' => '-',
+                                    'date' => '10/Oct/2000:13:55:36 -0700',
+                                    'request' => 'GET /apache_pb.gif HTTP/1.0',
+                                    'method' => 'GET',
+                                    'path' => '/apache_pb.gif',
+                                    'protocol' => 'HTTP/1.0',
+                                    'status' => 200,
+                                    'bytes' => 2326,
+                                    'referer' => 'http://www.example.com/start.html',
+                                    'agent' => 'Mozilla/4.08 [en] (Win98; I ;Nav)'
+                                  })
 
 seconds = 3600 # 1 hour
 
@@ -31,16 +31,16 @@ Viiite.bench do |b|
         t = Thread.new do
           packs = 0
           while Time.now < end_at
-            10000.times do
+            10_000.times do
               MessagePack.unpack(data_plain)
             end
-            packs += 10000
+            packs += 10_000
           end
           packs
         end
         ths.push t
       end
-      sum = ths.reduce(0){|r,t| r + t.value }
+      sum = ths.reduce(0) { |r, t| r + t.value }
       puts "MessagePack.unpack, plain, #{threads} threads: #{sum} times, #{sum / seconds} times/second."
     end
 
@@ -51,16 +51,16 @@ Viiite.bench do |b|
         t = Thread.new do
           packs = 0
           while Time.now < end_at
-            10000.times do
+            10_000.times do
               MessagePack.unpack(data_structure)
             end
-            packs += 10000
+            packs += 10_000
           end
           packs
         end
         ths.push t
       end
-      sum = ths.reduce(0){|r,t| r + t.value }
+      sum = ths.reduce(0) { |r, t| r + t.value }
       puts "MessagePack.unpack, structured, #{threads} threads: #{sum} times, #{sum / seconds} times/second."
     end
   end

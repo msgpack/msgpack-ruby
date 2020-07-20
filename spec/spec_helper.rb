@@ -1,4 +1,3 @@
-
 if ENV['SIMPLE_COV']
   require 'simplecov'
   SimpleCov.start do
@@ -9,7 +8,7 @@ if ENV['SIMPLE_COV']
 end
 
 if ENV['GC_STRESS']
-  puts "enable GC.stress"
+  puts 'enable GC.stress'
   GC.stress = true
 end
 
@@ -22,12 +21,12 @@ end
 if java?
   RSpec.configure do |c|
     c.treat_symbols_as_metadata_keys_with_true_values = true
-    c.filter_run_excluding :encodings => !(defined? Encoding)
+    c.filter_run_excluding encodings: !(defined? Encoding)
   end
 else
   RSpec.configure do |config|
     config.expect_with :rspec do |c|
-      c.syntax = [:should, :expect]
+      c.syntax = %i[should expect]
     end
   end
   Packer = MessagePack::Packer
