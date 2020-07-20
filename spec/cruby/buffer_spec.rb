@@ -21,9 +21,7 @@ describe Buffer do
   STATIC_EXAMPLES[:offset02] = 'ort' + 'short' * 127
   STATIC_EXAMPLES[:offset03] = 'ort' + 'short' * (126 + 1024)
 
-  if ''.respond_to?(:force_encoding)
-    STATIC_EXAMPLES.each_value { |v| v.force_encoding('ASCII-8BIT') }
-  end
+  STATIC_EXAMPLES.each_value { |v| v.force_encoding('ASCII-8BIT') } if ''.respond_to?(:force_encoding)
   STATIC_EXAMPLES.each_value { |v| v.freeze }
 
   r = Random.new

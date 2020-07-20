@@ -34,3 +34,18 @@ Lint/UnusedMethodArgument:
 # Offense count: 128
 Lint/Void:
   Enabled: false
+
+Layout/LineLength: # Line is too long
+  Enabled: false
+
+Metrics/BlockLength: # Block has too many lines.
+  Enabled: false
+
+Metrics/MethodLength: # Method has too many lines.
+  Enabled: false
+
+Naming/MethodParameterName: # Method parameter must be at least 3 characters long.
+  Enabled: false
+
+Style/FrozenStringLiteralComment: # Missing frozen string literal comment
+  Enabled: false

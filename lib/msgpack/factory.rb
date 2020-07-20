@@ -16,9 +16,7 @@ module MessagePack
           type = ary[0]
           packer_arg = ary[2]
           unpacker_arg = nil
-          if unpacker.has_key?(type) && unpacker[type][0] == klass
-            unpacker_arg = unpacker.delete(type)[2]
-          end
+          unpacker_arg = unpacker.delete(type)[2] if unpacker.has_key?(type) && unpacker[type][0] == klass
           list << { type: type, class: klass, packer: packer_arg, unpacker: unpacker_arg }
         end
 

@@ -103,7 +103,7 @@ class Symbol
 end
 
 if 1.class.name == 'Integer'
-  class Fixnum  # rubocop:disable Lint/UnifiedInteger
+  class Fixnum # rubocop:disable Lint/UnifiedInteger
     include MessagePack::CoreExt
 
     private
