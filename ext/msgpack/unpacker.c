@@ -28,7 +28,7 @@
 static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
 
-static ID s_call;
+static ID s_call, s_uminus;
 
 #ifdef UNPACKER_STACK_RMEM
 static msgpack_rmem_t s_stack_rmem;
@@ -41,6 +41,7 @@ void msgpack_unpacker_static_init()
 #endif
 
     s_call = rb_intern("call");
+    s_uminus = rb_intern("-@");
 }
 
 void msgpack_unpacker_static_destroy()
@@ -300,8 +301,21 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
         } else {
             ret = object_complete_ext(uk, raw_type, string);
         }
+
         if(will_freeze) {
+# if HASH_ASET_DEDUPE_FROZEN
+             rb_obj_freeze(string);
+# elif HASH_ASET_DEDUPE
+            // Some ruby versions automatically dedup key strings, but only if
+            // they aren't frozen. So just do nothing.
+# elif STR_UMINUS_DEDUPE
+            // As a fallback we can use `String#-@` to deduplicate the string.
+            // Ruby 3.0 might expose an API to get deduplicated string from
+            // a char array.
+            uk->last_object = rb_funcall(string, s_uminus, 0);
+# else
             rb_obj_freeze(string);
+# endif
         }
         uk->reading_raw_remaining = 0;
         return ret;

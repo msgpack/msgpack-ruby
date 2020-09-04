@@ -25,6 +25,15 @@ describe MessagePack::Unpacker do
     u2.allow_unknown_ext?.should == true
   end
 
+  it 'ensure string hash keys are deduplicated' do
+    sample_data = [{"foo" => 1}, {"foo" => 2}]
+    sample_packed = MessagePack.pack(sample_data).force_encoding('ASCII-8BIT')
+    unpacker.feed(sample_packed)
+    hashes = nil
+    unpacker.each { |obj| hashes = obj }
+    expect(hashes[0].keys.first).to equal(hashes[1].keys.first)
+  end
+
   it 'gets IO or object which has #read to read data from it' do
     sample_data = {"message" => "morning!", "num" => 1}
     sample_packed = MessagePack.pack(sample_data).force_encoding('ASCII-8BIT')

@@ -25,6 +25,43 @@ if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
   $CFLAGS << %[ -DDISABLE_RMEM]
 end
 
+# checking if String#-@ (str_uminus) dedupes
+begin
+  a = -(%w(t e s t).join)
+  b = -(%w(t e s t).join)
+  if a.equal?(b)
+    $CFLAGS << ' -DSTR_UMINUS_DEDUPE=1 '
+  else
+    $CFLAGS << ' -DSTR_UMINUS_DEDUPE=0 '
+  end
+rescue NoMethodError
+  $CFLAGS << ' -DSTR_UMINUS_DEDUPE=0 '
+end
+
+# checking if Hash#[]= (rb_hash_aset) dedupes string keys
+h = {}
+x = {}
+r = rand.to_s
+h[%W(#{r}).join('')] = :foo
+x[%W(#{r}).join('')] = :foo
+if x.keys[0].equal?(h.keys[0])
+  $CFLAGS << ' -DHASH_ASET_DEDUPE=1 '
+else
+  $CFLAGS << ' -DHASH_ASET_DEDUPE=0 '
+end
+
+# checking if Hash#[]= (rb_hash_aset) dedupes frozen string keys
+h = {}
+x = {}
+r = rand.to_s
+h[%W(#{r}).join('').freeze] = :foo
+x[%W(#{r}).join('').freeze] = :foo
+if x.keys[0].equal?(h.keys[0])
+  $CFLAGS << ' -DHASH_ASET_DEDUPE_FROZEN=1 '
+else
+  $CFLAGS << ' -DHASH_ASET_DEDUPE_FROZEN=0 '
+end
+
 if warnflags = CONFIG['warnflags']
   warnflags.slice!(/ -Wdeclaration-after-statement/)
 end
