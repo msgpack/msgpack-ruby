@@ -19,6 +19,17 @@ def java?
   /java/ =~ RUBY_PLATFORM
 end
 
+# checking if Hash#[]= (rb_hash_aset) dedupes string keys
+def automatic_string_keys_deduplication?
+  h = {}
+  x = {}
+  r = rand.to_s
+  h[%W(#{r}).join('')] = :foo
+  x[%W(#{r}).join('')] = :foo
+
+  x.keys[0].equal?(h.keys[0])
+end
+
 if java?
   RSpec.configure do |c|
     c.treat_symbols_as_metadata_keys_with_true_values = true

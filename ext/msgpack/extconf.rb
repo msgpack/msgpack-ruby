@@ -25,6 +25,18 @@ if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
   $CFLAGS << %[ -DDISABLE_RMEM]
 end
 
+# checking if Hash#[]= (rb_hash_aset) dedupes string keys
+h = {}
+x = {}
+r = rand.to_s
+h[%W(#{r}).join('')] = :foo
+x[%W(#{r}).join('')] = :foo
+if x.keys[0].equal?(h.keys[0])
+  $CFLAGS << ' -DHASH_ASET_DEDUPE=1 '
+else
+  $CFLAGS << ' -DHASH_ASET_DEDUPE=0 '
+end
+
 if warnflags = CONFIG['warnflags']
   warnflags.slice!(/ -Wdeclaration-after-statement/)
 end
