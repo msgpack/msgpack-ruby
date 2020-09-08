@@ -300,9 +300,12 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
         } else {
             ret = object_complete_ext(uk, raw_type, string);
         }
+
+# if !HASH_ASET_DEDUPE
         if(will_freeze) {
             rb_obj_freeze(string);
         }
+# endif
         uk->reading_raw_remaining = 0;
         return ret;
     }
