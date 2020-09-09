@@ -18,10 +18,12 @@ describe MessagePack::Unpacker do
   it 'gets options to specify how to unpack values' do
     u1 = MessagePack::Unpacker.new
     u1.symbolize_keys?.should == false
+    u1.freeze?.should == false
     u1.allow_unknown_ext?.should == false
 
-    u2 = MessagePack::Unpacker.new(symbolize_keys: true, allow_unknown_ext: true)
+    u2 = MessagePack::Unpacker.new(symbolize_keys: true, freeze: true, allow_unknown_ext: true)
     u2.symbolize_keys?.should == true
+    u2.freeze?.should == true
     u2.allow_unknown_ext?.should == true
   end
 
@@ -659,6 +661,88 @@ describe MessagePack::Unpacker do
           objs << obj
         end
         objs.should == [{:hello => 'world', :nested => ['object', {:structure => true}]}]
+      end
+    end
+
+    context 'freeze' do
+      let :struct do
+        {'hello' => 'world', 'nested' => ['object', {'structure' => true}]}
+      end
+
+      let :buffer do
+        MessagePack.pack(struct)
+      end
+
+      let :unpacker do
+        described_class.new(:freeze => true)
+      end
+
+      it 'can freeze objects when using .unpack' do
+        parsed_struct = MessagePack.unpack(buffer, freeze: true)
+        parsed_struct.should == struct
+
+        parsed_struct.should be_frozen
+        parsed_struct['hello'].should be_frozen
+        parsed_struct['nested'].should be_frozen
+        parsed_struct['nested'][0].should be_frozen
+        parsed_struct['nested'][1].should be_frozen
+
+        if string_deduplication?
+          parsed_struct.keys[0].should be_equal('hello'.freeze)
+          parsed_struct.keys[1].should be_equal('nested'.freeze)
+          parsed_struct.values[0].should be_equal('world'.freeze)
+          parsed_struct.values[1][0].should be_equal('object'.freeze)
+          parsed_struct.values[1][1].keys[0].should be_equal('structure'.freeze)
+        end
+      end
+
+      it 'can freeze objects when using #each' do
+        objs = []
+        unpacker.feed(buffer)
+        unpacker.each do |obj|
+          objs << obj
+        end
+
+        parsed_struct = objs.first
+        parsed_struct.should == struct
+
+        parsed_struct.should be_frozen
+        parsed_struct['hello'].should be_frozen
+        parsed_struct['nested'].should be_frozen
+        parsed_struct['nested'][0].should be_frozen
+        parsed_struct['nested'][1].should be_frozen
+
+        if string_deduplication?
+          parsed_struct.keys[0].should be_equal('hello'.freeze)
+          parsed_struct.keys[1].should be_equal('nested'.freeze)
+          parsed_struct.values[0].should be_equal('world'.freeze)
+          parsed_struct.values[1][0].should be_equal('object'.freeze)
+          parsed_struct.values[1][1].keys[0].should be_equal('structure'.freeze)
+        end
+      end
+
+      it 'can freeze objects when using #feed_each' do
+        objs = []
+        unpacker.feed_each(buffer) do |obj|
+          objs << obj
+        end
+
+        parsed_struct = objs.first
+        parsed_struct.should == struct
+
+        parsed_struct.should be_frozen
+        parsed_struct['hello'].should be_frozen
+        parsed_struct['nested'].should be_frozen
+        parsed_struct['nested'][0].should be_frozen
+        parsed_struct['nested'][1].should be_frozen
+
+        if string_deduplication?
+          parsed_struct.keys[0].should be_equal('hello'.freeze)
+          parsed_struct.keys[1].should be_equal('nested'.freeze)
+          parsed_struct.values[0].should be_equal('world'.freeze)
+          parsed_struct.values[1][0].should be_equal('object'.freeze)
+          parsed_struct.values[1][1].keys[0].should be_equal('structure'.freeze)
+        end
       end
     end
 

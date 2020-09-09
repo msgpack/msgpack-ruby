@@ -105,6 +105,9 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
         v = rb_hash_aref(options, ID2SYM(rb_intern("symbolize_keys")));
         msgpack_unpacker_set_symbolized_keys(uk, RTEST(v));
 
+        v = rb_hash_aref(options, ID2SYM(rb_intern("freeze")));
+        msgpack_unpacker_set_freeze(uk, RTEST(v));
+
         v = rb_hash_aref(options, ID2SYM(rb_intern("allow_unknown_ext")));
         msgpack_unpacker_set_allow_unknown_ext(uk, RTEST(v));
     }
@@ -116,6 +119,12 @@ static VALUE Unpacker_symbolized_keys_p(VALUE self)
 {
     UNPACKER(self, uk);
     return uk->symbolize_keys ? Qtrue : Qfalse;
+}
+
+static VALUE Unpacker_freeze_p(VALUE self)
+{
+    UNPACKER(self, uk);
+    return uk->freeze ? Qtrue : Qfalse;
 }
 
 static VALUE Unpacker_allow_unknown_ext_p(VALUE self)
@@ -438,6 +447,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 
     rb_define_method(cMessagePack_Unpacker, "initialize", MessagePack_Unpacker_initialize, -1);
     rb_define_method(cMessagePack_Unpacker, "symbolize_keys?", Unpacker_symbolized_keys_p, 0);
+    rb_define_method(cMessagePack_Unpacker, "freeze?", Unpacker_freeze_p, 0);
     rb_define_method(cMessagePack_Unpacker, "allow_unknown_ext?", Unpacker_allow_unknown_ext_p, 0);
     rb_define_method(cMessagePack_Unpacker, "buffer", Unpacker_buffer, 0);
     rb_define_method(cMessagePack_Unpacker, "read", Unpacker_read, 0);

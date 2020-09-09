@@ -30,6 +30,12 @@ def automatic_string_keys_deduplication?
   x.keys[0].equal?(h.keys[0])
 end
 
+def string_deduplication?
+  r1 = rand.to_s
+  r2 = r1.dup
+  (-r1).equal?(-r2)
+end
+
 if java?
   RSpec.configure do |c|
     c.treat_symbols_as_metadata_keys_with_true_values = true

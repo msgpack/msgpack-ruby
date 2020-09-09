@@ -38,36 +38,38 @@ public class Decoder implements Iterator<IRubyObject> {
   private ExtensionRegistry registry;
   private ByteBuffer buffer;
   private boolean symbolizeKeys;
+  private boolean freeze;
   private boolean allowUnknownExt;
 
   public Decoder(Ruby runtime) {
-    this(runtime, null, new byte[] {}, 0, 0, false, false);
+    this(runtime, null, new byte[] {}, 0, 0, false, false, false);
   }
 
   public Decoder(Ruby runtime, ExtensionRegistry registry) {
-    this(runtime, registry, new byte[] {}, 0, 0, false, false);
+    this(runtime, registry, new byte[] {}, 0, 0, false, false, false);
   }
 
   public Decoder(Ruby runtime, byte[] bytes) {
-    this(runtime, null, bytes, 0, bytes.length, false, false);
+    this(runtime, null, bytes, 0, bytes.length, false, false, false);
   }
 
   public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes) {
-    this(runtime, registry, bytes, 0, bytes.length, false, false);
+    this(runtime, registry, bytes, 0, bytes.length, false, false, false);
   }
 
-  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, boolean symbolizeKeys, boolean allowUnknownExt) {
-    this(runtime, registry, bytes, 0, bytes.length, symbolizeKeys, allowUnknownExt);
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, boolean symbolizeKeys, boolean freeze, boolean allowUnknownExt) {
+    this(runtime, registry, bytes, 0, bytes.length, symbolizeKeys, freeze, allowUnknownExt);
   }
 
   public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length) {
-    this(runtime, registry, bytes, offset, length, false, false);
+    this(runtime, registry, bytes, offset, length, false, false, false);
   }
 
-  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean allowUnknownExt) {
+  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean freeze, boolean allowUnknownExt) {
     this.runtime = runtime;
     this.registry = registry;
     this.symbolizeKeys = symbolizeKeys;
+    this.freeze = freeze;
     this.allowUnknownExt = allowUnknownExt;
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     this.utf8Encoding = UTF8Encoding.INSTANCE;
@@ -118,7 +120,12 @@ public class Decoder implements Iterator<IRubyObject> {
   private IRubyObject consumeString(int size, Encoding encoding) {
     byte[] bytes = readBytes(size);
     ByteList byteList = new ByteList(bytes, encoding);
-    return runtime.newString(byteList);
+    RubyString string = runtime.newString(byteList);
+    if (this.freeze) {
+      string.setFrozen(true);
+      string = runtime.freezeAndDedupString(string);
+    }
+    return string;
   }
 
   private IRubyObject consumeArray(int size) {
@@ -220,6 +227,14 @@ public class Decoder implements Iterator<IRubyObject> {
 
   @Override
   public IRubyObject next() {
+    IRubyObject next = consumeNext();
+    if (freeze) {
+      next.setFrozen(true);
+    }
+    return next;
+  }
+
+  private IRubyObject consumeNext() {
     int position = buffer.position();
     try {
       byte b = buffer.get();
