@@ -34,6 +34,7 @@ public class Unpacker extends RubyObject {
   private Decoder decoder;
   private final RubyClass underflowErrorClass;
   private boolean symbolizeKeys;
+  private boolean freeze;
   private boolean allowUnknownExt;
 
   public Unpacker(Ruby runtime, RubyClass type) {
@@ -56,12 +57,17 @@ public class Unpacker extends RubyObject {
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
     symbolizeKeys = false;
     allowUnknownExt = false;
+    freeze = false;
     if (args.length > 0) {
       if (args[args.length - 1] instanceof RubyHash) {
         RubyHash options = (RubyHash) args[args.length - 1];
         IRubyObject sk = options.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
         if (sk != null) {
           symbolizeKeys = sk.isTrue();
+        }
+        IRubyObject f = options.fastARef(ctx.getRuntime().newSymbol("freeze"));
+        if (f != null) {
+          freeze = f.isTrue();
         }
         IRubyObject au = options.fastARef(ctx.getRuntime().newSymbol("allow_unknown_ext"));
         if (au != null) {
@@ -84,6 +90,11 @@ public class Unpacker extends RubyObject {
   @JRubyMethod(name = "symbolize_keys?")
   public IRubyObject isSymbolizeKeys(ThreadContext ctx) {
     return symbolizeKeys ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+  }
+
+  @JRubyMethod(name = "freeze?")
+  public IRubyObject isFreeze(ThreadContext ctx) {
+    return freeze ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
   }
 
   @JRubyMethod(name = "allow_unknown_ext?")
@@ -144,7 +155,7 @@ public class Unpacker extends RubyObject {
     if (limit == -1) {
       limit = byteList.length() - offset;
     }
-    Decoder decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin() + offset, limit, symbolizeKeys, allowUnknownExt);
+    Decoder decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin() + offset, limit, symbolizeKeys, freeze, allowUnknownExt);
     try {
       data = null;
       data = decoder.next();
@@ -174,7 +185,7 @@ public class Unpacker extends RubyObject {
   public IRubyObject feed(ThreadContext ctx, IRubyObject data) {
     ByteList byteList = data.asString().getByteList();
     if (decoder == null) {
-      decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin(), byteList.length(), symbolizeKeys, allowUnknownExt);
+      decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin(), byteList.length(), symbolizeKeys, freeze, allowUnknownExt);
     } else {
       decoder.feed(byteList.unsafeBytes(), byteList.begin(), byteList.length());
     }
@@ -312,7 +323,7 @@ public class Unpacker extends RubyObject {
     ByteList byteList = str.getByteList();
     this.stream = stream;
     this.decoder = null;
-    this.decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin(), byteList.length(), symbolizeKeys, allowUnknownExt);
+    this.decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin(), byteList.length(), symbolizeKeys, freeze, allowUnknownExt);
     return getStream(ctx);
   }
 }

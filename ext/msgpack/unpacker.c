@@ -28,7 +28,7 @@
 static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
 
-static ID s_call;
+static ID s_call, s_uminus;
 
 #ifdef UNPACKER_STACK_RMEM
 static msgpack_rmem_t s_stack_rmem;
@@ -41,6 +41,7 @@ void msgpack_unpacker_static_init()
 #endif
 
     s_call = rb_intern("call");
+    s_uminus = rb_intern("-@");
 }
 
 void msgpack_unpacker_static_destroy()
@@ -142,6 +143,10 @@ static inline void reset_head_byte(msgpack_unpacker_t* uk)
 
 static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 {
+    if(uk->freeze) {
+        rb_obj_freeze(object);
+    }
+
     uk->last_object = object;
     reset_head_byte(uk);
     return PRIMITIVE_OBJECT_COMPLETE;
@@ -152,6 +157,21 @@ static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 #ifdef COMPAT_HAVE_ENCODING
     ENCODING_SET(str, msgpack_rb_encindex_utf8);
 #endif
+
+#if STR_UMINUS_DEDUPE
+    if(uk->freeze) {
+# if STR_UMINUS_DEDUPE_FROZEN
+        // Starting from MRI 2.8 it is preferable to freeze the string
+        // before deduplication so that it can be interned directly
+        // otherwise it would be duplicated first which is wasteful.
+        rb_str_freeze(str);
+# endif
+        // MRI 2.5 and older do not deduplicate strings that are already
+        // frozen.
+        str = rb_funcall(str, s_uminus, 0);
+    }
+#endif
+
     return object_complete(uk, str);
 }
 
@@ -160,6 +180,16 @@ static inline int object_complete_binary(msgpack_unpacker_t* uk, VALUE str)
 #ifdef COMPAT_HAVE_ENCODING
     ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
 #endif
+
+#if STR_UMINUS_DEDUPE
+    if(uk->freeze) {
+# if STR_UMINUS_DEDUPE_FROZEN
+        rb_str_freeze(str);
+# endif
+        str = rb_funcall(str, s_uminus, 0);
+    }
+#endif
+
     return object_complete(uk, str);
 }
 
@@ -167,6 +197,15 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
 {
 #ifdef COMPAT_HAVE_ENCODING
     ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
+#endif
+
+#if STR_UMINUS_DEDUPE
+    if(uk->freeze) {
+# if STR_UMINUS_DEDUPE_FROZEN
+        rb_str_freeze(str);
+# endif
+        str = rb_funcall(str, s_uminus, 0);
+    }
 #endif
 
     VALUE proc = msgpack_unpacker_ext_registry_lookup(&uk->ext_registry, ext_type);
@@ -290,7 +329,7 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
         /* don't use zerocopy for hash keys but get a frozen string directly
          * because rb_hash_aset freezes keys and it causes copying */
-        bool will_freeze = is_reading_map_key(uk);
+        bool will_freeze = uk->freeze || is_reading_map_key(uk);
         VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
         int ret;
         if(raw_type == RAW_TYPE_STRING) {

@@ -64,6 +64,7 @@ struct msgpack_unpacker_t {
 
     /* options */
     bool symbolize_keys;
+    bool freeze;
     bool allow_unknown_ext;
 };
 
@@ -94,6 +95,11 @@ void _msgpack_unpacker_reset(msgpack_unpacker_t* uk);
 static inline void msgpack_unpacker_set_symbolized_keys(msgpack_unpacker_t* uk, bool enable)
 {
     uk->symbolize_keys = enable;
+}
+
+static inline void msgpack_unpacker_set_freeze(msgpack_unpacker_t* uk, bool enable)
+{
+    uk->freeze = enable;
 }
 
 static inline void msgpack_unpacker_set_allow_unknown_ext(msgpack_unpacker_t* uk, bool enable)
