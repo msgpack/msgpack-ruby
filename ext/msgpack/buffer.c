@@ -27,12 +27,16 @@ int msgpack_rb_encindex_utf8;
 int msgpack_rb_encindex_usascii;
 int msgpack_rb_encindex_ascii8bit;
 
+ID s_uminus;
+
 #ifndef DISABLE_RMEM
 static msgpack_rmem_t s_rmem;
 #endif
 
 void msgpack_buffer_static_init()
 {
+    s_uminus = rb_intern("-@");
+
     msgpack_rb_encindex_utf8 = rb_utf8_encindex();
     msgpack_rb_encindex_usascii = rb_usascii_encindex();
     msgpack_rb_encindex_ascii8bit = rb_ascii8bit_encindex();
