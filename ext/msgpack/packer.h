@@ -396,7 +396,6 @@ static inline void msgpack_packer_write_ext(msgpack_packer_t* pk, int ext_type, 
     msgpack_buffer_append_string(PACKER_BUFFER_(pk), payload);
 }
 
-#ifdef COMPAT_HAVE_ENCODING
 static inline bool msgpack_packer_is_binary(VALUE v, int encindex)
 {
     return encindex == msgpack_rb_encindex_ascii8bit;
@@ -414,7 +413,6 @@ static inline bool msgpack_packer_is_utf8_compat_string(VALUE v, int encindex)
 #endif
         ;
 }
-#endif
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
@@ -425,7 +423,6 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
         rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
     }
 
-#ifdef COMPAT_HAVE_ENCODING
     int encindex = ENCODING_GET(v);
     if(msgpack_packer_is_binary(v, encindex) && !pk->compatibility_mode) {
         /* write ASCII-8BIT string using Binary type */
@@ -443,10 +440,6 @@ static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE
         msgpack_packer_write_raw_header(pk, (unsigned int)len);
         msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
     }
-#else
-    msgpack_packer_write_raw_header(pk, (unsigned int)len);
-    msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
-#endif
 }
 
 static inline void msgpack_packer_write_symbol_string_value(msgpack_packer_t* pk, VALUE v)

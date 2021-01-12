@@ -49,11 +49,9 @@
 
 #define NO_MAPPED_STRING ((VALUE)0)
 
-#ifdef COMPAT_HAVE_ENCODING  /* see compat.h*/
 extern int msgpack_rb_encindex_utf8;
 extern int msgpack_rb_encindex_usascii;
 extern int msgpack_rb_encindex_ascii8bit;
-#endif
 
 struct msgpack_buffer_chunk_t;
 typedef struct msgpack_buffer_chunk_t msgpack_buffer_chunk_t;

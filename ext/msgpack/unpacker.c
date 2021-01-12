@@ -154,9 +154,7 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
 
 static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 {
-#ifdef COMPAT_HAVE_ENCODING
     ENCODING_SET(str, msgpack_rb_encindex_utf8);
-#endif
 
 #if STR_UMINUS_DEDUPE
     if(uk->freeze) {
@@ -177,9 +175,7 @@ static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
 
 static inline int object_complete_binary(msgpack_unpacker_t* uk, VALUE str)
 {
-#ifdef COMPAT_HAVE_ENCODING
     ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
-#endif
 
 #if STR_UMINUS_DEDUPE
     if(uk->freeze) {
@@ -195,9 +191,7 @@ static inline int object_complete_binary(msgpack_unpacker_t* uk, VALUE str)
 
 static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALUE str)
 {
-#ifdef COMPAT_HAVE_ENCODING
     ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
-#endif
 
 #if STR_UMINUS_DEDUPE
     if(uk->freeze) {
