@@ -20,6 +20,7 @@
 
 #include <stdbool.h>
 #include "ruby.h"
+#include "ruby/encoding.h"
 
 #if defined(HAVE_RUBY_ST_H)
 #  include "ruby/st.h"  /* ruby hash on Ruby 1.9 */
@@ -36,18 +37,6 @@
 #endif
 #ifndef ZALLOC_N
 #  define ZALLOC_N(type,n) RB_ZALLOC_N(type,n)
-#endif
-
-/*
- * COMPAT_HAVE_ENCODING
- */
-#ifdef HAVE_RUBY_ENCODING_H
-#  include "ruby/encoding.h"
-#  define COMPAT_HAVE_ENCODING
-#endif
-
-#if defined(__MACRUBY__)  /* MacRuby */
-#  undef COMPAT_HAVE_ENCODING
 #endif
 
 
