@@ -28,7 +28,7 @@
 static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
 
-static ID s_call, s_uminus;
+static ID s_call;
 
 #ifdef UNPACKER_STACK_RMEM
 static msgpack_rmem_t s_stack_rmem;
@@ -41,7 +41,6 @@ void msgpack_unpacker_static_init()
 #endif
 
     s_call = rb_intern("call");
-    s_uminus = rb_intern("-@");
 }
 
 void msgpack_unpacker_static_destroy()
@@ -152,56 +151,8 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
     return PRIMITIVE_OBJECT_COMPLETE;
 }
 
-static inline int object_complete_string(msgpack_unpacker_t* uk, VALUE str)
-{
-    ENCODING_SET(str, msgpack_rb_encindex_utf8);
-
-#if STR_UMINUS_DEDUPE
-    if(uk->freeze) {
-# if STR_UMINUS_DEDUPE_FROZEN
-        // Starting from MRI 2.8 it is preferable to freeze the string
-        // before deduplication so that it can be interned directly
-        // otherwise it would be duplicated first which is wasteful.
-        rb_str_freeze(str);
-# endif
-        // MRI 2.5 and older do not deduplicate strings that are already
-        // frozen.
-        str = rb_funcall(str, s_uminus, 0);
-    }
-#endif
-
-    return object_complete(uk, str);
-}
-
-static inline int object_complete_binary(msgpack_unpacker_t* uk, VALUE str)
-{
-    ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
-
-#if STR_UMINUS_DEDUPE
-    if(uk->freeze) {
-# if STR_UMINUS_DEDUPE_FROZEN
-        rb_str_freeze(str);
-# endif
-        str = rb_funcall(str, s_uminus, 0);
-    }
-#endif
-
-    return object_complete(uk, str);
-}
-
 static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALUE str)
 {
-    ENCODING_SET(str, msgpack_rb_encindex_ascii8bit);
-
-#if STR_UMINUS_DEDUPE
-    if(uk->freeze) {
-# if STR_UMINUS_DEDUPE_FROZEN
-        rb_str_freeze(str);
-# endif
-        str = rb_funcall(str, s_uminus, 0);
-    }
-#endif
-
     VALUE proc = msgpack_unpacker_ext_registry_lookup(&uk->ext_registry, ext_type);
     if(proc != Qnil) {
         VALUE obj = rb_funcall(proc, s_call, 1, str);
@@ -304,9 +255,10 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
 
     int ret;
     if(uk->reading_raw_type == RAW_TYPE_STRING) {
-        ret = object_complete_string(uk, uk->reading_raw);
-    } else if(uk->reading_raw_type == RAW_TYPE_BINARY) {
-        ret = object_complete_binary(uk, uk->reading_raw);
+        ENCODING_SET(uk->reading_raw, msgpack_rb_encindex_utf8);
+        ret = object_complete(uk, uk->reading_raw);
+    } else if (uk->reading_raw_type == RAW_TYPE_BINARY) {
+        ret = object_complete(uk, uk->reading_raw);
     } else {
         ret = object_complete_ext(uk, uk->reading_raw_type, uk->reading_raw);
     }
@@ -324,12 +276,10 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
         /* don't use zerocopy for hash keys but get a frozen string directly
          * because rb_hash_aset freezes keys and it causes copying */
         bool will_freeze = uk->freeze || is_reading_map_key(uk);
-        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze);
+        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze, raw_type == RAW_TYPE_STRING);
         int ret;
-        if(raw_type == RAW_TYPE_STRING) {
-            ret = object_complete_string(uk, string);
-        } else if(raw_type == RAW_TYPE_BINARY) {
-            ret = object_complete_binary(uk, string);
+        if(raw_type == RAW_TYPE_STRING || raw_type == RAW_TYPE_BINARY) {
+            ret = object_complete(uk, string);
         } else {
             ret = object_complete_ext(uk, raw_type, string);
         }
@@ -368,7 +318,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
     SWITCH_RANGE(b, 0xa0, 0xbf)  // FixRaw / fixstr
         int count = b & 0x1f;
         if(count == 0) {
-            return object_complete_string(uk, rb_str_buf_new(0));
+            return object_complete(uk, rb_utf8_str_new_static("", 0));
         }
         /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
@@ -553,7 +503,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
                 uint8_t count = cb->u8;
                 if(count == 0) {
-                    return object_complete_string(uk, rb_str_buf_new(0));
+                    return object_complete(uk, rb_utf8_str_new_static("", 0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -565,7 +515,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint16_t count = _msgpack_be16(cb->u16);
                 if(count == 0) {
-                    return object_complete_string(uk, rb_str_buf_new(0));
+                    return object_complete(uk, rb_utf8_str_new_static("", 0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -577,7 +527,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
                 if(count == 0) {
-                    return object_complete_string(uk, rb_str_buf_new(0));
+                    return object_complete(uk, rb_utf8_str_new_static("", 0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -589,7 +539,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
                 uint8_t count = cb->u8;
                 if(count == 0) {
-                    return object_complete_binary(uk, rb_str_buf_new(0));
+                    return object_complete(uk, rb_str_new_static("", 0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -601,7 +551,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint16_t count = _msgpack_be16(cb->u16);
                 if(count == 0) {
-                    return object_complete_binary(uk, rb_str_buf_new(0));
+                    return object_complete(uk, rb_str_new_static("", 0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
@@ -613,7 +563,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
                 if(count == 0) {
-                    return object_complete_binary(uk, rb_str_buf_new(0));
+                    return object_complete(uk, rb_str_new_static("", 0));
                 }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;

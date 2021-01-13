@@ -53,6 +53,8 @@ extern int msgpack_rb_encindex_utf8;
 extern int msgpack_rb_encindex_usascii;
 extern int msgpack_rb_encindex_ascii8bit;
 
+extern ID s_uminus;
+
 struct msgpack_buffer_chunk_t;
 typedef struct msgpack_buffer_chunk_t msgpack_buffer_chunk_t;
 
@@ -436,7 +438,7 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
     return rb_str_substr(b->head->mapped_string, offset, length);
 }
 
-static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool will_be_frozen)
+static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool will_be_frozen, bool utf8)
 {
 #ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
     /* optimize */
@@ -449,11 +451,46 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
     }
 #endif
 
-    VALUE result = rb_str_new(b->read_buffer, length);
+    VALUE result;
+
+#ifdef HAVE_RB_ENC_INTERNED_STR
+    if (will_be_frozen) {
+        result = rb_enc_interned_str(b->read_buffer, length, utf8 ? rb_utf8_encoding() : rb_ascii8bit_encoding());
+    } else {
+        if (utf8) {
+            result = rb_utf8_str_new(b->read_buffer, length);
+        } else {
+            result = rb_str_new(b->read_buffer, length);
+        }
+    }
     _msgpack_buffer_consumed(b, length);
     return result;
+
+#else
+
+    if (utf8) {
+        result = rb_utf8_str_new(b->read_buffer, length);
+    } else {
+        result = rb_str_new(b->read_buffer, length);
+    }
+
+#if STR_UMINUS_DEDUPE
+    if (will_be_frozen) {
+#if STR_UMINUS_DEDUPE_FROZEN
+        // Starting from MRI 2.8 it is preferable to freeze the string
+        // before deduplication so that it can be interned directly
+        // otherwise it would be duplicated first which is wasteful.
+        rb_str_freeze(result);
+#endif //STR_UMINUS_DEDUPE_FROZEN
+        // MRI 2.5 and older do not deduplicate strings that are already
+        // frozen.
+        result = rb_funcall(result, s_uminus, 0);
+    }
+#endif // STR_UMINUS_DEDUPE
+    _msgpack_buffer_consumed(b, length);
+    return result;
+
+#endif // HAVE_RB_ENC_INTERNED_STR
 }
 
-
 #endif
-
