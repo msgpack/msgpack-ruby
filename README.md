@@ -47,17 +47,21 @@ Patches to improve portability is highly welcomed.
 
 Use `MessagePack.pack` or `to_msgpack`:
 
-    require 'msgpack'
-    msg = MessagePack.pack(obj)  # or
-    msg = obj.to_msgpack
+```ruby
+require 'msgpack'
+msg = MessagePack.pack(obj)  # or
+msg = obj.to_msgpack
+```
 
 ### Streaming serialization
 
 Packer provides advanced API to serialize objects in streaming style:
 
-    # serialize a 2-element array [e1, e2]
-    pk = MessagePack::Packer.new(io)
-    pk.write_array_header(2).write(e1).write(e2).flush
+```ruby
+# serialize a 2-element array [e1, e2]
+pk = MessagePack::Packer.new(io)
+pk.write_array_header(2).write(e1).write(e2).flush
+```
 
 See [API reference](http://ruby.msgpack.org/MessagePack/Packer.html) for details.
 
@@ -65,28 +69,34 @@ See [API reference](http://ruby.msgpack.org/MessagePack/Packer.html) for details
 
 Use `MessagePack.unpack`:
 
-    require 'msgpack'
-    obj = MessagePack.unpack(msg)
+```ruby
+require 'msgpack'
+obj = MessagePack.unpack(msg)
+```
 
 ### Streaming deserialization
 
 Unpacker provides advanced API to deserialize objects in streaming style:
 
-    # deserialize objects from an IO
-    u = MessagePack::Unpacker.new(io)
-    u.each do |obj|
-      # ...
-    end
+```ruby
+# deserialize objects from an IO
+u = MessagePack::Unpacker.new(io)
+u.each do |obj|
+  # ...
+end
+```
 
 or event-driven style which works well with EventMachine:
 
-    # event-driven deserialization
-    def on_read(data)
-      @u ||= MessagePack::Unpacker.new
-      @u.feed_each(data) {|obj|
-         # ...
-      }
-    end
+```ruby
+# event-driven deserialization
+def on_read(data)
+  @u ||= MessagePack::Unpacker.new
+  @u.feed_each(data) {|obj|
+     # ...
+  }
+end
+```
 
 See [API reference](http://ruby.msgpack.org/MessagePack/Unpacker.html) for details.
 
@@ -94,31 +104,37 @@ See [API reference](http://ruby.msgpack.org/MessagePack/Unpacker.html) for detai
 
 By default, symbols are serialized as strings:
 
-    packed = :symbol.to_msgpack     # => "\xA6symbol"
-    MessagePack.unpack(packed)      # => "symbol"
+```ruby
+packed = :symbol.to_msgpack     # => "\xA6symbol"
+MessagePack.unpack(packed)      # => "symbol"
+```
 
 This can be customized by registering an extension type for them:
 
-    MessagePack::DefaultFactory.register_type(0x00, Symbol)
+```ruby
+MessagePack::DefaultFactory.register_type(0x00, Symbol)
 
-    # symbols now survive round trips
-    packed = :symbol.to_msgpack     # => "\xc7\x06\x00symbol"
-    MessagePack.unpack(packed)      # => :symbol
+# symbols now survive round trips
+packed = :symbol.to_msgpack     # => "\xc7\x06\x00symbol"
+MessagePack.unpack(packed)      # => :symbol
+```
 
 The extension type for symbols is configurable like any other extension type.
 For example, to customize how symbols are packed you can just redefine
 Symbol#to_msgpack_ext. Doing this gives you an option to prevent symbols from
 being serialized altogether by throwing an exception:
 
-    class Symbol
-        def to_msgpack_ext
-            raise "Serialization of symbols prohibited"
-        end
+```ruby
+class Symbol
+    def to_msgpack_ext
+        raise "Serialization of symbols prohibited"
     end
+end
 
-    MessagePack::DefaultFactory.register_type(0x00, Symbol)
+MessagePack::DefaultFactory.register_type(0x00, Symbol)
 
-    [1, :symbol, 'string'].to_msgpack  # => RuntimeError: Serialization of symbols prohibited
+[1, :symbol, 'string'].to_msgpack  # => RuntimeError: Serialization of symbols prohibited
+```
 
 ## Serializing and deserializing Time instances
 
@@ -127,12 +143,14 @@ but it is not registered by default.
 
 To map Ruby's Time to MessagePack's timestamp for the default factory:
 
-    MessagePack::DefaultFactory.register_type(
-      MessagePack::Timestamp::TYPE, # or just -1
-      Time,
-      packer: MessagePack::Time::Packer,
-      unpacker: MessagePack::Time::Unpacker
-    )
+```ruby
+MessagePack::DefaultFactory.register_type(
+  MessagePack::Timestamp::TYPE, # or just -1
+  Time,
+  packer: MessagePack::Time::Packer,
+  unpacker: MessagePack::Time::Unpacker
+)
+```
 
 See [API reference](http://ruby.msgpack.org/) for details.
 
@@ -140,28 +158,34 @@ See [API reference](http://ruby.msgpack.org/) for details.
 
 Packer and Unpacker support [Extension types of MessagePack](https://github.com/msgpack/msgpack/blob/master/spec.md#types-extension-type).
 
-    # register how to serialize custom class at first
-    pk = MessagePack::Packer.new(io)
-    pk.register_type(0x01, MyClass1, :to_msgpack_ext) # equal to pk.register_type(0x01, MyClass)
-    pk.register_type(0x02, MyClass2){|obj| obj.how_to_serialize() } # blocks also available
-    
-    # almost same API for unpacker
-    uk = MessagePack::Unpacker.new()
-    uk.register_type(0x01, MyClass1, :from_msgpack_ext)
-    uk.register_type(0x02){|data| MyClass2.create_from_serialized_data(data) }
+```ruby
+# register how to serialize custom class at first
+pk = MessagePack::Packer.new(io)
+pk.register_type(0x01, MyClass1, :to_msgpack_ext) # equal to pk.register_type(0x01, MyClass)
+pk.register_type(0x02, MyClass2){|obj| obj.how_to_serialize() } # blocks also available
+
+# almost same API for unpacker
+uk = MessagePack::Unpacker.new()
+uk.register_type(0x01, MyClass1, :from_msgpack_ext)
+uk.register_type(0x02){|data| MyClass2.create_from_serialized_data(data) }
+```
 
 `MessagePack::Factory` is to create packer and unpacker which have same extension types.
 
-    factory = MessagePack::Factory.new
-    factory.register_type(0x01, MyClass1) # same with next line
-    factory.register_type(0x01, MyClass1, packer: :to_msgpack_ext, unpacker: :from_msgpack_ext)
-    pk = factory.packer(options_for_packer)
-    uk = factory.unpacker(options_for_unpacker)
+```ruby
+factory = MessagePack::Factory.new
+factory.register_type(0x01, MyClass1) # same with next line
+factory.register_type(0x01, MyClass1, packer: :to_msgpack_ext, unpacker: :from_msgpack_ext)
+pk = factory.packer(options_for_packer)
+uk = factory.unpacker(options_for_unpacker)
+```
 
 For `MessagePack.pack` and `MessagePack.unpack`, default packer/unpacker refer `MessagePack::DefaultFactory`. Call `MessagePack::DefaultFactory.register_type` to enable types process globally.
 
-    MessagePack::DefaultFactory.register_type(0x03, MyClass3)
-    MessagePack.unpack(data_with_ext_typeid_03) #=> MyClass3 instance
+```ruby
+MessagePack::DefaultFactory.register_type(0x03, MyClass3)
+MessagePack.unpack(data_with_ext_typeid_03) #=> MyClass3 instance
+```
 
 ## Buffer API
 
