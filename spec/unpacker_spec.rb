@@ -634,6 +634,14 @@ describe MessagePack::Unpacker do
       array = ['foo'] * 10_000
       MessagePack.unpack(MessagePack.pack(array)).size.should == 10_000
     end
+
+    it 'preserve string encoding (issue #200)' do
+      string = 'a'.force_encoding(Encoding::UTF_8)
+      MessagePack.unpack(MessagePack.pack(string)).encoding.should == string.encoding
+
+      string *= 256
+      MessagePack.unpack(MessagePack.pack(string)).encoding.should == string.encoding
+    end
   end
 
   context 'extensions' do

@@ -446,6 +446,7 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
             b->head->mapped_string != NO_MAPPED_STRING &&
             length >= b->read_reference_threshold) {
         VALUE result = _msgpack_buffer_refer_head_mapped_string(b, length);
+        if (utf8) ENCODING_SET(result, msgpack_rb_encindex_utf8);
         _msgpack_buffer_consumed(b, length);
         return result;
     }
