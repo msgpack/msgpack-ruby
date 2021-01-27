@@ -1,0 +1,32 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  mri:
+    strategy:
+      matrix:
+        os: [ubuntu, macos, windows]
+        ruby: ['2.4', '2.5', '2.6', '2.7', '3.0', 'ruby-head']
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+      - run: bundle install
+      - run: bundle exec rake
+
+  jruby-truffle:
+    strategy:
+      matrix:
+        os: [ubuntu]
+        ruby: ['jruby', 'truffleruby']
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+      - run: bundle install
+      - run: bundle exec rake
