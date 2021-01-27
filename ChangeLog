@@ -1,3 +1,8 @@
+2021-01-27 version 1.4.0:
+
+* Introduce the optimization to use frozen/deduped keys for map objects
+* Stop releasing fat gem (pre-built binaries) for mswin32 arch environments
+
 2020-02-05 version 1.3.3:
 
 * Hotfix release for Windows environments: 1.3.2 missed including binaries

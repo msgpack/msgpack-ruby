@@ -1,7 +1,6 @@
+# MessagePack
 
-= MessagePack
-
-MessagePack[http://msgpack.org] is an efficient binary serialization format.
+[MessagePack](http://msgpack.org) is an efficient binary serialization format.
 It lets you exchange data among multiple languages like JSON but it's faster and smaller.
 For example, small integers (like flags or error code) are encoded into a single byte,
 and typical short strings only require an extra byte in addition to the strings themselves.
@@ -24,19 +23,19 @@ or build msgpack-ruby and install:
     gem install --local pkg/msgpack
 
 
-= Use cases
+## Use cases
 
 * Create REST API returing MessagePack using Rails + [RABL](https://github.com/nesquena/rabl)
 * Store objects efficiently serialized by msgpack on memcached or Redis
-  * In fact Redis supports msgpack in EVAL-scripts[http://redis.io/commands/eval]
+  * In fact Redis supports msgpack in [EVAL-scripts](http://redis.io/commands/eval)
 * Upload data in efficient format from mobile devices such as smartphones
-  * MessagePack works on iPhone/iPad and Android. See also Objective-C[https://github.com/msgpack/msgpack-objectivec] and Java[https://github.com/msgpack/msgpack-java] implementations
+  * MessagePack works on iPhone/iPad and Android. See also [Objective-C](https://github.com/msgpack/msgpack-objectivec) and [Java](https://github.com/msgpack/msgpack-java) implementations
 * Design a portable protocol to communicate with embedded devices
-  * Check also Fluentd[http://fluentd.org/] which is a log collector which uses msgpack for the log format (they say it uses JSON but actually it's msgpack, which is compatible with JSON)
+  * Check also [Fluentd](http://fluentd.org/) which is a log collector which uses msgpack for the log format (they say it uses JSON but actually it's msgpack, which is compatible with JSON)
 * Exchange objects between software components written in different languages
   * You'll need a flexible but efficient format so that components exchange objects while keeping compatibility
 
-= Portability
+## Portability
 
 MessagePack for Ruby should run on x86, ARM, PowerPC, SPARC and other CPU architectures.
 
@@ -44,15 +43,15 @@ And it works with MRI (CRuby) and Rubinius.
 Patches to improve portability is highly welcomed.
 
 
-= Serializing objects
+## Serializing objects
 
-Use *MessagePack.pack* or *to_msgpack*:
+Use `MessagePack.pack` or `to_msgpack`:
 
     require 'msgpack'
     msg = MessagePack.pack(obj)  # or
     msg = obj.to_msgpack
 
-== Streaming serialization
+### Streaming serialization
 
 Packer provides advanced API to serialize objects in streaming style:
 
@@ -60,16 +59,16 @@ Packer provides advanced API to serialize objects in streaming style:
     pk = MessagePack::Packer.new(io)
     pk.write_array_header(2).write(e1).write(e2).flush
 
-See {API reference}[http://ruby.msgpack.org/MessagePack/Packer.html] for details.
+See [API reference](http://ruby.msgpack.org/MessagePack/Packer.html) for details.
 
-= Deserializing objects
+## Deserializing objects
 
-Use *MessagePack.unpack*:
+Use `MessagePack.unpack`:
 
     require 'msgpack'
     obj = MessagePack.unpack(msg)
 
-== Streaming deserialization
+### Streaming deserialization
 
 Unpacker provides advanced API to deserialize objects in streaming style:
 
@@ -89,9 +88,9 @@ or event-driven style which works well with EventMachine:
       }
     end
 
-See {API reference}[http://ruby.msgpack.org/MessagePack/Unpacker.html] for details.
+See [API reference](http://ruby.msgpack.org/MessagePack/Unpacker.html) for details.
 
-= Serializing and deserializing symbols
+## Serializing and deserializing symbols
 
 By default, symbols are serialized as strings:
 
@@ -121,7 +120,7 @@ being serialized altogether by throwing an exception:
 
     [1, :symbol, 'string'].to_msgpack  # => RuntimeError: Serialization of symbols prohibited
 
-= Serializing and deserializing Time instances
+## Serializing and deserializing Time instances
 
 There are the timestamp extension type in MessagePack,
 but it is not registered by default.
@@ -135,11 +134,11 @@ To map Ruby's Time to MessagePack's timestamp for the default factory:
       unpacker: MessagePack::Time::Unpacker
     )
 
-See {API reference}[http://ruby.msgpack.org/] for details.
+See [API reference](http://ruby.msgpack.org/) for details.
 
-= Extension Types
+## Extension Types
 
-Packer and Unpacker support {Extension types of MessagePack}[https://github.com/msgpack/msgpack/blob/master/spec.md#types-extension-type].
+Packer and Unpacker support [Extension types of MessagePack](https://github.com/msgpack/msgpack/blob/master/spec.md#types-extension-type).
 
     # register how to serialize custom class at first
     pk = MessagePack::Packer.new(io)
@@ -151,7 +150,7 @@ Packer and Unpacker support {Extension types of MessagePack}[https://github.com/
     uk.register_type(0x01, MyClass1, :from_msgpack_ext)
     uk.register_type(0x02){|data| MyClass2.create_from_serialized_data(data) }
 
-MessagePack::Factory is to create packer and unpacker which have same extension types.
+`MessagePack::Factory` is to create packer and unpacker which have same extension types.
 
     factory = MessagePack::Factory.new
     factory.register_type(0x01, MyClass1) # same with next line
@@ -159,19 +158,19 @@ MessagePack::Factory is to create packer and unpacker which have same extension 
     pk = factory.packer(options_for_packer)
     uk = factory.unpacker(options_for_unpacker)
 
-For *MessagePack.pack* and *MessagePack.unpack*, default packer/unpacker refer *MessagePack::DefaultFactory*. Call *MessagePack::DefaultFactory.register_type* to enable types process globally.
+For `MessagePack.pack` and `MessagePack.unpack`, default packer/unpacker refer `MessagePack::DefaultFactory`. Call `MessagePack::DefaultFactory.register_type` to enable types process globally.
 
     MessagePack::DefaultFactory.register_type(0x03, MyClass3)
     MessagePack.unpack(data_with_ext_typeid_03) #=> MyClass3 instance
 
-= Buffer API
+## Buffer API
 
 MessagePack for Ruby provides a buffer API so that you can read or write data by hand, not via Packer or Unpacker API.
 
-This {MessagePack::Buffer}[http://ruby.msgpack.org/MessagePack/Buffer.html] is backed with a fixed-length shared memory pool which is very fast for small data (<= 4KB),
+This [MessagePack::Buffer](http://ruby.msgpack.org/MessagePack/Buffer.html) is backed with a fixed-length shared memory pool which is very fast for small data (<= 4KB),
 and has zero-copy capability which significantly affects performance to handle large binary data.
 
-= How to build and run tests
+## How to build and run tests
 
 Before building msgpack, you need to install bundler and dependencies.
 
@@ -180,19 +179,19 @@ Before building msgpack, you need to install bundler and dependencies.
 
 Then, you can run the tasks as follows:
 
-* Build
+### Build
 
     bundle exec rake build
 
-* Run tests
+### Run tests
 
     bundle exec rake spec
 
-* Generating docs
+### Generating docs
 
     bundle exec rake doc
 
-== How to build -java rubygems
+## How to build -java rubygems
 
 To build -java gems for JRuby, run:
 
@@ -200,7 +199,7 @@ To build -java gems for JRuby, run:
 
 If this directory has Gemfile.lock (generated with MRI), remove it beforehand.
 
-== Updating documents
+## Updating documents
 
 Online documents (http://ruby.msgpack.org) is generated from gh-pages branch.
 Following commands update documents in gh-pages branch:
@@ -209,9 +208,11 @@ Following commands update documents in gh-pages branch:
     git checkout gh-pages
     cp doc/* ./ -a
 
-= Copyright
+## Copyright
 
-Author::    Sadayuki Furuhashi <frsyuki@gmail.com>
-Copyright:: Copyright (c) 2008-2015 Sadayuki Furuhashi
-License::   Apache License, Version 2.0
-
+* Author
+  * Sadayuki Furuhashi <frsyuki@gmail.com>
+* Copyright
+  * Copyright (c) 2008-2015 Sadayuki Furuhashi
+* License
+  * Apache License, Version 2.0
