@@ -1,3 +1,7 @@
+2021-01-27 version 1.4.1:
+
+* Bugfix about the wrong string encoding longer than 256 bytes (#200)
+
 2021-01-27 version 1.4.0:
 
 * Introduce the optimization to use frozen/deduped keys for map objects
