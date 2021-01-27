@@ -22,11 +22,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'bundler'
   s.add_development_dependency 'rake'
-  s.add_development_dependency 'rake-compiler', ['~> 1.0']
-  if /java/ !~ RUBY_PLATFORM
-    # NOTE: rake-compiler-dock SHOULD be updated for new Ruby versions
-    s.add_development_dependency 'rake-compiler-dock', ['~> 1.0']
-  end
+  s.add_development_dependency 'rake-compiler'
   s.add_development_dependency 'rspec', ['~> 3.3']
   s.add_development_dependency 'yard'
   s.add_development_dependency 'json'

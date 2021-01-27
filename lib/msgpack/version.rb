@@ -1,10 +1,6 @@
 module MessagePack
-  VERSION = "1.4.0.pre1"
-
-  # NOTE for msgpack-ruby maintainer:
-  # Check these things to release new binaryes for new Ruby versions (especially for Windows):
-  # * versions/supports of rake-compiler & rake-compiler-dock
-  #   https://github.com/rake-compiler/rake-compiler-dock/blob/master/History.md
-  # * update RUBY_CC_VERSION in Rakefile
-  # * check Ruby dependency of released mswin gem details
+  VERSION = "1.4.0"
+  # Note for maintainers:
+  #  Don't miss building/releasing the JRuby version (rake buld:java)
+  #  See "How to build -java rubygems" in README for more details.
 end
