@@ -200,14 +200,6 @@ To build -java gems for JRuby, run:
 
 If this directory has Gemfile.lock (generated with MRI), remove it beforehand.
 
-== How to build -mingw32 rubygems
-
-MessagePack mingw32/64 rubygems build process uses {rake-compiler-dock}[https://github.com/rake-compiler/rake-compiler-dock]. Run:
-
-    rake build:windows
-
-Once this step successes, target gems exist in pkg/msgpack-*-{x86,x64}-mingw32.gem.
-
 == Updating documents
 
 Online documents (http://ruby.msgpack.org) is generated from gh-pages branch.
