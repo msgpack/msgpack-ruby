@@ -1,3 +1,8 @@
+2021-02-01 version 1.4.2:
+
+* Add the required Ruby version (>= 2.4) to avoid compilation errors on older Ruby runtimes
+* Drop the support of old Ruby versions explicitly (1.8, 1.9, 2.0, 2.1, 2.2, 2.3)
+
 2021-01-27 version 1.4.1:
 
 * Bugfix about the wrong string encoding longer than 256 bytes (#200)
