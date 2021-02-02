@@ -32,7 +32,7 @@ jobs:
       - run: bundle exec rake
 
   truffle:
-    continue-on-erro: true
+    continue-on-error: true
     strategy:
       matrix:
         os: [ubuntu]
