@@ -164,12 +164,7 @@ size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string,
             b->head->mapped_string != NO_MAPPED_STRING &&
             length >= b->read_reference_threshold) {
         VALUE s = _msgpack_buffer_refer_head_mapped_string(b, length);
-#ifndef HAVE_RB_STR_REPLACE
-        /* TODO MRI 1.8 */
-        rb_funcall(string, s_replace, 1, s);
-#else
         rb_str_replace(string, s);
-#endif
         /* here doesn't have to call ENCODING_SET because
          * encoding of s is always ASCII-8BIT */
         _msgpack_buffer_consumed(b, length);

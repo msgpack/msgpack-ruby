@@ -43,37 +43,15 @@ void msgpack_packer_ext_registry_mark(msgpack_packer_ext_registry_t* pkrg)
 void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst)
 {
-#ifdef HAVE_RB_HASH_DUP
     dst->hash = rb_hash_dup(src->hash);
     dst->cache = rb_hash_dup(src->cache);
-#else
-    dst->hash = rb_funcall(src->hash, rb_intern("dup"), 0);
-    dst->cache = rb_funcall(src->cache, rb_intern("dup"), 0);
-#endif
 }
-
-#ifndef HAVE_RB_HASH_CLEAR
-
-static int
-__rb_hash_clear_clear_i(key, value, dummy)
-    VALUE key, value, dummy;
-{
-    return ST_DELETE;
-}
-
-#endif
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_module, int ext_type, VALUE proc, VALUE arg)
 {
     VALUE e = rb_ary_new3(3, INT2FIX(ext_type), proc, arg);
     /* clear lookup cache not to miss added type */
-#ifdef HAVE_RB_HASH_CLEAR
     rb_hash_clear(pkrg->cache);
-#else
-    if(FIX2INT(rb_funcall(pkrg->cache, rb_intern("size"), 0)) > 0) {
-        rb_hash_foreach(pkrg->cache, __rb_hash_clear_clear_i, 0);
-    }
-#endif
     return rb_hash_aset(pkrg->hash, ext_module, e);
 }

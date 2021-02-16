@@ -339,11 +339,7 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 static VALUE Packer_registered_types_internal(VALUE self)
 {
     PACKER(self, pk);
-#ifdef HAVE_RB_HASH_DUP
     return rb_hash_dup(pk->ext_registry.hash);
-#else
-    return rb_funcall(pk->ext_registry.hash, rb_intern("dup"), 0);
-#endif
 }
 
 static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
@@ -359,12 +355,7 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
     case 2:
         /* register_type(0x7f, Time) {|obj| block... } */
         rb_need_block();
-#ifdef HAVE_RB_BLOCK_LAMBDA
         proc = rb_block_lambda();
-#else
-        /* MRI 1.8 */
-        proc = rb_block_proc();
-#endif
         arg = proc;
         break;
     case 3:
