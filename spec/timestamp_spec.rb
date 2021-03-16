@@ -61,25 +61,25 @@ describe MessagePack::Timestamp do
       expect(factory.unpack(factory.pack(Time.utc(2200)))).to eq(Time.utc(2200))
     end
 
-    let(:time32_max) { Time.new(2106, 2, 7, 6, 28, 15, "UTC") }
+    let(:time32_max) { Time.new(2106, 2, 7, 6, 28, 15, "+00:00") }
     it 'is serialized into timestamp32' do
       expect(factory.pack(time32_max).size).to be 6
       expect(factory.unpack(factory.pack(time32_max)).utc).to eq(time32_max)
     end
 
-    let(:time64_min) { Time.new(2106, 2, 7, 6, 28, 16, "UTC") }
+    let(:time64_min) { Time.new(2106, 2, 7, 6, 28, 16, "+00:00") }
     it 'is serialized into timestamp64' do
       expect(factory.pack(time64_min).size).to be 10
       expect(factory.unpack(factory.pack(time64_min)).utc).to eq(time64_min)
     end
 
-    let(:time64_max) { Time.at(Time.new(2514, 5, 30, 1, 53, 3, "UTC").to_i, 999999999, :nsec).utc }
+    let(:time64_max) { Time.at(Time.new(2514, 5, 30, 1, 53, 3, "+00:00").to_i, 999999999 / 1000.0r).utc } # TODO: use Time.at(sec, nsec, :nsec) when removing Ruby 2.4 from the list
     it 'is serialized into timestamp64' do
       expect(factory.pack(time64_max).size).to be 10
       expect(factory.unpack(factory.pack(time64_max)).utc).to eq(time64_max)
     end
 
-    let(:time96_positive_min) { Time.new(2514, 5, 30, 1, 53, 4, "UTC") }
+    let(:time96_positive_min) { Time.new(2514, 5, 30, 1, 53, 4, "+00:00") }
     it 'is serialized into timestamp96' do
       expect(factory.pack(time96_positive_min).size).to be 15
       expect(factory.unpack(factory.pack(time96_positive_min)).utc).to eq(time96_positive_min)
