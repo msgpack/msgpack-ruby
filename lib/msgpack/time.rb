@@ -18,7 +18,7 @@ module MessagePack
                else
                  lambda do |payload|
                    tv = MessagePack::Timestamp.from_msgpack_ext(payload)
-                   ::Time.at(tv.sec, tv.nsec / 1000.0)
+                   ::Time.at(tv.sec, tv.nsec / 1000.0r)
                  end
                end
 
