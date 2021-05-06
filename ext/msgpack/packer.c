@@ -138,38 +138,28 @@ void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
 
 void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v)
 {
-    switch(rb_type(v)) {
-    case T_NIL:
+    VALUE klass = rb_class_of(v);
+    if (v == Qnil) {
         msgpack_packer_write_nil(pk);
-        break;
-    case T_TRUE:
+    } else if (v == Qtrue) {
         msgpack_packer_write_true(pk);
-        break;
-    case T_FALSE:
+    } else if (v == Qfalse) {
         msgpack_packer_write_false(pk);
-        break;
-    case T_FIXNUM:
+    } else if (FIXNUM_P(v)) {
         msgpack_packer_write_fixnum_value(pk, v);
-        break;
-    case T_SYMBOL:
+    } else if (SYMBOL_P(v)) {
         msgpack_packer_write_symbol_value(pk, v);
-        break;
-    case T_STRING:
+    } else if (klass == rb_cString) {
         msgpack_packer_write_string_value(pk, v);
-        break;
-    case T_ARRAY:
+    } else if (klass == rb_cArray) {
         msgpack_packer_write_array_value(pk, v);
-        break;
-    case T_HASH:
+    } else if (klass == rb_cHash) {
         msgpack_packer_write_hash_value(pk, v);
-        break;
-    case T_BIGNUM:
+    } else if (RB_TYPE_P(v, T_BIGNUM)) {
         msgpack_packer_write_bignum_value(pk, v);
-        break;
-    case T_FLOAT:
+    } else if (klass == rb_cFloat) {
         msgpack_packer_write_float_value(pk, v);
-        break;
-    default:
+    } else {
         msgpack_packer_write_other_value(pk, v);
     }
 }
