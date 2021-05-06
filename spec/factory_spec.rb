@@ -368,12 +368,20 @@ describe MessagePack::Factory do
   describe 'with strict types' do
     shared_examples_for 'strict core type' do |klass|
       it "enforces exact class match on #{klass} with strict: true" do
-        stub_const('FooClass', Class.new(klass))
+        stub_const('Foo', Class.new(klass))
         factory = described_class.new(strict: true)
-        expect { factory.dump(FooClass.new) }.to raise_error do |e|
+        foo = Foo.new
+        expect { factory.dump(foo) }.to raise_error do |e|
           expect(e.class).to eq(NoMethodError)
           expect(e.name).to eq(:to_msgpack)
         end
+      end
+
+      it "does not enforce exact class match on #{klass} with strict: false (default)" do
+        stub_const('Foo', Class.new(klass))
+        factory = described_class.new
+        foo = Foo.new
+        expect { factory.dump(foo) }.not_to raise_error
       end
     end
 
