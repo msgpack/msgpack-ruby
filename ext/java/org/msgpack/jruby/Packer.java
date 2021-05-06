@@ -31,17 +31,19 @@ public class Packer extends RubyObject {
   private Buffer buffer;
   private Encoder encoder;
   private boolean hasSymbolExtType;
+  private boolean strictTypes;
   private Encoding binaryEncoding;
 
-  public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry, boolean hasSymbolExtType) {
+  public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry, boolean hasSymbolExtType, boolean strictTypes) {
     super(runtime, type);
     this.registry = registry;
     this.hasSymbolExtType = hasSymbolExtType;
+    this.strictTypes = strictTypes;
   }
 
   static class PackerAllocator implements ObjectAllocator {
     public IRubyObject allocate(Ruby runtime, RubyClass type) {
-      return new Packer(runtime, type, null, false);
+      return new Packer(runtime, type, null, false, false);
     }
   }
 
@@ -58,15 +60,15 @@ public class Packer extends RubyObject {
         // registry is already initialized (and somthing might be registered) when newPacker from Factory
         this.registry = new ExtensionRegistry();
     }
-    this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode, registry, hasSymbolExtType);
+    this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode, registry, hasSymbolExtType, strictTypes);
     this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
     this.binaryEncoding = ctx.getRuntime().getEncodingService().getAscii8bitEncoding();
     return this;
   }
 
-  public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, boolean hasSymbolExtType, IRubyObject[] args) {
-    Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"), extRegistry, hasSymbolExtType);
+  public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, boolean hasSymbolExtType, boolean strictTypes, IRubyObject[] args) {
+    Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"), extRegistry, hasSymbolExtType, strictTypes);
     packer.initialize(ctx, args);
     return packer;
   }

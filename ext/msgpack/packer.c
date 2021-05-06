@@ -132,8 +132,15 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
         StringValue(payload);
         msgpack_packer_write_ext(pk, ext_type, payload);
         return true;
+    } else if(pk->strict_types) {
+        VALUE mMessagePack = rb_const_get(rb_cObject, rb_intern("MessagePack"));
+        VALUE ePackError = rb_const_get(mMessagePack, rb_intern("PackError"));
+        VALUE exc = rb_obj_alloc(ePackError);
+        rb_ivar_set(exc, rb_intern("@error_value"), v);
+        rb_exc_raise(exc);
+    } else {
+        return false;
     }
-    return false;
 }
 
 void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)

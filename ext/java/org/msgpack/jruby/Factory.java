@@ -26,12 +26,14 @@ public class Factory extends RubyObject {
   private final Ruby runtime;
   private final ExtensionRegistry extensionRegistry;
   private boolean hasSymbolExtType;
+  private boolean strictTypes;
 
   public Factory(Ruby runtime, RubyClass type) {
     super(runtime, type);
     this.runtime = runtime;
     this.extensionRegistry = new ExtensionRegistry();
     this.hasSymbolExtType = false;
+    this.strictTypes = false;
   }
 
   static class FactoryAllocator implements ObjectAllocator {
@@ -44,14 +46,31 @@ public class Factory extends RubyObject {
     return extensionRegistry.dup();
   }
 
-  @JRubyMethod(name = "initialize")
-  public IRubyObject initialize(ThreadContext ctx) {
+  @JRubyMethod(name = "initialize", optional = 1)
+  public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
+    Ruby runtime = ctx.getRuntime();
+    IRubyObject strictArg;
+
+    if (args.length == 1) {
+      if (args[args.length - 1] instanceof RubyHash) {
+        RubyHash options = (RubyHash) args[args.length - 1];
+        strictArg = options.fastARef(runtime.newSymbol("strict"));
+        if (strictArg != null && strictArg.isTrue()) {
+          this.strictTypes = true;
+        }
+      } else {
+        throw runtime.newArgumentError(String.format("expected Hash but found %s.", args[args.length - 1].getType().getName()));
+      }
+    } else if (args.length > 1) {
+      throw runtime.newArgumentError(String.format("wrong number of arguments (%d for 0..1)", 2 + args.length));
+    }
+
     return this;
   }
 
   @JRubyMethod(name = "packer", optional = 1)
   public Packer packer(ThreadContext ctx, IRubyObject[] args) {
-    return Packer.newPacker(ctx, extensionRegistry(), hasSymbolExtType, args);
+    return Packer.newPacker(ctx, extensionRegistry(), hasSymbolExtType, strictTypes, args);
   }
 
   @JRubyMethod(name = "unpacker", optional = 2)

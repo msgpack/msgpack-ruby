@@ -364,4 +364,40 @@ describe MessagePack::Factory do
       expect(MessagePack.unpack(MessagePack.pack(dm2))).to eq(dm2)
     end
   end
+
+  describe 'with strict types' do
+    shared_examples_for 'strict core type' do |klass|
+      it "enforces exact class match on #{klass} with strict: true" do
+        stub_const('Foo', Class.new(klass))
+        factory = described_class.new(strict: true)
+        foo = Foo.new
+        expect { factory.dump(foo) }.to raise_error do |e|
+          expect(e.class).to eq(MessagePack::PackError)
+          expect(e.error_value).to eq(foo)
+        end
+      end
+
+      it "does not enforce exact class match on #{klass} with strict: false (default)" do
+        stub_const('Foo', Class.new(klass))
+        factory = described_class.new
+        foo = Foo.new
+        expect { factory.dump(foo) }.not_to raise_error
+        expect(factory.dump(foo)).to eq(factory.dump(klass.new))
+      end
+    end
+
+    it_behaves_like 'strict core type', Hash
+    it_behaves_like 'strict core type', Array
+    it_behaves_like 'strict core type', String
+
+    it "raises MessagePack::PackError with strict: true if class has no matching core/extension type" do
+      stub_const('Foo', Class.new)
+      factory = described_class.new(strict: true)
+      foo = Foo.new
+      expect { factory.dump(foo) }.to raise_error do |e|
+        expect(e.class).to eq(MessagePack::PackError)
+        expect(e.error_value).to eq(foo)
+      end
+    end
+  end
 end

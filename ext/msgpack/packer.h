@@ -33,6 +33,7 @@ struct msgpack_packer_t {
 
     bool compatibility_mode;
     bool has_symbol_ext_type;
+    bool strict_types;
 
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
