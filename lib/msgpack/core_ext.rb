@@ -3,6 +3,9 @@ module MessagePack
     def to_msgpack(packer_or_io = nil)
       if packer_or_io
         if packer_or_io.is_a?(MessagePack::Packer)
+          if packer_or_io.strict_types
+            raise NoMethodError.new("undefined method `to_msgpack' for #{inspect}:#{self.class.inspect}", :to_msgpack)
+          end
           to_msgpack_with_packer packer_or_io
         else
           MessagePack.pack(self, packer_or_io)

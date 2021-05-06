@@ -364,4 +364,21 @@ describe MessagePack::Factory do
       expect(MessagePack.unpack(MessagePack.pack(dm2))).to eq(dm2)
     end
   end
+
+  describe 'with strict types' do
+    shared_examples_for 'strict core type' do |klass|
+      it "enforces exact class match on #{klass} with strict: true" do
+        stub_const('FooClass', Class.new(klass))
+        factory = described_class.new(strict: true)
+        expect { factory.dump(FooClass.new) }.to raise_error do |e|
+          expect(e.class).to eq(NoMethodError)
+          expect(e.name).to eq(:to_msgpack)
+        end
+      end
+    end
+
+    it_behaves_like 'strict core type', Hash
+    it_behaves_like 'strict core type', Array
+    it_behaves_like 'strict core type', String
+  end
 end
