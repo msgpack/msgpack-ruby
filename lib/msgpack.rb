@@ -46,4 +46,8 @@ module MessagePack
 
   module_function :pack
   module_function :dump
+
+  class PackError < StandardError
+    attr_accessor :error_value
+  end
 end

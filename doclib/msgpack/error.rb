@@ -1,5 +1,8 @@
 module MessagePack
 
+  class PackError < StandardError
+  end
+
   class UnpackError < StandardError
   end
 
