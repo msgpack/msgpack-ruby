@@ -32,6 +32,7 @@ struct msgpack_factory_t {
     msgpack_packer_ext_registry_t pkrg;
     msgpack_unpacker_ext_registry_t ukrg;
     bool has_symbol_ext_type;
+    bool strict_types;
 };
 
 #define FACTORY(from, name) \
@@ -68,14 +69,23 @@ static VALUE Factory_alloc(VALUE klass)
 static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
+    VALUE options = Qnil;
 
     msgpack_packer_ext_registry_init(&fc->pkrg);
     msgpack_unpacker_ext_registry_init(&fc->ukrg);
 
     fc->has_symbol_ext_type = false;
+    fc->strict_types = false;
 
     switch (argc) {
     case 0:
+        break;
+    case 1:
+        options = argv[0];
+        if(rb_type(options) != T_HASH) {
+            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
+        }
+        fc->strict_types = rb_hash_aref(options, ID2SYM(rb_intern("strict")));
         break;
     default:
         // TODO options is not supported yet
@@ -98,6 +108,7 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
     msgpack_packer_ext_registry_destroy(&pk->ext_registry);
     msgpack_packer_ext_registry_dup(&fc->pkrg, &pk->ext_registry);
     pk->has_symbol_ext_type = fc->has_symbol_ext_type;
+    pk->strict_types = fc->strict_types;
 
     return packer;
 }
@@ -204,6 +215,12 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
+static VALUE MessagePack_Factory_strict_types(VALUE self)
+{
+    FACTORY(self, fc);
+    return fc->strict_types ? Qtrue : Qfalse;
+}
+
 void MessagePack_Factory_module_init(VALUE mMessagePack)
 {
     cMessagePack_Factory = rb_define_class_under(mMessagePack, "Factory", rb_cObject);
@@ -217,4 +234,6 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
 
     rb_define_private_method(cMessagePack_Factory, "registered_types_internal", Factory_registered_types_internal, 0);
     rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
+
+    rb_define_method(cMessagePack_Factory, "strict_types", MessagePack_Factory_strict_types, 0);
 }
