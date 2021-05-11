@@ -115,7 +115,7 @@ describe MessagePack do
       expect { MessagePack.pack(self) }.to raise_error(NoMethodError, /^undefined method `to_msgpack'/)
     end
 
-    it 'rasies an error on #unpack with garbage' do
+    it 'raises an error on #unpack with garbage' do
       skip "but nothing was raised. why?"
       expect { MessagePack.unpack('asdka;sd') }.to raise_error(MessagePack::UnpackError)
     end
