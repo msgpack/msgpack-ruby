@@ -488,6 +488,24 @@ describe MessagePack::Packer do
       it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
     end
 
+    shared_examples_for 'extension subclasses core type' do |klass|
+      before { stub_const('Value', Class.new(klass)) }
+      let(:object) { Value.new }
+      subject { packer.pack(object).to_s }
+
+      it "defaults to #{klass.name} packer if no extension is present" do
+        expect(subject).to eq(MessagePack.dump(klass.new))
+      end
+
+      it "uses core type extension for #{klass.name}" do
+        packer.register_type(0x01, Value, ->(_) { 'value_msgpacked' })
+        expect(subject).to eq("\xC7\x0F\x01value_msgpacked")
+      end
+    end
+    it_behaves_like 'extension subclasses core type', Hash
+    it_behaves_like 'extension subclasses core type', Array
+    it_behaves_like 'extension subclasses core type', String
+
     context 'when registering a type for symbols' do
       before { packer.register_type(0x00, ::Symbol, :to_msgpack_ext) }
 
