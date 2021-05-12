@@ -119,7 +119,9 @@ public class Encoder {
     } else if (object instanceof RubyFloat) {
       appendFloat((RubyFloat) object);
     } else if (object instanceof RubyString) {
-      appendString((RubyString) object);
+      if (object.getType() == runtime.getString() || !tryAppendWithExtTypeLookup(object)) {
+        appendString((RubyString) object);
+      }
     } else if (object instanceof RubySymbol) {
       if (hasSymbolExtType) {
         appendOther(object, destination);
@@ -127,9 +129,13 @@ public class Encoder {
         appendString(((RubySymbol) object).asString());
       }
     } else if (object instanceof RubyArray) {
-      appendArray((RubyArray) object);
+      if (object.getType() == runtime.getArray() || !tryAppendWithExtTypeLookup(object)) {
+        appendArray((RubyArray) object);
+      }
     } else if (object instanceof RubyHash) {
-      appendHash((RubyHash) object);
+      if (object.getType() == runtime.getHash() || !tryAppendWithExtTypeLookup(object)) {
+        appendHash((RubyHash) object);
+      }
     } else if (object instanceof ExtensionValue) {
       appendExtensionValue((ExtensionValue) object);
     } else {
@@ -383,7 +389,7 @@ public class Encoder {
     appendExt((int) type, payloadBytes);
   }
 
-  private void appendOther(IRubyObject object, IRubyObject destination) {
+  private boolean tryAppendWithExtTypeLookup(IRubyObject object) {
     if (registry != null) {
       RubyModule lookupClass;
 
@@ -398,10 +404,14 @@ public class Encoder {
         RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
         int type = (int) ((RubyFixnum) pair[1]).getLongValue();
         appendExt(type, bytes.getByteList());
-        return;
+        return true;
       }
     }
-    appendCustom(object, destination);
+    return false;
+  }
+
+  private void appendOther(IRubyObject object, IRubyObject destination) {
+    if (!tryAppendWithExtTypeLookup(object)) { appendCustom(object, destination); }
   }
 
   private void appendCustom(IRubyObject object, IRubyObject destination) {
