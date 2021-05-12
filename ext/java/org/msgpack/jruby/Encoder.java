@@ -118,7 +118,7 @@ public class Encoder {
       appendInteger((RubyInteger) object);
     } else if (object instanceof RubyFloat) {
       appendFloat((RubyFloat) object);
-    } else if (object instanceof RubyString) {
+    } else if (object.getType() == runtime.getString()) {
       appendString((RubyString) object);
     } else if (object instanceof RubySymbol) {
       if (hasSymbolExtType) {
@@ -126,9 +126,9 @@ public class Encoder {
       } else {
         appendString(((RubySymbol) object).asString());
       }
-    } else if (object instanceof RubyArray) {
+    } else if (object.getType() == runtime.getArray()) {
       appendArray((RubyArray) object);
-    } else if (object instanceof RubyHash) {
+    } else if (object.getType() == runtime.getHash()) {
       appendHash((RubyHash) object);
     } else if (object instanceof ExtensionValue) {
       appendExtensionValue((ExtensionValue) object);
