@@ -145,4 +145,9 @@ public class Factory extends RubyObject {
 
     return runtime.getNil();
   }
+
+  @JRubyMethod(name = "strict_types?")
+  public IRubyObject registerType(ThreadContext ctx) {
+    return strictTypes ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+  }
 }
