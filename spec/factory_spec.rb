@@ -365,24 +365,24 @@ describe MessagePack::Factory do
     end
   end
 
-  describe 'with strict types' do
+  describe 'core type strictness' do
     shared_examples_for 'strict core type' do |klass|
       it "enforces exact class match on #{klass} with strict: true" do
-        stub_const('Foo', Class.new(klass))
+        klass = Class.new(klass)
         factory = described_class.new(strict: true)
-        foo = Foo.new
-        expect { factory.dump(foo) }.to raise_error do |e|
+        object = klass.new
+        expect { factory.dump(object) }.to raise_error do |e|
           expect(e.class).to eq(MessagePack::PackError)
-          expect(e.error_value).to eq(foo)
+          expect(e.error_value).to eq(object)
         end
       end
 
       it "does not enforce exact class match on #{klass} with strict: false (default)" do
-        stub_const('Foo', Class.new(klass))
+        klass = Class.new(klass)
         factory = described_class.new
-        foo = Foo.new
-        expect { factory.dump(foo) }.not_to raise_error
-        expect(factory.dump(foo)).to eq(factory.dump(klass.new))
+        object = klass.new
+        expect { factory.dump(object) }.not_to raise_error
+        expect(factory.dump(object)).to eq(factory.dump(klass.new))
       end
     end
 
@@ -391,12 +391,64 @@ describe MessagePack::Factory do
     it_behaves_like 'strict core type', String
 
     it "raises MessagePack::PackError with strict: true if class has no matching core/extension type" do
-      stub_const('Foo', Class.new)
+      klass = Class.new
       factory = described_class.new(strict: true)
-      foo = Foo.new
-      expect { factory.dump(foo) }.to raise_error do |e|
+      object = klass.new
+      expect { factory.dump(object) }.to raise_error do |e|
         expect(e.class).to eq(MessagePack::PackError)
-        expect(e.error_value).to eq(foo)
+        expect(e.error_value).to eq(object)
+      end
+    end
+  end
+
+  describe "#to_msgpack" do
+    let(:klass) { Class.new }
+    before do
+      klass.class_eval do
+        def to_msgpack(packer)
+          packer.write_string("to_msgpacked")
+          packer
+        end
+      end
+    end
+
+    context 'strict: false' do
+      let(:factory) { described_class.new }
+
+      it "does not raise on classes that define to_msgpack method directly" do
+        object = klass.new
+
+        expect { factory.dump(object) }.not_to raise_error
+        expect(factory.dump(object)).to eq("\xC4\fto_msgpacked")
+      end
+
+      it "does not raise on classes that define to_msgpack method in superclass" do
+        subclass = Class.new(klass)
+        object = subclass.new
+
+        expect { factory.dump(object) }.not_to raise_error
+        expect(factory.dump(object)).to eq("\xC4\fto_msgpacked")
+      end
+    end
+
+    context 'strict: true' do
+      let(:factory) { described_class.new(strict: true) }
+
+      it "does not raise on classes that define to_msgpack method directly" do
+        object = klass.new
+
+        expect { factory.dump(object) }.not_to raise_error
+        expect(factory.dump(object)).to eq("\xC4\fto_msgpacked")
+      end
+
+      it "raise on classes that define to_msgpack method in superclass" do
+        subclass = Class.new(klass)
+        object = subclass.new
+
+        expect { factory.dump(object) }.to raise_error do |e|
+          expect(e.class).to eq(MessagePack::PackError)
+          expect(e.error_value).to eq(object)
+        end
       end
     end
   end
