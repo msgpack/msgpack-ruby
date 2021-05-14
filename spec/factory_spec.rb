@@ -364,4 +364,18 @@ describe MessagePack::Factory do
       expect(MessagePack.unpack(MessagePack.pack(dm2))).to eq(dm2)
     end
   end
+
+  describe '#to_msgpack' do
+    it 'does not raise on classes that define public to_msgpack method' do
+      stub_const('Foo', Class.new do
+        def to_msgpack(*)
+          "to_msgpacked"
+        end
+      end)
+      object = Foo.new
+      factory = described_class.new
+
+      expect(factory.dump(object)).to eq('to_msgpacked')
+    end
+  end
 end
