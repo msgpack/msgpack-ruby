@@ -23,6 +23,7 @@ import org.jruby.RubyHash;
 import org.jruby.RubyEncoding;
 import org.jruby.RubyException;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.runtime.ThreadContext;
 import org.jruby.util.ByteList;
 
 import org.jcodings.Encoding;
@@ -403,13 +404,19 @@ public class Encoder {
         lookupClass = object.getSingletonClass();
       }
 
+      ThreadContext ctx = runtime.getCurrentContext();
       IRubyObject[] pair = registry.lookupPackerForObject(object);
       if (pair != null) {
-        RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
+        RubyString bytes = pair[0].callMethod(ctx, "call", object).asString();
         int type = (int) ((RubyFixnum) pair[1]).getLongValue();
         appendExt(type, bytes.getByteList());
         return true;
       } else if (strictTypes) {
+        RubyArray instance_methods = (RubyArray) object.getType().callMethod(ctx, "instance_methods", runtime.getFalse());
+        if (instance_methods.includes(ctx, runtime.newSymbol("to_msgpack"))) {
+          return false;
+        }
+
         RubyClass packErrorClass = runtime.getModule("MessagePack").getClass("PackError");
         RubyException exc = (RubyException) packErrorClass.allocate();
         exc.setInstanceVariable("@error_value", object);

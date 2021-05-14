@@ -133,6 +133,11 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
         msgpack_packer_write_ext(pk, ext_type, payload);
         return true;
     } else if(pk->strict_types) {
+        VALUE argv[] = { Qfalse };
+        VALUE instance_methods = rb_class_instance_methods(1, argv, rb_obj_class(v));
+        VALUE to_msgpack_defined = rb_ary_includes(instance_methods, ID2SYM(pk->to_msgpack_method));
+        if (to_msgpack_defined == Qtrue) { return false; }
+
         VALUE mMessagePack = rb_const_get(rb_cObject, rb_intern("MessagePack"));
         VALUE ePackError = rb_const_get(mMessagePack, rb_intern("PackError"));
         VALUE exc = rb_obj_alloc(ePackError);
