@@ -54,7 +54,7 @@ public class Factory extends RubyObject {
     if (args.length == 1) {
       if (args[args.length - 1] instanceof RubyHash) {
         RubyHash options = (RubyHash) args[args.length - 1];
-        strictArg = options.fastARef(runtime.newSymbol("strict"));
+        strictArg = options.fastARef(runtime.newSymbol("strict_types"));
         if (strictArg != null && strictArg.isTrue()) {
           this.strictTypes = true;
         }

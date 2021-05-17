@@ -367,9 +367,9 @@ describe MessagePack::Factory do
 
   describe 'core type strictness' do
     shared_examples_for 'strict core type' do |klass|
-      it "enforces exact class match on #{klass} with strict: true" do
+      it "enforces exact class match on #{klass} with strict_types: true" do
         klass = Class.new(klass)
-        factory = described_class.new(strict: true)
+        factory = described_class.new(strict_types: true)
         object = klass.new
         expect { factory.dump(object) }.to raise_error do |e|
           expect(e.class).to eq(MessagePack::PackError)
@@ -377,7 +377,7 @@ describe MessagePack::Factory do
         end
       end
 
-      it "does not enforce exact class match on #{klass} with strict: false (default)" do
+      it "does not enforce exact class match on #{klass} with strict_types: false (default)" do
         klass = Class.new(klass)
         factory = described_class.new
         object = klass.new
@@ -390,9 +390,9 @@ describe MessagePack::Factory do
     it_behaves_like 'strict core type', Array
     it_behaves_like 'strict core type', String
 
-    it "raises MessagePack::PackError with strict: true if class has no matching core/extension type" do
+    it "raises MessagePack::PackError with strict_types: true if class has no matching core/extension type" do
       klass = Class.new
-      factory = described_class.new(strict: true)
+      factory = described_class.new(strict_types: true)
       object = klass.new
       expect { factory.dump(object) }.to raise_error do |e|
         expect(e.class).to eq(MessagePack::PackError)
@@ -412,7 +412,7 @@ describe MessagePack::Factory do
       end
     end
 
-    context 'strict: false' do
+    context 'strict_types: false' do
       let(:factory) { described_class.new }
 
       it "does not raise on classes that define to_msgpack method directly" do
@@ -431,8 +431,8 @@ describe MessagePack::Factory do
       end
     end
 
-    context 'strict: true' do
-      let(:factory) { described_class.new(strict: true) }
+    context 'strict_types: true' do
+      let(:factory) { described_class.new(strict_types: true) }
 
       it "does not raise on classes that define to_msgpack method directly" do
         object = klass.new

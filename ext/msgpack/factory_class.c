@@ -76,17 +76,17 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
     fc->has_symbol_ext_type = false;
 
     VALUE options = Qnil;
-    VALUE strict = Qfalse;
+    VALUE strict_types = Qfalse;
     rb_scan_args(argc, argv, "0:", &options);
 
     if (!NIL_P(options)) {
         static ID keyword_ids[1];
         if (!keyword_ids[0])
-            keyword_ids[0] = rb_intern("strict");
-        rb_get_kwargs(options, keyword_ids, 0, 1, &strict);
+            keyword_ids[0] = rb_intern("strict_types");
+        rb_get_kwargs(options, keyword_ids, 0, 1, &strict_types);
     }
 
-    fc->strict_types = RB_TEST(strict);
+    fc->strict_types = RB_TEST(strict_types);
 
     return Qnil;
 }
