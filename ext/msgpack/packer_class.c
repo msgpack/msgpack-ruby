@@ -404,12 +404,6 @@ VALUE Packer_full_pack(VALUE self)
     return retval;
 }
 
-static VALUE Packer_strict_types_p(VALUE self)
-{
-    PACKER(self, pk);
-    return pk->strict_types ? Qtrue : Qfalse;
-}
-
 void MessagePack_Packer_module_init(VALUE mMessagePack)
 {
     s_to_msgpack = rb_intern("to_msgpack");
@@ -464,6 +458,4 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     //Data_Get_Struct(s_packer_value, msgpack_packer_t, s_packer);
 
     rb_define_method(cMessagePack_Packer, "full_pack", Packer_full_pack, 0);
-
-    rb_define_method(cMessagePack_Packer, "strict_types?", Packer_strict_types_p, 0);
 }

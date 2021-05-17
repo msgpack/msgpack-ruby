@@ -452,20 +452,4 @@ describe MessagePack::Factory do
       end
     end
   end
-
-  describe '#strict_types?' do
-    it 'returns true if strict: true' do
-      factory = described_class.new(strict: true)
-      expect(factory.strict_types?).to eq(true)
-    end
-
-    it 'returns false if strict: false or undefined' do
-      factory = described_class.new(strict: false)
-      expect(factory.strict_types?).to eq(false)
-    end
-
-    it 'defaults to false' do
-      expect(described_class.new.strict_types?).to eq(false)
-    end
-  end
 end
