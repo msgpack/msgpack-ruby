@@ -1,6 +1,7 @@
 module MessagePack
 
   class PackError < StandardError
+    attr_reader :error_value
   end
 
   class UnpackError < StandardError
