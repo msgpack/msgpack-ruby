@@ -121,7 +121,7 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 #endif
 }
 
-void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
+bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v)
 {
     int ext_type;
 
@@ -131,7 +131,14 @@ void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
         VALUE payload = rb_funcall(proc, s_call, 1, v);
         StringValue(payload);
         msgpack_packer_write_ext(pk, ext_type, payload);
-    } else {
+        return true;
+    }
+    return false;
+}
+
+void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)
+{
+    if(!(msgpack_packer_try_write_with_ext_type_lookup(pk, v))) {
         rb_funcall(v, pk->to_msgpack_method, 1, pk->to_msgpack_arg);
     }
 }
@@ -155,13 +162,19 @@ void msgpack_packer_write_value(msgpack_packer_t* pk, VALUE v)
         msgpack_packer_write_symbol_value(pk, v);
         break;
     case T_STRING:
-        msgpack_packer_write_string_value(pk, v);
+        if(rb_class_of(v) == rb_cString || !msgpack_packer_try_write_with_ext_type_lookup(pk, v)) {
+            msgpack_packer_write_string_value(pk, v);
+        }
         break;
     case T_ARRAY:
-        msgpack_packer_write_array_value(pk, v);
+        if(rb_class_of(v) == rb_cArray || !msgpack_packer_try_write_with_ext_type_lookup(pk, v)) {
+            msgpack_packer_write_array_value(pk, v);
+        }
         break;
     case T_HASH:
-        msgpack_packer_write_hash_value(pk, v);
+        if(rb_class_of(v) == rb_cHash || !msgpack_packer_try_write_with_ext_type_lookup(pk, v)) {
+            msgpack_packer_write_hash_value(pk, v);
+        }
         break;
     case T_BIGNUM:
         msgpack_packer_write_bignum_value(pk, v);
