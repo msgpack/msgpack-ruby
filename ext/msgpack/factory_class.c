@@ -86,7 +86,7 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
         rb_get_kwargs(options, keyword_ids, 0, 1, &strict_types);
     }
 
-    fc->strict_types = RB_TEST(strict_types);
+    fc->strict_types = RTEST(strict_types);
 
     return Qnil;
 }
