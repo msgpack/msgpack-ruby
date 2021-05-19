@@ -101,10 +101,13 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
     MessagePack_Buffer_set_options(PACKER_BUFFER_(pk), io, options);
 
     if(options != Qnil) {
-        VALUE v;
+        VALUE compatibility_mode, strict_types;
 
-        v = rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode")));
-        msgpack_packer_set_compat(pk, RTEST(v));
+        compatibility_mode = rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode")));
+        msgpack_packer_set_compat(pk, RTEST(compatibility_mode));
+
+        strict_types = rb_hash_aref(options, ID2SYM(rb_intern("strict_types")));
+        msgpack_packer_set_strict_types(pk, RTEST(strict_types));
     }
 
     return self;
@@ -114,6 +117,12 @@ static VALUE Packer_compatibility_mode_p(VALUE self)
 {
     PACKER(self, pk);
     return pk->compatibility_mode ? Qtrue : Qfalse;
+}
+
+static VALUE Packer_strict_types_p(VALUE self)
+{
+    PACKER(self, pk);
+    return pk->strict_types ? Qtrue : Qfalse;
 }
 
 static VALUE Packer_buffer(VALUE self)
@@ -418,6 +427,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
 
     rb_define_method(cMessagePack_Packer, "initialize", MessagePack_Packer_initialize, -1);
     rb_define_method(cMessagePack_Packer, "compatibility_mode?", Packer_compatibility_mode_p, 0);
+    rb_define_method(cMessagePack_Packer, "strict_types?", Packer_strict_types_p, 0);
     rb_define_method(cMessagePack_Packer, "buffer", Packer_buffer, 0);
     rb_define_method(cMessagePack_Packer, "write", Packer_write, 1);
     rb_define_alias(cMessagePack_Packer, "pack", "write");

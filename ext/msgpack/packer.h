@@ -71,6 +71,12 @@ static inline void msgpack_packer_set_compat(msgpack_packer_t* pk, bool enable)
     pk->compatibility_mode = enable;
 }
 
+static inline void msgpack_packer_set_strict_types(msgpack_packer_t* pk, bool enable)
+{
+    pk->strict_types = enable;
+}
+
+
 static inline void msgpack_packer_write_nil(msgpack_packer_t* pk)
 {
     msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 1);

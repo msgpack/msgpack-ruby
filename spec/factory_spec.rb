@@ -429,6 +429,11 @@ describe MessagePack::Factory do
         expect { factory.dump(object) }.not_to raise_error
         expect(factory.dump(object)).to eq("\xC4\fto_msgpacked")
       end
+
+      it "does not apply strictness on packer unless packer has strictness on" do
+        expect(factory.packer.strict_types?).to eq(false)
+        expect(factory.packer(strict_types: true).strict_types?).to eq(true)
+      end
     end
 
     context 'strict_types: true' do
@@ -449,6 +454,11 @@ describe MessagePack::Factory do
           expect(e.class).to eq(MessagePack::PackError)
           expect(e.error_value).to eq(object)
         end
+      end
+
+      it "applies strictness on packer unless packer has strictness off" do
+        expect(factory.packer.strict_types?).to eq(true)
+        expect(factory.packer(strict_types: false).strict_types?).to eq(false)
       end
     end
   end

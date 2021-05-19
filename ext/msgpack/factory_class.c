@@ -104,7 +104,21 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
     msgpack_packer_ext_registry_destroy(&pk->ext_registry);
     msgpack_packer_ext_registry_dup(&fc->pkrg, &pk->ext_registry);
     pk->has_symbol_ext_type = fc->has_symbol_ext_type;
-    pk->strict_types = fc->strict_types;
+
+    VALUE options = Qnil;
+
+    if(argc == 1 && rb_type(argv[0]) == T_HASH) {
+        options = argv[0];
+    } else if (argc == 2 && rb_type(argv[1]) == T_HASH) {
+        options = argv[1];
+    }
+    if(NIL_P(options)) {
+        pk->strict_types = fc->strict_types;
+    } else {
+        VALUE strict_types = rb_hash_aref(argv[0], ID2SYM(rb_intern("strict_types")));
+        if(NIL_P(strict_types))
+            pk->strict_types = fc->strict_types;
+    }
 
     return packer;
 }
