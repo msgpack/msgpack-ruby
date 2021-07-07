@@ -1,4 +1,3 @@
-# encoding: ascii-8bit
 require 'spec_helper'
 
 describe MessagePack::Factory do
@@ -255,34 +254,30 @@ describe MessagePack::Factory do
         subject { factory.packer.pack(value).to_s }
         before { stub_const('Value', Class.new{ include Mod }) }
         let(:value) { Value.new }
-        it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+        it { is_expected.to eq "\xC7\x0F\x01value_msgpacked".force_encoding(Encoding::BINARY) }
       end
 
       describe "packing an object which has been extended by the module" do
         subject { factory.packer.pack(object).to_s }
         let(:object) { Object.new.extend Mod }
-        it { is_expected.to eq "\xC7\x0F\x01value_msgpacked" }
+        it { is_expected.to eq "\xC7\x0F\x01value_msgpacked".force_encoding(Encoding::BINARY) }
       end
 
       describe "unpacking with the module" do
-        subject { factory.unpacker.feed("\xC7\x06\x01module").unpack }
+        subject { factory.unpacker.feed("\xC7\x06\x01module".force_encoding(Encoding::BINARY)).unpack }
         it { is_expected.to eq "unpacked module" }
       end
     end
   end
 
   describe 'the special treatment of symbols with ext type' do
-    let(:packer) { subject.packer }
-    let(:unpacker) { subject.unpacker }
-
-    def symbol_after_roundtrip
-      packed_symbol = packer.pack(:symbol).to_s
-      unpacker.feed(packed_symbol).unpack
+    def roundtrip(object)
+      subject.load(subject.dump(object))
     end
 
     context 'if no ext type is registered for symbols' do
       it 'converts symbols to string' do
-        expect(symbol_after_roundtrip).to eq 'symbol'
+        expect(roundtrip(:symbol)).to eq 'symbol'
       end
     end
 
@@ -291,7 +286,26 @@ describe MessagePack::Factory do
         before { subject.register_type(0x00, ::Symbol) }
 
         it 'lets symbols survive a roundtrip' do
-          expect(symbol_after_roundtrip).to be :symbol
+          expect(roundtrip(:symbol)).to be :symbol
+        end
+
+        it 'preserves encoding for ASCII symbols' do
+          expect(:symbol.encoding).to be Encoding::US_ASCII
+          expect(roundtrip(:symbol)).to be :symbol
+          expect(roundtrip(:symbol).encoding).to be Encoding::US_ASCII
+        end
+
+        it 'preserves encoding for UTF-8 symbols' do
+          expect(:"fée".encoding).to be Encoding::UTF_8
+          expect(roundtrip(:"fée")).to be :"fée"
+          expect(roundtrip(:"fée").encoding).to be Encoding::UTF_8
+        end
+
+        it 'preserves encoding for ISO-8859-1 symbols' do
+          symbol = "fée".encode(Encoding::ISO_8859_1).to_sym
+          expect(symbol.encoding).to be Encoding::ISO_8859_1
+          expect(roundtrip(symbol)).to be symbol
+          expect(roundtrip(symbol).encoding).to be Encoding::ISO_8859_1
         end
       end
 
@@ -315,7 +329,7 @@ describe MessagePack::Factory do
         before { subject.register_type(0x00, ::Symbol) }
 
         it 'lets symbols survive a roundtrip' do
-          expect(symbol_after_roundtrip).to be :symbol
+          expect(roundtrip(:symbol)).to be :symbol
         end
 
         after do
