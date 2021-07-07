@@ -104,6 +104,14 @@ describe MessagePack::Packer do
     u2.compatibility_mode?.should == true
   end
 
+  it 'gets options to specify strictness' do
+    u1 = MessagePack::Packer.new
+    u1.strict_types?.should == false
+
+    u2 = MessagePack::Packer.new(strict_types: true)
+    u2.strict_types?.should == true
+  end
+
   it 'write' do
     packer.write([])
     packer.to_s.should == "\x90"

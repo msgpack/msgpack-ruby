@@ -33,6 +33,7 @@ struct msgpack_packer_t {
 
     bool compatibility_mode;
     bool has_symbol_ext_type;
+    bool strict_types;
 
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
@@ -69,6 +70,12 @@ static inline void msgpack_packer_set_compat(msgpack_packer_t* pk, bool enable)
 {
     pk->compatibility_mode = enable;
 }
+
+static inline void msgpack_packer_set_strict_types(msgpack_packer_t* pk, bool enable)
+{
+    pk->strict_types = enable;
+}
+
 
 static inline void msgpack_packer_write_nil(msgpack_packer_t* pk)
 {

@@ -32,6 +32,7 @@ struct msgpack_factory_t {
     msgpack_packer_ext_registry_t pkrg;
     msgpack_unpacker_ext_registry_t ukrg;
     bool has_symbol_ext_type;
+    bool strict_types;
 };
 
 #define FACTORY(from, name) \
@@ -74,13 +75,18 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
 
     fc->has_symbol_ext_type = false;
 
-    switch (argc) {
-    case 0:
-        break;
-    default:
-        // TODO options is not supported yet
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0)", argc);
+    VALUE options = Qnil;
+    VALUE strict_types = Qfalse;
+    rb_scan_args(argc, argv, "0:", &options);
+
+    if (!NIL_P(options)) {
+        static ID keyword_ids[1];
+        if (!keyword_ids[0])
+            keyword_ids[0] = rb_intern("strict_types");
+        rb_get_kwargs(options, keyword_ids, 0, 1, &strict_types);
     }
+
+    fc->strict_types = RTEST(strict_types);
 
     return Qnil;
 }
@@ -98,6 +104,21 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
     msgpack_packer_ext_registry_destroy(&pk->ext_registry);
     msgpack_packer_ext_registry_dup(&fc->pkrg, &pk->ext_registry);
     pk->has_symbol_ext_type = fc->has_symbol_ext_type;
+
+    VALUE options = Qnil;
+
+    if(argc == 1 && rb_type(argv[0]) == T_HASH) {
+        options = argv[0];
+    } else if (argc == 2 && rb_type(argv[1]) == T_HASH) {
+        options = argv[1];
+    }
+    if(NIL_P(options)) {
+        pk->strict_types = fc->strict_types;
+    } else {
+        VALUE strict_types = rb_hash_aref(argv[0], ID2SYM(rb_intern("strict_types")));
+        if(NIL_P(strict_types))
+            pk->strict_types = fc->strict_types;
+    }
 
     return packer;
 }

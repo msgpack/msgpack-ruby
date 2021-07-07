@@ -8,6 +8,7 @@ import java.util.Arrays;
 import org.jruby.Ruby;
 import org.jruby.RubyObject;
 import org.jruby.RubyModule;
+import org.jruby.RubyClass;
 import org.jruby.RubyNil;
 import org.jruby.RubyBoolean;
 import org.jruby.RubyNumeric;
@@ -20,7 +21,9 @@ import org.jruby.RubySymbol;
 import org.jruby.RubyArray;
 import org.jruby.RubyHash;
 import org.jruby.RubyEncoding;
+import org.jruby.RubyException;
 import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.runtime.ThreadContext;
 import org.jruby.util.ByteList;
 
 import org.jcodings.Encoding;
@@ -40,10 +43,11 @@ public class Encoder {
   private final ExtensionRegistry registry;
 
   public boolean hasSymbolExtType;
+  public boolean strictTypes;
 
   private ByteBuffer buffer;
 
-  public Encoder(Ruby runtime, boolean compatibilityMode, ExtensionRegistry registry, boolean hasSymbolExtType) {
+  public Encoder(Ruby runtime, boolean compatibilityMode, ExtensionRegistry registry, boolean hasSymbolExtType, boolean strictTypes) {
     this.runtime = runtime;
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
@@ -51,6 +55,7 @@ public class Encoder {
     this.compatibilityMode = compatibilityMode;
     this.registry = registry;
     this.hasSymbolExtType = hasSymbolExtType;
+    this.strictTypes = strictTypes;
   }
 
   public boolean isCompatibilityMode() {
@@ -399,12 +404,23 @@ public class Encoder {
         lookupClass = object.getSingletonClass();
       }
 
+      ThreadContext ctx = runtime.getCurrentContext();
       IRubyObject[] pair = registry.lookupPackerForObject(object);
       if (pair != null) {
-        RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
+        RubyString bytes = pair[0].callMethod(ctx, "call", object).asString();
         int type = (int) ((RubyFixnum) pair[1]).getLongValue();
         appendExt(type, bytes.getByteList());
         return true;
+      } else if (strictTypes) {
+        RubyArray instance_methods = (RubyArray) object.getType().callMethod(ctx, "instance_methods", runtime.getFalse());
+        if (instance_methods.includes(ctx, runtime.newSymbol("to_msgpack"))) {
+          return false;
+        }
+
+        RubyClass packErrorClass = runtime.getModule("MessagePack").getClass("PackError");
+        RubyException exc = (RubyException) packErrorClass.allocate();
+        exc.setInstanceVariable("@error_value", object);
+        throw exc.toThrowable();
       }
     }
     return false;
