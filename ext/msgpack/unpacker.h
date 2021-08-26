@@ -66,6 +66,8 @@ struct msgpack_unpacker_t {
     bool symbolize_keys;
     bool freeze;
     bool allow_unknown_ext;
+    bool optimized_symbol_ext_type;
+    int symbol_ext_type;
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)

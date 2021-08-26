@@ -32,6 +32,8 @@ struct msgpack_factory_t {
     msgpack_packer_ext_registry_t pkrg;
     msgpack_unpacker_ext_registry_t ukrg;
     bool has_symbol_ext_type;
+    bool optimized_symbol_ext_type;
+    int symbol_ext_type;
 };
 
 #define FACTORY(from, name) \
@@ -114,6 +116,8 @@ VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
 
     msgpack_unpacker_ext_registry_destroy(&uk->ext_registry);
     msgpack_unpacker_ext_registry_dup(&fc->ukrg, &uk->ext_registry);
+    uk->optimized_symbol_ext_type = fc->optimized_symbol_ext_type;
+    uk->symbol_ext_type = fc->symbol_ext_type;
 
     return unpacker;
 }
@@ -137,7 +141,7 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
 
     int ext_type;
     VALUE ext_module;
-    VALUE options;
+    VALUE options = Qnil;
     VALUE packer_arg, unpacker_arg;
     VALUE packer_proc, unpacker_proc;
 
@@ -184,6 +188,8 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     if(unpacker_arg != Qnil) {
         if(rb_type(unpacker_arg) == T_SYMBOL || rb_type(unpacker_arg) == T_STRING) {
             unpacker_proc = rb_obj_method(ext_module, unpacker_arg);
+        } else if (rb_respond_to(unpacker_arg, rb_intern("call"))) {
+            unpacker_proc = unpacker_arg;
         } else {
             unpacker_proc = rb_funcall(unpacker_arg, rb_intern("method"), 1, ID2SYM(rb_intern("call")));
         }
@@ -193,6 +199,9 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
 
     if (ext_module == rb_cSymbol) {
         fc->has_symbol_ext_type = true;
+        if(RB_TEST(options) && RB_TEST(rb_hash_aref(options, ID2SYM(rb_intern("optimized_symbols_parsing"))))) {
+            fc->optimized_symbol_ext_type = true;
+        }
     }
 
     msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_module, ext_type, unpacker_proc, unpacker_arg);

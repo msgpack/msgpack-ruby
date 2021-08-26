@@ -494,4 +494,9 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
 #endif // HAVE_RB_ENC_INTERNED_STR
 }
 
+static inline VALUE msgpack_buffer_read_top_as_symbol(msgpack_buffer_t* b, size_t length)
+{
+    return rb_str_intern(msgpack_buffer_read_top_as_string(b, length, true, false));
+}
+
 #endif

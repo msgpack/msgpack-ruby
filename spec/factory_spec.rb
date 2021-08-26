@@ -280,6 +280,22 @@ describe MessagePack::Factory do
       unpacker.feed(packed_symbol).unpack
     end
 
+    context 'using the optimized symbol unpacker' do
+      before do
+        subject.register_type(
+          0x00,
+          ::Symbol,
+          packer: :to_msgpack_ext,
+          unpacker: :from_msgpack_ext,
+          optimized_symbols_parsing: true,
+        )
+      end
+
+      it 'lets symbols survive a roundtrip' do
+        expect(symbol_after_roundtrip).to be :symbol
+      end
+    end
+
     context 'if no ext type is registered for symbols' do
       it 'converts symbols to string' do
         expect(symbol_after_roundtrip).to eq 'symbol'
