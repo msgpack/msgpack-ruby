@@ -140,9 +140,15 @@ public class Decoder implements Iterator<IRubyObject> {
     RubyHash hash = RubyHash.newHash(runtime);
     for (int i = 0; i < size; i++) {
       IRubyObject key = next();
-      if (this.symbolizeKeys && key instanceof RubyString) {
+      if (key instanceof RubyString) {
+        if (this.symbolizeKeys) {
           key = ((RubyString) key).intern();
+        } else {
+          key.setFrozen(true);
+          key = runtime.freezeAndDedupString((RubyString) key);
+        }
       }
+
       hash.fastASet(key, next());
     }
     return hash;

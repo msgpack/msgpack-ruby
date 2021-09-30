@@ -36,6 +36,15 @@ describe MessagePack::Unpacker do
       unpacker.each { |obj| hashes = obj }
       expect(hashes[0].keys.first).to equal(hashes[1].keys.first)
     end
+
+    it 'ensure strings are not deduplicated' do
+      sample_data = ["foo"]
+      sample_packed = MessagePack.pack(sample_data).force_encoding('ASCII-8BIT')
+      unpacker.feed(sample_packed)
+      ary = nil
+      unpacker.each { |obj| ary = obj }
+      expect(ary.first.frozen?).to eq(false)
+    end
   end
 
   it 'gets IO or object which has #read to read data from it' do
