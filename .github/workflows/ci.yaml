@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu]
-        ruby: ['jruby']
+        ruby: ['jruby-9.2.19.0', 'jruby-head']
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v2
