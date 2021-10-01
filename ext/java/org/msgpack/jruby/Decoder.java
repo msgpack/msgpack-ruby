@@ -122,7 +122,6 @@ public class Decoder implements Iterator<IRubyObject> {
     ByteList byteList = new ByteList(bytes, encoding);
     RubyString string = runtime.newString(byteList);
     if (this.freeze) {
-      string.setFrozen(true);
       string = runtime.freezeAndDedupString(string);
     }
     return string;
@@ -144,7 +143,6 @@ public class Decoder implements Iterator<IRubyObject> {
         if (this.symbolizeKeys) {
           key = ((RubyString) key).intern();
         } else {
-          key.setFrozen(true);
           key = runtime.freezeAndDedupString((RubyString) key);
         }
       }
