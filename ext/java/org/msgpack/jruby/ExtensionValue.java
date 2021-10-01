@@ -25,6 +25,7 @@ import static org.msgpack.jruby.Types.*;
 
 @JRubyClass(name="MessagePack::ExtensionValue")
 public class ExtensionValue extends RubyObject {
+  private static final long serialVersionUID = 8451274621449322492L;
   private final Encoding binaryEncoding;
 
   private RubyFixnum type;
@@ -77,12 +78,10 @@ public class ExtensionValue extends RubyObject {
     }
     if (o instanceof ExtensionValue) {
       ExtensionValue other = (ExtensionValue) o;
-      if (!this.type.eql_p(other.type).isTrue())
+      if (!this.type.eql_p(other.type).isTrue()) {
         return runtime.getFalse();
-      if (runtime.is1_8()) {
-        return this.payload.str_eql_p(ctx, other.payload);
       } else {
-        return this.payload.str_eql_p19(ctx, other.payload);
+        return this.payload.str_eql_p(ctx, other.payload);
       }
     }
     return runtime.getFalse();
@@ -96,12 +95,10 @@ public class ExtensionValue extends RubyObject {
     }
     if (o instanceof ExtensionValue) {
       ExtensionValue other = (ExtensionValue) o;
-      if (!this.type.op_equal(ctx, other.type).isTrue())
+      if (!this.type.op_equal(ctx, other.type).isTrue()) {
         return runtime.getFalse();
-      if (runtime.is1_8()) {
-        return this.payload.op_equal(ctx, other.payload);
       } else {
-        return this.payload.op_equal19(ctx, other.payload);
+        return this.payload.op_equal(ctx, other.payload);
       }
     }
     return runtime.getFalse();

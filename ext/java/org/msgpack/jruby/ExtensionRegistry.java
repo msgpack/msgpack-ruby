@@ -37,7 +37,7 @@ public class ExtensionRegistry {
   }
 
   public IRubyObject toInternalPackerRegistry(ThreadContext ctx) {
-    RubyHash hash = RubyHash.newHash(ctx.getRuntime());
+    RubyHash hash = RubyHash.newHash(ctx.runtime);
     for (RubyModule extensionModule : extensionsByModule.keySet()) {
       ExtensionEntry entry = extensionsByModule.get(extensionModule);
       if (entry.hasPacker()) {
@@ -48,11 +48,11 @@ public class ExtensionRegistry {
   }
 
   public IRubyObject toInternalUnpackerRegistry(ThreadContext ctx) {
-    RubyHash hash = RubyHash.newHash(ctx.getRuntime());
+    RubyHash hash = RubyHash.newHash(ctx.runtime);
     for (int typeIdIndex = 0 ; typeIdIndex < 256 ; typeIdIndex++) {
       ExtensionEntry entry = extensionsByTypeId[typeIdIndex];
       if (entry != null && entry.hasUnpacker()) {
-        IRubyObject typeId = RubyFixnum.newFixnum(ctx.getRuntime(), typeIdIndex - 128);
+        IRubyObject typeId = RubyFixnum.newFixnum(ctx.runtime, typeIdIndex - 128);
         hash.put(typeId, entry.toUnpackerTuple(ctx));
       }
     }
@@ -124,7 +124,7 @@ public class ExtensionRegistry {
   private ExtensionEntry findEntryByModuleOrAncestor(final RubyModule mod) {
     ThreadContext ctx = mod.getRuntime().getCurrentContext();
     for (RubyModule extensionModule : extensionsByModule.keySet()) {
-      RubyArray ancestors = (RubyArray) mod.callMethod(ctx, "ancestors");
+      RubyArray<?> ancestors = (RubyArray)mod.callMethod(ctx, "ancestors");
       if (ancestors.callMethod(ctx, "include?", extensionModule).isTrue()) {
         return extensionsByModule.get(extensionModule);
       }
@@ -173,16 +173,16 @@ public class ExtensionRegistry {
       return unpackerProc;
     }
 
-    public RubyArray toPackerTuple(ThreadContext ctx) {
-      return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {RubyFixnum.newFixnum(ctx.getRuntime(), typeId), packerProc, packerArg});
+    public RubyArray<?> toPackerTuple(ThreadContext ctx) {
+      return ctx.runtime.newArray(new IRubyObject[] {ctx.runtime.newFixnum(typeId), packerProc, packerArg});
     }
 
-    public RubyArray toUnpackerTuple(ThreadContext ctx) {
-      return RubyArray.newArray(ctx.getRuntime(), new IRubyObject[] {mod, unpackerProc, unpackerArg});
+    public RubyArray<?> toUnpackerTuple(ThreadContext ctx) {
+      return ctx.runtime.newArray(new IRubyObject[] {mod, unpackerProc, unpackerArg});
     }
 
     public IRubyObject[] toPackerProcTypeIdPair(ThreadContext ctx) {
-      return new IRubyObject[] {packerProc, RubyFixnum.newFixnum(ctx.getRuntime(), typeId)};
+      return new IRubyObject[] {packerProc, ctx.runtime.newFixnum(typeId)};
     }
   }
 }

@@ -27,6 +27,7 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Unpacker")
 public class Unpacker extends RubyObject {
+  private static final long serialVersionUID = 8451264671199362492L;
   private final ExtensionRegistry registry;
 
   private IRubyObject stream;
@@ -59,22 +60,23 @@ public class Unpacker extends RubyObject {
     allowUnknownExt = false;
     freeze = false;
     if (args.length > 0) {
+      Ruby runtime = ctx.runtime;
       if (args[args.length - 1] instanceof RubyHash) {
         RubyHash options = (RubyHash) args[args.length - 1];
-        IRubyObject sk = options.fastARef(ctx.getRuntime().newSymbol("symbolize_keys"));
+        IRubyObject sk = options.fastARef(runtime.newSymbol("symbolize_keys"));
         if (sk != null) {
           symbolizeKeys = sk.isTrue();
         }
-        IRubyObject f = options.fastARef(ctx.getRuntime().newSymbol("freeze"));
+        IRubyObject f = options.fastARef(runtime.newSymbol("freeze"));
         if (f != null) {
           freeze = f.isTrue();
         }
-        IRubyObject au = options.fastARef(ctx.getRuntime().newSymbol("allow_unknown_ext"));
+        IRubyObject au = options.fastARef(runtime.newSymbol("allow_unknown_ext"));
         if (au != null) {
           allowUnknownExt = au.isTrue();
         }
       }
-      if (args[0] != ctx.getRuntime().getNil() && !(args[0] instanceof RubyHash)) {
+      if (args[0] != runtime.getNil() && !(args[0] instanceof RubyHash)) {
         setStream(ctx, args[0]);
       }
     }
@@ -82,24 +84,24 @@ public class Unpacker extends RubyObject {
   }
 
   public static Unpacker newUnpacker(ThreadContext ctx, ExtensionRegistry extRegistry, IRubyObject[] args) {
-    Unpacker unpacker = new Unpacker(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Unpacker"), extRegistry);
+    Unpacker unpacker = new Unpacker(ctx.runtime, ctx.runtime.getModule("MessagePack").getClass("Unpacker"), extRegistry);
     unpacker.initialize(ctx, args);
     return unpacker;
   }
 
   @JRubyMethod(name = "symbolize_keys?")
   public IRubyObject isSymbolizeKeys(ThreadContext ctx) {
-    return symbolizeKeys ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+    return symbolizeKeys ? ctx.runtime.getTrue() : ctx.runtime.getFalse();
   }
 
   @JRubyMethod(name = "freeze?")
   public IRubyObject isFreeze(ThreadContext ctx) {
-    return freeze ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+    return freeze ? ctx.runtime.getTrue() : ctx.runtime.getFalse();
   }
 
   @JRubyMethod(name = "allow_unknown_ext?")
   public IRubyObject isAllowUnknownExt(ThreadContext ctx) {
-    return allowUnknownExt ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+    return allowUnknownExt ? ctx.runtime.getTrue() : ctx.runtime.getFalse();
   }
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
@@ -109,7 +111,7 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod(name = "register_type", required = 1, optional = 2)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
-    Ruby runtime = ctx.getRuntime();
+    Ruby runtime = ctx.runtime;
     IRubyObject type = args[0];
 
     RubyModule extModule;
@@ -155,7 +157,7 @@ public class Unpacker extends RubyObject {
     if (limit == -1) {
       limit = byteList.length() - offset;
     }
-    Decoder decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin() + offset, limit, symbolizeKeys, freeze, allowUnknownExt);
+    Decoder decoder = new Decoder(ctx.runtime, registry, byteList.unsafeBytes(), byteList.begin() + offset, limit, symbolizeKeys, freeze, allowUnknownExt);
     try {
       data = null;
       data = decoder.next();
@@ -164,13 +166,13 @@ public class Unpacker extends RubyObject {
         throw re;
       }
     }
-    return ctx.getRuntime().newFixnum(decoder.offset());
+    return ctx.runtime.newFixnum(decoder.offset());
   }
 
   @JRubyMethod(name = "data")
   public IRubyObject getData(ThreadContext ctx) {
     if (data == null) {
-      return ctx.getRuntime().getNil();
+      return ctx.runtime.getNil();
     } else {
       return data;
     }
@@ -178,14 +180,14 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod(name = "finished?")
   public IRubyObject finished_p(ThreadContext ctx) {
-    return data == null ? ctx.getRuntime().getFalse() : ctx.getRuntime().getTrue();
+    return data == null ? ctx.runtime.getFalse() : ctx.runtime.getTrue();
   }
 
   @JRubyMethod(required = 1, name = "feed", alias = { "feed_reference" })
   public IRubyObject feed(ThreadContext ctx, IRubyObject data) {
     ByteList byteList = data.asString().getByteList();
     if (decoder == null) {
-      decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin(), byteList.length(), symbolizeKeys, freeze, allowUnknownExt);
+      decoder = new Decoder(ctx.runtime, registry, byteList.unsafeBytes(), byteList.begin(), byteList.length(), symbolizeKeys, freeze, allowUnknownExt);
     } else {
       decoder.feed(byteList.unsafeBytes(), byteList.begin(), byteList.length());
     }
@@ -202,7 +204,7 @@ public class Unpacker extends RubyObject {
     feed(ctx, data);
     if (block.isGiven()) {
       each(ctx, block);
-      return ctx.getRuntime().getNil();
+      return ctx.runtime.getNil();
     } else {
       return callMethod(ctx, "to_enum");
     }
@@ -230,7 +232,7 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod
   public IRubyObject fill(ThreadContext ctx) {
-    return ctx.getRuntime().getNil();
+    return ctx.runtime.getNil();
   }
 
   @JRubyMethod
@@ -238,13 +240,13 @@ public class Unpacker extends RubyObject {
     if (decoder != null) {
       decoder.reset();
     }
-    return ctx.getRuntime().getNil();
+    return ctx.runtime.getNil();
   }
 
   @JRubyMethod(name = "read", alias = { "unpack" })
   public IRubyObject read(ThreadContext ctx) {
     if (decoder == null) {
-      throw ctx.getRuntime().newEOFError();
+      throw ctx.runtime.newEOFError();
     }
     try {
       return decoder.next();
@@ -252,19 +254,19 @@ public class Unpacker extends RubyObject {
       if (re.getException().getType() != underflowErrorClass) {
         throw re;
       } else {
-        throw ctx.getRuntime().newEOFError();
+        throw ctx.runtime.newEOFError();
       }
     }
   }
 
   @JRubyMethod(name = "skip")
   public IRubyObject skip(ThreadContext ctx) {
-    throw ctx.getRuntime().newNotImplementedError("Not supported yet in JRuby implementation");
+    throw ctx.runtime.newNotImplementedError("Not supported yet in JRuby implementation");
   }
 
   @JRubyMethod(name = "skip_nil")
   public IRubyObject skipNil(ThreadContext ctx) {
-    throw ctx.getRuntime().newNotImplementedError("Not supported yet in JRuby implementation");
+    throw ctx.runtime.newNotImplementedError("Not supported yet in JRuby implementation");
   }
 
   @JRubyMethod
@@ -276,11 +278,11 @@ public class Unpacker extends RubyObject {
         if (re.getException().getType() != underflowErrorClass) {
           throw re;
         } else {
-          throw ctx.getRuntime().newEOFError();
+          throw ctx.runtime.newEOFError();
         }
       }
     }
-    return ctx.getRuntime().getNil();
+    return ctx.runtime.getNil();
   }
 
   @JRubyMethod
@@ -292,17 +294,17 @@ public class Unpacker extends RubyObject {
         if (re.getException().getType() != underflowErrorClass) {
           throw re;
         } else {
-          throw ctx.getRuntime().newEOFError();
+          throw ctx.runtime.newEOFError();
         }
       }
     }
-    return ctx.getRuntime().getNil();
+    return ctx.runtime.getNil();
   }
 
   @JRubyMethod(name = "stream")
   public IRubyObject getStream(ThreadContext ctx) {
     if (stream == null) {
-      return ctx.getRuntime().getNil();
+      return ctx.runtime.getNil();
     } else {
       return stream;
     }
@@ -318,12 +320,12 @@ public class Unpacker extends RubyObject {
     } else if (stream.respondsTo("read")) {
       str = stream.callMethod(ctx, "read").asString();
     } else {
-      throw ctx.getRuntime().newTypeError(stream, "IO");
+      throw ctx.runtime.newTypeError(stream, "IO");
     }
     ByteList byteList = str.getByteList();
     this.stream = stream;
     this.decoder = null;
-    this.decoder = new Decoder(ctx.getRuntime(), registry, byteList.unsafeBytes(), byteList.begin(), byteList.length(), symbolizeKeys, freeze, allowUnknownExt);
+    this.decoder = new Decoder(ctx.runtime, registry, byteList.unsafeBytes(), byteList.begin(), byteList.length(), symbolizeKeys, freeze, allowUnknownExt);
     return getStream(ctx);
   }
 }
