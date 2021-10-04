@@ -159,7 +159,7 @@ public class Encoder {
   }
 
   private void appendInteger(RubyInteger object) {
-    long value = ((RubyInteger) object).getLongValue();
+    long value = object.getLongValue();
     if (value < 0) {
       if (value < Short.MIN_VALUE) {
         if (value < Integer.MIN_VALUE) {
@@ -247,7 +247,7 @@ public class Encoder {
     } else {
       ensureRemainingCapacity(5 + length);
       buffer.put(binary ? BIN32 : STR32);
-      buffer.putInt((int) length);
+      buffer.putInt(length);
     }
   }
 
@@ -255,7 +255,7 @@ public class Encoder {
     Encoding encoding = object.getEncoding();
     boolean binary = !compatibilityMode && encoding == binaryEncoding;
     if (encoding != utf8Encoding && encoding != binaryEncoding) {
-      object = (RubyString) ((RubyString) object).encode(runtime.getCurrentContext(), runtime.getEncodingService().getEncoding(utf8Encoding));
+      object = (RubyString)(object).encode(runtime.getCurrentContext(), runtime.getEncodingService().getEncoding(utf8Encoding));
     }
     ByteList bytes = object.getByteList();
     int length = bytes.length();
@@ -263,12 +263,12 @@ public class Encoder {
     buffer.put(bytes.unsafeBytes(), bytes.begin(), length);
   }
 
-  private void appendArray(RubyArray object) {
+  private void appendArray(RubyArray<?> object) {
     appendArrayHeader(object);
     appendArrayElements(object);
   }
 
-  private void appendArrayHeader(RubyArray object) {
+  private void appendArrayHeader(RubyArray<?> object) {
     appendArrayHeader(object.size());
   }
 
@@ -287,7 +287,7 @@ public class Encoder {
     }
   }
 
-  private void appendArrayElements(RubyArray object) {
+  private void appendArrayElements(RubyArray<?> object) {
     int size = object.size();
     for (int i = 0; i < size; i++) {
       appendObject(object.eltOk(i));

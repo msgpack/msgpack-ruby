@@ -21,6 +21,7 @@ import org.jcodings.Encoding;
 
 @JRubyClass(name="MessagePack::Buffer")
 public class Buffer extends RubyObject {
+  private static final long serialVersionUID = 8441244627425629412L;
   private IRubyObject io;
   private ByteBuffer buffer;
   private boolean writeMode;
@@ -49,7 +50,7 @@ public class Buffer extends RubyObject {
     }
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.writeMode = true;
-    this.binaryEncoding = ctx.getRuntime().getEncodingService().getAscii8bitEncoding();
+    this.binaryEncoding = ctx.runtime.getEncodingService().getAscii8bitEncoding();
     return this;
   }
 
@@ -87,17 +88,17 @@ public class Buffer extends RubyObject {
       writeMode = true;
     }
     buffer.clear();
-    return ctx.getRuntime().getNil();
+    return ctx.runtime.getNil();
   }
 
   @JRubyMethod(name = "size")
   public IRubyObject size(ThreadContext ctx) {
-    return ctx.getRuntime().newFixnum(rawSize());
+    return ctx.runtime.newFixnum(rawSize());
   }
 
   @JRubyMethod(name = "empty?")
   public IRubyObject isEmpty(ThreadContext ctx) {
-    return rawSize() == 0 ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+    return rawSize() == 0 ? ctx.runtime.getTrue() : ctx.runtime.getFalse();
   }
 
   private IRubyObject bufferWrite(ThreadContext ctx, IRubyObject str) {
@@ -105,7 +106,7 @@ public class Buffer extends RubyObject {
     int length = bytes.length();
     ensureRemainingCapacity(length);
     buffer.put(bytes.unsafeBytes(), bytes.begin(), length);
-    return ctx.getRuntime().newFixnum(length);
+    return ctx.runtime.newFixnum(length);
 
   }
 
@@ -131,19 +132,19 @@ public class Buffer extends RubyObject {
       length = (int) args[0].convertToInteger().getLongValue();
     }
     if (raiseOnUnderflow && rawSize() < length) {
-      throw ctx.getRuntime().newEOFError();
+      throw ctx.runtime.newEOFError();
     }
     int readLength = Math.min(length, rawSize());
     if (readLength == 0 && length > 0) {
-      return ctx.getRuntime().getNil();
+      return ctx.runtime.getNil();
     } else if (readLength == 0) {
-      return ctx.getRuntime().newString();
+      return ctx.runtime.newString();
     } else {
       ensureReadMode();
       byte[] bytes = new byte[readLength];
       buffer.get(bytes);
       ByteList byteList = new ByteList(bytes, binaryEncoding);
-      return ctx.getRuntime().newString(byteList);
+      return ctx.runtime.newString(byteList);
     }
   }
 
@@ -161,12 +162,12 @@ public class Buffer extends RubyObject {
     feed(ctx);
     int length = (int) _length.convertToInteger().getLongValue();
     if (raiseOnUnderflow && rawSize() < length) {
-      throw ctx.getRuntime().newEOFError();
+      throw ctx.runtime.newEOFError();
     }
     ensureReadMode();
     int skipLength = Math.min(length, rawSize());
     buffer.position(buffer.position() + skipLength);
-    return ctx.getRuntime().newFixnum(skipLength);
+    return ctx.runtime.newFixnum(skipLength);
   }
 
   @JRubyMethod(name = "skip")
@@ -188,23 +189,23 @@ public class Buffer extends RubyObject {
     ensureReadMode();
     int length = buffer.limit() - buffer.position();
     ByteList str = new ByteList(buffer.array(), buffer.position(), length, binaryEncoding, true);
-    return ctx.getRuntime().newString(str);
+    return ctx.runtime.newString(str);
   }
 
   @JRubyMethod(name = "to_a")
   public IRubyObject toA(ThreadContext ctx) {
-    return ctx.getRuntime().newArray(toS(ctx));
+    return ctx.runtime.newArray(toS(ctx));
   }
 
   @JRubyMethod(name = "io")
   public IRubyObject getIo(ThreadContext ctx) {
-    return io == null ? ctx.getRuntime().getNil() : io;
+    return io == null ? ctx.runtime.getNil() : io;
   }
 
   @JRubyMethod(name = "flush")
   public IRubyObject flush(ThreadContext ctx) {
     if (io == null) {
-      return ctx.getRuntime().getNil();
+      return ctx.runtime.getNil();
     } else {
       return io.callMethod(ctx, "flush");
     }
@@ -213,7 +214,7 @@ public class Buffer extends RubyObject {
   @JRubyMethod(name = "close")
   public IRubyObject close(ThreadContext ctx) {
     if (io == null) {
-      return ctx.getRuntime().getNil();
+      return ctx.runtime.getNil();
     } else {
       return io.callMethod(ctx, "close");
     }

@@ -27,6 +27,7 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Packer")
 public class Packer extends RubyObject {
+  private static final long serialVersionUID = 8451274621499362492L;
   public ExtensionRegistry registry;
   private Buffer buffer;
   private Encoder encoder;
@@ -48,9 +49,10 @@ public class Packer extends RubyObject {
   @JRubyMethod(name = "initialize", optional = 2)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
     boolean compatibilityMode = false;
+    Ruby runtime = ctx.runtime;
     if (args.length > 0 && args[args.length - 1] instanceof RubyHash) {
       RubyHash options = (RubyHash) args[args.length - 1];
-      IRubyObject mode = options.fastARef(ctx.getRuntime().newSymbol("compatibility_mode"));
+      IRubyObject mode = options.fastARef(runtime.newSymbol("compatibility_mode"));
       compatibilityMode = (mode != null) && mode.isTrue();
     }
     if (registry == null) {
@@ -58,22 +60,22 @@ public class Packer extends RubyObject {
         // registry is already initialized (and somthing might be registered) when newPacker from Factory
         this.registry = new ExtensionRegistry();
     }
-    this.encoder = new Encoder(ctx.getRuntime(), compatibilityMode, registry, hasSymbolExtType);
-    this.buffer = new Buffer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Buffer"));
+    this.encoder = new Encoder(runtime, compatibilityMode, registry, hasSymbolExtType);
+    this.buffer = new Buffer(runtime, runtime.getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
-    this.binaryEncoding = ctx.getRuntime().getEncodingService().getAscii8bitEncoding();
+    this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     return this;
   }
 
   public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, boolean hasSymbolExtType, IRubyObject[] args) {
-    Packer packer = new Packer(ctx.getRuntime(), ctx.getRuntime().getModule("MessagePack").getClass("Packer"), extRegistry, hasSymbolExtType);
+    Packer packer = new Packer(ctx.runtime, ctx.runtime.getModule("MessagePack").getClass("Packer"), extRegistry, hasSymbolExtType);
     packer.initialize(ctx, args);
     return packer;
   }
 
   @JRubyMethod(name = "compatibility_mode?")
   public IRubyObject isCompatibilityMode(ThreadContext ctx) {
-    return encoder.isCompatibilityMode() ? ctx.getRuntime().getTrue() : ctx.getRuntime().getFalse();
+    return encoder.isCompatibilityMode() ? ctx.runtime.getTrue() : ctx.runtime.getFalse();
   }
 
   @JRubyMethod(name = "registered_types_internal", visibility = PRIVATE)
@@ -83,7 +85,7 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
-    Ruby runtime = ctx.getRuntime();
+    Ruby runtime = ctx.runtime;
     IRubyObject type = args[0];
     IRubyObject mod = args[1];
 
@@ -182,12 +184,12 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "write_true")
   public IRubyObject writeTrue(ThreadContext ctx) {
-    return write(ctx, ctx.getRuntime().getTrue());
+    return write(ctx, ctx.runtime.getTrue());
   }
 
   @JRubyMethod(name = "write_false")
   public IRubyObject writeFalse(ThreadContext ctx) {
-    return write(ctx, ctx.getRuntime().getFalse());
+    return write(ctx, ctx.runtime.getFalse());
   }
 
   @JRubyMethod(name = "write_nil")
