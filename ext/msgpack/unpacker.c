@@ -151,8 +151,19 @@ static inline int object_complete(msgpack_unpacker_t* uk, VALUE object)
     return PRIMITIVE_OBJECT_COMPLETE;
 }
 
+static inline int object_complete_symbol(msgpack_unpacker_t* uk, VALUE object)
+{
+    uk->last_object = object;
+    reset_head_byte(uk);
+    return PRIMITIVE_OBJECT_COMPLETE;
+}
+
 static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALUE str)
 {
+    if (uk->optimized_symbol_ext_type && ext_type == uk->symbol_ext_type) {
+        return object_complete_symbol(uk, rb_str_intern(str));
+    }
+
     VALUE proc = msgpack_unpacker_ext_registry_lookup(&uk->ext_registry, ext_type);
     if(proc != Qnil) {
         VALUE obj = rb_funcall(proc, s_call, 1, str);
@@ -273,22 +284,27 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
     /* try optimized read */
     size_t length = uk->reading_raw_remaining;
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
-        /* don't use zerocopy for hash keys but get a frozen string directly
-         * because rb_hash_aset freezes keys and it causes copying */
-        bool will_freeze = uk->freeze || is_reading_map_key(uk);
-        VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze, raw_type == RAW_TYPE_STRING);
         int ret;
-        if(raw_type == RAW_TYPE_STRING || raw_type == RAW_TYPE_BINARY) {
-            ret = object_complete(uk, string);
+        if ((uk->optimized_symbol_ext_type && uk->symbol_ext_type == raw_type) || (uk->symbolize_keys && is_reading_map_key(uk))) {
+            VALUE symbol = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length);
+            ret = object_complete_symbol(uk, symbol);
         } else {
-            ret = object_complete_ext(uk, raw_type, string);
-        }
+            /* don't use zerocopy for hash keys but get a frozen string directly
+             * because rb_hash_aset freezes keys and it causes copying */
+            bool will_freeze = uk->freeze || is_reading_map_key(uk);
+            VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze, raw_type == RAW_TYPE_STRING);
+            if(raw_type == RAW_TYPE_STRING || raw_type == RAW_TYPE_BINARY) {
+                ret = object_complete(uk, string);
+            } else {
+                ret = object_complete_ext(uk, raw_type, string);
+            }
 
 # if !HASH_ASET_DEDUPE
-        if(will_freeze) {
-            rb_obj_freeze(string);
-        }
+            if(will_freeze) {
+                rb_obj_freeze(string);
+            }
 # endif
+        }
         uk->reading_raw_remaining = 0;
         return ret;
     }
