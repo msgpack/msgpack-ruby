@@ -282,6 +282,7 @@ describe MessagePack::Factory do
 
     context 'using the optimized symbol unpacker' do
       before do
+        skip if IS_JRUBY # JRuby implementation doesn't support the optimized symbols unpacker for now
         subject.register_type(
           0x00,
           ::Symbol,

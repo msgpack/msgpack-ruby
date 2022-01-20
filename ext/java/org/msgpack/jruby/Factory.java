@@ -89,6 +89,10 @@ public class Factory extends RubyObject {
         RubyHash options = (RubyHash) args[args.length - 1];
         packerArg = options.fastARef(runtime.newSymbol("packer"));
         unpackerArg = options.fastARef(runtime.newSymbol("unpacker"));
+        IRubyObject optimizedSymbolsParsingArg = options.fastARef(runtime.newSymbol("optimized_symbols_parsing"));
+        if (optimizedSymbolsParsingArg != null && optimizedSymbolsParsingArg.isTrue()) {
+          throw runtime.newArgumentError("JRuby implementation does not support the optimized_symbols_parsing option");
+        }
       } else {
         throw runtime.newArgumentError(String.format("expected Hash but found %s.", args[args.length - 1].getType().getName()));
       }
