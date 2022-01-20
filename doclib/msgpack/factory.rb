@@ -75,6 +75,7 @@ module MessagePack
     #
     # * *:packer* specify symbol or proc object for packer
     # * *:unpacker* specify symbol or proc object for unpacker
+    # * *:optimized_symbols_parsing* specify true to use the optimized symbols parsing (not supported on JRuby now)
     #
     def register_type(type, klass, options={})
     end
