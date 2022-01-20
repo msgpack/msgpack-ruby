@@ -1,3 +1,11 @@
+2022-01-20 version 1.4.3:
+
+* Optimize serialization/deserialization of Symbols
+* Support registering ext types for objects of subclasses of primitive types (like Hash)
+* Add optimized_symbols_parsing option to Factory#register_type on MRI implementation
+* Optimize to deduplicate Hash keys on JRuby
+* Support JRuby 9.3 (and drop 9.1)
+
 2021-02-01 version 1.4.2:
 
 * Add the required Ruby version (>= 2.4) to avoid compilation errors on older Ruby runtimes
