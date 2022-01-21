@@ -1,3 +1,6 @@
+Unreleased
+* JRuby - fixes binary compatibility with Java 8
+
 2022-01-20 version 1.4.3:
 
 * Optimize serialization/deserialization of Symbols

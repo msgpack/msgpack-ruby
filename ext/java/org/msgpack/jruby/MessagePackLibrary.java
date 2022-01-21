@@ -37,8 +37,8 @@ public class MessagePackLibrary implements Library {
     packerClass.defineAnnotatedMethods(Packer.class);
     RubyClass unpackerClass = msgpackModule.defineClassUnder("Unpacker", runtime.getObject(), new Unpacker.UnpackerAllocator());
     unpackerClass.defineAnnotatedMethods(Unpacker.class);
-    RubyClass bufferClass = msgpackModule.defineClassUnder("Buffer", runtime.getObject(), new Buffer.BufferAllocator());
-    bufferClass.defineAnnotatedMethods(Buffer.class);
+    RubyClass bufferClass = msgpackModule.defineClassUnder("MsgBuffer", runtime.getObject(), new MsgBuffer.BufferAllocator());
+    bufferClass.defineAnnotatedMethods(MsgBuffer.class);
     RubyClass factoryClass = msgpackModule.defineClassUnder("Factory", runtime.getObject(), new Factory.FactoryAllocator());
     factoryClass.defineAnnotatedMethods(Factory.class);
   }

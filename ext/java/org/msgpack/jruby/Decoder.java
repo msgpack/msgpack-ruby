@@ -2,6 +2,7 @@ package org.msgpack.jruby;
 
 
 import java.math.BigInteger;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.BufferUnderflowException;
 import java.util.Iterator;
@@ -92,10 +93,10 @@ public class Decoder implements Iterator<IRubyObject> {
     if (buffer == null) {
       buffer = ByteBuffer.wrap(bytes, offset, length);
     } else {
-      ByteBuffer newBuffer = ByteBuffer.allocate(buffer.remaining() + length);
+      ByteBuffer newBuffer = ByteBuffer.allocate(((Buffer)buffer).remaining() + length);
       newBuffer.put(buffer);
       newBuffer.put(bytes, offset, length);
-      newBuffer.flip();
+      ((Buffer)newBuffer).flip();
       buffer = newBuffer;
     }
   }
@@ -105,7 +106,7 @@ public class Decoder implements Iterator<IRubyObject> {
   }
 
   public int offset() {
-    return buffer.position();
+    return ((Buffer)buffer).position();
   }
 
   private IRubyObject consumeUnsignedLong() {
@@ -184,11 +185,11 @@ public class Decoder implements Iterator<IRubyObject> {
 
   @Override
   public boolean hasNext() {
-    return buffer.remaining() > 0;
+    return ((Buffer)buffer).remaining() > 0;
   }
 
   public IRubyObject read_array_header() {
-    int position = buffer.position();
+    int position = ((Buffer)buffer).position();
     try {
       byte b = buffer.get();
       if ((b & 0xf0) == 0x90) {
@@ -200,16 +201,16 @@ public class Decoder implements Iterator<IRubyObject> {
       }
       throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
-      buffer.position(position);
+      ((Buffer)buffer).position(position);
       throw re;
     } catch (BufferUnderflowException bue) {
-      buffer.position(position);
+      ((Buffer)buffer).position(position);
       throw runtime.newRaiseException(underflowErrorClass, "Not enough bytes available");
     }
   }
 
   public IRubyObject read_map_header() {
-    int position = buffer.position();
+    int position = ((Buffer)buffer).position();
     try {
       byte b = buffer.get();
       if ((b & 0xf0) == 0x80) {
@@ -221,10 +222,10 @@ public class Decoder implements Iterator<IRubyObject> {
       }
       throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
-      buffer.position(position);
+      ((Buffer)buffer).position(position);
       throw re;
     } catch (BufferUnderflowException bue) {
-      buffer.position(position);
+      ((Buffer)buffer).position(position);
       throw runtime.newRaiseException(underflowErrorClass, "Not enough bytes available");
     }
   }
@@ -239,7 +240,7 @@ public class Decoder implements Iterator<IRubyObject> {
   }
 
   private IRubyObject consumeNext() {
-    int position = buffer.position();
+    int position = ((Buffer)buffer).position();
     try {
       byte b = buffer.get();
       outer: switch ((b >> 4) & 0xf) {
@@ -290,13 +291,13 @@ public class Decoder implements Iterator<IRubyObject> {
       case 0xf: return runtime.newFixnum((0x1f & b) - 0x20);
       default: return runtime.newFixnum(b);
       }
-      buffer.position(position);
+      ((Buffer)buffer).position(position);
       throw runtime.newRaiseException(malformedFormatErrorClass, "Illegal byte sequence");
     } catch (RaiseException re) {
-      buffer.position(position);
+      ((Buffer)buffer).position(position);
       throw re;
     } catch (BufferUnderflowException bue) {
-      buffer.position(position);
+      ((Buffer)buffer).position(position);
       throw runtime.newRaiseException(underflowErrorClass, "Not enough bytes available");
     }
   }

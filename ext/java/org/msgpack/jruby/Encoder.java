@@ -2,6 +2,7 @@ package org.msgpack.jruby;
 
 
 import java.math.BigInteger;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -58,16 +59,16 @@ public class Encoder {
   }
 
   private void ensureRemainingCapacity(int c) {
-    if (buffer.remaining() < c) {
+    if (((Buffer)buffer).remaining() < c) {
       int newLength = Math.max(buffer.capacity() + (buffer.capacity() >> 1), buffer.capacity() + c);
       newLength += CACHE_LINE_SIZE - ((ARRAY_HEADER_SIZE + newLength) % CACHE_LINE_SIZE);
-      buffer = ByteBuffer.allocate(newLength).put(buffer.array(), 0, buffer.position());
+      buffer = ByteBuffer.allocate(newLength).put(buffer.array(), 0, ((Buffer)buffer).position());
     }
   }
 
   private IRubyObject readRubyString() {
-    IRubyObject str = runtime.newString(new ByteList(buffer.array(), 0, buffer.position(), binaryEncoding, false));
-    buffer.clear();
+    IRubyObject str = runtime.newString(new ByteList(buffer.array(), 0, ((Buffer)buffer).position(), binaryEncoding, false));
+    ((Buffer)buffer).clear();
     return str;
   }
 

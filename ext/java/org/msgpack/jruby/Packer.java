@@ -29,7 +29,7 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 public class Packer extends RubyObject {
   private static final long serialVersionUID = 8451274621499362492L;
   public ExtensionRegistry registry;
-  private Buffer buffer;
+  private MsgBuffer buffer;
   private Encoder encoder;
   private boolean hasSymbolExtType;
   private Encoding binaryEncoding;
@@ -61,7 +61,7 @@ public class Packer extends RubyObject {
         this.registry = new ExtensionRegistry();
     }
     this.encoder = new Encoder(runtime, compatibilityMode, registry, hasSymbolExtType);
-    this.buffer = new Buffer(runtime, runtime.getModule("MessagePack").getClass("Buffer"));
+    this.buffer = new MsgBuffer(runtime, runtime.getModule("MessagePack").getClass("MsgBuffer"));
     this.buffer.initialize(ctx, args);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     return this;

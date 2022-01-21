@@ -1,6 +1,6 @@
 package org.msgpack.jruby;
 
-
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.jruby.Ruby;
@@ -18,9 +18,8 @@ import org.jruby.util.ByteList;
 
 import org.jcodings.Encoding;
 
-
 @JRubyClass(name="MessagePack::Buffer")
-public class Buffer extends RubyObject {
+public class MsgBuffer extends RubyObject {
   private static final long serialVersionUID = 8441244627425629412L;
   private IRubyObject io;
   private ByteBuffer buffer;
@@ -30,13 +29,13 @@ public class Buffer extends RubyObject {
   private static final int CACHE_LINE_SIZE = 64;
   private static final int ARRAY_HEADER_SIZE = 24;
 
-  public Buffer(Ruby runtime, RubyClass type) {
+  public MsgBuffer(Ruby runtime, RubyClass type) {
     super(runtime, type);
   }
 
   static class BufferAllocator implements ObjectAllocator {
     public IRubyObject allocate(Ruby runtime, RubyClass type) {
-      return new Buffer(runtime, type);
+      return new MsgBuffer(runtime, type);
     }
   }
 
@@ -62,22 +61,22 @@ public class Buffer extends RubyObject {
     if (buffer.remaining() < c) {
       int newLength = Math.max(buffer.capacity() + (buffer.capacity() >> 1), buffer.capacity() + c);
       newLength += CACHE_LINE_SIZE - ((ARRAY_HEADER_SIZE + newLength) % CACHE_LINE_SIZE);
-      buffer = ByteBuffer.allocate(newLength).put(buffer.array(), 0, buffer.position());
+      buffer = ByteBuffer.allocate(newLength).put(buffer.array(), 0, ((Buffer)buffer).position());
     }
   }
 
   private void ensureReadMode() {
     if (writeMode) {
-      buffer.flip();
+      ((Buffer)buffer).flip();
       writeMode = false;
     }
   }
 
   private int rawSize() {
     if (writeMode) {
-      return buffer.position();
+      return ((Buffer)buffer).position();
     } else {
-      return buffer.limit() - buffer.position();
+      return ((Buffer)buffer).limit() - ((Buffer)buffer).position();
     }
   }
 
@@ -87,7 +86,7 @@ public class Buffer extends RubyObject {
       buffer.compact();
       writeMode = true;
     }
-    buffer.clear();
+    ((Buffer)buffer).clear();
     return ctx.runtime.getNil();
   }
 
@@ -166,7 +165,7 @@ public class Buffer extends RubyObject {
     }
     ensureReadMode();
     int skipLength = Math.min(length, rawSize());
-    buffer.position(buffer.position() + skipLength);
+    ((Buffer)buffer).position(((Buffer)buffer).position() + skipLength);
     return ctx.runtime.newFixnum(skipLength);
   }
 
@@ -187,8 +186,8 @@ public class Buffer extends RubyObject {
   @JRubyMethod(name = "to_s", alias = {"to_str"})
   public IRubyObject toS(ThreadContext ctx) {
     ensureReadMode();
-    int length = buffer.limit() - buffer.position();
-    ByteList str = new ByteList(buffer.array(), buffer.position(), length, binaryEncoding, true);
+    int length = ((Buffer)buffer).limit() - ((Buffer)buffer).position();
+    ByteList str = new ByteList(buffer.array(), ((Buffer)buffer).position(), length, binaryEncoding, true);
     return ctx.runtime.newString(str);
   }
 
