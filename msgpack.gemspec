@@ -18,7 +18,6 @@ Gem::Specification.new do |s|
     s.files = `git ls-files`.split("\n")
     s.extensions = ["ext/msgpack/extconf.rb"]
   end
-  s.test_files = `git ls-files -- {test,spec}/*`.split("\n")
 
   s.required_ruby_version = ">= 2.4"
 
