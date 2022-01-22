@@ -1,3 +1,7 @@
+2022-01-22 version 1.4.4:
+
+* Specify the build option --platform=8 for older Java platforms
+
 2022-01-20 version 1.4.3:
 
 * Optimize serialization/deserialization of Symbols
