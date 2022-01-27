@@ -14,6 +14,7 @@ if ENV['GC_STRESS']
 end
 
 require 'msgpack'
+require "msgpack/bigint"
 
 if GC.respond_to?(:verify_compaction_references)
   # This method was added in Ruby 3.0.0. Calling it this way asks the GC to

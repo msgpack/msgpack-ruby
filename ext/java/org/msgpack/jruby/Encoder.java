@@ -40,10 +40,11 @@ public class Encoder {
   private final ExtensionRegistry registry;
 
   public boolean hasSymbolExtType;
+  private boolean hasBigintExtType;
 
   private ByteBuffer buffer;
 
-  public Encoder(Ruby runtime, boolean compatibilityMode, ExtensionRegistry registry, boolean hasSymbolExtType) {
+  public Encoder(Ruby runtime, boolean compatibilityMode, ExtensionRegistry registry, boolean hasSymbolExtType, boolean hasBigintExtType) {
     this.runtime = runtime;
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
@@ -51,6 +52,7 @@ public class Encoder {
     this.compatibilityMode = compatibilityMode;
     this.registry = registry;
     this.hasSymbolExtType = hasSymbolExtType;
+    this.hasBigintExtType = hasBigintExtType;
   }
 
   public boolean isCompatibilityMode() {
@@ -147,7 +149,10 @@ public class Encoder {
     BigInteger value = object.getBigIntegerValue();
     if (value.compareTo(RubyBignum.LONG_MIN) < 0 || value.compareTo(RubyBignum.LONG_MAX) > 0) {
       if (value.bitLength() > 64 || (value.bitLength() > 63 && value.signum() < 0)) {
-        throw runtime.newArgumentError(String.format("Cannot pack big integer: %s", value));
+        if (hasBigintExtType && tryAppendWithExtTypeLookup(object)) {
+          return;
+        }
+        throw runtime.newRangeError(String.format("Cannot pack big integer: %s", value));
       }
       ensureRemainingCapacity(9);
       buffer.put(value.signum() < 0 ? INT64 : UINT64);
@@ -391,14 +396,6 @@ public class Encoder {
 
   private boolean tryAppendWithExtTypeLookup(IRubyObject object) {
     if (registry != null) {
-      RubyModule lookupClass;
-
-      if (object.getType() == runtime.getSymbol()) {
-        lookupClass = object.getType();
-      } else {
-        lookupClass = object.getSingletonClass();
-      }
-
       IRubyObject[] pair = registry.lookupPackerForObject(object);
       if (pair != null) {
         RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();

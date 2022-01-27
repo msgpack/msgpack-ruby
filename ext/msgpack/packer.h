@@ -32,6 +32,7 @@ struct msgpack_packer_t {
     msgpack_buffer_t buffer;
 
     bool compatibility_mode;
+    bool has_bigint_ext_type;
     bool has_symbol_ext_type;
 
     ID to_msgpack_method;
@@ -55,6 +56,8 @@ void msgpack_packer_init(msgpack_packer_t* pk);
 void msgpack_packer_destroy(msgpack_packer_t* pk);
 
 void msgpack_packer_mark(msgpack_packer_t* pk);
+
+bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v);
 
 static inline void msgpack_packer_set_to_msgpack_method(msgpack_packer_t* pk,
         ID to_msgpack_method, VALUE to_msgpack_arg)
@@ -469,9 +472,30 @@ static inline void msgpack_packer_write_fixnum_value(msgpack_packer_t* pk, VALUE
 
 static inline void msgpack_packer_write_bignum_value(msgpack_packer_t* pk, VALUE v)
 {
+    int leading_zero_bits;
+    size_t required_size = rb_absint_size(v, &leading_zero_bits);
+
     if(RBIGNUM_POSITIVE_P(v)) {
+        if(required_size > 8 && pk->has_bigint_ext_type) {
+            if(msgpack_packer_try_write_with_ext_type_lookup(pk, v)) {
+                return;
+            }
+            // if we didn't return here `msgpack_packer_write_u64` will raise a RangeError
+        }
+
         msgpack_packer_write_u64(pk, rb_big2ull(v));
     } else {
+        if(leading_zero_bits == 0) {
+            required_size += 1;
+        }
+
+        if(required_size > 8 && pk->has_bigint_ext_type) {
+            if(msgpack_packer_try_write_with_ext_type_lookup(pk, v)) {
+                return;
+            }
+            // if we didn't return here `msgpack_packer_write_u64` will raise a RangeError
+        }
+
         msgpack_packer_write_long_long(pk, rb_big2ll(v));
     }
 }
