@@ -31,6 +31,7 @@ typedef struct msgpack_factory_t msgpack_factory_t;
 struct msgpack_factory_t {
     msgpack_packer_ext_registry_t pkrg;
     msgpack_unpacker_ext_registry_t *ukrg;
+    bool has_bigint_ext_type;
     bool has_symbol_ext_type;
     bool optimized_symbol_ext_type;
     int symbol_ext_type;
@@ -99,6 +100,7 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
 
     msgpack_packer_ext_registry_destroy(&pk->ext_registry);
     msgpack_packer_ext_registry_dup(&fc->pkrg, &pk->ext_registry);
+    pk->has_bigint_ext_type = fc->has_bigint_ext_type;
     pk->has_symbol_ext_type = fc->has_symbol_ext_type;
 
     return packer;
@@ -173,6 +175,10 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 2..3)", argc);
     }
 
+    if (options != Qnil) {
+        Check_Type(options, T_HASH);
+    }
+
     ext_type = NUM2INT(argv[0]);
     if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
@@ -200,8 +206,6 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         }
     }
 
-    msgpack_packer_ext_registry_put(&fc->pkrg, ext_module, ext_type, packer_proc, packer_arg);
-
     if (ext_module == rb_cSymbol) {
         fc->has_symbol_ext_type = true;
         if(RB_TEST(options) && RB_TEST(rb_hash_aref(options, ID2SYM(rb_intern("optimized_symbols_parsing"))))) {
@@ -209,6 +213,14 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         }
     }
 
+    if (options != Qnil && RB_TEST(rb_hash_aref(options, ID2SYM(rb_intern("oversized_integer_extension"))))) {
+        if(ext_module == rb_cInteger) {
+            fc->has_bigint_ext_type = true;
+        } else {
+            rb_raise(rb_eArgError, "oversized_integer_extension: true is only for Integer class");
+        }
+    }
+    msgpack_packer_ext_registry_put(&fc->pkrg, ext_module, ext_type, packer_proc, packer_arg);
     msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_module, ext_type, unpacker_proc, unpacker_arg);
 
     return Qnil;
