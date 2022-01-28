@@ -1,5 +1,3 @@
-# encoding: ascii-8bit
-
 require 'stringio'
 require 'tempfile'
 require 'zlib'
@@ -300,6 +298,21 @@ describe MessagePack::Unpacker do
     symbolized_hash = {:a => 'b', :c => 'd'}
     MessagePack.load(MessagePack.pack(symbolized_hash), :symbolize_keys => true).should == symbolized_hash
     MessagePack.unpack(MessagePack.pack(symbolized_hash), :symbolize_keys => true).should == symbolized_hash
+  end
+
+  it 'MessagePack.unpack symbolize_keys preserve encoding' do
+    hash = { :ascii => 1, :utf8_é => 2}
+    loaded_hash = MessagePack.load(MessagePack.pack(hash), :symbolize_keys => true)
+
+    hash.keys[0].encoding.should == Encoding::US_ASCII # Ruby coerce symbols to US-ASCII when possible.
+    loaded_hash.keys[0].should == hash.keys[0]
+    loaded_hash.keys[0].encoding.should == hash.keys[0].encoding
+
+    hash.keys[1].encoding.should == Encoding::UTF_8
+    loaded_hash.keys[1].should == hash.keys[1]
+    loaded_hash.keys[1].encoding.should == hash.keys[1].encoding
+
+    MessagePack.unpack(MessagePack.pack(hash), :symbolize_keys => true).should == hash
   end
 
   it 'Unpacker#unpack symbolize_keys' do
@@ -765,7 +778,13 @@ describe MessagePack::Unpacker do
 
     context 'binary encoding', :encodings do
       let :buffer do
-        MessagePack.pack({'hello' => 'world', 'nested' => ['object', {'structure' => true}]})
+        MessagePack.pack({
+          'hello'.b => 'world'.b,
+          'nested'.b => [
+            'object'.b,
+            {'structure'.b => true},
+          ]
+        })
       end
 
       let :unpacker do
