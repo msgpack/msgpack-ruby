@@ -36,7 +36,7 @@ module MessagePack
     #
     # @overload register_type(type, klass, class_method_name)
     #   @param type [Fixnum] type id (0-127) user defined type id for specified Class
-    #   @param klass [Class] Class to be serialized with speicifed type id
+    #   @param klass [Class] Class to be serialized with specified type id
     #   @param class_method_name [Symbol] class method which returns an instance object
     #
     # @return nil
@@ -149,7 +149,7 @@ module MessagePack
     #
     # It repeats until the io or internal buffer does not include any complete objects.
     #
-    # If the an IO is set, it repeats to read data from the IO when the buffer
+    # If an IO is set, it repeats to read data from the IO when the buffer
     # becomes empty until the IO raises EOFError.
     #
     # This method could raise same errors with _read_ excepting EOFError.
