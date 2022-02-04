@@ -62,24 +62,22 @@ static VALUE Buffer_alloc(VALUE klass)
 
 static ID get_partial_read_method(VALUE io)
 {
-    if(rb_respond_to(io, s_readpartial)) {
+    if(io != Qnil && rb_respond_to(io, s_readpartial)) {
         return s_readpartial;
-    } else if(rb_respond_to(io, s_read)) {
-        return s_read;
-    } else {
-        return s_read;
     }
+    return s_read;
 }
 
 static ID get_write_all_method(VALUE io)
 {
-    if(rb_respond_to(io, s_write)) {
-        return s_write;
-    } else if(rb_respond_to(io, s_append)) {
-        return s_append;
-    } else {
-        return s_write;
+    if(io != Qnil) {
+        if(rb_respond_to(io, s_write)) {
+            return s_write;
+        } else if(rb_respond_to(io, s_append)) {
+            return s_append;
+        }
     }
+    return s_write;
 }
 
 void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options)
