@@ -25,9 +25,7 @@ if GC.respond_to?(:auto_compact=)
   GC.auto_compact = true
 end
 
-def java?
-  /java/ =~ RUBY_PLATFORM
-end
+IS_JRUBY = RUBY_ENGINE == 'jruby'
 
 # checking if Hash#[]= (rb_hash_aset) dedupes string keys
 def automatic_string_keys_deduplication?
@@ -46,7 +44,7 @@ def string_deduplication?
   (-r1).equal?(-r2)
 end
 
-if java?
+if IS_JRUBY
   RSpec.configure do |c|
     c.treat_symbols_as_metadata_keys_with_true_values = true
     c.filter_run_excluding :encodings => !(defined? Encoding)
