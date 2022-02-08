@@ -17,16 +17,15 @@ require "msgpack/time"
 
 module MessagePack
   DefaultFactory = MessagePack::Factory.new
-  DEFAULT_EMPTY_PARAMS = {}.freeze
 
   def load(src, param = nil)
     unpacker = nil
 
     if src.is_a? String
-      unpacker = DefaultFactory.unpacker param || DEFAULT_EMPTY_PARAMS
+      unpacker = DefaultFactory.unpacker param
       unpacker.feed_reference src
     else
-      unpacker = DefaultFactory.unpacker src, param || DEFAULT_EMPTY_PARAMS
+      unpacker = DefaultFactory.unpacker src, param
     end
 
     unpacker.full_unpack
@@ -36,8 +35,8 @@ module MessagePack
   module_function :load
   module_function :unpack
 
-  def pack(v, *rest)
-    packer = DefaultFactory.packer(*rest)
+  def pack(v, io = nil, options = nil)
+    packer = DefaultFactory.packer(io, options)
     packer.write v
     packer.full_pack
   end

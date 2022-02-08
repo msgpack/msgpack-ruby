@@ -28,6 +28,8 @@ VALUE cMessagePack_Packer;
 static ID s_to_msgpack;
 static ID s_write;
 
+static VALUE sym_compatibility_mode;
+
 //static VALUE s_packer_value;
 //static msgpack_packer_t* s_packer;
 
@@ -68,29 +70,28 @@ VALUE MessagePack_Packer_alloc(VALUE klass)
 
 VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
 {
+    if(argc > 2) {
+        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
+    }
+
     VALUE io = Qnil;
     VALUE options = Qnil;
 
-    if(argc == 0 || (argc == 1 && argv[0] == Qnil)) {
-        /* Qnil */
-
-    } else if(argc == 1) {
-        VALUE v = argv[0];
-        if(rb_type(v) == T_HASH) {
-            options = v;
-        } else {
-            io = v;
-        }
-
-    } else if(argc == 2) {
+    if(argc >= 1) {
         io = argv[0];
-        options = argv[1];
-        if(rb_type(options) != T_HASH) {
-            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
-        }
+    }
 
-    } else {
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
+    if(argc == 2) {
+        options = argv[1];
+    }
+
+    if (options == Qnil && rb_type(io) == T_HASH) {
+        options = io;
+        io = Qnil;
+    }
+
+    if(options != Qnil) {
+        Check_Type(options, T_HASH);
     }
 
     PACKER(self, pk);
@@ -103,7 +104,7 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
     if(options != Qnil) {
         VALUE v;
 
-        v = rb_hash_aref(options, ID2SYM(rb_intern("compatibility_mode")));
+        v = rb_hash_aref(options, sym_compatibility_mode);
         msgpack_packer_set_compat(pk, RTEST(v));
     }
 
@@ -411,6 +412,8 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
 {
     s_to_msgpack = rb_intern("to_msgpack");
     s_write = rb_intern("write");
+
+    sym_compatibility_mode = ID2SYM(rb_intern("compatibility_mode"));
 
     msgpack_packer_static_init();
     msgpack_packer_ext_registry_static_init();

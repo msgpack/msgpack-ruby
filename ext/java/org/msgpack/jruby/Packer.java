@@ -52,10 +52,18 @@ public class Packer extends RubyObject {
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
     boolean compatibilityMode = false;
     Ruby runtime = ctx.runtime;
-    if (args.length > 0 && args[args.length - 1] instanceof RubyHash) {
-      RubyHash options = (RubyHash) args[args.length - 1];
-      IRubyObject mode = options.fastARef(runtime.newSymbol("compatibility_mode"));
-      compatibilityMode = (mode != null) && mode.isTrue();
+    if (args.length > 0) {
+      RubyHash options = null;
+      if (args[args.length - 1] instanceof RubyHash) {
+        options = (RubyHash) args[args.length - 1];
+      } else if (args.length > 1 && args[args.length - 2] instanceof RubyHash) {
+        options = (RubyHash) args[args.length - 2];
+      }
+
+      if (options != null) {
+        IRubyObject mode = options.fastARef(runtime.newSymbol("compatibility_mode"));
+        compatibilityMode = (mode != null) && mode.isTrue();
+      }
     }
     if (registry == null) {
         // registry is null when allocate -> initialize
