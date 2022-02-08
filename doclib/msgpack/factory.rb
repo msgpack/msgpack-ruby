@@ -31,7 +31,7 @@ module MessagePack
     #
     # See Packer#initialize for supported options.
     #
-    def dump(obj, options={})
+    def dump(obj, options=nil)
     end
     alias pack dump
 
@@ -57,7 +57,7 @@ module MessagePack
     #
     # See Unpacker#initialize for supported options.
     #
-    def load(data, options={})
+    def load(data, options=nil)
     end
     alias unpack load
 

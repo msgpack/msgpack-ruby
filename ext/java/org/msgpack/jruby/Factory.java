@@ -50,7 +50,7 @@ public class Factory extends RubyObject {
     return this;
   }
 
-  @JRubyMethod(name = "packer", optional = 1)
+  @JRubyMethod(name = "packer", optional = 2)
   public Packer packer(ThreadContext ctx, IRubyObject[] args) {
     return Packer.newPacker(ctx, extensionRegistry(), hasSymbolExtType, args);
   }

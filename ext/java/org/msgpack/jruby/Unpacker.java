@@ -56,30 +56,48 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod(name = "initialize", optional = 2, visibility = PRIVATE)
   public IRubyObject initialize(ThreadContext ctx, IRubyObject[] args) {
+    Ruby runtime = ctx.runtime;
+
     symbolizeKeys = false;
     allowUnknownExt = false;
     freeze = false;
-    if (args.length > 0) {
-      Ruby runtime = ctx.runtime;
-      if (args[args.length - 1] instanceof RubyHash) {
-        RubyHash options = (RubyHash) args[args.length - 1];
-        IRubyObject sk = options.fastARef(runtime.newSymbol("symbolize_keys"));
-        if (sk != null) {
-          symbolizeKeys = sk.isTrue();
-        }
-        IRubyObject f = options.fastARef(runtime.newSymbol("freeze"));
-        if (f != null) {
-          freeze = f.isTrue();
-        }
-        IRubyObject au = options.fastARef(runtime.newSymbol("allow_unknown_ext"));
-        if (au != null) {
-          allowUnknownExt = au.isTrue();
-        }
-      }
-      if (args[0] != runtime.getNil() && !(args[0] instanceof RubyHash)) {
-        setStream(ctx, args[0]);
-      }
+
+    IRubyObject io = null;
+    RubyHash options = null;
+
+    if (args.length >= 1) {
+      io = args[0];
     }
+
+    if (args.length >= 2 && args[1] != runtime.getNil()) {
+      options = (RubyHash)args[1];
+    }
+
+    if (options == null && io != null && io instanceof RubyHash) {
+      options = (RubyHash)io;
+      io = null;
+    }
+
+    if (options != null) {
+      IRubyObject sk = options.fastARef(runtime.newSymbol("symbolize_keys"));
+      if (sk != null) {
+        symbolizeKeys = sk.isTrue();
+      }
+      IRubyObject f = options.fastARef(runtime.newSymbol("freeze"));
+      if (f != null) {
+        freeze = f.isTrue();
+      }
+      IRubyObject au = options.fastARef(runtime.newSymbol("allow_unknown_ext"));
+      if (au != null) {
+        allowUnknownExt = au.isTrue();
+      }
+
+    }
+
+    if (io != null && io != runtime.getNil()) {
+      setStream(ctx, io);
+    }
+
     return this;
   }
 
