@@ -41,6 +41,21 @@ describe MessagePack::Factory do
       unpacker.feed(MessagePack::ExtensionValue.new(1, 'a').to_msgpack)
       expect{ unpacker.read }.to raise_error(MessagePack::UnknownExtTypeError)
     end
+
+    it 'does not share the extension registry with unpackers' do
+      subject.register_type(0x00, Symbol)
+      expect do
+        unpacker = subject.unpacker
+        expect do
+          unpacker.register_type(0x01) {}
+        end.to change { unpacker.registered_types }
+
+        second_unpacker = subject.unpacker
+        expect do
+          second_unpacker.register_type(0x01) {}
+        end.to_not change { unpacker.registered_types }
+      end.to_not change { subject.registered_types }
+    end
   end
 
   describe '#dump and #load' do

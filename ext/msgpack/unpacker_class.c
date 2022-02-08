@@ -45,7 +45,7 @@ static void Unpacker_free(msgpack_unpacker_t* uk)
     if(uk == NULL) {
         return;
     }
-    msgpack_unpacker_ext_registry_destroy(&uk->ext_registry);
+    msgpack_unpacker_ext_registry_release(uk->ext_registry);
     _msgpack_unpacker_destroy(uk);
     xfree(uk);
 }
@@ -53,7 +53,7 @@ static void Unpacker_free(msgpack_unpacker_t* uk)
 static void Unpacker_mark(msgpack_unpacker_t* uk)
 {
     msgpack_unpacker_mark(uk);
-    msgpack_unpacker_ext_registry_mark(&uk->ext_registry);
+    msgpack_unpacker_ext_registry_mark(uk->ext_registry);
 }
 
 VALUE MessagePack_Unpacker_alloc(VALUE klass)
@@ -93,7 +93,6 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 
     UNPACKER(self, uk);
 
-    msgpack_unpacker_ext_registry_init(&uk->ext_registry);
     uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
 
     MessagePack_Buffer_set_options(UNPACKER_BUFFER_(uk), io, options);
@@ -319,9 +318,11 @@ static VALUE Unpacker_registered_types_internal(VALUE self)
     UNPACKER(self, uk);
 
     VALUE mapping = rb_hash_new();
-    for(int i=0; i < 256; i++) {
-        if(uk->ext_registry.array[i] != Qnil) {
-            rb_hash_aset(mapping, INT2FIX(i - 128), uk->ext_registry.array[i]);
+    if (uk->ext_registry) {
+        for(int i=0; i < 256; i++) {
+            if(uk->ext_registry->array[i] != Qnil) {
+                rb_hash_aset(mapping, INT2FIX(i - 128), uk->ext_registry->array[i]);
+            }
         }
     }
 

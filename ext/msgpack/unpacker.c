@@ -166,7 +166,7 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
         return object_complete_symbol(uk, rb_str_intern(str));
     }
 
-    VALUE proc = msgpack_unpacker_ext_registry_lookup(&uk->ext_registry, ext_type);
+    VALUE proc = msgpack_unpacker_ext_registry_lookup(uk->ext_registry, ext_type);
     if(proc != Qnil) {
         VALUE obj = rb_funcall(proc, s_call, 1, str);
         return object_complete(uk, obj);
