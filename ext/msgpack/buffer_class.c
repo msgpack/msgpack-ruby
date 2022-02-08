@@ -243,10 +243,11 @@ static VALUE read_until_eof_rescue(VALUE args)
     return Qnil;
 }
 
-static VALUE read_until_eof_error(VALUE args)
+static VALUE read_until_eof_error(VALUE args, VALUE error)
 {
     /* ignore EOFError */
     UNUSED(args);
+    UNUSED(error);
     return Qnil;
 }
 
