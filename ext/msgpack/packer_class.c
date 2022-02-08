@@ -339,7 +339,10 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 static VALUE Packer_registered_types_internal(VALUE self)
 {
     PACKER(self, pk);
-    return rb_hash_dup(pk->ext_registry.hash);
+    if (RTEST(pk->ext_registry.hash)) {
+        return rb_hash_dup(pk->ext_registry.hash);
+    }
+    return rb_hash_new();
 }
 
 static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)

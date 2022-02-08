@@ -70,10 +70,12 @@ static inline VALUE msgpack_packer_ext_registry_fetch(msgpack_packer_ext_registr
     }
 
     // fetch lookup_class from cache, which stores results of searching ancestors from pkrg->hash
-    VALUE type_inht = rb_hash_lookup(pkrg->cache, lookup_class);
-    if(type_inht != Qnil) {
-        *ext_type_result = FIX2INT(rb_ary_entry(type_inht, 0));
-        return rb_ary_entry(type_inht, 1);
+    if (RTEST(pkrg->cache)) {
+        VALUE type_inht = rb_hash_lookup(pkrg->cache, lookup_class);
+        if(type_inht != Qnil) {
+            *ext_type_result = FIX2INT(rb_ary_entry(type_inht, 0));
+            return rb_ary_entry(type_inht, 1);
+        }
     }
 
     return Qnil;
@@ -84,6 +86,10 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
 {
     VALUE lookup_class;
     VALUE type;
+
+    if (pkrg->hash == Qnil) { // No extensions registered
+        return Qnil;
+    }
 
     /*
      * 1. check whether singleton_class of this instance is registered (or resolved in past) or not.
@@ -126,6 +132,9 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
     VALUE superclass = args[1];
     if(superclass != Qnil) {
         VALUE superclass_type = rb_hash_lookup(pkrg->hash, superclass);
+        if (!RTEST(pkrg->cache)) {
+            pkrg->cache = rb_hash_new();
+        }
         rb_hash_aset(pkrg->cache, lookup_class, superclass_type);
         *ext_type_result = FIX2INT(rb_ary_entry(superclass_type, 0));
         return rb_ary_entry(superclass_type, 1);

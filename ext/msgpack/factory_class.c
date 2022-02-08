@@ -132,7 +132,11 @@ static VALUE Factory_registered_types_internal(VALUE self)
             rb_hash_aset(uk_mapping, INT2FIX(i - 128), fc->ukrg.array[i]);
         }
     }
-    return rb_ary_new3(2, rb_hash_dup(fc->pkrg.hash), uk_mapping);
+    return rb_ary_new3(
+        2,
+        RTEST(fc->pkrg.hash) ? rb_hash_dup(fc->pkrg.hash) : rb_hash_new(),
+        uk_mapping
+    );
 }
 
 static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
