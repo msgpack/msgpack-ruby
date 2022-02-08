@@ -133,7 +133,7 @@ static VALUE Unpacker_allow_unknown_ext_p(VALUE self)
     return uk->allow_unknown_ext ? Qtrue : Qfalse;
 }
 
-static void raise_unpacker_error(int r)
+NORETURN(static void raise_unpacker_error(int r))
 {
     switch(r) {
     case PRIMITIVE_EOF:
@@ -222,34 +222,6 @@ static VALUE Unpacker_read_map_header(VALUE self)
     return ULONG2NUM(size);
 }
 
-static VALUE Unpacker_peek_next_type(VALUE self)
-{
-    UNPACKER(self, uk);
-
-    int r = msgpack_unpacker_peek_next_object_type(uk);
-    if(r < 0) {
-        raise_unpacker_error(r);
-    }
-
-    switch((enum msgpack_unpacker_object_type) r) {
-    case TYPE_NIL:
-        return rb_intern("nil");
-    case TYPE_BOOLEAN:
-        return rb_intern("boolean");
-    case TYPE_INTEGER:
-        return rb_intern("integer");
-    case TYPE_FLOAT:
-        return rb_intern("float");
-    case TYPE_RAW:
-        return rb_intern("raw");
-    case TYPE_ARRAY:
-        return rb_intern("array");
-    case TYPE_MAP:
-        return rb_intern("map");
-    default:
-        rb_raise(eUnpackError, "logically unknown type %d", r);
-    }
-}
 
 static VALUE Unpacker_feed(VALUE self, VALUE data)
 {
@@ -296,9 +268,10 @@ static VALUE Unpacker_each_impl(VALUE self)
     }
 }
 
-static VALUE Unpacker_rescue_EOFError(VALUE self)
+static VALUE Unpacker_rescue_EOFError(VALUE args, VALUE error)
 {
-    UNUSED(self);
+    UNUSED(args);
+    UNUSED(error);
     return Qnil;
 }
 
@@ -451,7 +424,6 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cMessagePack_Unpacker, "read_array_header", Unpacker_read_array_header, 0);
     rb_define_method(cMessagePack_Unpacker, "read_map_header", Unpacker_read_map_header, 0);
-    //rb_define_method(cMessagePack_Unpacker, "peek_next_type", Unpacker_peek_next_type, 0);  // TODO
     rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed, 1);
     rb_define_method(cMessagePack_Unpacker, "feed_reference", Unpacker_feed_reference, 1);
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
