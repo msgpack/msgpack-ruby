@@ -58,8 +58,7 @@ static void Unpacker_mark(msgpack_unpacker_t* uk)
 
 VALUE MessagePack_Unpacker_alloc(VALUE klass)
 {
-    msgpack_unpacker_t* uk = ZALLOC_N(msgpack_unpacker_t, 1);
-    _msgpack_unpacker_init(uk);
+    msgpack_unpacker_t* uk = _msgpack_unpacker_new();
 
     VALUE self = Data_Wrap_Struct(klass, Unpacker_mark, Unpacker_free, uk);
     return self;
