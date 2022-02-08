@@ -2,8 +2,6 @@
 
 require 'spec_helper'
 
-IS_JRUBY = Kernel.const_defined?(:JRUBY_VERSION)
-
 describe MessagePack::Timestamp do
   describe 'malformed format' do
     it do
