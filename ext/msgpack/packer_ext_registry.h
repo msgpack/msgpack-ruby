@@ -84,41 +84,34 @@ static inline VALUE msgpack_packer_ext_registry_fetch(msgpack_packer_ext_registr
 static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_registry_t* pkrg,
         VALUE instance, int* ext_type_result)
 {
-    VALUE lookup_class;
     VALUE type;
 
     if (pkrg->hash == Qnil) { // No extensions registered
         return Qnil;
     }
 
-    /*
-     * 1. check whether singleton_class of this instance is registered (or resolved in past) or not.
-     *
-     * Objects of type Integer (Fixnum, Bignum), Float, Symbol and frozen
-     * String have no singleton class and raise a TypeError when trying to get
-     * it. See implementation of #singleton_class in ruby's source code:
-     * VALUE rb_singleton_class(VALUE obj);
-     *
-     * Since all but symbols are already filtered out when reaching this code
-     * only symbols are checked here.
-     */
-    if (!SYMBOL_P(instance)) {
-      lookup_class = rb_singleton_class(instance);
-
-      type = msgpack_packer_ext_registry_fetch(pkrg, lookup_class, ext_type_result);
-
-      if(type != Qnil) {
-          return type;
-      }
+   /*
+    * 1. check whether singleton_class or class of this instance is registered (or resolved in past) or not.
+    *
+    * Objects of type Integer (Fixnum, Bignum), Float, Symbol and frozen
+    * `rb_class_of` returns the singleton_class if the object has one, or the "real class" otherwise.
+    */
+    VALUE lookup_class = rb_class_of(instance);
+    type = msgpack_packer_ext_registry_fetch(pkrg, lookup_class, ext_type_result);
+    if(type != Qnil) {
+        return type;
     }
 
     /*
-     * 2. check the class of instance is registered (or resolved in past) or not.
+     * 2. If the object had a singleton_class check if the real class of instance is registered
+     * (or resolved in past) or not.
      */
-    type = msgpack_packer_ext_registry_fetch(pkrg, rb_obj_class(instance), ext_type_result);
-
-    if(type != Qnil) {
-        return type;
+    VALUE real_class = rb_obj_class(instance);
+    if(lookup_class != real_class) {
+        type = msgpack_packer_ext_registry_fetch(pkrg, real_class, ext_type_result);
+        if(type != Qnil) {
+            return type;
+        }
     }
 
     /*

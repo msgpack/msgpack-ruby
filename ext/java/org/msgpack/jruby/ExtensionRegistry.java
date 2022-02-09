@@ -82,26 +82,21 @@ public class ExtensionRegistry {
      * Objects of type Integer (Fixnum, Bignum), Float, Symbol and frozen
      * String have no singleton class and raise a TypeError when trying to get
      * it.
-     *
-     * Since all but symbols are already filtered out when reaching this code
-     * only symbols are checked here.
      */
-    if (!(object instanceof RubySymbol)) {
-      lookupClass = object.getSingletonClass();
-      pair = fetchEntryByModule(lookupClass);
-      if (pair != null) {
-          return pair;
-      }
-    }
-
-    pair = fetchEntryByModule(object.getType());
+    lookupClass = object.getMetaClass();
+    pair = fetchEntryByModule(lookupClass);
     if (pair != null) {
       return pair;
     }
 
-    if (lookupClass == null) {
-      lookupClass = object.getType(); // only for Symbol
+    RubyModule realClass = object.getType();
+    if (realClass != lookupClass) {
+      pair = fetchEntryByModule(realClass);
+      if (pair != null) {
+        return pair;
+      }
     }
+
     ExtensionEntry e = findEntryByModuleOrAncestor(lookupClass);
     if (e != null && e.hasPacker()) {
       extensionsByAncestor.put(e.getExtensionModule(), e);
