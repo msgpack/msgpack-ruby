@@ -86,7 +86,7 @@ void msgpack_unpacker_static_init();
 
 void msgpack_unpacker_static_destroy();
 
-void _msgpack_unpacker_init(msgpack_unpacker_t* uk);
+msgpack_unpacker_t* _msgpack_unpacker_new(void);
 
 void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk);
 

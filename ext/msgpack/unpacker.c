@@ -52,9 +52,9 @@ void msgpack_unpacker_static_destroy()
 
 #define HEAD_BYTE_REQUIRED 0xc1
 
-void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
+msgpack_unpacker_t* _msgpack_unpacker_new(void)
 {
-    memset(uk, 0, sizeof(msgpack_unpacker_t));
+    msgpack_unpacker_t* uk = ZALLOC_N(msgpack_unpacker_t, 1);
 
     msgpack_buffer_init(UNPACKER_BUFFER_(uk));
 
@@ -71,6 +71,8 @@ void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
     uk->stack = xmalloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_t));
 #endif
     uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
+
+    return uk;
 }
 
 void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
