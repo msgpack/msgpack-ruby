@@ -281,7 +281,7 @@ static VALUE Packer_flush(VALUE self)
     return self;
 }
 
-static VALUE Packer_clear(VALUE self)
+static VALUE Packer_reset(VALUE self)
 {
     PACKER(self, pk);
     msgpack_buffer_clear(PACKER_BUFFER_(pk));
@@ -443,7 +443,8 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "flush", Packer_flush, 0);
 
     /* delegation methods */
-    rb_define_method(cMessagePack_Packer, "clear", Packer_clear, 0);
+    rb_define_method(cMessagePack_Packer, "reset", Packer_reset, 0);
+    rb_define_alias(cMessagePack_Packer, "clear", "reset");
     rb_define_method(cMessagePack_Packer, "size", Packer_size, 0);
     rb_define_method(cMessagePack_Packer, "empty?", Packer_empty_p, 0);
     rb_define_method(cMessagePack_Packer, "write_to", Packer_write_to, 1);
