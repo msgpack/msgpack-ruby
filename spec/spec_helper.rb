@@ -27,6 +27,8 @@ end
 
 IS_JRUBY = RUBY_ENGINE == 'jruby'
 
+IS_TRUFFLERUBY = RUBY_ENGINE == 'truffleruby'
+
 # checking if Hash#[]= (rb_hash_aset) dedupes string keys
 def automatic_string_keys_deduplication?
   h = {}
