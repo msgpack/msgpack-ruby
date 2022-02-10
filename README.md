@@ -187,6 +187,28 @@ MessagePack::DefaultFactory.register_type(0x03, MyClass3)
 MessagePack.unpack(data_with_ext_typeid_03) #=> MyClass3 instance
 ```
 
+Alternatively, extension types can call the packer or unpacker recursively to generate the extension data:
+
+```ruby
+Point = Struct.new(:x, :y)
+factory = MessagePack::Factory.new
+factory.register_type(
+  0x01,
+  Point,
+  packer: ->(point, packer) {
+    packer.write(point.x)
+    packer.write(point.y)
+  },
+  unpacker: ->(unpacker) {
+    x = unpacker.read
+    y = unpacker.read
+    Point.new(x, y)
+  },
+  recursive: true,
+)
+factory.load(factory.dump(Point.new(12, 34))) # => #<struct Point x=12, y=34>
+```
+
 ## Buffer API
 
 MessagePack for Ruby provides a buffer API so that you can read or write data by hand, not via Packer or Unpacker API.
