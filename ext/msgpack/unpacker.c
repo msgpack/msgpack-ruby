@@ -288,7 +288,7 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
         int ret;
         if ((uk->optimized_symbol_ext_type && uk->symbol_ext_type == raw_type) || (uk->symbolize_keys && is_reading_map_key(uk))) {
-            VALUE symbol = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length, raw_type == RAW_TYPE_STRING);
+            VALUE symbol = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length, raw_type != RAW_TYPE_BINARY);
             ret = object_complete_symbol(uk, symbol);
         } else {
             /* don't use zerocopy for hash keys but get a frozen string directly

@@ -14,6 +14,13 @@ class Symbol
     # The canonical way to do it for symbols would be:
     #  data.unpack1('A*').to_sym
     # However in this instance we can take a shortcut
-    data.to_sym
+
+    # We assume the string encoding is UTF-8, and let Ruby create either
+    # an ASCII symbol or UTF-8 symbol.
+    data.force_encoding(Encoding::UTF_8).to_sym
+  rescue EncodingError
+    # If somehow the string wasn't valid UTF-8 not valid ASCII, we fallback
+    # to what has been the historical behavior of creating a binary symbol
+    data.force_encoding(Encoding::BINARY).to_sym
   end
 end
