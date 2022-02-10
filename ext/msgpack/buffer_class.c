@@ -23,16 +23,9 @@
 
 VALUE cMessagePack_Buffer;
 
-static ID s_read;
-static ID s_readpartial;
-static ID s_write;
-static ID s_append;
-static ID s_close;
-
 static VALUE sym_read_reference_threshold;
 static VALUE sym_write_reference_threshold;
 static VALUE sym_io_buffer_size;
-
 
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
@@ -67,22 +60,22 @@ static VALUE Buffer_alloc(VALUE klass)
 
 static ID get_partial_read_method(VALUE io)
 {
-    if(io != Qnil && rb_respond_to(io, s_readpartial)) {
-        return s_readpartial;
+    if(io != Qnil && rb_respond_to(io, rb_intern("readpartial"))) {
+        return rb_intern("readpartial");
     }
-    return s_read;
+    return rb_intern("read");
 }
 
 static ID get_write_all_method(VALUE io)
 {
     if(io != Qnil) {
-        if(rb_respond_to(io, s_write)) {
-            return s_write;
-        } else if(rb_respond_to(io, s_append)) {
-            return s_append;
+        if(rb_respond_to(io, rb_intern("write"))) {
+            return rb_intern("write");
+        } else if(rb_respond_to(io, rb_intern("<<"))) {
+            return rb_intern("<<");
         }
     }
-    return s_write;
+    return rb_intern("write");
 }
 
 void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options)
@@ -464,7 +457,7 @@ static VALUE Buffer_close(VALUE self)
 {
     BUFFER(self, b);
     if(b->io != Qnil) {
-        return rb_funcall(b->io, s_close, 0);
+        return rb_funcall(b->io, rb_intern("close"), 0);
     }
     return Qnil;
 }
@@ -472,18 +465,12 @@ static VALUE Buffer_close(VALUE self)
 static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
     BUFFER(self, b);
-    size_t sz = msgpack_buffer_flush_to_io(b, io, s_write, true);
+    size_t sz = msgpack_buffer_flush_to_io(b, io, rb_intern("write"), true);
     return ULONG2NUM(sz);
 }
 
 void MessagePack_Buffer_module_init(VALUE mMessagePack)
 {
-    s_read = rb_intern("read");
-    s_readpartial = rb_intern("readpartial");
-    s_write = rb_intern("write");
-    s_append = rb_intern("<<");
-    s_close = rb_intern("close");
-
     sym_read_reference_threshold = ID2SYM(rb_intern("read_reference_threshold"));
     sym_write_reference_threshold = ID2SYM(rb_intern("write_reference_threshold"));
     sym_io_buffer_size = ID2SYM(rb_intern("io_buffer_size"));

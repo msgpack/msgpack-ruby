@@ -53,8 +53,6 @@ extern int msgpack_rb_encindex_utf8;
 extern int msgpack_rb_encindex_usascii;
 extern int msgpack_rb_encindex_ascii8bit;
 
-extern ID s_uminus;
-
 struct msgpack_buffer_chunk_t;
 typedef struct msgpack_buffer_chunk_t msgpack_buffer_chunk_t;
 
@@ -485,7 +483,7 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
 #endif //STR_UMINUS_DEDUPE_FROZEN
         // MRI 2.5 and older do not deduplicate strings that are already
         // frozen.
-        result = rb_funcall(result, s_uminus, 0);
+        result = rb_funcall(result, rb_intern("-@"), 0);
     }
 #endif // STR_UMINUS_DEDUPE
     _msgpack_buffer_consumed(b, length);

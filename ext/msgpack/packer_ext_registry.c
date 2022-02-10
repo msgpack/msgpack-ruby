@@ -18,11 +18,8 @@
 
 #include "packer_ext_registry.h"
 
-static ID s_call;
-
 void msgpack_packer_ext_registry_static_init()
 {
-    s_call = rb_intern("call");
 }
 
 void msgpack_packer_ext_registry_static_destroy()

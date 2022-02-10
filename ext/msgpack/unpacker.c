@@ -28,8 +28,6 @@
 static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
 
-static ID s_call;
-
 #ifdef UNPACKER_STACK_RMEM
 static msgpack_rmem_t s_stack_rmem;
 #endif
@@ -39,8 +37,6 @@ void msgpack_unpacker_static_init()
 #ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_init(&s_stack_rmem);
 #endif
-
-    s_call = rb_intern("call");
 }
 
 void msgpack_unpacker_static_destroy()
@@ -168,7 +164,7 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
 
     VALUE proc = msgpack_unpacker_ext_registry_lookup(uk->ext_registry, ext_type);
     if(proc != Qnil) {
-        VALUE obj = rb_funcall(proc, s_call, 1, str);
+        VALUE obj = rb_funcall(proc, rb_intern("call"), 1, str);
         return object_complete(uk, obj);
     }
 

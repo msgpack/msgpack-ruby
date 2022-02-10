@@ -19,15 +19,9 @@
 #include "buffer.h"
 #include "rmem.h"
 
-#ifndef HAVE_RB_STR_REPLACE
-static ID s_replace;
-#endif
-
 int msgpack_rb_encindex_utf8;
 int msgpack_rb_encindex_usascii;
 int msgpack_rb_encindex_ascii8bit;
-
-ID s_uminus;
 
 #ifndef DISABLE_RMEM
 static msgpack_rmem_t s_rmem;
@@ -35,7 +29,6 @@ static msgpack_rmem_t s_rmem;
 
 void msgpack_buffer_static_init()
 {
-    s_uminus = rb_intern("-@");
 
     msgpack_rb_encindex_utf8 = rb_utf8_encindex();
     msgpack_rb_encindex_usascii = rb_usascii_encindex();
@@ -43,10 +36,6 @@ void msgpack_buffer_static_init()
 
 #ifndef DISABLE_RMEM
     msgpack_rmem_init(&s_rmem);
-#endif
-
-#ifndef HAVE_RB_STR_REPLACE
-    s_replace = rb_intern("replace");
 #endif
 }
 

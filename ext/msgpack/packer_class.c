@@ -25,9 +25,6 @@
 
 VALUE cMessagePack_Packer;
 
-static ID s_to_msgpack;
-static ID s_write;
-
 static VALUE sym_compatibility_mode;
 
 //static VALUE s_packer_value;
@@ -63,7 +60,7 @@ VALUE MessagePack_Packer_alloc(VALUE klass)
 
     VALUE self = Data_Wrap_Struct(klass, Packer_mark, Packer_free, pk);
 
-    msgpack_packer_set_to_msgpack_method(pk, s_to_msgpack, self);
+    msgpack_packer_set_to_msgpack_method(pk, rb_intern("to_msgpack"), self);
 
     return self;
 }
@@ -321,7 +318,7 @@ static VALUE Packer_to_a(VALUE self)
 static VALUE Packer_write_to(VALUE self, VALUE io)
 {
     PACKER(self, pk);
-    size_t sz = msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), io, s_write, true);
+    size_t sz = msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), io, rb_intern("write"), true);
     return ULONG2NUM(sz);
 }
 
@@ -410,9 +407,6 @@ VALUE Packer_full_pack(VALUE self)
 
 void MessagePack_Packer_module_init(VALUE mMessagePack)
 {
-    s_to_msgpack = rb_intern("to_msgpack");
-    s_write = rb_intern("write");
-
     sym_compatibility_mode = ID2SYM(rb_intern("compatibility_mode"));
 
     msgpack_packer_static_init();
