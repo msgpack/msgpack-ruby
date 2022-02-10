@@ -291,21 +291,17 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             VALUE symbol = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length, raw_type != RAW_TYPE_BINARY);
             ret = object_complete_symbol(uk, symbol);
         } else {
-            /* don't use zerocopy for hash keys but get a frozen string directly
-             * because rb_hash_aset freezes keys and it causes copying */
-            bool will_freeze = uk->freeze || is_reading_map_key(uk);
-            VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze, raw_type == RAW_TYPE_STRING);
+            bool will_freeze = uk->freeze;
             if(raw_type == RAW_TYPE_STRING || raw_type == RAW_TYPE_BINARY) {
+               /* don't use zerocopy for hash keys but get a frozen string directly
+                * because rb_hash_aset freezes keys and it causes copying */
+                will_freeze = will_freeze || is_reading_map_key(uk);
+                VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze, raw_type == RAW_TYPE_STRING);
                 ret = object_complete(uk, string);
             } else {
+                VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, false, false);
                 ret = object_complete_ext(uk, raw_type, string);
             }
-
-# if !HASH_ASET_DEDUPE
-            if(will_freeze) {
-                rb_obj_freeze(string);
-            }
-# endif
         }
         uk->reading_raw_remaining = 0;
         return ret;
