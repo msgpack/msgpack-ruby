@@ -323,8 +323,8 @@ describe MessagePack::Factory do
   end
 
   describe 'the special treatment of symbols with ext type' do
-    def roundtrip(object)
-      subject.load(subject.dump(object))
+    def roundtrip(object, options = nil)
+      subject.load(subject.dump(object), options)
     end
 
     context 'using the optimized symbol unpacker' do
@@ -368,6 +368,14 @@ describe MessagePack::Factory do
 
         it 'lets symbols survive a roundtrip' do
           expect(roundtrip(:symbol)).to be :symbol
+        end
+
+        it 'works with hash keys' do
+          expect(roundtrip(symbol: 1)).to be == { symbol: 1 }
+        end
+
+        it 'works with frozen: true option' do
+          expect(roundtrip(:symbol, freeze: true)).to be :symbol
         end
 
         it 'preserves encoding for ASCII symbols' do
