@@ -155,8 +155,9 @@ module MessagePack
     #
     # @return nil
     #
-    def clear
+    def reset
     end
+    alias clear reset
 
     #
     # Returns size of the internal buffer. Same as buffer.size.
