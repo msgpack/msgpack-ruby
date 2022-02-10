@@ -30,7 +30,7 @@ typedef struct msgpack_factory_t msgpack_factory_t;
 
 struct msgpack_factory_t {
     msgpack_packer_ext_registry_t pkrg;
-    msgpack_unpacker_ext_registry_t ukrg;
+    msgpack_unpacker_ext_registry_t *ukrg;
     bool has_symbol_ext_type;
     bool optimized_symbol_ext_type;
     int symbol_ext_type;
@@ -49,14 +49,14 @@ static void Factory_free(msgpack_factory_t* fc)
         return;
     }
     msgpack_packer_ext_registry_destroy(&fc->pkrg);
-    msgpack_unpacker_ext_registry_destroy(&fc->ukrg);
+    msgpack_unpacker_ext_registry_release(fc->ukrg);
     xfree(fc);
 }
 
 void Factory_mark(msgpack_factory_t* fc)
 {
     msgpack_packer_ext_registry_mark(&fc->pkrg);
-    msgpack_unpacker_ext_registry_mark(&fc->ukrg);
+    msgpack_unpacker_ext_registry_mark(fc->ukrg);
 }
 
 static VALUE Factory_alloc(VALUE klass)
@@ -72,7 +72,7 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
     FACTORY(self, fc);
 
     msgpack_packer_ext_registry_init(&fc->pkrg);
-    msgpack_unpacker_ext_registry_init(&fc->ukrg);
+    // fc->ukrg is lazily initialized
 
     fc->has_symbol_ext_type = false;
 
@@ -113,9 +113,7 @@ VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
 
     msgpack_unpacker_t* uk;
     Data_Get_Struct(unpacker, msgpack_unpacker_t, uk);
-
-    msgpack_unpacker_ext_registry_destroy(&uk->ext_registry);
-    msgpack_unpacker_ext_registry_dup(&fc->ukrg, &uk->ext_registry);
+    msgpack_unpacker_ext_registry_borrow(fc->ukrg, &uk->ext_registry);
     uk->optimized_symbol_ext_type = fc->optimized_symbol_ext_type;
     uk->symbol_ext_type = fc->symbol_ext_type;
 
@@ -127,11 +125,14 @@ static VALUE Factory_registered_types_internal(VALUE self)
     FACTORY(self, fc);
 
     VALUE uk_mapping = rb_hash_new();
-    for(int i=0; i < 256; i++) {
-        if(fc->ukrg.array[i] != Qnil) {
-            rb_hash_aset(uk_mapping, INT2FIX(i - 128), fc->ukrg.array[i]);
+    if (fc->ukrg) {
+        for(int i=0; i < 256; i++) {
+            if(fc->ukrg->array[i] != Qnil) {
+                rb_hash_aset(uk_mapping, INT2FIX(i - 128), fc->ukrg->array[i]);
+            }
         }
     }
+
     return rb_ary_new3(
         2,
         RTEST(fc->pkrg.hash) ? rb_hash_dup(fc->pkrg.hash) : rb_hash_new(),

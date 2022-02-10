@@ -12,6 +12,7 @@ on:
 jobs:
   mri:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
         ruby: ['2.4', '2.5', '2.6', '2.7', '3.0', '3.1']
@@ -26,6 +27,7 @@ jobs:
 
   jruby:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu]
         # TODO: update to 9.3.3.0 once supported
@@ -43,6 +45,7 @@ jobs:
   head-versions:
     continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu]
         ruby: ['ruby-head', 'jruby-head', 'truffleruby']

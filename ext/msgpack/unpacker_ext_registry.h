@@ -25,35 +25,39 @@ struct msgpack_unpacker_ext_registry_t;
 typedef struct msgpack_unpacker_ext_registry_t msgpack_unpacker_ext_registry_t;
 
 struct msgpack_unpacker_ext_registry_t {
+    unsigned int borrow_count;
     VALUE array[256];
-    //int bitmap;
 };
 
 void msgpack_unpacker_ext_registry_static_init();
 
 void msgpack_unpacker_ext_registry_static_destroy();
 
-void msgpack_unpacker_ext_registry_init(msgpack_unpacker_ext_registry_t* ukrg);
+void msgpack_unpacker_ext_registry_release(msgpack_unpacker_ext_registry_t* ukrg);
 
-static inline void msgpack_unpacker_ext_registry_destroy(msgpack_unpacker_ext_registry_t* ukrg)
-{ }
+static inline void msgpack_unpacker_ext_registry_borrow(msgpack_unpacker_ext_registry_t* src, msgpack_unpacker_ext_registry_t** dst)
+{
+    if (src) {
+        src->borrow_count++;
+        *dst = src;
+    }
+}
 
 void msgpack_unpacker_ext_registry_mark(msgpack_unpacker_ext_registry_t* ukrg);
 
-void msgpack_unpacker_ext_registry_dup(msgpack_unpacker_ext_registry_t* src,
-        msgpack_unpacker_ext_registry_t* dst);
-
-VALUE msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t* ukrg,
+void msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t** ukrg,
         VALUE ext_module, int ext_type, VALUE proc, VALUE arg);
 
 static inline VALUE msgpack_unpacker_ext_registry_lookup(msgpack_unpacker_ext_registry_t* ukrg,
         int ext_type)
 {
-    VALUE e = ukrg->array[ext_type + 128];
-    if(e == Qnil) {
-        return Qnil;
+    if (ukrg) {
+        VALUE entry = ukrg->array[ext_type + 128];
+        if (entry != Qnil) {
+            return rb_ary_entry(entry, 1);
+        }
     }
-    return rb_ary_entry(e, 1);
+    return Qnil;
 }
 
 #endif

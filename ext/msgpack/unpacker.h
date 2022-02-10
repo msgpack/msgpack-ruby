@@ -60,7 +60,7 @@ struct msgpack_unpacker_t {
 
     VALUE buffer_ref;
 
-    msgpack_unpacker_ext_registry_t ext_registry;
+    msgpack_unpacker_ext_registry_t *ext_registry;
 
     /* options */
     bool symbolize_keys;
