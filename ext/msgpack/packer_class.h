@@ -20,7 +20,16 @@
 
 #include "packer.h"
 
+#define PACKER(from, name) \
+    msgpack_packer_t* name; \
+    TypedData_Get_Struct(from, msgpack_packer_t, &packer_data_type, name); \
+    if(name == NULL) { \
+        rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
+    }
+
 extern VALUE cMessagePack_Packer;
+
+extern const rb_data_type_t packer_data_type;
 
 void MessagePack_Packer_module_init(VALUE mMessagePack);
 

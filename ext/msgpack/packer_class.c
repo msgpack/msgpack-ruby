@@ -33,15 +33,9 @@ static VALUE sym_compatibility_mode;
 //static VALUE s_packer_value;
 //static msgpack_packer_t* s_packer;
 
-#define PACKER(from, name) \
-    msgpack_packer_t* name; \
-    Data_Get_Struct(from, msgpack_packer_t, name); \
-    if(name == NULL) { \
-        rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
-    }
-
-static void Packer_free(msgpack_packer_t* pk)
+static void Packer_free(void *ptr)
 {
+    msgpack_packer_t* pk = ptr;
     if(pk == NULL) {
         return;
     }
@@ -50,21 +44,38 @@ static void Packer_free(msgpack_packer_t* pk)
     xfree(pk);
 }
 
-static void Packer_mark(msgpack_packer_t* pk)
+static void Packer_mark(void *ptr)
 {
+    msgpack_packer_t* pk = ptr;
     msgpack_packer_mark(pk);
     msgpack_packer_ext_registry_mark(&pk->ext_registry);
 }
 
+static size_t Packer_memsize(const void *ptr)
+{
+    return sizeof(msgpack_packer_t);
+}
+
+const rb_data_type_t packer_data_type = {
+    .wrap_struct_name = "msgpack:packer",
+    .function = {
+        .dmark = Packer_mark,
+        .dfree = Packer_free,
+        .dsize = Packer_memsize,
+#ifdef HAS_GC_COMPACT
+        .dcompact = NULL
+#endif
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
+
 VALUE MessagePack_Packer_alloc(VALUE klass)
 {
-    msgpack_packer_t* pk = ZALLOC_N(msgpack_packer_t, 1);
+    msgpack_packer_t* pk;
+    VALUE self = TypedData_Make_Struct(klass, msgpack_packer_t, &packer_data_type, pk);
     msgpack_packer_init(pk);
-
-    VALUE self = Data_Wrap_Struct(klass, Packer_mark, Packer_free, pk);
-
     msgpack_packer_set_to_msgpack_method(pk, s_to_msgpack, self);
-
     return self;
 }
 

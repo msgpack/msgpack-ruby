@@ -651,6 +651,24 @@ describe MessagePack::Unpacker do
     end
   end
 
+  describe 'memsize' do
+    it 'works on a fresh Unpacker' do
+      skip "JRuby doesn't support ObjectSpace.memsize_of" if IS_JRUBY
+
+      unpacker = MessagePack::Unpacker.new
+      expect(ObjectSpace.memsize_of(unpacker)).to be_an(Integer)
+    end
+
+    it 'works on a Unpacker with registered types' do
+      skip "JRuby doesn't support ObjectSpace.memsize_of" if IS_JRUBY
+
+      unpacker = MessagePack::Unpacker.new
+      base_size = ObjectSpace.memsize_of(unpacker)
+      unpacker.register_type(0x0) { }
+      expect(ObjectSpace.memsize_of(unpacker)).to be > base_size
+    end
+  end
+
   context 'regressions' do
     it 'handles massive arrays (issue #2)' do
       array = ['foo'] * 10_000

@@ -56,6 +56,8 @@ rescue NoMethodError
   $CFLAGS << ' -DSTR_UMINUS_DEDUPE_FROZEN=0 '
 end
 
+$CFLAGS << ' -DHAS_GC_COMPACT' if GC.respond_to?(:compact)
+
 if warnflags = CONFIG['warnflags']
   warnflags.slice!(/ -Wdeclaration-after-statement/)
 end

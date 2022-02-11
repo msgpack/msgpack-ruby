@@ -20,6 +20,15 @@
 
 #include "unpacker.h"
 
+#define UNPACKER(from, name) \
+    msgpack_unpacker_t *name = NULL; \
+    TypedData_Get_Struct(from, msgpack_unpacker_t, &unpacker_data_type, name); \
+    if(name == NULL) { \
+        rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
+    }
+
+extern const rb_data_type_t unpacker_data_type;
+
 extern VALUE cMessagePack_Unpacker;
 
 void MessagePack_Unpacker_module_init(VALUE mMessagePack);

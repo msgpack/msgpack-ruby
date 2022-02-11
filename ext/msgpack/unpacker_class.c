@@ -37,15 +37,9 @@ static VALUE sym_symbolize_keys;
 static VALUE sym_freeze;
 static VALUE sym_allow_unknown_ext;
 
-#define UNPACKER(from, name) \
-    msgpack_unpacker_t *name = NULL; \
-    Data_Get_Struct(from, msgpack_unpacker_t, name); \
-    if(name == NULL) { \
-        rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
-    }
-
-static void Unpacker_free(msgpack_unpacker_t* uk)
+static void Unpacker_free(void *ptr)
 {
+    msgpack_unpacker_t* uk = ptr;
     if(uk == NULL) {
         return;
     }
@@ -54,17 +48,45 @@ static void Unpacker_free(msgpack_unpacker_t* uk)
     xfree(uk);
 }
 
-static void Unpacker_mark(msgpack_unpacker_t* uk)
+static void Unpacker_mark(void *ptr)
 {
+    msgpack_unpacker_t* uk = ptr;
     msgpack_unpacker_mark(uk);
     msgpack_unpacker_ext_registry_mark(uk->ext_registry);
 }
 
+static size_t Unpacker_memsize(const void *ptr)
+{
+    size_t total_size = sizeof(msgpack_unpacker_t);
+
+    const msgpack_unpacker_t* uk = ptr;
+    if (uk->ext_registry) {
+        total_size += sizeof(msgpack_unpacker_ext_registry_t) / (uk->ext_registry->borrow_count + 1);
+    }
+
+    total_size += (uk->stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
+
+    return total_size;
+}
+
+const rb_data_type_t unpacker_data_type = {
+    .wrap_struct_name = "msgpack:unpacker",
+    .function = {
+        .dmark = Unpacker_mark,
+        .dfree = Unpacker_free,
+        .dsize = Unpacker_memsize,
+#ifdef HAS_GC_COMPACT
+        .dcompact = NULL
+#endif
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
 VALUE MessagePack_Unpacker_alloc(VALUE klass)
 {
-    msgpack_unpacker_t* uk = _msgpack_unpacker_new();
-
-    VALUE self = Data_Wrap_Struct(klass, Unpacker_mark, Unpacker_free, uk);
+    msgpack_unpacker_t* uk;
+    VALUE self = TypedData_Make_Struct(klass, msgpack_unpacker_t, &unpacker_data_type, uk);
+    _msgpack_unpacker_init(uk);
     return self;
 }
 

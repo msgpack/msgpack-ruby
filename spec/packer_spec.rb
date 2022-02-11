@@ -515,6 +515,15 @@ describe MessagePack::Packer do
     end
   end
 
+  context 'memsize' do
+    it 'works on a fresh Packer' do
+      skip "JRuby doesn't support ObjectSpace.memsize_of" if IS_JRUBY
+
+      unpacker = MessagePack::Packer.new
+      expect(ObjectSpace.memsize_of(unpacker)).to be_an(Integer)
+    end
+  end
+
   describe "fixnum and bignum" do
     it "fixnum.to_msgpack" do
       23.to_msgpack.should == "\x17"
