@@ -474,4 +474,56 @@ describe MessagePack::Factory do
       expect(MessagePack.unpack(MessagePack.pack(dm2))).to eq(dm2)
     end
   end
+
+  describe '#pool' do
+    let(:factory) { described_class.new }
+
+    it 'responds to serializers interface' do
+      pool = factory.pool(1)
+      expect(pool.load(pool.dump(42))).to be == 42
+    end
+
+    it 'types can be registered before the pool is created' do
+      factory.register_type(0x00, Symbol)
+      pool = factory.pool(1)
+      expect(pool.load(pool.dump(:foo))).to be == :foo
+    end
+
+    it 'types cannot be registered after the pool is created' do
+      pool = factory.pool(1)
+      factory.register_type(0x20, ::MyType)
+
+      expect do
+        pool.dump(MyType.new(1, 2))
+      end.to raise_error NoMethodError
+
+      payload = factory.dump(MyType.new(1, 2))
+      expect do
+        pool.load(payload)
+      end.to raise_error MessagePack::UnknownExtTypeError
+    end
+
+    it 'support symbolize_keys: true' do
+      pool = factory.pool(1, symbolize_keys: true)
+      expect(pool.load(pool.dump('foo' => 1))).to be == { foo: 1 }
+    end
+
+    it 'support freeze: true' do
+      pool = factory.pool(1, freeze: true)
+      expect(pool.load(pool.dump('foo'))).to be_frozen
+    end
+
+    it 'is thread safe' do
+      pool = factory.pool(1)
+
+      threads = 10.times.map do
+        Thread.new do
+          1_000.times do |i|
+            expect(pool.load(pool.dump(i))).to be == i
+          end
+        end
+      end
+      threads.each(&:join)
+    end
+  end
 end

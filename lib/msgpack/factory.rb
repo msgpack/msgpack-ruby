@@ -77,5 +77,108 @@ module MessagePack
       packer.full_pack
     end
     alias :pack :dump
+
+    def pool(size = 1, **options)
+      Pool.new(
+        frozen? ? self : dup.freeze,
+        size,
+        options.empty? ? nil : options,
+      )
+    end
+
+    class Pool
+      if RUBY_ENGINE == "ruby"
+        class AbstractPool
+          def initialize(size, &block)
+            @size = size
+            @new_member = block
+            @members = []
+          end
+
+          def checkout
+            @members.pop || @new_member.call
+          end
+
+          def checkin(member)
+            # If the pool is already full, we simply drop the extra member.
+            # This is because contrary to a connection pool, creating an extra instance
+            # is extremely unlikely to cause some kind of resource exhaustion.
+            #
+            # We could cycle the members (keep the newer one) but first It's more work and second
+            # the older member might have been created pre-fork, so it might be at least partially
+            # in shared memory.
+            if member && @members.size < @size
+              member.reset
+              @members << member
+            end
+          end
+        end
+      else
+        class AbstractPool
+          def initialize(size, &block)
+            @size = size
+            @new_member = block
+            @members = []
+            @mutex = Mutex.new
+          end
+
+          def checkout
+            @mutex.synchronize { @members.pop } || @new_member.call
+          end
+
+          def checkin(member)
+            @mutex.synchronize do
+              if member && @members.size < @size
+                member.reset
+                @members << member
+              end
+            end
+          end
+        end
+      end
+
+      class PackerPool < AbstractPool
+        private
+
+        def reset(packer)
+          packer.clear
+        end
+      end
+
+      class UnpackerPool < AbstractPool
+        private
+
+        def reset(unpacker)
+          unpacker.reset
+        end
+      end
+
+      def initialize(factory, size, options = nil)
+        options = nil if !options || options.empty?
+        @factory = factory
+        @packers = PackerPool.new(size) { factory.packer(options) }
+        @unpackers = UnpackerPool.new(size) { factory.unpacker(options) }
+      end
+
+      def load(data)
+        unpacker = @unpackers.checkout
+        begin
+          unpacker.feed_reference(data)
+          unpacker.full_unpack
+        ensure
+          @unpackers.checkin(unpacker)
+        end
+      end
+
+      def dump(object)
+        packer = @packers.checkout
+        begin
+          packer.write(object)
+          packer.full_pack
+        ensure
+          @packers.checkin(packer)
+        end
+      end
+    end
   end
 end

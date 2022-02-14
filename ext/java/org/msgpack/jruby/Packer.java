@@ -267,7 +267,7 @@ public class Packer extends RubyObject {
     return buffer.size(ctx);
   }
 
-  @JRubyMethod(name = "clear")
+  @JRubyMethod(name = "clear", alias = { "reset" })
   public IRubyObject clear(ThreadContext ctx) {
     return buffer.clear(ctx);
   }

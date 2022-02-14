@@ -88,6 +88,41 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
     return Qnil;
 }
 
+static VALUE Factory_dup(VALUE self)
+{
+    VALUE clone = Factory_alloc(rb_obj_class(self));
+
+    FACTORY(self, fc);
+    FACTORY(clone, cloned_fc);
+
+    cloned_fc->has_symbol_ext_type = fc->has_symbol_ext_type;
+    cloned_fc->pkrg = fc->pkrg;
+    msgpack_unpacker_ext_registry_borrow(fc->ukrg, &cloned_fc->ukrg);
+    msgpack_packer_ext_registry_dup(&fc->pkrg, &cloned_fc->pkrg);
+
+    return clone;
+}
+
+static VALUE Factory_freeze(VALUE self) {
+    if(!rb_obj_frozen_p(self)) {
+        FACTORY(self, fc);
+
+        if (RTEST(fc->pkrg.hash)) {
+            rb_hash_freeze(fc->pkrg.hash);
+            if (!RTEST(fc->pkrg.cache)) {
+                // If the factory is frozen, we can safely share the packer cache between
+                // all packers. So we eagerly create it now so it's available when #packer
+                // is called.
+                fc->pkrg.cache = rb_hash_new();
+            }
+        }
+
+        rb_obj_freeze(self);
+    }
+
+    return self;
+}
+
 VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
 {
     FACTORY(self, fc);
@@ -233,6 +268,8 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
     rb_define_alloc_func(cMessagePack_Factory, Factory_alloc);
 
     rb_define_method(cMessagePack_Factory, "initialize", Factory_initialize, -1);
+    rb_define_method(cMessagePack_Factory, "dup", Factory_dup, 0);
+    rb_define_method(cMessagePack_Factory, "freeze", Factory_freeze, 0);
 
     rb_define_method(cMessagePack_Factory, "packer", MessagePack_Factory_packer, -1);
     rb_define_method(cMessagePack_Factory, "unpacker", MessagePack_Factory_unpacker, -1);
