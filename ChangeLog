@@ -1,3 +1,11 @@
+2022-02-15 version 1.4.5:
+
+* Fix to create UTF-8 Symbol keys when symbolize_keys: true
+* Fix to assume Symbols as US-ASCII or UTF-8
+* Optimize Packer/Unpacker initialization
+* Optimize extension class lookup
+* Rename Packer#clear as Packer#reset (#clear is still available as an alias)
+
 2022-01-22 version 1.4.4:
 
 * Specify the build option --platform=8 for older Java platforms
