@@ -29,6 +29,11 @@ static ID s_write;
 static ID s_append;
 static ID s_close;
 
+static VALUE sym_read_reference_threshold;
+static VALUE sym_write_reference_threshold;
+static VALUE sym_io_buffer_size;
+
+
 #define BUFFER(from, name) \
     msgpack_buffer_t *name = NULL; \
     Data_Get_Struct(from, msgpack_buffer_t, name); \
@@ -89,17 +94,17 @@ void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options
     if(options != Qnil) {
         VALUE v;
 
-        v = rb_hash_aref(options, ID2SYM(rb_intern("read_reference_threshold")));
+        v = rb_hash_aref(options, sym_read_reference_threshold);
         if(v != Qnil) {
             msgpack_buffer_set_read_reference_threshold(b, NUM2ULONG(v));
         }
 
-        v = rb_hash_aref(options, ID2SYM(rb_intern("write_reference_threshold")));
+        v = rb_hash_aref(options, sym_write_reference_threshold);
         if(v != Qnil) {
             msgpack_buffer_set_write_reference_threshold(b, NUM2ULONG(v));
         }
 
-        v = rb_hash_aref(options, ID2SYM(rb_intern("io_buffer_size")));
+        v = rb_hash_aref(options, sym_io_buffer_size);
         if(v != Qnil) {
             msgpack_buffer_set_io_buffer_size(b, NUM2ULONG(v));
         }
@@ -478,6 +483,10 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
     s_write = rb_intern("write");
     s_append = rb_intern("<<");
     s_close = rb_intern("close");
+
+    sym_read_reference_threshold = ID2SYM(rb_intern("read_reference_threshold"));
+    sym_write_reference_threshold = ID2SYM(rb_intern("write_reference_threshold"));
+    sym_io_buffer_size = ID2SYM(rb_intern("io_buffer_size"));
 
     msgpack_buffer_static_init();
 
