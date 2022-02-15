@@ -1,5 +1,5 @@
 module MessagePack
-  VERSION = "1.4.4"
+  VERSION = "1.4.5"
   # Note for maintainers:
   #  Don't miss building/releasing the JRuby version (rake buld:java)
   #  See "How to build -java rubygems" in README for more details.
