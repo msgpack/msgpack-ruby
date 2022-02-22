@@ -32,17 +32,19 @@ public class Packer extends RubyObject {
   private Buffer buffer;
   private Encoder encoder;
   private boolean hasSymbolExtType;
+  private boolean hasBigintExtType;
   private Encoding binaryEncoding;
 
-  public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry, boolean hasSymbolExtType) {
+  public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry, boolean hasSymbolExtType, boolean hasBigintExtType) {
     super(runtime, type);
     this.registry = registry;
     this.hasSymbolExtType = hasSymbolExtType;
+    this.hasBigintExtType = hasBigintExtType;
   }
 
   static class PackerAllocator implements ObjectAllocator {
     public IRubyObject allocate(Ruby runtime, RubyClass type) {
-      return new Packer(runtime, type, null, false);
+      return new Packer(runtime, type, null, false, false);
     }
   }
 
@@ -68,15 +70,15 @@ public class Packer extends RubyObject {
         // registry is already initialized (and somthing might be registered) when newPacker from Factory
         this.registry = new ExtensionRegistry();
     }
-    this.encoder = new Encoder(runtime, compatibilityMode, registry, hasSymbolExtType);
+    this.encoder = new Encoder(runtime, compatibilityMode, registry, hasSymbolExtType, hasBigintExtType);
     this.buffer = new Buffer(runtime, runtime.getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
     return this;
   }
 
-  public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, boolean hasSymbolExtType, IRubyObject[] args) {
-    Packer packer = new Packer(ctx.runtime, ctx.runtime.getModule("MessagePack").getClass("Packer"), extRegistry, hasSymbolExtType);
+  public static Packer newPacker(ThreadContext ctx, ExtensionRegistry extRegistry, boolean hasSymbolExtType, boolean hasBigintExtType, IRubyObject[] args) {
+    Packer packer = new Packer(ctx.runtime, ctx.runtime.getModule("MessagePack").getClass("Packer"), extRegistry, hasSymbolExtType, hasBigintExtType);
     packer.initialize(ctx, args);
     return packer;
   }

@@ -27,12 +27,14 @@ public class Factory extends RubyObject {
   private final Ruby runtime;
   private final ExtensionRegistry extensionRegistry;
   private boolean hasSymbolExtType;
+  private boolean hasBigIntExtType;
 
   public Factory(Ruby runtime, RubyClass type) {
     super(runtime, type);
     this.runtime = runtime;
     this.extensionRegistry = new ExtensionRegistry();
     this.hasSymbolExtType = false;
+    this.hasBigIntExtType = false;
   }
 
   static class FactoryAllocator implements ObjectAllocator {
@@ -52,7 +54,7 @@ public class Factory extends RubyObject {
 
   @JRubyMethod(name = "packer", optional = 2)
   public Packer packer(ThreadContext ctx, IRubyObject[] args) {
-    return Packer.newPacker(ctx, extensionRegistry(), hasSymbolExtType, args);
+    return Packer.newPacker(ctx, extensionRegistry(), hasSymbolExtType, hasBigIntExtType, args);
   }
 
   @JRubyMethod(name = "unpacker", optional = 2)
@@ -77,6 +79,8 @@ public class Factory extends RubyObject {
     IRubyObject packerArg;
     IRubyObject unpackerArg;
 
+    RubyHash options = null;
+
     if (isFrozen()) {
         throw runtime.newRuntimeError("can't modify frozen Factory");
     }
@@ -86,7 +90,7 @@ public class Factory extends RubyObject {
       unpackerArg = runtime.newSymbol("from_msgpack_ext");
     } else if (args.length == 3) {
       if (args[args.length - 1] instanceof RubyHash) {
-        RubyHash options = (RubyHash) args[args.length - 1];
+        options = (RubyHash) args[args.length - 1];
         packerArg = options.fastARef(runtime.newSymbol("packer"));
         unpackerArg = options.fastARef(runtime.newSymbol("unpacker"));
         IRubyObject optimizedSymbolsParsingArg = options.fastARef(runtime.newSymbol("optimized_symbols_parsing"));
@@ -127,6 +131,17 @@ public class Factory extends RubyObject {
 
     if (extModule == runtime.getSymbol()) {
       hasSymbolExtType = true;
+    }
+
+    if (options != null) {
+      IRubyObject oversizedIntegerExtensionArg = options.fastARef(runtime.newSymbol("oversized_integer_extension"));
+      if (oversizedIntegerExtensionArg != null && oversizedIntegerExtensionArg.isTrue()) {
+        if (extModule == runtime.getModule("Integer")) {
+          hasBigIntExtType = true;
+        } else {
+          throw runtime.newArgumentError("oversized_integer_extension: true is only for Integer class");
+        }
+      }
     }
 
     return runtime.getNil();

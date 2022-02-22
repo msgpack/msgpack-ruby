@@ -283,6 +283,43 @@ describe MessagePack::Factory do
         it { is_expected.to eq "unpacked module" }
       end
     end
+
+    describe "registering an ext type for Integer" do
+      let(:factory) { described_class.new }
+      let(:bigint) { 10**150 }
+
+      it 'does not work by default without passing `oversized_integer_extension: true`' do
+        factory.register_type(0x01, Integer, packer: :to_s, unpacker: method(:Integer))
+
+        expect do
+          factory.dump(bigint)
+        end.to raise_error RangeError
+      end
+
+      it 'raises ArgumentError if the type is not Integer' do
+        expect do
+          factory.register_type(0x01, MyType, packer: :to_s, unpacker: method(:Integer), oversized_integer_extension: true)
+        end.to raise_error(ArgumentError)
+      end
+
+      it 'invokes the packer if registered with `oversized_integer_extension: true`' do
+        factory.register_type(0x01, Integer, packer: :to_s, unpacker: method(:Integer), oversized_integer_extension: true)
+
+        expect(factory.load(factory.dump(bigint))).to be == bigint
+      end
+
+      it 'does not use the oversized_integer_extension packer for integers fitting in native types' do
+        factory.register_type(
+          0x01,
+          Integer,
+          packer: ->(int) { raise NotImplementedError },
+          unpacker: ->(payload) { raise NotImplementedError },
+          oversized_integer_extension: true
+        )
+
+        expect(factory.dump(42)).to eq(MessagePack.dump(42))
+      end
+    end
   end
 
   describe 'the special treatment of symbols with ext type' do
