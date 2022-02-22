@@ -10,43 +10,47 @@ module MessagePack
     BASE = (2**CHUNK_BITLENGTH) - 1
     FORMAT = 'CL>*'
 
-    if Integer.instance_method(:[]).arity == 1 # Ruby 2.6 and older
-      def self.to_msgpack_ext(bigint)
-        members = []
+    def self.to_msgpack_ext(bigint)
+      members = []
 
-        if bigint < 0
-          bigint = -bigint
-          members << 1
-        else
-          members << 0
-        end
-
-        while bigint > 0
-          members << (bigint & BASE)
-          bigint = bigint >> CHUNK_BITLENGTH
-        end
-
-        members.pack(FORMAT)
+      if bigint < 0
+        bigint = -bigint
+        members << 1
+      else
+        members << 0
       end
-    else
-      def self.to_msgpack_ext(bigint)
-        members = []
 
-        if bigint < 0
-          bigint = -bigint
-          members << 1
-        else
-          members << 0
-        end
+      offset = 0
+      length = bigint.bit_length
+      while offset < length
+        members << bigint[offset, CHUNK_BITLENGTH]
+        offset += CHUNK_BITLENGTH
+      end
 
-        offset = 0
-        length = bigint.bit_length
-        while offset < length
-          members << bigint[offset, CHUNK_BITLENGTH]
-          offset += CHUNK_BITLENGTH
-        end
+      members.pack(FORMAT)
+    end
 
-        members.pack(FORMAT)
+    def self.to_msgpack_ext_old_ruby(bigint)
+      members = []
+
+      if bigint < 0
+        bigint = -bigint
+        members << 1
+      else
+        members << 0
+      end
+
+      while bigint > 0
+        members << (bigint & BASE)
+        bigint = bigint >> CHUNK_BITLENGTH
+      end
+
+      members.pack(FORMAT)
+    end
+
+    if Integer.instance_method(:[]).arity == 1 # Ruby 2.6 and older
+      class << self
+        alias :to_msgpack_ext :to_msgpack_ext_old_ruby
       end
     end
 
