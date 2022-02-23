@@ -25,7 +25,7 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 public class Factory extends RubyObject {
   private static final long serialVersionUID = 8441284623445322492L;
   private final Ruby runtime;
-  private final ExtensionRegistry extensionRegistry;
+  private ExtensionRegistry extensionRegistry;
   private boolean hasSymbolExtType;
   private boolean hasBigIntExtType;
 
@@ -50,6 +50,14 @@ public class Factory extends RubyObject {
   @JRubyMethod(name = "initialize")
   public IRubyObject initialize(ThreadContext ctx) {
     return this;
+  }
+
+  @JRubyMethod(name = "dup")
+  public IRubyObject dup() {
+    Factory clone = (Factory)super.dup();
+    clone.extensionRegistry = extensionRegistry();
+    clone.hasSymbolExtType = hasSymbolExtType;
+    return clone;
   }
 
   @JRubyMethod(name = "packer", optional = 2)

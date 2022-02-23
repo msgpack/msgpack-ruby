@@ -43,8 +43,14 @@ void msgpack_packer_ext_registry_mark(msgpack_packer_ext_registry_t* pkrg)
 void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst)
 {
-    dst->hash = RTEST(src->hash) ? rb_hash_dup(src->hash) : Qnil;
-    dst->cache = RTEST(src->cache) ? rb_hash_dup(src->cache): Qnil;
+    if(RTEST(src->hash) && !rb_obj_frozen_p(src->hash)) {
+        dst->hash = rb_hash_dup(src->hash);
+        dst->cache = RTEST(src->cache) ? rb_hash_dup(src->cache) : Qnil;
+    } else {
+        // If the type registry is frozen we can safely share it, and share the cache as well.
+        dst->hash = src->hash;
+        dst->cache = src->cache;
+    }
 }
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
