@@ -2,7 +2,7 @@
 
 module MessagePack
   module Bigint
-    TYPE = -142
+    TYPE = -122
 
     # We split the bigint in 32bits chunks so that individual part fits into
     # a MRI immediate Integer.
