@@ -2,8 +2,6 @@
 
 module MessagePack
   module Bigint
-    TYPE = -142
-
     # We split the bigint in 32bits chunks so that individual part fits into
     # a MRI immediate Integer.
     CHUNK_BITLENGTH = 32
