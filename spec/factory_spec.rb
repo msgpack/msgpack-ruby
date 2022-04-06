@@ -423,6 +423,27 @@ describe MessagePack::Factory do
           3,
         ]
       end
+
+      it 'can be nested' do
+        factory = MessagePack::Factory.new
+        factory.register_type(
+          0x02,
+          Set,
+          packer: ->(set, packer) do
+            packer.write(set.to_a)
+            nil
+          end,
+          unpacker: ->(unpacker) do
+            unpacker.read.to_set
+          end,
+          recursive: true,
+        )
+
+        expected = Set[1, Set[2, Set[3]]]
+        payload = factory.dump(expected)
+        expect(payload).to be == "\xC7\v\x02\x92\x01\xC7\x06\x02\x92\x02\xD5\x02\x91\x03".b
+        expect(factory.load(factory.dump(expected))).to be == expected
+      end
     end
   end
 
