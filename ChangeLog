@@ -1,3 +1,9 @@
+2022-04-06 version 1.5.0:
+
+* Add recursive option on Factory#register_type to operate Packer/Unpacker manually
+* Add oversized_integer_extension option on Factory#register_type to pack/unpack bigint using ext types
+* Add Factory#pool method and Factory::Pool class to provide pooled Packer and Unpacker instances
+
 2022-02-15 version 1.4.5:
 
 * Fix to create UTF-8 Symbol keys when symbolize_keys: true
