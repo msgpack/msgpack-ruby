@@ -381,7 +381,7 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "expected Module/Class but found %s.", rb_obj_classname(ext_module));
     }
 
-    msgpack_packer_ext_registry_put(&pk->ext_registry, ext_module, ext_type, proc, arg);
+    msgpack_packer_ext_registry_put(&pk->ext_registry, ext_module, ext_type, 0, proc, arg);
 
     if (ext_module == rb_cSymbol) {
         pk->has_symbol_ext_type = true;

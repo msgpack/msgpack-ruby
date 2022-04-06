@@ -320,6 +320,110 @@ describe MessagePack::Factory do
         expect(factory.dump(42)).to eq(MessagePack.dump(42))
       end
     end
+
+    describe "registering ext type with recursive serialization" do
+      before do
+        stub_const("Point", Struct.new(:x, :y, :z))
+      end
+
+      it 'can receive the packer as argument (proc)' do
+        factory = MessagePack::Factory.new
+        factory.register_type(0x00, Symbol)
+        factory.register_type(
+          0x01,
+          Point,
+          packer: ->(point, packer) do
+            packer.write(point.to_h)
+            nil
+          end,
+          unpacker: ->(unpacker) do
+            attrs = unpacker.read
+            Point.new(attrs.fetch(:x), attrs.fetch(:y), attrs.fetch(:z))
+          end,
+          recursive: true,
+        )
+
+        point = Point.new(1, 2, 3)
+        payload = factory.dump(point)
+        expect(factory.load(payload)).to be == point
+      end
+
+      it 'can receive the packer as argument (Method)' do
+        mod = Module.new
+        mod.define_singleton_method(:packer) do |point, packer|
+          packer.write(point.to_h)
+          nil
+        end
+
+        mod.define_singleton_method(:unpacker) do |unpacker|
+          attrs = unpacker.read
+          Point.new(attrs.fetch(:x), attrs.fetch(:y), attrs.fetch(:z))
+        end
+
+        factory = MessagePack::Factory.new
+        factory.register_type(0x00, Symbol)
+        factory.register_type(
+          0x01,
+          Point,
+          packer: mod.method(:packer),
+          unpacker: mod.method(:unpacker),
+          recursive: true,
+        )
+
+        point = Point.new(1, 2, 3)
+        payload = factory.dump(point)
+        expect(factory.load(payload)).to be == point
+      end
+
+      it 'respect message pack format' do
+        factory = MessagePack::Factory.new
+        factory.register_type(0x00, Symbol)
+        factory.register_type(
+          0x01,
+          Point,
+          packer: ->(point, packer) do
+            packer.write(point.to_a)
+            nil
+          end,
+          unpacker: ->(unpacker) do
+            attrs = unpacker.read
+            Point.new(*attrs)
+          end,
+          recursive: true,
+        )
+
+        point = Point.new(1, 2, 3)
+        expect(factory.dump(point)).to be == "\xD6\x01".b + MessagePack.dump([1, 2, 3])
+      end
+
+      it 'sets the correct length' do
+        factory = MessagePack::Factory.new
+        factory.register_type(0x00, Symbol)
+        factory.register_type(
+          0x01,
+          Point,
+          packer: ->(point, packer) do
+            packer.write(point.to_h)
+            nil
+          end,
+          unpacker: ->(unpacker) do
+            attrs = unpacker.read
+            Point.new(attrs.fetch(:x), attrs.fetch(:y), attrs.fetch(:z))
+          end,
+          recursive: true,
+        )
+
+        point = Point.new(1, 2, 3)
+        payload = factory.dump([1, point, 3])
+
+        obj = MessagePack::Factory.new.load(payload, allow_unknown_ext: true)
+        expect(obj).to be == [
+          1,
+          MessagePack::ExtensionValue.new(1, factory.dump(x: 1, y: 2, z: 3)),
+          3,
+        ]
+      end
+    end
   end
 
   describe 'the special treatment of symbols with ext type' do

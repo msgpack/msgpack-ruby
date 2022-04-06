@@ -182,6 +182,7 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     FACTORY(self, fc);
 
     int ext_type;
+    int flags = 0;
     VALUE ext_module;
     VALUE options = Qnil;
     VALUE packer_arg, unpacker_arg;
@@ -241,22 +242,29 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         }
     }
 
-    if (ext_module == rb_cSymbol) {
+    if(ext_module == rb_cSymbol) {
         fc->has_symbol_ext_type = true;
-        if(RB_TEST(options) && RB_TEST(rb_hash_aref(options, ID2SYM(rb_intern("optimized_symbols_parsing"))))) {
+        if(RTEST(options) && RTEST(rb_hash_aref(options, ID2SYM(rb_intern("optimized_symbols_parsing"))))) {
             fc->optimized_symbol_ext_type = true;
         }
     }
 
-    if (options != Qnil && RB_TEST(rb_hash_aref(options, ID2SYM(rb_intern("oversized_integer_extension"))))) {
-        if(ext_module == rb_cInteger) {
-            fc->has_bigint_ext_type = true;
-        } else {
-            rb_raise(rb_eArgError, "oversized_integer_extension: true is only for Integer class");
+    if(RTEST(options)) {
+        if(RTEST(rb_hash_aref(options, ID2SYM(rb_intern("oversized_integer_extension"))))) {
+            if(ext_module == rb_cInteger) {
+                fc->has_bigint_ext_type = true;
+            } else {
+                rb_raise(rb_eArgError, "oversized_integer_extension: true is only for Integer class");
+            }
+        }
+
+        if(RTEST(rb_hash_aref(options, ID2SYM(rb_intern("recursive"))))) {
+            flags |= MSGPACK_EXT_RECURSIVE;
         }
     }
-    msgpack_packer_ext_registry_put(&fc->pkrg, ext_module, ext_type, packer_proc, packer_arg);
-    msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_module, ext_type, unpacker_proc, unpacker_arg);
+
+    msgpack_packer_ext_registry_put(&fc->pkrg, ext_module, ext_type, flags, packer_proc, packer_arg);
+    msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_module, ext_type, flags, unpacker_proc, unpacker_arg);
 
     return Qnil;
 }

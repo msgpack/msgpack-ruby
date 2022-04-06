@@ -166,14 +166,17 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
         return object_complete_symbol(uk, rb_str_intern(str));
     }
 
-    VALUE proc = msgpack_unpacker_ext_registry_lookup(uk->ext_registry, ext_type);
+    int ext_flags;
+    VALUE proc = msgpack_unpacker_ext_registry_lookup(uk->ext_registry, ext_type, &ext_flags);
+
     if(proc != Qnil) {
-        VALUE obj = rb_funcall(proc, s_call, 1, str);
+        VALUE obj;
+        obj = rb_funcall(proc, s_call, 1, str == Qnil ? rb_str_buf_new(0) : str);
         return object_complete(uk, obj);
     }
 
     if(uk->allow_unknown_ext) {
-        VALUE obj = MessagePack_ExtensionValue_new(ext_type, str);
+        VALUE obj = MessagePack_ExtensionValue_new(ext_type, str == Qnil ? rb_str_buf_new(0) : str);
         return object_complete(uk, obj);
     }
 
@@ -283,6 +286,23 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
 {
     /* assuming uk->reading_raw == Qnil */
 
+    int ext_flags;
+    VALUE proc;
+
+    if(!(raw_type == RAW_TYPE_STRING || raw_type == RAW_TYPE_BINARY)) {
+        proc = msgpack_unpacker_ext_registry_lookup(uk->ext_registry, raw_type, &ext_flags);
+        if(proc != Qnil && ext_flags & MSGPACK_EXT_RECURSIVE) {
+            VALUE obj;
+            uk->last_object = Qnil;
+            reset_head_byte(uk);
+            size_t ext_size = uk->reading_raw_remaining;
+            uk->reading_raw_remaining = 0;
+            obj = rb_funcall(proc, s_call, 1, uk->buffer.owner);
+            msgpack_buffer_skip(UNPACKER_BUFFER_(uk), ext_size);
+            return object_complete(uk, obj);
+        }
+    }
+
     /* try optimized read */
     size_t length = uk->reading_raw_remaining;
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
@@ -371,7 +391,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint8_t length = cb->u8;
                 int ext_type = (signed char) cb->buffer[1];
                 if(length == 0) {
-                    return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
+                    return object_complete_ext(uk, ext_type, Qnil);
                 }
                 uk->reading_raw_remaining = length;
                 return read_raw_body_begin(uk, ext_type);
@@ -383,7 +403,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint16_t length = _msgpack_be16(cb->u16);
                 int ext_type = (signed char) cb->buffer[2];
                 if(length == 0) {
-                    return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
+                    return object_complete_ext(uk, ext_type, Qnil);
                 }
                 uk->reading_raw_remaining = length;
                 return read_raw_body_begin(uk, ext_type);
@@ -395,7 +415,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint32_t length = _msgpack_be32(cb->u32);
                 int ext_type = (signed char) cb->buffer[4];
                 if(length == 0) {
-                    return object_complete_ext(uk, ext_type, rb_str_buf_new(0));
+                    return object_complete_ext(uk, ext_type, Qnil);
                 }
                 uk->reading_raw_remaining = length;
                 return read_raw_body_begin(uk, ext_type);

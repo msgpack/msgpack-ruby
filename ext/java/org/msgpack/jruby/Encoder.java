@@ -38,13 +38,16 @@ public class Encoder {
   private final Encoding utf8Encoding;
   private final boolean compatibilityMode;
   private final ExtensionRegistry registry;
+  private final Packer packer;
 
   public boolean hasSymbolExtType;
   private boolean hasBigintExtType;
+  private boolean recursiveExtension;
 
   private ByteBuffer buffer;
 
-  public Encoder(Ruby runtime, boolean compatibilityMode, ExtensionRegistry registry, boolean hasSymbolExtType, boolean hasBigintExtType) {
+  public Encoder(Ruby runtime, Packer packer, boolean compatibilityMode, ExtensionRegistry registry, boolean hasSymbolExtType, boolean hasBigintExtType) {
+    this.packer = packer;
     this.runtime = runtime;
     this.buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
@@ -68,9 +71,17 @@ public class Encoder {
   }
 
   private IRubyObject readRubyString() {
-    IRubyObject str = runtime.newString(new ByteList(buffer.array(), 0, buffer.position(), binaryEncoding, false));
-    buffer.clear();
-    return str;
+    if (recursiveExtension) {
+      // If recursiveExtension is true, it means we re-entered encode, so we MUST NOT flush the buffer.
+	  // Instead we return an empty string to act as a null object for the caller. The buffer will actually
+	  // be flushed once we're done serializing the recursive extension.
+	  // All other method that consume the buffer should do so through readRubyString or implement the same logic.
+      return runtime.newString();
+    } else {
+      IRubyObject str = runtime.newString(new ByteList(buffer.array(), 0, buffer.position(), binaryEncoding, false));
+      buffer.clear();
+      return str;
+    }
   }
 
   public IRubyObject encode(IRubyObject object) {
@@ -396,11 +407,30 @@ public class Encoder {
 
   private boolean tryAppendWithExtTypeLookup(IRubyObject object) {
     if (registry != null) {
-      IRubyObject[] pair = registry.lookupPackerForObject(object);
-      if (pair != null) {
-        RubyString bytes = pair[0].callMethod(runtime.getCurrentContext(), "call", object).asString();
-        int type = (int) ((RubyFixnum) pair[1]).getLongValue();
-        appendExt(type, bytes.getByteList());
+      ExtensionRegistry.ExtensionEntry entry = registry.lookupExtensionForObject(object);
+      if (entry != null) {
+        IRubyObject proc = entry.getPackerProc();
+        int type = entry.getTypeId();
+
+        if (entry.isRecursive()) {
+          ByteBuffer oldBuffer = buffer;
+          buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
+          recursiveExtension = true;
+
+          ByteList payload;
+          try {
+            IRubyObject args[] = { object, packer };
+            proc.callMethod(runtime.getCurrentContext(), "call", args);
+            payload = new ByteList(buffer.array(), 0, buffer.position(), binaryEncoding, false);
+          } finally {
+            recursiveExtension = false;
+            buffer = oldBuffer;
+          }
+          appendExt(type, payload);
+        } else {
+          RubyString bytes = proc.callMethod(runtime.getCurrentContext(), "call", object).asString();
+          appendExt(type, bytes.getByteList());
+        }
         return true;
       }
     }

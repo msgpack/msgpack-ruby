@@ -70,7 +70,7 @@ public class Packer extends RubyObject {
         // registry is already initialized (and somthing might be registered) when newPacker from Factory
         this.registry = new ExtensionRegistry();
     }
-    this.encoder = new Encoder(runtime, compatibilityMode, registry, hasSymbolExtType, hasBigintExtType);
+    this.encoder = new Encoder(runtime, this, compatibilityMode, registry, hasSymbolExtType, hasBigintExtType);
     this.buffer = new Buffer(runtime, runtime.getModule("MessagePack").getClass("Buffer"));
     this.buffer.initialize(ctx, args);
     this.binaryEncoding = runtime.getEncodingService().getAscii8bitEncoding();
@@ -124,7 +124,7 @@ public class Packer extends RubyObject {
     }
     RubyModule extModule = (RubyModule) mod;
 
-    registry.put(extModule, (int) typeId, proc, arg, null, null);
+    registry.put(extModule, (int) typeId, false, proc, arg, null, null);
 
     if (extModule == runtime.getSymbol()) {
       encoder.hasSymbolExtType = true;

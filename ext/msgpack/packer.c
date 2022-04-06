@@ -121,19 +121,56 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
 #endif
 }
 
+struct msgpack_call_proc_args_t;
+typedef struct msgpack_call_proc_args_t msgpack_call_proc_args_t;
+struct msgpack_call_proc_args_t {
+    VALUE proc;
+    VALUE arg;
+    VALUE packer;
+};
+
+VALUE msgpack_packer_try_calling_proc(VALUE value)
+{
+    msgpack_call_proc_args_t *args = (msgpack_call_proc_args_t *)value;
+    return rb_funcall(args->proc, s_call, 2, args->arg, args->packer);
+}
+
 bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v)
 {
-    int ext_type;
+    int ext_type, ext_flags;
 
-    VALUE proc = msgpack_packer_ext_registry_lookup(&pk->ext_registry, v, &ext_type);
+    VALUE proc = msgpack_packer_ext_registry_lookup(&pk->ext_registry, v, &ext_type, &ext_flags);
 
-    if(proc != Qnil) {
+    if(proc == Qnil) {
+        return false;
+    }
+
+    if(ext_flags & MSGPACK_EXT_RECURSIVE) {
+        msgpack_buffer_t parent_buffer = pk->buffer;
+        msgpack_buffer_init(PACKER_BUFFER_(pk));
+
+        int exception_occured = 0;
+        msgpack_call_proc_args_t args = { proc, v, pk->to_msgpack_arg };
+        rb_protect(msgpack_packer_try_calling_proc, (VALUE)&args, &exception_occured);
+
+        if (exception_occured) {
+            msgpack_buffer_destroy(PACKER_BUFFER_(pk));
+            pk->buffer = parent_buffer;
+            rb_jump_tag(exception_occured); // re-raise the exception
+        } else {
+            VALUE payload = msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
+            StringValue(payload);
+            msgpack_buffer_destroy(PACKER_BUFFER_(pk));
+            pk->buffer = parent_buffer;
+            msgpack_packer_write_ext(pk, ext_type, payload);
+        }
+    } else {
         VALUE payload = rb_funcall(proc, s_call, 1, v);
         StringValue(payload);
         msgpack_packer_write_ext(pk, ext_type, payload);
-        return true;
     }
-    return false;
+
+    return true;
 }
 
 void msgpack_packer_write_other_value(msgpack_packer_t* pk, VALUE v)

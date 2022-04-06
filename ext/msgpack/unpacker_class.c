@@ -147,6 +147,7 @@ NORETURN(static void raise_unpacker_error(int r))
     case PRIMITIVE_UNEXPECTED_TYPE:
         rb_raise(eUnexpectedTypeError, "unexpected type");
     case PRIMITIVE_UNEXPECTED_EXT_TYPE:
+    // rb_bug("unexpected extension type");
         rb_raise(eUnknownExtTypeError, "unexpected extension type");
     default:
         rb_raise(eUnpackError, "logically unknown error %d", r);
@@ -365,7 +366,7 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
-    msgpack_unpacker_ext_registry_put(&uk->ext_registry, ext_module, ext_type, proc, arg);
+    msgpack_unpacker_ext_registry_put(&uk->ext_registry, ext_module, ext_type, 0, proc, arg);
 
     return Qnil;
 }

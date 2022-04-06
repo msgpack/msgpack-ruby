@@ -21,6 +21,8 @@
 #include "compat.h"
 #include "ruby.h"
 
+#define MSGPACK_EXT_RECURSIVE 0b0001
+
 struct msgpack_packer_ext_registry_t;
 typedef struct msgpack_packer_ext_registry_t msgpack_packer_ext_registry_t;
 
@@ -44,7 +46,7 @@ void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst);
 
 VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_module, int ext_type, VALUE proc, VALUE arg);
+        VALUE ext_module, int ext_type, int flags, VALUE proc, VALUE arg);
 
 static int msgpack_packer_ext_find_superclass(VALUE key, VALUE value, VALUE arg)
 {
@@ -60,12 +62,13 @@ static int msgpack_packer_ext_find_superclass(VALUE key, VALUE value, VALUE arg)
 }
 
 static inline VALUE msgpack_packer_ext_registry_fetch(msgpack_packer_ext_registry_t* pkrg,
-        VALUE lookup_class, int* ext_type_result)
+        VALUE lookup_class, int* ext_type_result, int* ext_flags_result)
 {
     // fetch lookup_class from hash, which is a hash to register classes
     VALUE type = rb_hash_lookup(pkrg->hash, lookup_class);
     if(type != Qnil) {
         *ext_type_result = FIX2INT(rb_ary_entry(type, 0));
+        *ext_flags_result = FIX2INT(rb_ary_entry(type, 3));
         return rb_ary_entry(type, 1);
     }
 
@@ -74,6 +77,7 @@ static inline VALUE msgpack_packer_ext_registry_fetch(msgpack_packer_ext_registr
         VALUE type_inht = rb_hash_lookup(pkrg->cache, lookup_class);
         if(type_inht != Qnil) {
             *ext_type_result = FIX2INT(rb_ary_entry(type_inht, 0));
+            *ext_flags_result = FIX2INT(rb_ary_entry(type_inht, 3));
             return rb_ary_entry(type_inht, 1);
         }
     }
@@ -82,7 +86,7 @@ static inline VALUE msgpack_packer_ext_registry_fetch(msgpack_packer_ext_registr
 }
 
 static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_registry_t* pkrg,
-        VALUE instance, int* ext_type_result)
+        VALUE instance, int* ext_type_result, int* ext_flags_result)
 {
     VALUE type;
 
@@ -97,7 +101,7 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
     * `rb_class_of` returns the singleton_class if the object has one, or the "real class" otherwise.
     */
     VALUE lookup_class = rb_class_of(instance);
-    type = msgpack_packer_ext_registry_fetch(pkrg, lookup_class, ext_type_result);
+    type = msgpack_packer_ext_registry_fetch(pkrg, lookup_class, ext_type_result, ext_flags_result);
     if(type != Qnil) {
         return type;
     }
@@ -108,7 +112,7 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
      */
     VALUE real_class = rb_obj_class(instance);
     if(lookup_class != real_class) {
-        type = msgpack_packer_ext_registry_fetch(pkrg, real_class, ext_type_result);
+        type = msgpack_packer_ext_registry_fetch(pkrg, real_class, ext_type_result, ext_flags_result);
         if(type != Qnil) {
             return type;
         }
@@ -130,6 +134,7 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
         }
         rb_hash_aset(pkrg->cache, lookup_class, superclass_type);
         *ext_type_result = FIX2INT(rb_ary_entry(superclass_type, 0));
+        *ext_flags_result = FIX2INT(rb_ary_entry(superclass_type, 3));
         return rb_ary_entry(superclass_type, 1);
     }
 

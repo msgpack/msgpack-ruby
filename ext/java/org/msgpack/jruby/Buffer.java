@@ -224,4 +224,10 @@ public class Buffer extends RubyObject {
   public IRubyObject writeTo(ThreadContext ctx, IRubyObject io) {
     return io.callMethod(ctx, "write", readCommon(ctx, null, false));
   }
+
+  public ByteList getBytes() {
+    byte[] bytes = new byte[rawSize()];
+    buffer.get(bytes);
+    return new ByteList(bytes, binaryEncoding);
+  }
 }

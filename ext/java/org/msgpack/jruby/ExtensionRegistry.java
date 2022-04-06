@@ -59,59 +59,46 @@ public class ExtensionRegistry {
     return hash;
   }
 
-  public void put(RubyModule mod, int typeId, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
-    ExtensionEntry entry = new ExtensionEntry(mod, typeId, packerProc, packerArg, unpackerProc, unpackerArg);
+  public void put(RubyModule mod, int typeId, boolean recursive, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
+    ExtensionEntry entry = new ExtensionEntry(mod, typeId, recursive, packerProc, packerArg, unpackerProc, unpackerArg);
     extensionsByModule.put(mod, entry);
     extensionsByTypeId[typeId + 128] = entry;
     extensionsByAncestor.clear();
   }
 
-  public IRubyObject lookupUnpackerByTypeId(int typeId) {
+  public ExtensionEntry lookupExtensionByTypeId(int typeId) {
     ExtensionEntry e = extensionsByTypeId[typeId + 128];
     if (e != null && e.hasUnpacker()) {
-      return e.getUnpackerProc();
-    } else {
-      return null;
+      return e;
     }
+    return null;
   }
 
-  public IRubyObject[] lookupPackerForObject(IRubyObject object) {
+  public ExtensionEntry lookupExtensionForObject(IRubyObject object) {
     RubyModule lookupClass = null;
-    IRubyObject[] pair;
+    ExtensionEntry entry = null;
     /*
      * Objects of type Integer (Fixnum, Bignum), Float, Symbol and frozen
      * String have no singleton class and raise a TypeError when trying to get
      * it.
      */
     lookupClass = object.getMetaClass();
-    pair = fetchEntryByModule(lookupClass);
-    if (pair != null) {
-      return pair;
+    entry = extensionsByModule.get(lookupClass);
+    if (entry != null && entry.hasPacker()) {
+      return entry;
     }
 
     RubyModule realClass = object.getType();
     if (realClass != lookupClass) {
-      pair = fetchEntryByModule(realClass);
-      if (pair != null) {
-        return pair;
+      entry = extensionsByModule.get(realClass);
+      if (entry != null && entry.hasPacker()) {
+        return entry;
       }
     }
 
-    ExtensionEntry e = findEntryByModuleOrAncestor(lookupClass);
-    if (e != null && e.hasPacker()) {
-      extensionsByAncestor.put(e.getExtensionModule(), e);
-      return e.toPackerProcTypeIdPair(lookupClass.getRuntime().getCurrentContext());
-    }
-    return null;
-  }
-
-  private IRubyObject[] fetchEntryByModule(final RubyModule mod) {
-    ExtensionEntry e = extensionsByModule.get(mod);
-    if (e == null) {
-      e = extensionsByAncestor.get(mod);
-    }
-    if (e != null && e.hasPacker()) {
-      return e.toPackerProcTypeIdPair(mod.getRuntime().getCurrentContext());
+    entry = findEntryByModuleOrAncestor(lookupClass);
+    if (entry != null && entry.hasPacker()) {
+      return entry;
     }
     return null;
   }
@@ -127,17 +114,19 @@ public class ExtensionRegistry {
     return null;
   }
 
-  private static class ExtensionEntry {
+  public static class ExtensionEntry {
     private final RubyModule mod;
     private final int typeId;
+    private final boolean recursive;
     private final IRubyObject packerProc;
     private final IRubyObject packerArg;
     private final IRubyObject unpackerProc;
     private final IRubyObject unpackerArg;
 
-    public ExtensionEntry(RubyModule mod, int typeId, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
+    public ExtensionEntry(RubyModule mod, int typeId, boolean recursive, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
       this.mod = mod;
       this.typeId = typeId;
+      this.recursive = recursive;
       this.packerProc = packerProc;
       this.packerArg = packerArg;
       this.unpackerProc = unpackerProc;
@@ -150,6 +139,10 @@ public class ExtensionRegistry {
 
     public int getTypeId() {
       return typeId;
+    }
+
+    public boolean isRecursive() {
+      return recursive;
     }
 
     public boolean hasPacker() {

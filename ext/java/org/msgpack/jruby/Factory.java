@@ -12,6 +12,8 @@ import org.jruby.RubyInteger;
 import org.jruby.RubyFixnum;
 import org.jruby.RubyString;
 import org.jruby.RubySymbol;
+import org.jruby.RubyProc;
+import org.jruby.RubyMethod;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
@@ -130,12 +132,22 @@ public class Factory extends RubyObject {
     if (unpackerArg != null) {
       if (unpackerArg instanceof RubyString || unpackerArg instanceof RubySymbol) {
         unpackerProc = extModule.method(unpackerArg.callMethod(ctx, "to_sym"));
+      } else if (unpackerArg instanceof RubyProc || unpackerArg instanceof RubyMethod) {
+        unpackerProc = unpackerArg;
       } else {
         unpackerProc = unpackerArg.callMethod(ctx, "method", runtime.newSymbol("call"));
       }
     }
 
-    extensionRegistry.put(extModule, (int) typeId, packerProc, packerArg, unpackerProc, unpackerArg);
+    boolean recursive = false;
+    if (options != null) {
+      IRubyObject recursiveExtensionArg = options.fastARef(runtime.newSymbol("recursive"));
+      if (recursiveExtensionArg != null && recursiveExtensionArg.isTrue()) {
+        recursive = true;
+      }
+    }
+
+    extensionRegistry.put(extModule, (int) typeId, recursive, packerProc, packerArg, unpackerProc, unpackerArg);
 
     if (extModule == runtime.getSymbol()) {
       hasSymbolExtType = true;

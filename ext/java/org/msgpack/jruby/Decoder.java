@@ -14,6 +14,7 @@ import org.jruby.RubyBignum;
 import org.jruby.RubyString;
 import org.jruby.RubyArray;
 import org.jruby.RubyHash;
+import org.jruby.RubyInteger;
 import org.jruby.exceptions.RaiseException;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.util.ByteList;
@@ -35,7 +36,7 @@ public class Decoder implements Iterator<IRubyObject> {
   private final RubyClass unexpectedTypeErrorClass;
   private final RubyClass unknownExtTypeErrorClass;
 
-  private ExtensionRegistry registry;
+  private Unpacker unpacker;
   private ByteBuffer buffer;
   private boolean symbolizeKeys;
   private boolean freeze;
@@ -45,29 +46,29 @@ public class Decoder implements Iterator<IRubyObject> {
     this(runtime, null, new byte[] {}, 0, 0, false, false, false);
   }
 
-  public Decoder(Ruby runtime, ExtensionRegistry registry) {
-    this(runtime, registry, new byte[] {}, 0, 0, false, false, false);
+  public Decoder(Ruby runtime, Unpacker unpacker) {
+    this(runtime, unpacker, new byte[] {}, 0, 0, false, false, false);
   }
 
   public Decoder(Ruby runtime, byte[] bytes) {
     this(runtime, null, bytes, 0, bytes.length, false, false, false);
   }
 
-  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes) {
-    this(runtime, registry, bytes, 0, bytes.length, false, false, false);
+  public Decoder(Ruby runtime, Unpacker unpacker, byte[] bytes) {
+    this(runtime, unpacker, bytes, 0, bytes.length, false, false, false);
   }
 
-  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, boolean symbolizeKeys, boolean freeze, boolean allowUnknownExt) {
-    this(runtime, registry, bytes, 0, bytes.length, symbolizeKeys, freeze, allowUnknownExt);
+  public Decoder(Ruby runtime, Unpacker unpacker, byte[] bytes, boolean symbolizeKeys, boolean freeze, boolean allowUnknownExt) {
+    this(runtime, unpacker, bytes, 0, bytes.length, symbolizeKeys, freeze, allowUnknownExt);
   }
 
-  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length) {
-    this(runtime, registry, bytes, offset, length, false, false, false);
+  public Decoder(Ruby runtime, Unpacker unpacker, byte[] bytes, int offset, int length) {
+    this(runtime, unpacker, bytes, offset, length, false, false, false);
   }
 
-  public Decoder(Ruby runtime, ExtensionRegistry registry, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean freeze, boolean allowUnknownExt) {
+  public Decoder(Ruby runtime, Unpacker unpacker, byte[] bytes, int offset, int length, boolean symbolizeKeys, boolean freeze, boolean allowUnknownExt) {
     this.runtime = runtime;
-    this.registry = registry;
+    this.unpacker = unpacker;
     this.symbolizeKeys = symbolizeKeys;
     this.freeze = freeze;
     this.allowUnknownExt = allowUnknownExt;
@@ -154,18 +155,21 @@ public class Decoder implements Iterator<IRubyObject> {
 
   private IRubyObject consumeExtension(int size) {
     int type = buffer.get();
-    byte[] payload = readBytes(size);
-
-    if (registry != null) {
-      IRubyObject proc = registry.lookupUnpackerByTypeId(type);
-      if (proc != null) {
-        ByteList byteList = new ByteList(payload, runtime.getEncodingService().getAscii8bitEncoding());
-        return proc.callMethod(runtime.getCurrentContext(), "call", runtime.newString(byteList));
+    if (unpacker != null) {
+      ExtensionRegistry.ExtensionEntry entry = unpacker.lookupExtensionByTypeId(type);
+      if (entry != null) {
+        IRubyObject proc = entry.getUnpackerProc();
+        if (entry.isRecursive()) {
+          return proc.callMethod(runtime.getCurrentContext(), "call", unpacker);
+        } else {
+          ByteList byteList = new ByteList(readBytes(size), runtime.getEncodingService().getAscii8bitEncoding());
+          return proc.callMethod(runtime.getCurrentContext(), "call", runtime.newString(byteList));
+        }
       }
     }
 
     if (this.allowUnknownExt) {
-      return ExtensionValue.newExtensionValue(runtime, type, payload);
+      return ExtensionValue.newExtensionValue(runtime, type, readBytes(size));
     }
 
     throw runtime.newRaiseException(unknownExtTypeErrorClass, "unexpected extension type");
