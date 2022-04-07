@@ -1,3 +1,7 @@
+2022-04-07 version 1.5.1:
+
+* Fix bug about packing/unpacking ext type objects with the recursive option
+
 2022-04-06 version 1.5.0:
 
 * Add recursive option on Factory#register_type to operate Packer/Unpacker manually
