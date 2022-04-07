@@ -415,6 +415,7 @@ public class Encoder {
         if (entry.isRecursive()) {
           ByteBuffer oldBuffer = buffer;
           buffer = ByteBuffer.allocate(CACHE_LINE_SIZE - ARRAY_HEADER_SIZE);
+          boolean previousRecursiveExtension = recursiveExtension;
           recursiveExtension = true;
 
           ByteList payload;
@@ -423,7 +424,7 @@ public class Encoder {
             proc.callMethod(runtime.getCurrentContext(), "call", args);
             payload = new ByteList(buffer.array(), 0, buffer.position(), binaryEncoding, false);
           } finally {
-            recursiveExtension = false;
+            recursiveExtension = previousRecursiveExtension;
             buffer = oldBuffer;
           }
           appendExt(type, payload);

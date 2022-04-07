@@ -1,3 +1,4 @@
+require "set"
 
 if ENV['SIMPLE_COV']
   require 'simplecov'

@@ -52,6 +52,16 @@ void msgpack_unpacker_static_destroy()
 
 #define HEAD_BYTE_REQUIRED 0xc1
 
+static inline msgpack_unpacker_stack_t* _msgpack_unpacker_new_stack(void) {
+#ifdef UNPACKER_STACK_RMEM
+    return msgpack_rmem_alloc(&s_stack_rmem);
+    /*memset(uk->stack, 0, MSGPACK_UNPACKER_STACK_CAPACITY);*/
+#else
+    /*uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_t));*/
+    return xmalloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_t));
+#endif
+}
+
 msgpack_unpacker_t* _msgpack_unpacker_new(void)
 {
     msgpack_unpacker_t* uk = ZALLOC_N(msgpack_unpacker_t, 1);
@@ -63,26 +73,23 @@ msgpack_unpacker_t* _msgpack_unpacker_new(void)
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
 
-#ifdef UNPACKER_STACK_RMEM
-    uk->stack = msgpack_rmem_alloc(&s_stack_rmem);
-    /*memset(uk->stack, 0, MSGPACK_UNPACKER_STACK_CAPACITY);*/
-#else
-    /*uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_t));*/
-    uk->stack = xmalloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_t));
-#endif
+    uk->stack = _msgpack_unpacker_new_stack();
     uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
 
     return uk;
 }
 
+static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {
+    #ifdef UNPACKER_STACK_RMEM
+        msgpack_rmem_free(&s_stack_rmem, stack);
+    #else
+        xfree(stack);
+    #endif
+}
+
 void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 {
-#ifdef UNPACKER_STACK_RMEM
-    msgpack_rmem_free(&s_stack_rmem, uk->stack);
-#else
-    xfree(uk->stack);
-#endif
-
+    _msgpack_unpacker_free_stack(uk->stack);
     msgpack_buffer_destroy(UNPACKER_BUFFER_(uk));
 }
 
@@ -297,7 +304,22 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             reset_head_byte(uk);
             size_t ext_size = uk->reading_raw_remaining;
             uk->reading_raw_remaining = 0;
+
+            msgpack_unpacker_stack_t* stack = uk->stack;
+            size_t stack_depth = uk->stack_depth;
+            size_t stack_capacity = uk->stack_capacity;
+
+            uk->stack = _msgpack_unpacker_new_stack();
+            uk->stack_depth = 0;
+            uk->stack_capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
+
             obj = rb_funcall(proc, s_call, 1, uk->buffer.owner);
+
+            _msgpack_unpacker_free_stack(uk->stack);
+            uk->stack = stack;
+            uk->stack_depth = stack_depth;
+            uk->stack_capacity = stack_capacity;
+
             msgpack_buffer_skip(UNPACKER_BUFFER_(uk), ext_size);
             return object_complete(uk, obj);
         }
