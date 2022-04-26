@@ -3,6 +3,7 @@ require 'mkmf'
 have_header("ruby/st.h")
 have_header("st.h")
 have_func("rb_enc_interned_str", "ruby.h")
+have_func("rb_hash_new_capa", "ruby.h")
 
 unless RUBY_PLATFORM.include? 'mswin'
   $CFLAGS << %[ -I.. -Wall -O3 -g -std=gnu99]
