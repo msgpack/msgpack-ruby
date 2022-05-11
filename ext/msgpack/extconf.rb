@@ -19,6 +19,11 @@ if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
   $CFLAGS << %[ -DDISABLE_RMEM]
 end
 
+if RUBY_VERSION.start_with?('3.0.')
+  # https://bugs.ruby-lang.org/issues/18772
+  $CFLAGS << ' -DRB_ENC_INTERNED_STR_NULL_CHECK=1 '
+end
+
 # checking if Hash#[]= (rb_hash_aset) dedupes string keys
 h = {}
 x = {}

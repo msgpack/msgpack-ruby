@@ -373,9 +373,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
 
     SWITCH_RANGE(b, 0xa0, 0xbf)  // FixRaw / fixstr
         int count = b & 0x1f;
-        if(count == 0) {
-            return object_complete(uk, rb_utf8_str_new_static("", 0));
-        }
         /* read_raw_body_begin sets uk->reading_raw */
         uk->reading_raw_remaining = count;
         return read_raw_body_begin(uk, RAW_TYPE_STRING);
@@ -558,9 +555,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
                 uint8_t count = cb->u8;
-                if(count == 0) {
-                    return object_complete(uk, rb_utf8_str_new_static("", 0));
-                }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_STRING);
@@ -570,9 +564,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint16_t count = _msgpack_be16(cb->u16);
-                if(count == 0) {
-                    return object_complete(uk, rb_utf8_str_new_static("", 0));
-                }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_STRING);
@@ -582,9 +573,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
-                if(count == 0) {
-                    return object_complete(uk, rb_utf8_str_new_static("", 0));
-                }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_STRING);
@@ -594,9 +582,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
                 uint8_t count = cb->u8;
-                if(count == 0) {
-                    return object_complete(uk, rb_str_new_static("", 0));
-                }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_BINARY);
@@ -606,9 +591,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
                 uint16_t count = _msgpack_be16(cb->u16);
-                if(count == 0) {
-                    return object_complete(uk, rb_str_new_static("", 0));
-                }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_BINARY);
@@ -618,9 +600,6 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t count = _msgpack_be32(cb->u32);
-                if(count == 0) {
-                    return object_complete(uk, rb_str_new_static("", 0));
-                }
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_BINARY);

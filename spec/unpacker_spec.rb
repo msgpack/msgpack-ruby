@@ -707,6 +707,18 @@ describe MessagePack::Unpacker do
         described_class.new(:freeze => true)
       end
 
+      if (-"test").equal?(-"test") # RUBY_VERSION >= "2.5"
+        it 'dedups strings' do
+          interned_str = -"test"
+          roundtrip = MessagePack.unpack(MessagePack.pack(interned_str), freeze: true)
+          expect(roundtrip).to be interned_str
+
+          interned_str = -""
+          roundtrip = MessagePack.unpack(MessagePack.pack(interned_str), freeze: true)
+          expect(roundtrip).to be interned_str
+        end
+      end
+
       it 'can freeze objects when using .unpack' do
         parsed_struct = MessagePack.unpack(buffer, freeze: true)
         parsed_struct.should == struct

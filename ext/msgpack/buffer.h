@@ -49,6 +49,10 @@
 
 #define NO_MAPPED_STRING ((VALUE)0)
 
+#ifndef RB_ENC_INTERNED_STR_NULL_CHECK
+#define RB_ENC_INTERNED_STR_NULL_CHECK 0
+#endif
+
 extern int msgpack_rb_encindex_utf8;
 extern int msgpack_rb_encindex_usascii;
 extern int msgpack_rb_encindex_ascii8bit;
@@ -456,7 +460,11 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
 
 #ifdef HAVE_RB_ENC_INTERNED_STR
     if (will_be_frozen) {
-        result = rb_enc_interned_str(b->read_buffer, length, utf8 ? rb_utf8_encoding() : rb_ascii8bit_encoding());
+        if (RB_ENC_INTERNED_STR_NULL_CHECK && length == 0) {
+            result = rb_enc_interned_str("", length, utf8 ? rb_utf8_encoding() : rb_ascii8bit_encoding());
+        } else {
+            result = rb_enc_interned_str(b->read_buffer, length, utf8 ? rb_utf8_encoding() : rb_ascii8bit_encoding());
+        }
     } else {
         if (utf8) {
             result = rb_utf8_str_new(b->read_buffer, length);
