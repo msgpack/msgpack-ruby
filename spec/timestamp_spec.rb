@@ -87,14 +87,14 @@ describe MessagePack::Timestamp do
 
     let(:time96_min) { Time.at(-2**63).utc }
     it 'is serialized into timestamp96' do
-      skip if IS_JRUBY # JRuby cannot handle numerics larger than long
+      skip if IS_JRUBY || IS_TRUFFLERUBY # JRuby and TruffleRuby both use underlying Java time classes that do not support |year| >= 1 billion
       expect(factory.pack(time96_min).size).to be 15
       expect(factory.unpack(factory.pack(time96_min)).utc).to eq(time96_min)
     end
 
     let(:time96_max) { Time.at(2**63 - 1).utc }
     it 'is serialized into timestamp96' do
-      skip if IS_JRUBY # JRuby cannot handle numerics larger than long
+      skip if IS_JRUBY || IS_TRUFFLERUBY # JRuby and TruffleRuby both use underlying Java time classes that do not support |year| >= 1 billion
       expect(factory.pack(time96_max).size).to be 15
       expect(factory.unpack(factory.pack(time96_max)).utc).to eq(time96_max)
     end
