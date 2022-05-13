@@ -38,7 +38,7 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # 'bundle install' and cache
-      - run: bundle exec rake
+      - run: bundle exec rake spec
 
   head-versions:
     continue-on-error: true
@@ -54,4 +54,4 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # 'bundle install' and cache
-      - run: bundle exec rake || echo "failed, but ignore it"
+      - run: bundle exec rake spec || echo "failed, but ignore it"
