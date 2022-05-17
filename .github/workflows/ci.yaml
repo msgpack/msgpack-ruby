@@ -25,12 +25,12 @@ jobs:
           bundler-cache: true # 'bundle install' and cache
       - run: bundle exec rake
 
-  jruby:
+  other:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu]
-        ruby: ['jruby-9.2.19.0', 'jruby-9.3.3.0']
+        ruby: ['jruby-9.2.19.0', 'jruby-9.3.3.0', 'truffleruby']
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v2
@@ -38,7 +38,7 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # 'bundle install' and cache
-      - run: bundle exec rake
+      - run: bundle exec rake spec
 
   head-versions:
     continue-on-error: true
@@ -46,7 +46,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu]
-        ruby: ['ruby-head', 'jruby-head', 'truffleruby']
+        ruby: ['ruby-head', 'jruby-head']
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v2
@@ -54,4 +54,4 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # 'bundle install' and cache
-      - run: bundle exec rake || echo "failed, but ignore it"
+      - run: bundle exec rake spec || echo "failed, but ignore it"
