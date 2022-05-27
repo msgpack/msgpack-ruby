@@ -1,3 +1,7 @@
+2022-05-27 version 1.5.2:
+
+* Fix bug about unpacking ext type objects with the recursive option
+
 2022-04-07 version 1.5.1:
 
 * Fix bug about packing/unpacking ext type objects with the recursive option
