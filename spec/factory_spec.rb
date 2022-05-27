@@ -422,6 +422,12 @@ describe MessagePack::Factory do
           MessagePack::ExtensionValue.new(1, factory.dump(x: 1, y: 2, z: 3)),
           3,
         ]
+
+        expect(factory.load(payload)).to be == [
+          1,
+          Point.new(1, 2, 3),
+          3,
+        ]
       end
 
       it 'can be nested' do

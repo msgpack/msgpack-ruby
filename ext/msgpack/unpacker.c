@@ -302,7 +302,6 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             VALUE obj;
             uk->last_object = Qnil;
             reset_head_byte(uk);
-            size_t ext_size = uk->reading_raw_remaining;
             uk->reading_raw_remaining = 0;
 
             msgpack_unpacker_stack_t* stack = uk->stack;
@@ -320,7 +319,6 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             uk->stack_depth = stack_depth;
             uk->stack_capacity = stack_capacity;
 
-            msgpack_buffer_skip(UNPACKER_BUFFER_(uk), ext_size);
             return object_complete(uk, obj);
         }
     }
