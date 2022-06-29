@@ -34,6 +34,13 @@ static ID s_call;
 static msgpack_rmem_t s_stack_rmem;
 #endif
 
+#if !defined(HAVE_RB_HASH_NEW_CAPA)
+static inline VALUE rb_hash_new_capa(long capa)
+{
+  return rb_hash_new();
+}
+#endif
+
 void msgpack_unpacker_static_init()
 {
 #ifdef UNPACKER_STACK_RMEM
@@ -390,7 +397,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         if(count == 0) {
             return object_complete(uk, rb_hash_new());
         }
-        return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new());
+        return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(count));
 
     SWITCH_RANGE(b, 0xc0, 0xdf)  // Variable
         switch(b) {
@@ -651,7 +658,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
-                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new());
+                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(count));
             }
 
         case 0xdf:  // map 32
@@ -661,7 +668,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
-                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new());
+                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(count));
             }
 
         default:
