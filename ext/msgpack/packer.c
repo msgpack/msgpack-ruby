@@ -18,24 +18,10 @@
 
 #include "packer.h"
 
-#ifdef RUBINIUS
-static ID s_to_iter;
-static ID s_next;
-static ID s_key;
-static ID s_value;
-#endif
-
 static ID s_call;
 
 void msgpack_packer_static_init()
 {
-#ifdef RUBINIUS
-    s_to_iter = rb_intern("to_iter");
-    s_next = rb_intern("next");
-    s_key = rb_intern("key");
-    s_value = rb_intern("value");
-#endif
-
     s_call = rb_intern("call");
 }
 
@@ -108,17 +94,7 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
     unsigned int len32 = (unsigned int)len;
     msgpack_packer_write_map_header(pk, len32);
 
-#ifdef RUBINIUS
-    VALUE iter = rb_funcall(v, s_to_iter, 0);
-    VALUE entry = Qnil;
-    while(RTEST(entry = rb_funcall(iter, s_next, 1, entry))) {
-        VALUE key = rb_funcall(entry, s_key, 0);
-        VALUE val = rb_funcall(entry, s_value, 0);
-        write_hash_foreach(key, val, (VALUE) pk);
-    }
-#else
     rb_hash_foreach(v, write_hash_foreach, (VALUE) pk);
-#endif
 }
 
 struct msgpack_call_proc_args_t;
