@@ -2,8 +2,8 @@ require 'mkmf'
 
 have_header("ruby/st.h")
 have_header("st.h")
-have_func("rb_enc_interned_str", "ruby.h")
-have_func("rb_hash_new_capa", "ruby.h")
+have_func("rb_enc_interned_str", "ruby.h") # Ruby 3.0+
+have_func("rb_hash_new_capa", "ruby.h") # Ruby 3.2+
 
 unless RUBY_PLATFORM.include? 'mswin'
   $CFLAGS << %[ -I.. -Wall -O3 -g -std=gnu99]
@@ -13,19 +13,12 @@ end
 #$CFLAGS << %[ -DDISABLE_BUFFER_READ_REFERENCE_OPTIMIZE]
 #$CFLAGS << %[ -DDISABLE_BUFFER_READ_TO_S_OPTIMIZE]
 
-if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'rbx'
-  # msgpack-ruby doesn't modify data came from RSTRING_PTR(str)
-  $CFLAGS << %[ -DRSTRING_NOT_MODIFIED]
-  # Rubinius C extensions don't grab GVL while rmem is not thread safe
-  $CFLAGS << %[ -DDISABLE_RMEM]
-end
-
 if RUBY_VERSION.start_with?('3.0.')
   # https://bugs.ruby-lang.org/issues/18772
   $CFLAGS << ' -DRB_ENC_INTERNED_STR_NULL_CHECK=1 '
 end
 
-# checking if Hash#[]= (rb_hash_aset) dedupes string keys
+# checking if Hash#[]= (rb_hash_aset) dedupes string keys (Ruby 2.6+)
 h = {}
 x = {}
 r = rand.to_s
@@ -38,7 +31,7 @@ else
 end
 
 
-# checking if String#-@ (str_uminus) dedupes... '
+# checking if String#-@ (str_uminus) dedupes... ' (Ruby 2.5+)
 begin
   a = -(%w(t e s t).join)
   b = -(%w(t e s t).join)
@@ -51,7 +44,7 @@ rescue NoMethodError
   $CFLAGS << ' -DSTR_UMINUS_DEDUPE=0 '
 end
 
-# checking if String#-@ (str_uminus) directly interns frozen strings... '
+# checking if String#-@ (str_uminus) directly interns frozen strings... ' (Ruby 3.0+)
 begin
   s = rand.to_s.freeze
   if (-s).equal?(s) && (-s.dup).equal?(s)
@@ -68,4 +61,3 @@ if warnflags = CONFIG['warnflags']
 end
 
 create_makefile('msgpack/msgpack')
-
