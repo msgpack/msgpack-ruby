@@ -450,4 +450,3 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 
     rb_define_method(cMessagePack_Unpacker, "full_unpack", Unpacker_full_unpack, 0);
 }
-
