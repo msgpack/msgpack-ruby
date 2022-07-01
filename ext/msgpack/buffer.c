@@ -300,30 +300,6 @@ static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
     }
 }
 
-static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE string)
-{
-    VALUE mapped_string = rb_str_dup(string);
-    ENCODING_SET(mapped_string, msgpack_rb_encindex_ascii8bit);
-
-    _msgpack_buffer_add_new_chunk(b);
-
-    char* data = RSTRING_PTR(mapped_string);
-    size_t length = RSTRING_LEN(mapped_string);
-
-    b->tail.first = (char*) data;
-    b->tail.last = (char*) data + length;
-    b->tail.mapped_string = mapped_string;
-    b->tail.mem = NULL;
-
-    /* msgpack_buffer_writable_size should return 0 for mapped chunk */
-    b->tail_buffer_end = b->tail.last;
-
-    /* consider read_buffer */
-    if(b->head == &b->tail) {
-        b->read_buffer = b->tail.first;
-    }
-}
-
 void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string)
 {
     size_t length = RSTRING_LEN(string);
