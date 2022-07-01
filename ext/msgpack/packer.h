@@ -408,13 +408,7 @@ static inline bool msgpack_packer_is_utf8_compat_string(VALUE v, int encindex)
 {
     return encindex == msgpack_rb_encindex_utf8
         || encindex == msgpack_rb_encindex_usascii
-#ifdef ENC_CODERANGE_ASCIIONLY
-        /* Because ENC_CODERANGE_ASCIIONLY does not scan string, it may return ENC_CODERANGE_UNKNOWN unlike */
-        /* rb_enc_str_asciionly_p. It is always faster than rb_str_encode if it is available. */
-        /* Very old Rubinius (< v1.3.1) doesn't have ENC_CODERANGE_ASCIIONLY. */
-        || (rb_enc_asciicompat(rb_enc_from_index(encindex)) && ENC_CODERANGE_ASCIIONLY(v))
-#endif
-        ;
+        || (rb_enc_asciicompat(rb_enc_from_index(encindex)) && ENC_CODERANGE_ASCIIONLY(v));
 }
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
