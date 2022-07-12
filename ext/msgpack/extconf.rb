@@ -6,7 +6,7 @@ have_func("rb_enc_interned_str", "ruby.h") # Ruby 3.0+
 have_func("rb_hash_new_capa", "ruby.h") # Ruby 3.2+
 
 unless RUBY_PLATFORM.include? 'mswin'
-  $CFLAGS << %[ -I.. -Wall -O3 -g -std=gnu99]
+  $CFLAGS << %[ -I.. -Wall -O3 #{RbConfig::CONFIG["debugflags"]} -std=gnu99]
 end
 #$CFLAGS << %[ -DDISABLE_RMEM]
 #$CFLAGS << %[ -DDISABLE_RMEM_REUSE_INTERNAL_FRAGMENT]
