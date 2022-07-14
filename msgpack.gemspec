@@ -27,4 +27,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec', ['~> 3.3']
   s.add_development_dependency 'yard'
   s.add_development_dependency 'json'
+  s.add_development_dependency 'benchmark-ips', ['~> 2.10.0']
 end
