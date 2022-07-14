@@ -47,44 +47,32 @@ extended_packer.register_type(0x00, Extended, :to_msgpack_ext)
 data_extended = extended_packer.pack(object_extended).to_s
 
 Benchmark.ips do |x|
-  x.report('pack-plain') do |n|
-    n.times do
-      MessagePack.pack(object_plain)
-    end
+  x.report('pack-plain') do
+    MessagePack.pack(object_plain)
   end
 
-  x.report('pack-structured') do |n|
-    n.times do
-      MessagePack.pack(object_structured)
-    end
+  x.report('pack-structured') do
+    MessagePack.pack(object_structured)
   end
 
-  x.report('pack-extended') do |n|
-    n.times do
-      packer = MessagePack::Packer.new
-      packer.register_type(0x00, Extended, :to_msgpack_ext)
-      packer.pack(object_extended).to_s
-    end
+  x.report('pack-extended') do
+    packer = MessagePack::Packer.new
+    packer.register_type(0x00, Extended, :to_msgpack_ext)
+    packer.pack(object_extended).to_s
   end
 
-  x.report('unpack-plain') do |n|
-    n.times do
-      MessagePack.unpack(data_plain)
-    end
+  x.report('unpack-plain') do
+    MessagePack.unpack(data_plain)
   end
 
-  x.report('unpack-structured') do |n|
-    n.times do
-      MessagePack.unpack(data_structured)
-    end
+  x.report('unpack-structured') do
+    MessagePack.unpack(data_structured)
   end
 
-  x.report('unpack-extended') do |n|
-    n.times do
-      unpacker = MessagePack::Unpacker.new
-      unpacker.register_type(0x00, Extended, :from_msgpack_ext)
-      unpacker.feed data_extended
-      unpacker.read
-    end
+  x.report('unpack-extended') do
+    unpacker = MessagePack::Unpacker.new
+    unpacker.register_type(0x00, Extended, :from_msgpack_ext)
+    unpacker.feed data_extended
+    unpacker.read
   end
 end
