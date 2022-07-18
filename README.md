@@ -51,7 +51,7 @@ Use `MessagePack.pack` or `to_msgpack`:
 require 'msgpack'
 msg = MessagePack.pack(obj)  # or
 msg = obj.to_msgpack
-File.write('mydata.msgpack', msg, mode: 'wb')
+File.binwrite('mydata.msgpack', msg)
 ```
 
 ### Streaming serialization
@@ -72,7 +72,7 @@ Use `MessagePack.unpack`:
 
 ```ruby
 require 'msgpack'
-msg = File.read('mydata.msgpack', mode: 'rb')
+msg = File.binread('mydata.msgpack')
 obj = MessagePack.unpack(msg)
 ```
 
