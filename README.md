@@ -40,7 +40,7 @@ or build msgpack-ruby and install:
 MessagePack for Ruby should run on x86, ARM, PowerPC, SPARC and other CPU architectures.
 
 And it works with MRI (CRuby) and Rubinius.
-Patches to improve portability is highly welcomed.
+Patches to improve portability are highly welcomed.
 
 
 ## Serializing objects
@@ -51,6 +51,7 @@ Use `MessagePack.pack` or `to_msgpack`:
 require 'msgpack'
 msg = MessagePack.pack(obj)  # or
 msg = obj.to_msgpack
+File.binwrite('mydata.msgpack', msg)
 ```
 
 ### Streaming serialization
@@ -71,6 +72,7 @@ Use `MessagePack.unpack`:
 
 ```ruby
 require 'msgpack'
+msg = File.binread('mydata.msgpack')
 obj = MessagePack.unpack(msg)
 ```
 
