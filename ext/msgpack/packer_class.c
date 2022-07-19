@@ -322,7 +322,7 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 {
     PACKER(self, pk);
     size_t sz = msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), io, s_write, true);
-    return ULONG2NUM(sz);
+    return SIZET2NUM(sz);
 }
 
 //static VALUE Packer_append(VALUE self, VALUE string_or_buffer)
