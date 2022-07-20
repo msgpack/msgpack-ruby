@@ -209,7 +209,7 @@ static VALUE Unpacker_read_array_header(VALUE self)
         raise_unpacker_error(r);
     }
 
-    return ULONG2NUM(size);
+    return ULONG2NUM(size); // long at least 32 bits
 }
 
 static VALUE Unpacker_read_map_header(VALUE self)
@@ -222,7 +222,7 @@ static VALUE Unpacker_read_map_header(VALUE self)
         raise_unpacker_error((int)r);
     }
 
-    return ULONG2NUM(size);
+    return ULONG2NUM(size); // long at least 32 bits
 }
 
 

@@ -477,7 +477,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 uint32_t u32 = _msgpack_be32(cb->u32);
-                return object_complete(uk, ULONG2NUM((unsigned long)u32));
+                return object_complete(uk, ULONG2NUM(u32)); // long at least 32 bits
             }
 
         case 0xcf:  // unsigned int 64
@@ -505,7 +505,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
                 int32_t i32 = _msgpack_be32(cb->i32);
-                return object_complete(uk, LONG2NUM((long)i32));
+                return object_complete(uk, LONG2NUM(i32)); // long at least 32 bits
             }
 
         case 0xd3:  // signed int 64

@@ -96,17 +96,17 @@ void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options
 
         v = rb_hash_aref(options, sym_read_reference_threshold);
         if(v != Qnil) {
-            msgpack_buffer_set_read_reference_threshold(b, NUM2ULONG(v));
+            msgpack_buffer_set_read_reference_threshold(b, NUM2SIZET(v));
         }
 
         v = rb_hash_aref(options, sym_write_reference_threshold);
         if(v != Qnil) {
-            msgpack_buffer_set_write_reference_threshold(b, NUM2ULONG(v));
+            msgpack_buffer_set_write_reference_threshold(b, NUM2SIZET(v));
         }
 
         v = rb_hash_aref(options, sym_io_buffer_size);
         if(v != Qnil) {
-            msgpack_buffer_set_io_buffer_size(b, NUM2ULONG(v));
+            msgpack_buffer_set_io_buffer_size(b, NUM2SIZET(v));
         }
     }
 }
@@ -301,11 +301,11 @@ static VALUE Buffer_skip(VALUE self, VALUE sn)
 
     /* do nothing */
     if(n == 0) {
-        return ULONG2NUM(0);
+        return INT2NUM(0);
     }
 
     size_t sz = read_until_eof(b, Qnil, n);
-    return ULONG2NUM(sz);
+    return SIZET2NUM(sz);
 }
 
 static VALUE Buffer_skip_all(VALUE self, VALUE sn)
@@ -473,7 +473,7 @@ static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
     BUFFER(self, b);
     size_t sz = msgpack_buffer_flush_to_io(b, io, s_write, true);
-    return ULONG2NUM(sz);
+    return SIZET2NUM(sz);
 }
 
 void MessagePack_Buffer_module_init(VALUE mMessagePack)
