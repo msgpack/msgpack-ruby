@@ -613,9 +613,11 @@ size_t _msgpack_buffer_feed_from_io(msgpack_buffer_t* b)
 
 size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string, size_t length)
 {
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
     if(RSTRING_LEN(string) == 0) {
         /* direct read */
-        VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, SIZET2NUM(length), string);
+        VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, SIZET2NUM(MIN(b->io_buffer_size, length)), string);
         if(ret == Qnil) {
             return 0;
         }
@@ -627,7 +629,7 @@ size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string,
         b->io_buffer = rb_str_buf_new(0);
     }
 
-    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, SIZET2NUM(length), b->io_buffer);
+    VALUE ret = rb_funcall(b->io, b->io_partial_read_method, 2, SIZET2NUM(MIN(b->io_buffer_size, length)), b->io_buffer);
     if(ret == Qnil) {
         return 0;
     }
@@ -635,6 +637,8 @@ size_t _msgpack_buffer_read_from_io_to_string(msgpack_buffer_t* b, VALUE string,
 
     rb_str_buf_cat(string, (const void*)RSTRING_PTR(b->io_buffer), rl);
     return rl;
+
+#undef MIN
 }
 
 size_t _msgpack_buffer_skip_from_io(msgpack_buffer_t* b, size_t length)
