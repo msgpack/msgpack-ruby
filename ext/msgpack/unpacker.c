@@ -177,6 +177,9 @@ static inline int object_complete_symbol(msgpack_unpacker_t* uk, VALUE object)
 static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALUE str)
 {
     if (uk->optimized_symbol_ext_type && ext_type == uk->symbol_ext_type) {
+        if (RB_UNLIKELY(NIL_P(str))) { // empty extension is returned as Qnil
+            return object_complete_symbol(uk, ID2SYM(rb_intern3("", 0, rb_utf8_encoding())));
+        }
         return object_complete_symbol(uk, rb_str_intern(str));
     }
 

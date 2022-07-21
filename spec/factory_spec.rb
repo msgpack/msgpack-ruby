@@ -474,6 +474,10 @@ describe MessagePack::Factory do
         expect(roundtrip(:symbol)).to be :symbol
       end
 
+      it 'works with empty symbol' do
+        expect(roundtrip(:"")).to be :""
+      end
+
       it 'preserves encoding for ASCII symbols' do
         expect(:symbol.encoding).to be Encoding::US_ASCII
         expect(roundtrip(:symbol)).to be :symbol
