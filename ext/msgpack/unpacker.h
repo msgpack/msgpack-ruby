@@ -41,16 +41,18 @@ typedef struct {
     VALUE key;
 } msgpack_unpacker_stack_entry_t;
 
+typedef struct {
+    size_t depth;
+    size_t capacity;
+    msgpack_unpacker_stack_entry_t* data;
+} msgpack_unpacker_stack_t;
+
 #define MSGPACK_UNPACKER_STACK_SIZE (8+4+8+8)  /* assumes size_t <= 64bit, enum <= 32bit, VALUE <= 64bit */
 
 struct msgpack_unpacker_t {
     msgpack_buffer_t buffer;
-
+    msgpack_unpacker_stack_t *stack;
     unsigned int head_byte;
-
-    msgpack_unpacker_stack_entry_t* stack;
-    size_t stack_depth;
-    size_t stack_capacity;
 
     VALUE last_object;
 
