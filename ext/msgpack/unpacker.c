@@ -59,13 +59,13 @@ void msgpack_unpacker_static_destroy()
 
 #define HEAD_BYTE_REQUIRED 0xc1
 
-static inline msgpack_unpacker_stack_t* _msgpack_unpacker_new_stack(void) {
+static inline msgpack_unpacker_stack_entry_t* _msgpack_unpacker_new_stack(void) {
 #ifdef UNPACKER_STACK_RMEM
     return msgpack_rmem_alloc(&s_stack_rmem);
     /*memset(uk->stack, 0, MSGPACK_UNPACKER_STACK_CAPACITY);*/
 #else
-    /*uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_t));*/
-    return xmalloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_t));
+    /*uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_entry_t));*/
+    return xmalloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_entry_t));
 #endif
 }
 
@@ -86,7 +86,7 @@ msgpack_unpacker_t* _msgpack_unpacker_new(void)
     return uk;
 }
 
-static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {
+static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_entry_t* stack) {
     #ifdef UNPACKER_STACK_RMEM
         msgpack_rmem_free(&s_stack_rmem, stack);
     #else
@@ -105,8 +105,8 @@ void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
     rb_gc_mark(uk->last_object);
     rb_gc_mark(uk->reading_raw);
 
-    msgpack_unpacker_stack_t* s = uk->stack;
-    msgpack_unpacker_stack_t* send = uk->stack + uk->stack_depth;
+    msgpack_unpacker_stack_entry_t* s = uk->stack;
+    msgpack_unpacker_stack_entry_t* send = uk->stack + uk->stack_depth;
     for(; s < send; s++) {
         rb_gc_mark(s->object);
         rb_gc_mark(s->key);
@@ -201,7 +201,7 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
 }
 
 /* stack funcs */
-static inline msgpack_unpacker_stack_t* _msgpack_unpacker_stack_top(msgpack_unpacker_t* uk)
+static inline msgpack_unpacker_stack_entry_t* _msgpack_unpacker_stack_entry_top(msgpack_unpacker_t* uk)
 {
     return &uk->stack[uk->stack_depth-1];
 }
@@ -214,7 +214,7 @@ static inline int _msgpack_unpacker_stack_push(msgpack_unpacker_t* uk, enum stac
         return PRIMITIVE_STACK_TOO_DEEP;
     }
 
-    msgpack_unpacker_stack_t* next = &uk->stack[uk->stack_depth];
+    msgpack_unpacker_stack_entry_t* next = &uk->stack[uk->stack_depth];
     next->count = count;
     next->type = type;
     next->object = object;
@@ -260,7 +260,7 @@ static inline bool msgpack_unpacker_stack_is_empty(msgpack_unpacker_t* uk)
 static inline bool is_reading_map_key(msgpack_unpacker_t* uk)
 {
     if(uk->stack_depth > 0) {
-        msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
+        msgpack_unpacker_stack_entry_t* top = _msgpack_unpacker_stack_entry_top(uk);
         if(top->type == STACK_TYPE_MAP_KEY) {
             return true;
         }
@@ -314,7 +314,7 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             reset_head_byte(uk);
             uk->reading_raw_remaining = 0;
 
-            msgpack_unpacker_stack_t* stack = uk->stack;
+            msgpack_unpacker_stack_entry_t* stack = uk->stack;
             size_t stack_depth = uk->stack_depth;
             size_t stack_capacity = uk->stack_capacity;
 
@@ -737,7 +737,7 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
 
         container_completed:
         {
-            msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
+            msgpack_unpacker_stack_entry_t* top = _msgpack_unpacker_stack_entry_top(uk);
             switch(top->type) {
             case STACK_TYPE_ARRAY:
                 rb_ary_push(top->object, uk->last_object);
@@ -787,7 +787,7 @@ int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth)
 
         container_completed:
         {
-            msgpack_unpacker_stack_t* top = _msgpack_unpacker_stack_top(uk);
+            msgpack_unpacker_stack_entry_t* top = _msgpack_unpacker_stack_entry_top(uk);
 
             /* this section optimized out */
             // TODO object_complete still creates objects which should be optimized out
