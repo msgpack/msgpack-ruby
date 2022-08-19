@@ -27,6 +27,7 @@
 
 struct msgpack_unpacker_t;
 typedef struct msgpack_unpacker_t msgpack_unpacker_t;
+typedef struct msgpack_unpacker_stack_t msgpack_unpacker_stack_t;
 
 enum stack_type_t {
     STACK_TYPE_ARRAY,
@@ -41,11 +42,12 @@ typedef struct {
     VALUE key;
 } msgpack_unpacker_stack_entry_t;
 
-typedef struct {
+struct msgpack_unpacker_stack_t {
     size_t depth;
     size_t capacity;
-    msgpack_unpacker_stack_entry_t* data;
-} msgpack_unpacker_stack_t;
+    msgpack_unpacker_stack_entry_t *data;
+    msgpack_unpacker_stack_t *parent;
+};
 
 #define MSGPACK_UNPACKER_STACK_SIZE (8+4+8+8)  /* assumes size_t <= 64bit, enum <= 32bit, VALUE <= 64bit */
 

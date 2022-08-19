@@ -60,7 +60,7 @@ void msgpack_unpacker_static_destroy()
 #define HEAD_BYTE_REQUIRED 0xc1
 
 static inline msgpack_unpacker_stack_t* _msgpack_unpacker_new_stack(void) {
-    msgpack_unpacker_stack_t *stack = ALLOC(msgpack_unpacker_stack_t);
+    msgpack_unpacker_stack_t *stack = ZALLOC(msgpack_unpacker_stack_t);
     stack->capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
 #ifdef UNPACKER_STACK_RMEM
     stack->data = msgpack_rmem_alloc(&s_stack_rmem);
@@ -105,13 +105,14 @@ void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 
 void msgpack_unpacker_mark_stack(msgpack_unpacker_stack_t* stack)
 {
-    if (stack) {
+    while (stack) {
         msgpack_unpacker_stack_entry_t* s = stack->data;
         msgpack_unpacker_stack_entry_t* send = stack->data + stack->depth;
         for(; s < send; s++) {
             rb_gc_mark(s->object);
             rb_gc_mark(s->key);
         }
+        stack = stack->parent;
     }
 }
 
@@ -321,12 +322,15 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             reset_head_byte(uk);
             uk->reading_raw_remaining = 0;
 
-            msgpack_unpacker_stack_t* parent_stack = uk->stack;
             msgpack_unpacker_stack_t* child_stack = _msgpack_unpacker_new_stack();
+            child_stack->parent = uk->stack;
             uk->stack = child_stack;
+
             obj = rb_funcall(proc, s_call, 1, uk->buffer.owner);
-            uk->stack = parent_stack;
+
+            uk->stack = child_stack->parent;
             _msgpack_unpacker_free_stack(child_stack);
+
             return object_complete(uk, obj);
         }
     }
