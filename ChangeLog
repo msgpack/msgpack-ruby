@@ -1,4 +1,8 @@
-2022-07-25
+2022-08-22 1.5.5:
+
+* Fix a segfault when GC triggers inside a recursive extension.
+
+2022-07-25 1.5.4:
 
 * Fix a segfault when deserializing empty symbol (`:""`).
 * Improve compilation flags to not strip debug symbols.
