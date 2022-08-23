@@ -1,4 +1,5 @@
 require "set"
+require "objspace"
 
 if ENV['SIMPLE_COV']
   require 'simplecov'

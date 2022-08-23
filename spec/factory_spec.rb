@@ -613,6 +613,24 @@ describe MessagePack::Factory do
     end
   end
 
+  describe 'memsize' do
+    it 'works on a fresh factory' do
+      skip "JRuby doesn't support ObjectSpace.memsize_of" if IS_JRUBY
+
+      f = MessagePack::Factory.new
+      expect(ObjectSpace.memsize_of(f)).to be_an(Integer)
+    end
+
+    it 'works on a factory with registered types' do
+      skip "JRuby doesn't support ObjectSpace.memsize_of" if IS_JRUBY
+
+      f = MessagePack::Factory.new
+      base_size = ObjectSpace.memsize_of(f)
+      f.register_type(0x0a, Symbol)
+      expect(ObjectSpace.memsize_of(f)).to be > base_size
+    end
+  end
+
   describe 'DefaultFactory' do
     it 'is a factory' do
       MessagePack::DefaultFactory.should be_kind_of(MessagePack::Factory)
