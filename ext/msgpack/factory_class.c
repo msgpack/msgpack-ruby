@@ -39,13 +39,15 @@ struct msgpack_factory_t {
 
 #define FACTORY(from, name) \
     msgpack_factory_t *name = NULL; \
-    Data_Get_Struct(from, msgpack_factory_t, name); \
+    TypedData_Get_Struct(from, msgpack_factory_t, &factory_data_type, name); \
     if(name == NULL) { \
         rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
     }
 
-static void Factory_free(msgpack_factory_t* fc)
+static void Factory_free(void *ptr)
 {
+    msgpack_factory_t *fc = ptr;
+
     if(fc == NULL) {
         return;
     }
@@ -54,18 +56,39 @@ static void Factory_free(msgpack_factory_t* fc)
     xfree(fc);
 }
 
-void Factory_mark(msgpack_factory_t* fc)
+void Factory_mark(void *ptr)
 {
+    msgpack_factory_t *fc = ptr;
     msgpack_packer_ext_registry_mark(&fc->pkrg);
     msgpack_unpacker_ext_registry_mark(fc->ukrg);
 }
 
+static size_t Factory_memsize(const void *ptr)
+{
+    const msgpack_factory_t *fc = ptr;
+    size_t total_size = sizeof(msgpack_factory_t);
+
+    if (fc->ukrg) {
+        total_size += sizeof(msgpack_unpacker_ext_registry_t) / (fc->ukrg->borrow_count + 1);
+    }
+
+    return total_size;
+}
+
+static const rb_data_type_t factory_data_type = {
+    .wrap_struct_name = "msgpack:factory",
+    .function = {
+        .dmark = Factory_mark,
+        .dfree = Factory_free,
+        .dsize = Factory_memsize,
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
 static VALUE Factory_alloc(VALUE klass)
 {
-    msgpack_factory_t* fc = ZALLOC_N(msgpack_factory_t, 1);
-
-    VALUE self = Data_Wrap_Struct(klass, Factory_mark, Factory_free, fc);
-    return self;
+    msgpack_factory_t *fc;
+    return TypedData_Make_Struct(klass, msgpack_factory_t, &factory_data_type, fc);
 }
 
 static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
