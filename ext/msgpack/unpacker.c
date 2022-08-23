@@ -678,7 +678,7 @@ int msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk, uint32_t* result_
     } else if(b == 0xdc) {
         /* array 16 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-        *result_size = _msgpack_be16(cb->u16);
+        *result_size = _msgpack_be16(cb->u16) & 0x0000FFFF; /* expand value to 32 bits */
 
     } else if(b == 0xdd) {
         /* array 32 */
@@ -706,7 +706,7 @@ int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk, uint32_t* result_si
     } else if(b == 0xde) {
         /* map 16 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-        *result_size = _msgpack_be16(cb->u16);
+        *result_size = _msgpack_be16(cb->u16) & 0x0000FFFF; /* expand value to 32 bits */
 
     } else if(b == 0xdf) {
         /* map 32 */
