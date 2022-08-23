@@ -1,3 +1,7 @@
+2022-08-23 1.5.6:
+
+* No actual code change, just re-release the `java` version properly.
+
 2022-08-22 1.5.5:
 
 * Fix a segfault when GC triggers inside a recursive extension.
