@@ -37,13 +37,6 @@ struct msgpack_factory_t {
     int symbol_ext_type;
 };
 
-#define FACTORY(from, name) \
-    msgpack_factory_t *name = NULL; \
-    TypedData_Get_Struct(from, msgpack_factory_t, &factory_data_type, name); \
-    if(name == NULL) { \
-        rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
-    }
-
 static void Factory_free(void *ptr)
 {
     msgpack_factory_t *fc = ptr;
@@ -85,6 +78,16 @@ static const rb_data_type_t factory_data_type = {
     .flags = RUBY_TYPED_FREE_IMMEDIATELY
 };
 
+static inline msgpack_factory_t *Factory_get(VALUE object)
+{
+    msgpack_factory_t *factory;
+    TypedData_Get_Struct(object, msgpack_factory_t, &factory_data_type, factory);
+    if (!factory) {
+        rb_raise(rb_eArgError, "Uninitialized Factory object");
+    }
+    return factory;
+}
+
 static VALUE Factory_alloc(VALUE klass)
 {
     msgpack_factory_t *fc;
@@ -93,7 +96,7 @@ static VALUE Factory_alloc(VALUE klass)
 
 static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
 {
-    FACTORY(self, fc);
+    msgpack_factory_t *fc = Factory_get(self);
 
     msgpack_packer_ext_registry_init(&fc->pkrg);
     // fc->ukrg is lazily initialized
@@ -115,8 +118,8 @@ static VALUE Factory_dup(VALUE self)
 {
     VALUE clone = Factory_alloc(rb_obj_class(self));
 
-    FACTORY(self, fc);
-    FACTORY(clone, cloned_fc);
+    msgpack_factory_t *fc = Factory_get(self);
+    msgpack_factory_t *cloned_fc = Factory_get(clone);
 
     cloned_fc->has_symbol_ext_type = fc->has_symbol_ext_type;
     cloned_fc->pkrg = fc->pkrg;
@@ -128,7 +131,7 @@ static VALUE Factory_dup(VALUE self)
 
 static VALUE Factory_freeze(VALUE self) {
     if(!rb_obj_frozen_p(self)) {
-        FACTORY(self, fc);
+        msgpack_factory_t *fc = Factory_get(self);
 
         if (RTEST(fc->pkrg.hash)) {
             rb_hash_freeze(fc->pkrg.hash);
@@ -148,7 +151,7 @@ static VALUE Factory_freeze(VALUE self) {
 
 VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
 {
-    FACTORY(self, fc);
+    msgpack_factory_t *fc = Factory_get(self);
 
     VALUE packer = MessagePack_Packer_alloc(cMessagePack_Packer);
     MessagePack_Packer_initialize(argc, argv, packer);
@@ -166,7 +169,7 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
 
 VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
 {
-    FACTORY(self, fc);
+    msgpack_factory_t *fc = Factory_get(self);
 
     VALUE unpacker = MessagePack_Unpacker_alloc(cMessagePack_Unpacker);
     MessagePack_Unpacker_initialize(argc, argv, unpacker);
@@ -182,7 +185,7 @@ VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
 
 static VALUE Factory_registered_types_internal(VALUE self)
 {
-    FACTORY(self, fc);
+    msgpack_factory_t *fc = Factory_get(self);
 
     VALUE uk_mapping = rb_hash_new();
     if (fc->ukrg) {
@@ -202,7 +205,7 @@ static VALUE Factory_registered_types_internal(VALUE self)
 
 static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
 {
-    FACTORY(self, fc);
+    msgpack_factory_t *fc = Factory_get(self);
 
     int ext_type;
     int flags = 0;
