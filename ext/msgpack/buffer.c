@@ -108,8 +108,9 @@ void msgpack_buffer_destroy(msgpack_buffer_t* b)
     }
 }
 
-void msgpack_buffer_mark(msgpack_buffer_t* b)
+void msgpack_buffer_mark(void *ptr)
 {
+    msgpack_buffer_t* b = ptr;
     /* head is always available */
     msgpack_buffer_chunk_t* c = b->head;
     while(c != &b->tail) {

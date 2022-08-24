@@ -133,7 +133,7 @@ void msgpack_buffer_init(msgpack_buffer_t* b);
 
 void msgpack_buffer_destroy(msgpack_buffer_t* b);
 
-void msgpack_buffer_mark(msgpack_buffer_t* b);
+void msgpack_buffer_mark(void* b);
 
 void msgpack_buffer_clear(msgpack_buffer_t* b);
 

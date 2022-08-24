@@ -34,13 +34,6 @@ static VALUE sym_write_reference_threshold;
 static VALUE sym_io_buffer_size;
 
 
-#define BUFFER(from, name) \
-    msgpack_buffer_t *name = NULL; \
-    Data_Get_Struct(from, msgpack_buffer_t, name); \
-    if(name == NULL) { \
-        rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
-    }
-
 #define CHECK_STRING_TYPE(value) \
     value = rb_check_string_type(value); \
     if( NIL_P(value) ) { \
@@ -53,16 +46,40 @@ static void Buffer_free(void* data)
         return;
     }
     msgpack_buffer_t* b = (msgpack_buffer_t*) data;
+    if (RTEST(b->owner)) {
+        // This buffer is embded in a packer or unpacker, the actual owner
+        // will free it.
+        return;
+    }
     msgpack_buffer_destroy(b);
     xfree(b);
 }
 
+const rb_data_type_t buffer_data_type = {
+    .wrap_struct_name = "msgpack:buffer",
+    .function = {
+        .dmark = msgpack_buffer_mark,
+        .dfree = Buffer_free,
+        .dsize = NULL, // TODO: memsie func would be nice
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
+static inline msgpack_buffer_t *MessagePack_Buffer_get(VALUE object) {
+    msgpack_buffer_t *buffer;
+    TypedData_Get_Struct(object, msgpack_buffer_t, &buffer_data_type, buffer);
+    if (!buffer) {
+        rb_raise(rb_eArgError, "Uninitialized Buffer object");
+    }
+    return buffer;
+}
+
 static VALUE Buffer_alloc(VALUE klass)
 {
-    msgpack_buffer_t* b = ZALLOC_N(msgpack_buffer_t, 1);
+    msgpack_buffer_t* b;
+    VALUE buffer = TypedData_Make_Struct(klass, msgpack_buffer_t, &buffer_data_type, b);
     msgpack_buffer_init(b);
-
-    return Data_Wrap_Struct(klass, msgpack_buffer_mark, Buffer_free, b);
+    return buffer;
 }
 
 static ID get_partial_read_method(VALUE io)
@@ -114,7 +131,7 @@ void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options
 VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
 {
     b->owner = owner;
-    return Data_Wrap_Struct(cMessagePack_Buffer, msgpack_buffer_mark, NULL, b);
+    return TypedData_Wrap_Struct(cMessagePack_Buffer, &buffer_data_type, b);
 }
 
 static VALUE Buffer_initialize(int argc, VALUE* argv, VALUE self)
@@ -144,7 +161,7 @@ static VALUE Buffer_initialize(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..1)", argc);
     }
 
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
 
     MessagePack_Buffer_set_options(b, io, options);
 
@@ -153,21 +170,21 @@ static VALUE Buffer_initialize(int argc, VALUE* argv, VALUE self)
 
 static VALUE Buffer_clear(VALUE self)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     msgpack_buffer_clear(b);
     return Qnil;
 }
 
 static VALUE Buffer_size(VALUE self)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     size_t size = msgpack_buffer_all_readable_size(b);
     return SIZET2NUM(size);
 }
 
 static VALUE Buffer_empty_p(VALUE self)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     if(msgpack_buffer_top_readable_size(b) == 0) {
         return Qtrue;
     } else {
@@ -177,7 +194,7 @@ static VALUE Buffer_empty_p(VALUE self)
 
 static VALUE Buffer_write(VALUE self, VALUE string_or_buffer)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
 
     VALUE string = string_or_buffer;  // TODO optimize if string_or_buffer is a Buffer
     StringValue(string);
@@ -189,7 +206,7 @@ static VALUE Buffer_write(VALUE self, VALUE string_or_buffer)
 
 static VALUE Buffer_append(VALUE self, VALUE string_or_buffer)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
 
     VALUE string = string_or_buffer;  // TODO optimize if string_or_buffer is a Buffer
     StringValue(string);
@@ -295,7 +312,7 @@ static inline VALUE read_all(msgpack_buffer_t* b, VALUE out)
 
 static VALUE Buffer_skip(VALUE self, VALUE sn)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
 
     unsigned long n = FIX2ULONG(sn);
 
@@ -310,7 +327,7 @@ static VALUE Buffer_skip(VALUE self, VALUE sn)
 
 static VALUE Buffer_skip_all(VALUE self, VALUE sn)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
 
     unsigned long n = FIX2ULONG(sn);
 
@@ -348,7 +365,7 @@ static VALUE Buffer_read_all(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
     }
 
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
 
     if(out != Qnil) {
         CHECK_STRING_TYPE(out);
@@ -394,7 +411,7 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
     }
 
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
 
     if(out != Qnil) {
         CHECK_STRING_TYPE(out);
@@ -437,32 +454,32 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
 
 static VALUE Buffer_to_str(VALUE self)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     return msgpack_buffer_all_as_string(b);
 }
 
 static VALUE Buffer_to_a(VALUE self)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     return msgpack_buffer_all_as_string_array(b);
 }
 
 static VALUE Buffer_flush(VALUE self)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     msgpack_buffer_flush(b);
     return self;
 }
 
 static VALUE Buffer_io(VALUE self)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     return b->io;
 }
 
 static VALUE Buffer_close(VALUE self)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     if(b->io != Qnil) {
         return rb_funcall(b->io, s_close, 0);
     }
@@ -471,7 +488,7 @@ static VALUE Buffer_close(VALUE self)
 
 static VALUE Buffer_write_to(VALUE self, VALUE io)
 {
-    BUFFER(self, b);
+    msgpack_buffer_t *b = MessagePack_Buffer_get(self);
     size_t sz = msgpack_buffer_flush_to_io(b, io, s_write, true);
     return SIZET2NUM(sz);
 }
