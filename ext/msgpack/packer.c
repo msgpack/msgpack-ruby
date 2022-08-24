@@ -30,8 +30,6 @@ void msgpack_packer_static_destroy()
 
 void msgpack_packer_init(msgpack_packer_t* pk)
 {
-    memset(pk, 0, sizeof(msgpack_packer_t));
-
     msgpack_buffer_init(PACKER_BUFFER_(pk));
 }
 

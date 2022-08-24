@@ -33,15 +33,9 @@ static VALUE sym_compatibility_mode;
 //static VALUE s_packer_value;
 //static msgpack_packer_t* s_packer;
 
-#define PACKER(from, name) \
-    msgpack_packer_t* name; \
-    Data_Get_Struct(from, msgpack_packer_t, name); \
-    if(name == NULL) { \
-        rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
-    }
-
-static void Packer_free(msgpack_packer_t* pk)
+static void Packer_free(void *ptr)
 {
+    msgpack_packer_t* pk = ptr;
     if(pk == NULL) {
         return;
     }
@@ -50,21 +44,35 @@ static void Packer_free(msgpack_packer_t* pk)
     xfree(pk);
 }
 
-static void Packer_mark(msgpack_packer_t* pk)
+static void Packer_mark(void *ptr)
 {
+    msgpack_packer_t* pk = ptr;
     msgpack_packer_mark(pk);
     msgpack_packer_ext_registry_mark(&pk->ext_registry);
 }
 
+static size_t Packer_memsize(const void *ptr)
+{
+    return sizeof(msgpack_packer_t);
+}
+
+const rb_data_type_t packer_data_type = {
+    .wrap_struct_name = "msgpack:packer",
+    .function = {
+        .dmark = Packer_mark,
+        .dfree = Packer_free,
+        .dsize = Packer_memsize,
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
+
 VALUE MessagePack_Packer_alloc(VALUE klass)
 {
-    msgpack_packer_t* pk = ZALLOC_N(msgpack_packer_t, 1);
+    msgpack_packer_t* pk;
+    VALUE self = TypedData_Make_Struct(klass, msgpack_packer_t, &packer_data_type, pk);
     msgpack_packer_init(pk);
-
-    VALUE self = Data_Wrap_Struct(klass, Packer_mark, Packer_free, pk);
-
     msgpack_packer_set_to_msgpack_method(pk, s_to_msgpack, self);
-
     return self;
 }
 
@@ -94,7 +102,7 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
         Check_Type(options, T_HASH);
     }
 
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
 
     msgpack_packer_ext_registry_init(&pk->ext_registry);
     pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
@@ -113,54 +121,54 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
 
 static VALUE Packer_compatibility_mode_p(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     return pk->compatibility_mode ? Qtrue : Qfalse;
 }
 
 static VALUE Packer_buffer(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     return pk->buffer_ref;
 }
 
 static VALUE Packer_write(VALUE self, VALUE v)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_value(pk, v);
     return self;
 }
 
 static VALUE Packer_write_nil(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_nil(pk);
     return self;
 }
 
 static VALUE Packer_write_true(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_true(pk);
     return self;
 }
 
 static VALUE Packer_write_false(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_false(pk);
     return self;
 }
 
 static VALUE Packer_write_float(VALUE self, VALUE obj)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_float_value(pk, obj);
     return self;
 }
 
 static VALUE Packer_write_string(VALUE self, VALUE obj)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     Check_Type(obj, T_STRING);
     msgpack_packer_write_string_value(pk, obj);
     return self;
@@ -168,7 +176,7 @@ static VALUE Packer_write_string(VALUE self, VALUE obj)
 
 static VALUE Packer_write_bin(VALUE self, VALUE obj)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     Check_Type(obj, T_STRING);
 
     VALUE enc = rb_enc_from_encoding(rb_ascii8bit_encoding());
@@ -180,7 +188,7 @@ static VALUE Packer_write_bin(VALUE self, VALUE obj)
 
 static VALUE Packer_write_array(VALUE self, VALUE obj)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     Check_Type(obj, T_ARRAY);
     msgpack_packer_write_array_value(pk, obj);
     return self;
@@ -188,7 +196,7 @@ static VALUE Packer_write_array(VALUE self, VALUE obj)
 
 static VALUE Packer_write_hash(VALUE self, VALUE obj)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     Check_Type(obj, T_HASH);
     msgpack_packer_write_hash_value(pk, obj);
     return self;
@@ -196,7 +204,7 @@ static VALUE Packer_write_hash(VALUE self, VALUE obj)
 
 static VALUE Packer_write_symbol(VALUE self, VALUE obj)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     Check_Type(obj, T_SYMBOL);
     msgpack_packer_write_symbol_value(pk, obj);
     return self;
@@ -204,7 +212,7 @@ static VALUE Packer_write_symbol(VALUE self, VALUE obj)
 
 static VALUE Packer_write_int(VALUE self, VALUE obj)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
 
     if (FIXNUM_P(obj)) {
         msgpack_packer_write_fixnum_value(pk, obj);
@@ -217,7 +225,7 @@ static VALUE Packer_write_int(VALUE self, VALUE obj)
 
 static VALUE Packer_write_extension(VALUE self, VALUE obj)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     Check_Type(obj, T_STRUCT);
 
     int ext_type = FIX2INT(RSTRUCT_GET(obj, 0));
@@ -233,21 +241,21 @@ static VALUE Packer_write_extension(VALUE self, VALUE obj)
 
 static VALUE Packer_write_array_header(VALUE self, VALUE n)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_array_header(pk, NUM2UINT(n));
     return self;
 }
 
 static VALUE Packer_write_map_header(VALUE self, VALUE n)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_map_header(pk, NUM2UINT(n));
     return self;
 }
 
 static VALUE Packer_write_bin_header(VALUE self, VALUE n)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_bin_header(pk, NUM2UINT(n));
     return self;
 }
@@ -258,14 +266,14 @@ static VALUE Packer_write_float32(VALUE self, VALUE numeric)
       rb_raise(rb_eArgError, "Expected numeric");
     }
 
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_packer_write_float(pk, (float)rb_num2dbl(numeric));
     return self;
 }
 
 static VALUE Packer_write_ext(VALUE self, VALUE type, VALUE data)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     int ext_type = NUM2INT(type);
     if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
@@ -277,28 +285,28 @@ static VALUE Packer_write_ext(VALUE self, VALUE type, VALUE data)
 
 static VALUE Packer_flush(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_buffer_flush(PACKER_BUFFER_(pk));
     return self;
 }
 
 static VALUE Packer_reset(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_buffer_clear(PACKER_BUFFER_(pk));
     return Qnil;
 }
 
 static VALUE Packer_size(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     size_t size = msgpack_buffer_all_readable_size(PACKER_BUFFER_(pk));
     return SIZET2NUM(size);
 }
 
 static VALUE Packer_empty_p(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     if(msgpack_buffer_top_readable_size(PACKER_BUFFER_(pk)) == 0) {
         return Qtrue;
     } else {
@@ -308,26 +316,26 @@ static VALUE Packer_empty_p(VALUE self)
 
 static VALUE Packer_to_str(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     return msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
 }
 
 static VALUE Packer_to_a(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     return msgpack_buffer_all_as_string_array(PACKER_BUFFER_(pk));
 }
 
 static VALUE Packer_write_to(VALUE self, VALUE io)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     size_t sz = msgpack_buffer_flush_to_io(PACKER_BUFFER_(pk), io, s_write, true);
     return SIZET2NUM(sz);
 }
 
 //static VALUE Packer_append(VALUE self, VALUE string_or_buffer)
 //{
-//    PACKER(self, pk);
+//    msgpack_packer_t *pk = MessagePack_Packer_get(self);
 //
 //    // TODO if string_or_buffer is a Buffer
 //    VALUE string = string_or_buffer;
@@ -339,7 +347,7 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
 
 static VALUE Packer_registered_types_internal(VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
     if (RTEST(pk->ext_registry.hash)) {
         return rb_hash_dup(pk->ext_registry.hash);
     }
@@ -348,7 +356,7 @@ static VALUE Packer_registered_types_internal(VALUE self)
 
 static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
 {
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
 
     int ext_type;
     VALUE ext_module;
@@ -394,7 +402,7 @@ VALUE Packer_full_pack(VALUE self)
 {
     VALUE retval;
 
-    PACKER(self, pk);
+    msgpack_packer_t *pk = MessagePack_Packer_get(self);
 
     if(msgpack_buffer_has_io(PACKER_BUFFER_(pk))) {
         msgpack_buffer_flush(PACKER_BUFFER_(pk));
