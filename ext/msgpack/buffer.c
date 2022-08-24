@@ -29,9 +29,7 @@ int msgpack_rb_encindex_ascii8bit;
 
 ID s_uminus;
 
-#ifndef DISABLE_RMEM
 static msgpack_rmem_t s_rmem;
-#endif
 
 void msgpack_buffer_static_init()
 {
@@ -41,9 +39,7 @@ void msgpack_buffer_static_init()
     msgpack_rb_encindex_usascii = rb_usascii_encindex();
     msgpack_rb_encindex_ascii8bit = rb_ascii8bit_encindex();
 
-#ifndef DISABLE_RMEM
     msgpack_rmem_init(&s_rmem);
-#endif
 
 #ifndef HAVE_RB_STR_REPLACE
     s_replace = rb_intern("replace");
@@ -52,9 +48,7 @@ void msgpack_buffer_static_init()
 
 void msgpack_buffer_static_destroy()
 {
-#ifndef DISABLE_RMEM
     msgpack_rmem_destroy(&s_rmem);
-#endif
 }
 
 void msgpack_buffer_init(msgpack_buffer_t* b)
@@ -72,16 +66,12 @@ void msgpack_buffer_init(msgpack_buffer_t* b)
 static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
 {
     if(c->mem != NULL) {
-#ifndef DISABLE_RMEM
         if(!msgpack_rmem_free(&s_rmem, c->mem)) {
             xfree(c->mem);
         }
         /* no needs to update rmem_owner because chunks will not be
          * free()ed (left in free_list) and thus *rmem_owner is
          * always valid. */
-#else
-        xfree(c->mem);
-#endif
     }
     c->first = NULL;
     c->last = NULL;
@@ -159,7 +149,6 @@ size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string,
 {
     size_t avail = msgpack_buffer_top_readable_size(b);
 
-#ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
     /* optimize */
     if(length <= avail && RSTRING_LEN(string) == 0 &&
             b->head->mapped_string != NO_MAPPED_STRING &&
@@ -171,7 +160,6 @@ size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string,
         _msgpack_buffer_consumed(b, length);
         return length;
     }
-#endif
 
     size_t const length_orig = length;
 
@@ -284,15 +272,11 @@ static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
 
         msgpack_buffer_chunk_t* nc = _msgpack_buffer_alloc_new_chunk(b);
 
-#ifndef DISABLE_RMEM
-#ifndef DISABLE_RMEM_REUSE_INTERNAL_FRAGMENT
         if(b->rmem_last == b->tail_buffer_end) {
             /* reuse unused rmem space */
             size_t unused = b->tail_buffer_end - b->tail.last;
             b->rmem_last -= unused;
         }
-#endif
-#endif
 
         /* rebuild tail */
         *nc = b->tail;
@@ -321,11 +305,8 @@ static inline void* _msgpack_buffer_chunk_malloc(
         msgpack_buffer_t* b, msgpack_buffer_chunk_t* c,
         size_t required_size, size_t* allocated_size)
 {
-#ifndef DISABLE_RMEM
     if(required_size <= MSGPACK_RMEM_PAGE_SIZE) {
-#ifndef DISABLE_RMEM_REUSE_INTERNAL_FRAGMENT
         if((size_t)(b->rmem_end - b->rmem_last) < required_size) {
-#endif
             /* alloc new rmem page */
             *allocated_size = MSGPACK_RMEM_PAGE_SIZE;
             char* buffer = msgpack_rmem_alloc(&s_rmem);
@@ -336,8 +317,6 @@ static inline void* _msgpack_buffer_chunk_malloc(
             b->rmem_last = b->rmem_end = buffer + MSGPACK_RMEM_PAGE_SIZE;
 
             return buffer;
-
-#ifndef DISABLE_RMEM_REUSE_INTERNAL_FRAGMENT
         } else {
             /* reuse unused rmem */
             *allocated_size = (size_t)(b->rmem_end - b->rmem_last);
@@ -351,13 +330,7 @@ static inline void* _msgpack_buffer_chunk_malloc(
 
             return buffer;
         }
-#endif
     }
-#else
-    if(required_size < 72) {
-        required_size = 72;
-    }
-#endif
 
     // TODO alignment?
     *allocated_size = required_size;
@@ -412,11 +385,7 @@ void _msgpack_buffer_expand(msgpack_buffer_t* b, const char* data, size_t length
     size_t capacity = b->tail.last - b->tail.first;
 
     /* can't realloc mapped chunk or rmem page */
-    if(b->tail.mapped_string != NO_MAPPED_STRING
-#ifndef DISABLE_RMEM
-            || capacity <= MSGPACK_RMEM_PAGE_SIZE
-#endif
-            ) {
+    if(b->tail.mapped_string != NO_MAPPED_STRING || capacity <= MSGPACK_RMEM_PAGE_SIZE) {
         /* allocate new chunk */
         _msgpack_buffer_add_new_chunk(b);
 

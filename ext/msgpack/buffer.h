@@ -102,11 +102,9 @@ struct msgpack_buffer_t {
     msgpack_buffer_chunk_t* head;
     msgpack_buffer_chunk_t* free_list;
 
-#ifndef DISABLE_RMEM
     char* rmem_last;
     char* rmem_end;
     void** rmem_owner;
-#endif
 
     union msgpack_buffer_cast_block_t cast_block;
 
@@ -444,7 +442,6 @@ static inline VALUE _msgpack_buffer_refer_head_mapped_string(msgpack_buffer_t* b
 
 static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_t length, bool will_be_frozen, bool utf8)
 {
-#ifndef DISABLE_BUFFER_READ_REFERENCE_OPTIMIZE
     /* optimize */
     if(!will_be_frozen &&
             b->head->mapped_string != NO_MAPPED_STRING &&
@@ -454,7 +451,6 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
         _msgpack_buffer_consumed(b, length);
         return result;
     }
-#endif
 
     VALUE result;
 
