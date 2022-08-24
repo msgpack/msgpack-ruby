@@ -174,8 +174,7 @@ VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
     VALUE unpacker = MessagePack_Unpacker_alloc(cMessagePack_Unpacker);
     MessagePack_Unpacker_initialize(argc, argv, unpacker);
 
-    msgpack_unpacker_t* uk;
-    Data_Get_Struct(unpacker, msgpack_unpacker_t, uk);
+    msgpack_unpacker_t* uk = MessagePack_Unpacker_get(unpacker);
     msgpack_unpacker_ext_registry_borrow(fc->ukrg, &uk->ext_registry);
     uk->optimized_symbol_ext_type = fc->optimized_symbol_ext_type;
     uk->symbol_ext_type = fc->symbol_ext_type;

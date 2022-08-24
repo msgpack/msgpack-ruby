@@ -72,10 +72,8 @@ static inline msgpack_unpacker_stack_t* _msgpack_unpacker_new_stack(void) {
     return stack;
 }
 
-msgpack_unpacker_t* _msgpack_unpacker_new(void)
+void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
 {
-    msgpack_unpacker_t* uk = ZALLOC_N(msgpack_unpacker_t, 1);
-
     msgpack_buffer_init(UNPACKER_BUFFER_(uk));
 
     uk->head_byte = HEAD_BYTE_REQUIRED;
@@ -84,8 +82,6 @@ msgpack_unpacker_t* _msgpack_unpacker_new(void)
     uk->reading_raw = Qnil;
 
     uk->stack = _msgpack_unpacker_new_stack();
-
-    return uk;
 }
 
 static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {

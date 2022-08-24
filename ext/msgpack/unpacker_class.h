@@ -20,6 +20,17 @@
 
 #include "unpacker.h"
 
+extern const rb_data_type_t unpacker_data_type;
+
+static inline msgpack_unpacker_t *MessagePack_Unpacker_get(VALUE object) {
+    msgpack_unpacker_t *unpacker;
+    TypedData_Get_Struct(object, msgpack_unpacker_t, &unpacker_data_type, unpacker);
+    if (!unpacker) {
+        rb_raise(rb_eArgError, "Uninitialized Unpacker object");
+    }
+    return unpacker;
+}
+
 extern VALUE cMessagePack_Unpacker;
 
 void MessagePack_Unpacker_module_init(VALUE mMessagePack);
