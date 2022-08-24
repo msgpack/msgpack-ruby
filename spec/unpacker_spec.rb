@@ -664,6 +664,16 @@ describe MessagePack::Unpacker do
       string *= 256
       MessagePack.unpack(MessagePack.pack(string)).encoding.should == string.encoding
     end
+
+    it 'returns correct size for array16 (issue #127)' do
+      unpacker.feed("\xdc\x00\x01\x01")
+      unpacker.read_array_header.should == 1
+    end
+
+    it 'returns correct size for map16 (issue #127)' do
+      unpacker.feed("\xde\x00\x02\x01\x02\x03\x04")
+      unpacker.read_map_header.should == 2
+    end
   end
 
   context 'extensions' do
