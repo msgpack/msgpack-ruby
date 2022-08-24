@@ -37,15 +37,9 @@ static VALUE sym_symbolize_keys;
 static VALUE sym_freeze;
 static VALUE sym_allow_unknown_ext;
 
-#define UNPACKER(from, name) \
-    msgpack_unpacker_t *name = NULL; \
-    Data_Get_Struct(from, msgpack_unpacker_t, name); \
-    if(name == NULL) { \
-        rb_raise(rb_eArgError, "NULL found for " # name " when shouldn't be."); \
-    }
-
-static void Unpacker_free(msgpack_unpacker_t* uk)
+static void Unpacker_free(void *ptr)
 {
+    msgpack_unpacker_t* uk = ptr;
     if(uk == NULL) {
         return;
     }
@@ -54,17 +48,42 @@ static void Unpacker_free(msgpack_unpacker_t* uk)
     xfree(uk);
 }
 
-static void Unpacker_mark(msgpack_unpacker_t* uk)
+static void Unpacker_mark(void *ptr)
 {
+    msgpack_unpacker_t* uk = ptr;
     msgpack_unpacker_mark(uk);
     msgpack_unpacker_ext_registry_mark(uk->ext_registry);
 }
 
+static size_t Unpacker_memsize(const void *ptr)
+{
+    size_t total_size = sizeof(msgpack_unpacker_t);
+
+    const msgpack_unpacker_t* uk = ptr;
+    if (uk->ext_registry) {
+        total_size += sizeof(msgpack_unpacker_ext_registry_t) / (uk->ext_registry->borrow_count + 1);
+    }
+
+    total_size += (uk->stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
+
+    return total_size;
+}
+
+const rb_data_type_t unpacker_data_type = {
+    .wrap_struct_name = "msgpack:unpacker",
+    .function = {
+        .dmark = Unpacker_mark,
+        .dfree = Unpacker_free,
+        .dsize = Unpacker_memsize,
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
 VALUE MessagePack_Unpacker_alloc(VALUE klass)
 {
-    msgpack_unpacker_t* uk = _msgpack_unpacker_new();
-
-    VALUE self = Data_Wrap_Struct(klass, Unpacker_mark, Unpacker_free, uk);
+    msgpack_unpacker_t* uk;
+    VALUE self = TypedData_Make_Struct(klass, msgpack_unpacker_t, &unpacker_data_type, uk);
+    _msgpack_unpacker_init(uk);
     return self;
 }
 
@@ -95,7 +114,7 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "wrong number of arguments (%d for 0..2)", argc);
     }
 
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
 
@@ -119,19 +138,19 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 
 static VALUE Unpacker_symbolized_keys_p(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
     return uk->symbolize_keys ? Qtrue : Qfalse;
 }
 
 static VALUE Unpacker_freeze_p(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
     return uk->freeze ? Qtrue : Qfalse;
 }
 
 static VALUE Unpacker_allow_unknown_ext_p(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
     return uk->allow_unknown_ext ? Qtrue : Qfalse;
 }
 
@@ -156,13 +175,13 @@ NORETURN(static void raise_unpacker_error(int r))
 
 static VALUE Unpacker_buffer(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
     return uk->buffer_ref;
 }
 
 static VALUE Unpacker_read(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
@@ -174,7 +193,7 @@ static VALUE Unpacker_read(VALUE self)
 
 static VALUE Unpacker_skip(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     int r = msgpack_unpacker_skip(uk, 0);
     if(r < 0) {
@@ -186,7 +205,7 @@ static VALUE Unpacker_skip(VALUE self)
 
 static VALUE Unpacker_skip_nil(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     int r = msgpack_unpacker_skip_nil(uk);
     if(r < 0) {
@@ -201,7 +220,7 @@ static VALUE Unpacker_skip_nil(VALUE self)
 
 static VALUE Unpacker_read_array_header(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     uint32_t size;
     int r = msgpack_unpacker_read_array_header(uk, &size);
@@ -214,7 +233,7 @@ static VALUE Unpacker_read_array_header(VALUE self)
 
 static VALUE Unpacker_read_map_header(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     uint32_t size;
     int r = msgpack_unpacker_read_map_header(uk, &size);
@@ -228,7 +247,7 @@ static VALUE Unpacker_read_map_header(VALUE self)
 
 static VALUE Unpacker_feed(VALUE self, VALUE data)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     StringValue(data);
 
@@ -239,7 +258,7 @@ static VALUE Unpacker_feed(VALUE self, VALUE data)
 
 static VALUE Unpacker_feed_reference(VALUE self, VALUE data)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     StringValue(data);
 
@@ -250,7 +269,7 @@ static VALUE Unpacker_feed_reference(VALUE self, VALUE data)
 
 static VALUE Unpacker_each_impl(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     while(true) {
         int r = msgpack_unpacker_read(uk, 0);
@@ -280,7 +299,7 @@ static VALUE Unpacker_rescue_EOFError(VALUE args, VALUE error)
 
 static VALUE Unpacker_each(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
 #ifdef RETURN_ENUMERATOR
     RETURN_ENUMERATOR(self, 0, 0);
@@ -311,7 +330,7 @@ static VALUE Unpacker_feed_each(VALUE self, VALUE data)
 
 static VALUE Unpacker_reset(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     _msgpack_unpacker_reset(uk);
 
@@ -320,7 +339,7 @@ static VALUE Unpacker_reset(VALUE self)
 
 static VALUE Unpacker_registered_types_internal(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     VALUE mapping = rb_hash_new();
     if (uk->ext_registry) {
@@ -336,7 +355,7 @@ static VALUE Unpacker_registered_types_internal(VALUE self)
 
 static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     int ext_type;
     VALUE proc;
@@ -373,7 +392,7 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
 
 static VALUE Unpacker_full_unpack(VALUE self)
 {
-    UNPACKER(self, uk);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
