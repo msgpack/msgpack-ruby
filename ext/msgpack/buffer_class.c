@@ -297,14 +297,13 @@ static inline size_t read_until_eof(msgpack_buffer_t* b, VALUE out, unsigned lon
 
 static inline VALUE read_all(msgpack_buffer_t* b, VALUE out)
 {
-#ifndef DISABLE_BUFFER_READ_TO_S_OPTIMIZE
     if(out == Qnil && !msgpack_buffer_has_io(b)) {
         /* same as to_s && clear; optimize */
         VALUE str = msgpack_buffer_all_as_string(b);
         msgpack_buffer_clear(b);
         return str;
     }
-#endif
+
     MAKE_EMPTY_STRING(out);
     read_until_eof(b, out, 0);
     return out;
@@ -427,7 +426,6 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
         return out;
     }
 
-#ifndef DISABLE_BUFFER_READ_TO_S_OPTIMIZE
     if(!msgpack_buffer_has_io(b) && out == Qnil &&
             msgpack_buffer_all_readable_size(b) <= n) {
         /* same as to_s && clear; optimize */
@@ -440,7 +438,6 @@ static VALUE Buffer_read(int argc, VALUE* argv, VALUE self)
             return str;
         }
     }
-#endif
 
     MAKE_EMPTY_STRING(out);
     read_until_eof(b, out, n);

@@ -20,7 +20,7 @@
 #include "rmem.h"
 #include "extension_value_class.h"
 
-#if !defined(DISABLE_RMEM) && !defined(DISABLE_UNPACKER_STACK_RMEM) && \
+#if !defined(DISABLE_UNPACKER_STACK_RMEM) && \
         MSGPACK_UNPACKER_STACK_CAPACITY * MSGPACK_UNPACKER_STACK_SIZE <= MSGPACK_RMEM_PAGE_SIZE
 #define UNPACKER_STACK_RMEM
 #endif

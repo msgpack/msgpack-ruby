@@ -8,10 +8,6 @@ have_func("rb_hash_new_capa", "ruby.h") # Ruby 3.2+
 unless RUBY_PLATFORM.include? 'mswin'
   $CFLAGS << %[ -I.. -Wall -O3 #{RbConfig::CONFIG["debugflags"]} -std=gnu99]
 end
-#$CFLAGS << %[ -DDISABLE_RMEM]
-#$CFLAGS << %[ -DDISABLE_RMEM_REUSE_INTERNAL_FRAGMENT]
-#$CFLAGS << %[ -DDISABLE_BUFFER_READ_REFERENCE_OPTIMIZE]
-#$CFLAGS << %[ -DDISABLE_BUFFER_READ_TO_S_OPTIMIZE]
 
 if RUBY_VERSION.start_with?('3.0.')
   # https://bugs.ruby-lang.org/issues/18772
