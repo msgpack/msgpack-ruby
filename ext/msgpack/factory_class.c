@@ -156,9 +156,7 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
     VALUE packer = MessagePack_Packer_alloc(cMessagePack_Packer);
     MessagePack_Packer_initialize(argc, argv, packer);
 
-    msgpack_packer_t* pk;
-    Data_Get_Struct(packer, msgpack_packer_t, pk);
-
+    msgpack_packer_t* pk = MessagePack_Packer_get(packer);
     msgpack_packer_ext_registry_destroy(&pk->ext_registry);
     msgpack_packer_ext_registry_dup(&fc->pkrg, &pk->ext_registry);
     pk->has_bigint_ext_type = fc->has_bigint_ext_type;

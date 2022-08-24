@@ -22,6 +22,17 @@
 
 extern VALUE cMessagePack_Packer;
 
+extern const rb_data_type_t packer_data_type;
+
+static inline msgpack_packer_t *MessagePack_Packer_get(VALUE object) {
+    msgpack_packer_t *packer;
+    TypedData_Get_Struct(object, msgpack_packer_t, &packer_data_type, packer);
+    if (!packer) {
+        rb_raise(rb_eArgError, "Uninitialized Packer object");
+    }
+    return packer;
+}
+
 void MessagePack_Packer_module_init(VALUE mMessagePack);
 
 VALUE MessagePack_Packer_alloc(VALUE klass);
