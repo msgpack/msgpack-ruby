@@ -35,8 +35,11 @@
 #    define _msgpack_be16(x) ((uint16_t)_byteswap_ushort((unsigned short)x))
 #  else
 #    define _msgpack_be16(x) ( \
-        ((((uint16_t)x) <<  8) ) | \
-        ((((uint16_t)x) >>  8) ) )
+        ( \
+          ((((uint16_t)x) <<  8) ) | \
+          ((((uint16_t)x) >>  8) ) \
+        ) \
+          & 0x0000FFFF )
 #  endif
 #else
 #  define _msgpack_be16(x) ntohs(x)
