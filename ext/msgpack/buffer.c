@@ -98,6 +98,20 @@ void msgpack_buffer_destroy(msgpack_buffer_t* b)
     }
 }
 
+size_t msgpack_buffer_memsize(const msgpack_buffer_t* b)
+{
+    size_t memsize = 0;
+    msgpack_buffer_chunk_t* c = b->head;
+
+    while(c) {
+        memsize += sizeof(msgpack_buffer_chunk_t);
+        memsize += (c->last - c->first);
+        c = c->next;
+    }
+
+    return memsize;
+}
+
 void msgpack_buffer_mark(void *ptr)
 {
     msgpack_buffer_t* b = ptr;

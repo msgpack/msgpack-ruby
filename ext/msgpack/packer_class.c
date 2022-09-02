@@ -53,7 +53,8 @@ static void Packer_mark(void *ptr)
 
 static size_t Packer_memsize(const void *ptr)
 {
-    return sizeof(msgpack_packer_t);
+    const msgpack_packer_t* pk = ptr;
+    return sizeof(msgpack_packer_t) + msgpack_buffer_memsize(&pk->buffer);
 }
 
 const rb_data_type_t packer_data_type = {

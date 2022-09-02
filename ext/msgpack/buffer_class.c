@@ -55,17 +55,29 @@ static void Buffer_free(void* data)
     xfree(b);
 }
 
+static size_t Buffer_memsize(const void *data)
+{
+    const msgpack_buffer_t* b = data;
+
+    if (RTEST(b->owner)) {
+        return 0;
+    }
+
+    return sizeof(msgpack_buffer_t) + msgpack_buffer_memsize(data);
+}
+
 const rb_data_type_t buffer_data_type = {
     .wrap_struct_name = "msgpack:buffer",
     .function = {
         .dmark = msgpack_buffer_mark,
         .dfree = Buffer_free,
-        .dsize = NULL, // TODO: memsie func would be nice
+        .dsize = Buffer_memsize,
     },
     .flags = RUBY_TYPED_FREE_IMMEDIATELY
 };
 
-static inline msgpack_buffer_t *MessagePack_Buffer_get(VALUE object) {
+static inline msgpack_buffer_t *MessagePack_Buffer_get(VALUE object)
+{
     msgpack_buffer_t *buffer;
     TypedData_Get_Struct(object, msgpack_buffer_t, &buffer_data_type, buffer);
     if (!buffer) {
