@@ -66,7 +66,7 @@ static size_t Unpacker_memsize(const void *ptr)
 
     total_size += (uk->stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
 
-    return total_size;
+    return total_size + msgpack_buffer_memsize(&uk->buffer);
 }
 
 const rb_data_type_t unpacker_data_type = {

@@ -572,4 +572,19 @@ describe Buffer do
       end
     }
   end
+
+  it "defines a function for ObjectSpace.memsize_of" do
+    skip "JRuby doesn't support ObjectSpace.memsize_of" if IS_JRUBY
+
+    buffer = MessagePack::Buffer.new
+    empty_size = ObjectSpace.memsize_of(buffer)
+    expect(empty_size).to be < 400
+    buffer << "a" * 10_000
+    memsize = ObjectSpace.memsize_of(buffer)
+    expect(memsize).to be > 10_000
+    buffer.read(10)
+    expect(ObjectSpace.memsize_of(buffer)).to be == memsize
+    buffer.read_all
+    expect(ObjectSpace.memsize_of(buffer)).to be == empty_size
+  end
 end

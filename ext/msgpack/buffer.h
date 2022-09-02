@@ -135,6 +135,8 @@ void msgpack_buffer_mark(void* b);
 
 void msgpack_buffer_clear(msgpack_buffer_t* b);
 
+size_t msgpack_buffer_memsize(const msgpack_buffer_t* b);
+
 static inline void msgpack_buffer_set_write_reference_threshold(msgpack_buffer_t* b, size_t length)
 {
     if(length < MSGPACK_BUFFER_STRING_WRITE_REFERENCE_MINIMUM) {
