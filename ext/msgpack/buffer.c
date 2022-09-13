@@ -105,7 +105,9 @@ size_t msgpack_buffer_memsize(const msgpack_buffer_t* b)
 
     while(c) {
         memsize += sizeof(msgpack_buffer_chunk_t);
-        memsize += (c->last - c->first);
+        if(c->mapped_string != NO_MAPPED_STRING) {
+            memsize += (c->last - c->first);
+        }
         c = c->next;
     }
 
@@ -301,8 +303,13 @@ static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
 
 static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE string)
 {
-    VALUE mapped_string = rb_str_dup(string);
-    ENCODING_SET(mapped_string, msgpack_rb_encindex_ascii8bit);
+    VALUE mapped_string;
+    if(ENCODING_GET(string) == msgpack_rb_encindex_ascii8bit && RTEST(rb_obj_frozen_p(string))) {
+        mapped_string = string;
+    } else {
+        mapped_string = rb_str_dup(string);
+        ENCODING_SET(mapped_string, msgpack_rb_encindex_ascii8bit);
+    }
 
     _msgpack_buffer_add_new_chunk(b);
 
@@ -335,7 +342,7 @@ void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string)
             msgpack_buffer_append(b, RSTRING_PTR(string), length);
         }
     } else {
-        msgpack_buffer_append(b, RSTRING_PTR(string), length);
+       _msgpack_buffer_append_reference(b, string);
     }
 }
 
