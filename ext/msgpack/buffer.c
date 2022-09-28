@@ -31,7 +31,7 @@ ID s_uminus;
 
 static msgpack_rmem_t s_rmem;
 
-void msgpack_buffer_static_init()
+void msgpack_buffer_static_init(void)
 {
     s_uminus = rb_intern("-@");
 
@@ -46,7 +46,7 @@ void msgpack_buffer_static_init()
 #endif
 }
 
-void msgpack_buffer_static_destroy()
+void msgpack_buffer_static_destroy(void)
 {
     msgpack_rmem_destroy(&s_rmem);
 }

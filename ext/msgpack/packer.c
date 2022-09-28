@@ -20,12 +20,12 @@
 
 static ID s_call;
 
-void msgpack_packer_static_init()
+void msgpack_packer_static_init(void)
 {
     s_call = rb_intern("call");
 }
 
-void msgpack_packer_static_destroy()
+void msgpack_packer_static_destroy(void)
 { }
 
 void msgpack_packer_init(msgpack_packer_t* pk)

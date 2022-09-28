@@ -31,9 +31,9 @@ struct msgpack_unpacker_ext_registry_t {
     VALUE array[256];
 };
 
-void msgpack_unpacker_ext_registry_static_init();
+void msgpack_unpacker_ext_registry_static_init(void);
 
-void msgpack_unpacker_ext_registry_static_destroy();
+void msgpack_unpacker_ext_registry_static_destroy(void);
 
 void msgpack_unpacker_ext_registry_release(msgpack_unpacker_ext_registry_t* ukrg);
 
