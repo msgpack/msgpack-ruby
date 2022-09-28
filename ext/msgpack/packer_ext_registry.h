@@ -31,9 +31,9 @@ struct msgpack_packer_ext_registry_t {
     VALUE cache; // lookup cache for ext types inherited from a super class
 };
 
-void msgpack_packer_ext_registry_static_init();
+void msgpack_packer_ext_registry_static_init(void);
 
-void msgpack_packer_ext_registry_static_destroy();
+void msgpack_packer_ext_registry_static_destroy(void);
 
 void msgpack_packer_ext_registry_init(msgpack_packer_ext_registry_t* pkrg);
 

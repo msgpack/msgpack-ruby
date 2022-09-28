@@ -21,14 +21,14 @@
 static ID s_call;
 static ID s_dup;
 
-void msgpack_unpacker_ext_registry_static_init()
+void msgpack_unpacker_ext_registry_static_init(void)
 {
     s_call = rb_intern("call");
     s_dup = rb_intern("dup");
 }
 
 
-void msgpack_unpacker_ext_registry_static_destroy()
+void msgpack_unpacker_ext_registry_static_destroy(void)
 { }
 
 void msgpack_unpacker_ext_registry_mark(msgpack_unpacker_ext_registry_t* ukrg)

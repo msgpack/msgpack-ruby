@@ -41,7 +41,7 @@ static inline VALUE rb_hash_new_capa(long capa)
 }
 #endif
 
-void msgpack_unpacker_static_init()
+void msgpack_unpacker_static_init(void)
 {
 #ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_init(&s_stack_rmem);
@@ -50,7 +50,7 @@ void msgpack_unpacker_static_init()
     s_call = rb_intern("call");
 }
 
-void msgpack_unpacker_static_destroy()
+void msgpack_unpacker_static_destroy(void)
 {
 #ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_destroy(&s_stack_rmem);

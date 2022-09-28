@@ -20,12 +20,12 @@
 
 static ID s_call;
 
-void msgpack_packer_ext_registry_static_init()
+void msgpack_packer_ext_registry_static_init(void)
 {
     s_call = rb_intern("call");
 }
 
-void msgpack_packer_ext_registry_static_destroy()
+void msgpack_packer_ext_registry_static_destroy(void)
 { }
 
 void msgpack_packer_ext_registry_init(msgpack_packer_ext_registry_t* pkrg)

@@ -123,9 +123,9 @@ struct msgpack_buffer_t {
 /*
  * initialization functions
  */
-void msgpack_buffer_static_init();
+void msgpack_buffer_static_init(void);
 
-void msgpack_buffer_static_destroy();
+void msgpack_buffer_static_destroy(void);
 
 void msgpack_buffer_init(msgpack_buffer_t* b);
 
