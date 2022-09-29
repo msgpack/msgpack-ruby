@@ -56,6 +56,7 @@ struct msgpack_unpacker_t {
     msgpack_unpacker_stack_t *stack;
     unsigned int head_byte;
 
+    VALUE self;
     VALUE last_object;
 
     VALUE reading_raw;

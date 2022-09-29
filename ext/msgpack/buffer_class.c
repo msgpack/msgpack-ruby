@@ -28,6 +28,7 @@ static ID s_readpartial;
 static ID s_write;
 static ID s_append;
 static ID s_close;
+static ID s_at_owner;
 
 static VALUE sym_read_reference_threshold;
 static VALUE sym_write_reference_threshold;
@@ -46,23 +47,12 @@ static void Buffer_free(void* data)
         return;
     }
     msgpack_buffer_t* b = (msgpack_buffer_t*) data;
-    if (RTEST(b->owner)) {
-        // This buffer is embded in a packer or unpacker, the actual owner
-        // will free it.
-        return;
-    }
     msgpack_buffer_destroy(b);
     xfree(b);
 }
 
 static size_t Buffer_memsize(const void *data)
 {
-    const msgpack_buffer_t* b = data;
-
-    if (RTEST(b->owner)) {
-        return 0;
-    }
-
     return sizeof(msgpack_buffer_t) + msgpack_buffer_memsize(data);
 }
 
@@ -76,10 +66,21 @@ const rb_data_type_t buffer_data_type = {
     .flags = RUBY_TYPED_FREE_IMMEDIATELY
 };
 
+const rb_data_type_t buffer_view_data_type = {
+    .wrap_struct_name = "msgpack:buffer_view",
+    .function = {
+        .dmark = msgpack_buffer_mark,
+        .dfree = NULL,
+        .dsize = NULL,
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
 static inline msgpack_buffer_t *MessagePack_Buffer_get(VALUE object)
 {
     msgpack_buffer_t *buffer;
-    TypedData_Get_Struct(object, msgpack_buffer_t, &buffer_data_type, buffer);
+    bool view = RTEST(rb_ivar_get(object, s_at_owner));
+    TypedData_Get_Struct(object, msgpack_buffer_t, view ? &buffer_view_data_type : &buffer_data_type, buffer);
     if (!buffer) {
         rb_raise(rb_eArgError, "Uninitialized Buffer object");
     }
@@ -90,6 +91,7 @@ static VALUE Buffer_alloc(VALUE klass)
 {
     msgpack_buffer_t* b;
     VALUE buffer = TypedData_Make_Struct(klass, msgpack_buffer_t, &buffer_data_type, b);
+    rb_ivar_set(buffer, s_at_owner, Qnil);
     msgpack_buffer_init(b);
     return buffer;
 }
@@ -142,8 +144,9 @@ void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options
 
 VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
 {
-    b->owner = owner;
-    return TypedData_Wrap_Struct(cMessagePack_Buffer, &buffer_data_type, b);
+    VALUE buffer = TypedData_Wrap_Struct(cMessagePack_Buffer, &buffer_view_data_type, b);
+    rb_ivar_set(buffer, s_at_owner, owner);
+    return buffer;
 }
 
 static VALUE Buffer_initialize(int argc, VALUE* argv, VALUE self)
@@ -509,6 +512,7 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
     s_write = rb_intern("write");
     s_append = rb_intern("<<");
     s_close = rb_intern("close");
+    s_at_owner = rb_intern("@owner");
 
     sym_read_reference_threshold = ID2SYM(rb_intern("read_reference_threshold"));
     sym_write_reference_threshold = ID2SYM(rb_intern("write_reference_threshold"));
