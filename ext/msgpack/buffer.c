@@ -127,8 +127,6 @@ void msgpack_buffer_mark(void *ptr)
 
     rb_gc_mark(b->io);
     rb_gc_mark(b->io_buffer);
-
-    rb_gc_mark(b->owner);
 }
 
 bool _msgpack_buffer_shift_chunk(msgpack_buffer_t* b)

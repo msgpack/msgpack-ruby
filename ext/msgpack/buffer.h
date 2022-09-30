@@ -116,8 +116,6 @@ struct msgpack_buffer_t {
     size_t write_reference_threshold;
     size_t read_reference_threshold;
     size_t io_buffer_size;
-
-    VALUE owner;
 };
 
 /*

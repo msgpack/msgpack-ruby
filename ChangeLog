@@ -1,3 +1,5 @@
+* Fix a potential use-after-free bug in Buffer_free when accessing a packer or unpacker buffer. 
+
 2022-08-23 1.5.6:
 
 * No actual code change, just re-release the `java` version properly.

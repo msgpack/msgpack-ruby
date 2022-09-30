@@ -322,7 +322,7 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             child_stack->parent = uk->stack;
             uk->stack = child_stack;
 
-            obj = rb_funcall(proc, s_call, 1, uk->buffer.owner);
+            obj = rb_funcall(proc, s_call, 1, uk->self);
 
             uk->stack = child_stack->parent;
             _msgpack_unpacker_free_stack(child_stack);

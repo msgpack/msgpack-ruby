@@ -84,6 +84,7 @@ VALUE MessagePack_Unpacker_alloc(VALUE klass)
     msgpack_unpacker_t* uk;
     VALUE self = TypedData_Make_Struct(klass, msgpack_unpacker_t, &unpacker_data_type, uk);
     _msgpack_unpacker_init(uk);
+    uk->self = self;
     return self;
 }
 
