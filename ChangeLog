@@ -1,4 +1,8 @@
 * Fix a potential use-after-free bug in Buffer_free when accessing a packer or unpacker buffer. 
+* `old-style-definition` compilation warnings.
+* Restore zero-copy buffer feed when provided a Ruby string. This was accidentally broken in 1.5.4.
+* Provide implementations for `ObjectSpace.memsize`. Message pack objects now properly report their size to Ruby.
+* Fix an endianess bug on Windows platform.
 
 2022-08-23 1.5.6:
 
