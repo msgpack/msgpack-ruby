@@ -25,6 +25,17 @@ jobs:
           bundler-cache: true # 'bundle install' and cache
       - run: bundle exec rake
 
+  valgrind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+          bundler-cache: true # 'bundle install' and cache
+      - run: sudo apt-get install -y valgrind
+      - run: bundle exec rake spec:valgrind
+
   other:
     strategy:
       fail-fast: false
