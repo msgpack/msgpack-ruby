@@ -7,6 +7,12 @@ require 'fileutils'
 require 'rspec/core'
 require 'rspec/core/rake_task'
 require 'yard'
+if Gem::Version.new(RUBY_VERSION) > Gem::Version.new('2.6.0')
+  require 'ruby_memcheck'
+  require 'ruby_memcheck/rspec/rake_task'
+
+  RubyMemcheck.config(binary_name: 'msgpack')
+end
 
 task :spec => :compile
 
@@ -53,11 +59,17 @@ test_pattern = case
                when RUBY_ENGINE =~ /rbx/ then 'spec/*_spec.rb'
                else 'spec/{,cruby/}*_spec.rb' # MRI
                end
-RSpec::Core::RakeTask.new(:spec) do |t|
+spec_config = lambda do |t|
   t.rspec_opts = ["-c", "-f progress"]
   t.rspec_opts << "-Ilib"
   t.pattern = test_pattern
   t.verbose = true
+end
+RSpec::Core::RakeTask.new(:spec, &spec_config)
+if Gem::Version.new(RUBY_VERSION) > Gem::Version.new('2.6.0')
+  namespace :spec do
+    RubyMemcheck::RSpec::RakeTask.new(valgrind: :compile, &spec_config)
+  end
 end
 
 namespace :build do
