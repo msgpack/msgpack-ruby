@@ -249,6 +249,32 @@ describe MessagePack::Factory do
       my.b.should == 2
     end
 
+    describe "registering multiple ext type for the same class" do
+      let(:payload) do
+        factory = MessagePack::Factory.new
+        factory.register_type(0x01, Symbol, packer: :to_s, unpacker: :to_sym.to_proc)
+        factory.dump(:foobar)
+      end
+
+      it "select the type based on code for deserialization" do
+        factory = MessagePack::Factory.new
+        factory.register_type(0x00, Symbol, packer: -> (value) { raise NotImplementedError }, unpacker:  -> (value) { raise NotImplementedError })
+        factory.register_type(0x01, Symbol, packer: :to_s, unpacker: :to_sym.to_proc)
+        factory.register_type(0x02, Symbol, packer: -> (value) { raise NotImplementedError }, unpacker:  -> (value) { raise NotImplementedError })
+
+        expect(factory.load(payload)).to be == :foobar
+      end
+
+      it "uses the last registered packer for serialization" do
+        factory = MessagePack::Factory.new
+        factory.register_type(0x00, Symbol, packer: -> (value) { raise NotImplementedError }, unpacker:  -> (value) { raise NotImplementedError })
+        factory.register_type(0x02, Symbol, packer: -> (value) { raise NotImplementedError }, unpacker:  -> (value) { raise NotImplementedError })
+        factory.register_type(0x01, Symbol, packer: :to_s, unpacker: :to_sym.to_proc)
+
+        expect(factory.dump(:foobar)).to be == payload
+      end
+    end
+
     describe "registering an ext type for a module" do
       before do
         mod = Module.new do
