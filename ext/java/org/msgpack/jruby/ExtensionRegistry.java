@@ -18,22 +18,17 @@ public class ExtensionRegistry {
   private final ExtensionEntry[] extensionsByTypeId;
 
   public ExtensionRegistry() {
-    this(new HashMap<RubyModule, ExtensionEntry>());
+    this(new HashMap<RubyModule, ExtensionEntry>(), new ExtensionEntry[256]);
   }
 
-  private ExtensionRegistry(Map<RubyModule, ExtensionEntry> extensionsByModule) {
+  private ExtensionRegistry(Map<RubyModule, ExtensionEntry> extensionsByModule, ExtensionEntry[] extensionsByTypeId) {
     this.extensionsByModule = new HashMap<RubyModule, ExtensionEntry>(extensionsByModule);
     this.extensionsByAncestor = new HashMap<RubyModule, ExtensionEntry>();
-    this.extensionsByTypeId = new ExtensionEntry[256];
-    for (ExtensionEntry entry : extensionsByModule.values()) {
-      if (entry.hasUnpacker()) {
-        extensionsByTypeId[entry.getTypeId() + 128] = entry;
-      }
-    }
+    this.extensionsByTypeId = extensionsByTypeId.clone();
   }
 
   public ExtensionRegistry dup() {
-    return new ExtensionRegistry(extensionsByModule);
+    return new ExtensionRegistry(extensionsByModule, extensionsByTypeId);
   }
 
   public IRubyObject toInternalPackerRegistry(ThreadContext ctx) {
