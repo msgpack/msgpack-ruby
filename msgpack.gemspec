@@ -12,10 +12,12 @@ Gem::Specification.new do |s|
   s.homepage = "http://msgpack.org/"
   s.require_paths = ["lib"]
   if /java/ =~ RUBY_PLATFORM
-    s.files = Dir['lib/**/*.rb', 'lib/**/*.jar']
+    s.files = Dir['lib/**/*.rb', 'lib/**/*.jar', 'LICENSE']
     s.platform = Gem::Platform.new('java')
   else
-    s.files = `git ls-files`.split("\n")
+    s.files = `git ls-files -z`.split("\x0").reject do |f|
+      (f == __FILE__) || f.match(%r{\A(?:(?:bin|test|spec|features|bench|doclib|msgpack.org.md|Gemfile|Rakefile)|\.(?:git|circleci|rubocop)|appveyor)})
+    end
     s.extensions = ["ext/msgpack/extconf.rb"]
   end
 
