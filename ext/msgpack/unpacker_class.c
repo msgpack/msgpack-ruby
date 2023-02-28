@@ -462,11 +462,5 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_private_method(cMessagePack_Unpacker, "registered_types_internal", Unpacker_registered_types_internal, 0);
     rb_define_method(cMessagePack_Unpacker, "register_type", Unpacker_register_type, -1);
 
-    //s_unpacker_value = MessagePack_Unpacker_alloc(cMessagePack_Unpacker);
-    //rb_gc_register_address(&s_unpacker_value);
-    //Data_Get_Struct(s_unpacker_value, msgpack_unpacker_t, s_unpacker);
-    /* prefer reference than copying */
-    //msgpack_buffer_set_write_reference_threshold(UNPACKER_BUFFER_(s_unpacker), 0);
-
     rb_define_method(cMessagePack_Unpacker, "full_unpack", Unpacker_full_unpack, 0);
 }
