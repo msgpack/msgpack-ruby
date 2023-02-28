@@ -334,18 +334,6 @@ static VALUE Packer_write_to(VALUE self, VALUE io)
     return SIZET2NUM(sz);
 }
 
-//static VALUE Packer_append(VALUE self, VALUE string_or_buffer)
-//{
-//    msgpack_packer_t *pk = MessagePack_Packer_get(self);
-//
-//    // TODO if string_or_buffer is a Buffer
-//    VALUE string = string_or_buffer;
-//
-//    msgpack_buffer_append_string(PACKER_BUFFER_(pk), string);
-//
-//    return self;
-//}
-
 static VALUE Packer_registered_types_internal(VALUE self)
 {
     msgpack_packer_t *pk = MessagePack_Packer_get(self);
@@ -463,15 +451,9 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "to_str", Packer_to_str, 0);
     rb_define_alias(cMessagePack_Packer, "to_s", "to_str");
     rb_define_method(cMessagePack_Packer, "to_a", Packer_to_a, 0);
-    //rb_define_method(cMessagePack_Packer, "append", Packer_append, 1);
-    //rb_define_alias(cMessagePack_Packer, "<<", "append");
 
     rb_define_private_method(cMessagePack_Packer, "registered_types_internal", Packer_registered_types_internal, 0);
     rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
-
-    //s_packer_value = MessagePack_Packer_alloc(cMessagePack_Packer);
-    //rb_gc_register_address(&s_packer_value);
-    //Data_Get_Struct(s_packer_value, msgpack_packer_t, s_packer);
 
     rb_define_method(cMessagePack_Packer, "full_pack", Packer_full_pack, 0);
 }
