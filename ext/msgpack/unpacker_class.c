@@ -382,7 +382,7 @@ static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
-    msgpack_unpacker_ext_registry_put(&uk->ext_registry, ext_module, ext_type, 0, proc, arg);
+    msgpack_unpacker_ext_registry_put(self, &uk->ext_registry, ext_module, ext_type, 0, proc, arg);
 
     return Qnil;
 }

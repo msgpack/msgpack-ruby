@@ -28,10 +28,10 @@ void msgpack_packer_ext_registry_static_init(void)
 void msgpack_packer_ext_registry_static_destroy(void)
 { }
 
-void msgpack_packer_ext_registry_init(msgpack_packer_ext_registry_t* pkrg)
+void msgpack_packer_ext_registry_init(VALUE owner, msgpack_packer_ext_registry_t* pkrg)
 {
-    pkrg->hash = Qnil;
-    pkrg->cache = Qnil;
+    RB_OBJ_WRITE(owner, &pkrg->hash, Qnil);
+    RB_OBJ_WRITE(owner, &pkrg->cache, Qnil);
 }
 
 void msgpack_packer_ext_registry_mark(msgpack_packer_ext_registry_t* pkrg)
@@ -40,32 +40,46 @@ void msgpack_packer_ext_registry_mark(msgpack_packer_ext_registry_t* pkrg)
     rb_gc_mark(pkrg->cache);
 }
 
-void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
+void msgpack_packer_ext_registry_borrow(VALUE owner, msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst)
 {
-    if(RTEST(src->hash) && !rb_obj_frozen_p(src->hash)) {
-        dst->hash = rb_hash_dup(src->hash);
-        dst->cache = RTEST(src->cache) ? rb_hash_dup(src->cache) : Qnil;
+    if(RTEST(src->hash)) {
+        if(rb_obj_frozen_p(src->hash)) {
+            // If the type registry is frozen we can safely share it, and share the cache as well.
+            RB_OBJ_WRITE(owner, &dst->hash, src->hash);
+            RB_OBJ_WRITE(owner, &dst->cache, src->cache);
+        } else {
+            RB_OBJ_WRITE(owner, &dst->hash, rb_hash_dup(src->hash));
+            RB_OBJ_WRITE(owner, &dst->cache, NIL_P(src->cache) ? Qnil : rb_hash_dup(src->cache));
+        }
     } else {
-        // If the type registry is frozen we can safely share it, and share the cache as well.
-        dst->hash = src->hash;
-        dst->cache = src->cache;
+        RB_OBJ_WRITE(owner, &dst->hash, Qnil);
+        RB_OBJ_WRITE(owner, &dst->cache, Qnil);
     }
 }
 
-VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
+void msgpack_packer_ext_registry_dup(VALUE owner, msgpack_packer_ext_registry_t* src,
+        msgpack_packer_ext_registry_t* dst)
+{
+    RB_OBJ_WRITE(owner, &dst->hash, NIL_P(src->hash) ? Qnil : rb_hash_dup(src->hash));
+    RB_OBJ_WRITE(owner, &dst->cache, NIL_P(src->cache) ? Qnil : rb_hash_dup(src->cache));
+}
+
+void msgpack_packer_ext_registry_put(VALUE owner, msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_module, int ext_type, int flags, VALUE proc, VALUE arg)
 {
-    if (!RTEST(pkrg->hash)) {
-        pkrg->hash = rb_hash_new();
+    if(NIL_P(pkrg->hash)) {
+        RB_OBJ_WRITE(owner, &pkrg->hash, rb_hash_new());
     }
 
-    if (RTEST(pkrg->cache)) {
+    if(NIL_P(pkrg->cache)) {
+        RB_OBJ_WRITE(owner, &pkrg->cache, rb_hash_new());
+    } else {
         /* clear lookup cache not to miss added type */
         rb_hash_clear(pkrg->cache);
     }
 
     // TODO: Ruby embeded array limit is 3, merging `proc` and `arg` would be good.
     VALUE entry = rb_ary_new3(4, INT2FIX(ext_type), proc, arg, INT2FIX(flags));
-    return rb_hash_aset(pkrg->hash, ext_module, entry);
+    rb_hash_aset(pkrg->hash, ext_module, entry);
 }

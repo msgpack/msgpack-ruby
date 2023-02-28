@@ -106,8 +106,8 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
 
     msgpack_packer_t *pk = MessagePack_Packer_get(self);
 
-    msgpack_packer_ext_registry_init(&pk->ext_registry);
-    pk->buffer_ref = Qnil;
+    msgpack_packer_ext_registry_init(self, &pk->ext_registry);
+    pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
 
     MessagePack_Buffer_set_options(PACKER_BUFFER_(pk), io, options);
 
@@ -391,7 +391,7 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
         rb_raise(rb_eArgError, "expected Module/Class but found %s.", rb_obj_classname(ext_module));
     }
 
-    msgpack_packer_ext_registry_put(&pk->ext_registry, ext_module, ext_type, 0, proc, arg);
+    msgpack_packer_ext_registry_put(self, &pk->ext_registry, ext_module, ext_type, 0, proc, arg);
 
     if (ext_module == rb_cSymbol) {
         pk->has_symbol_ext_type = true;

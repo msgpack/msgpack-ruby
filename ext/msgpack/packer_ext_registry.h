@@ -35,17 +35,20 @@ void msgpack_packer_ext_registry_static_init(void);
 
 void msgpack_packer_ext_registry_static_destroy(void);
 
-void msgpack_packer_ext_registry_init(msgpack_packer_ext_registry_t* pkrg);
+void msgpack_packer_ext_registry_init(VALUE owner, msgpack_packer_ext_registry_t* pkrg);
 
 static inline void msgpack_packer_ext_registry_destroy(msgpack_packer_ext_registry_t* pkrg)
 { }
 
 void msgpack_packer_ext_registry_mark(msgpack_packer_ext_registry_t* pkrg);
 
-void msgpack_packer_ext_registry_dup(msgpack_packer_ext_registry_t* src,
+void msgpack_packer_ext_registry_borrow(VALUE owner, msgpack_packer_ext_registry_t* src,
         msgpack_packer_ext_registry_t* dst);
 
-VALUE msgpack_packer_ext_registry_put(msgpack_packer_ext_registry_t* pkrg,
+void msgpack_packer_ext_registry_dup(VALUE owner, msgpack_packer_ext_registry_t* src,
+        msgpack_packer_ext_registry_t* dst);
+
+void msgpack_packer_ext_registry_put(VALUE owner, msgpack_packer_ext_registry_t* pkrg,
         VALUE ext_module, int ext_type, int flags, VALUE proc, VALUE arg);
 
 static int msgpack_packer_ext_find_superclass(VALUE key, VALUE value, VALUE arg)
@@ -129,9 +132,6 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
     VALUE superclass = args[1];
     if(superclass != Qnil) {
         VALUE superclass_type = rb_hash_lookup(pkrg->hash, superclass);
-        if (!RTEST(pkrg->cache)) {
-            pkrg->cache = rb_hash_new();
-        }
         rb_hash_aset(pkrg->cache, lookup_class, superclass_type);
         *ext_type_result = FIX2INT(rb_ary_entry(superclass_type, 0));
         *ext_flags_result = FIX2INT(rb_ary_entry(superclass_type, 3));
