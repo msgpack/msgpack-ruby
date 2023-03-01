@@ -91,8 +91,8 @@ static VALUE Buffer_alloc(VALUE klass)
 {
     msgpack_buffer_t* b;
     VALUE buffer = TypedData_Make_Struct(klass, msgpack_buffer_t, &buffer_data_type, b);
-    rb_ivar_set(buffer, s_at_owner, Qnil);
     msgpack_buffer_init(b);
+    rb_ivar_set(buffer, s_at_owner, Qnil);
     return buffer;
 }
 

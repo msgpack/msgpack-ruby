@@ -1,3 +1,5 @@
+* Fix a possible GC crash when GC trigger inside `MessagePack::Buffer.new` (#314).
+
 2022-09-30 1.6.0:
 
 * Fix a potential use-after-free bug in Buffer_free when accessing a packer or unpacker buffer. 
