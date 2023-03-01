@@ -47,6 +47,7 @@ static void Packer_free(void *ptr)
 static void Packer_mark(void *ptr)
 {
     msgpack_packer_t* pk = ptr;
+    msgpack_buffer_mark(pk);
     msgpack_packer_mark(pk);
     msgpack_packer_ext_registry_mark(&pk->ext_registry);
 }
@@ -106,7 +107,7 @@ VALUE MessagePack_Packer_initialize(int argc, VALUE* argv, VALUE self)
     msgpack_packer_t *pk = MessagePack_Packer_get(self);
 
     msgpack_packer_ext_registry_init(&pk->ext_registry);
-    pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
+    pk->buffer_ref = Qnil;
 
     MessagePack_Buffer_set_options(PACKER_BUFFER_(pk), io, options);
 
@@ -129,6 +130,9 @@ static VALUE Packer_compatibility_mode_p(VALUE self)
 static VALUE Packer_buffer(VALUE self)
 {
     msgpack_packer_t *pk = MessagePack_Packer_get(self);
+    if (!RTEST(pk->buffer_ref)) {
+        pk->buffer_ref = MessagePack_Buffer_wrap(PACKER_BUFFER_(pk), self);
+    }
     return pk->buffer_ref;
 }
 

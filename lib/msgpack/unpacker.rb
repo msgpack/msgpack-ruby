@@ -2,6 +2,10 @@ module MessagePack
   class Unpacker
     # see ext for other methods
 
+    # The semantic of duping an unpacker is just too weird.
+    undef_method :dup
+    undef_method :clone
+
     def registered_types
       list = []
 

@@ -590,6 +590,11 @@ describe Buffer do
     expect(ObjectSpace.memsize_of(buffer)).to be == empty_size
   end
 
+  it "doesn't allow #dup or #clone" do
+    expect(subject).to_not respond_to :dup
+    expect(subject).to_not respond_to :clone
+  end
+
   it "doesn't crash when marking an uninitialized buffer" do
     stress = GC.stress
     begin

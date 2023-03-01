@@ -69,7 +69,7 @@ static const rb_data_type_t buffer_data_type = {
 static const rb_data_type_t buffer_view_data_type = {
     .wrap_struct_name = "msgpack:buffer_view",
     .function = {
-        .dmark = msgpack_buffer_mark,
+        .dmark = NULL,
         .dfree = NULL,
         .dsize = NULL,
     },
