@@ -56,7 +56,7 @@ static size_t Buffer_memsize(const void *data)
     return sizeof(msgpack_buffer_t) + msgpack_buffer_memsize(data);
 }
 
-const rb_data_type_t buffer_data_type = {
+static const rb_data_type_t buffer_data_type = {
     .wrap_struct_name = "msgpack:buffer",
     .function = {
         .dmark = msgpack_buffer_mark,
@@ -66,7 +66,7 @@ const rb_data_type_t buffer_data_type = {
     .flags = RUBY_TYPED_FREE_IMMEDIATELY
 };
 
-const rb_data_type_t buffer_view_data_type = {
+static const rb_data_type_t buffer_view_data_type = {
     .wrap_struct_name = "msgpack:buffer_view",
     .function = {
         .dmark = msgpack_buffer_mark,
