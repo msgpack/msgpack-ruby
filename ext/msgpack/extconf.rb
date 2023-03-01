@@ -9,7 +9,7 @@ unless RUBY_PLATFORM.include? 'mswin'
   $CFLAGS << %[ -I.. -Wall -O3 #{RbConfig::CONFIG["debugflags"]} -std=gnu99]
 end
 
-if RUBY_VERSION.start_with?('3.0.')
+if RUBY_VERSION.start_with?('3.0.') && RUBY_VERSION <= '3.0.5'
   # https://bugs.ruby-lang.org/issues/18772
   $CFLAGS << ' -DRB_ENC_INTERNED_STR_NULL_CHECK=1 '
 end
