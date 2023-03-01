@@ -22,7 +22,7 @@
 #include "factory_class.h"
 #include "extension_value_class.h"
 
-void Init_msgpack(void)
+RUBY_FUNC_EXPORTED void Init_msgpack(void)
 {
     VALUE mMessagePack = rb_define_module("MessagePack");
 

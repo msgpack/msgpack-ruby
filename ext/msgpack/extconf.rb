@@ -5,6 +5,8 @@ have_header("st.h")
 have_func("rb_enc_interned_str", "ruby.h") # Ruby 3.0+
 have_func("rb_hash_new_capa", "ruby.h") # Ruby 3.2+
 
+$CFLAGS << " -fvisibility=hidden "
+
 unless RUBY_PLATFORM.include? 'mswin'
   $CFLAGS << %[ -I.. -Wall -O3 #{RbConfig::CONFIG["debugflags"]} -std=gnu99]
 end
