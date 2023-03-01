@@ -51,6 +51,7 @@ static void Unpacker_free(void *ptr)
 static void Unpacker_mark(void *ptr)
 {
     msgpack_unpacker_t* uk = ptr;
+    msgpack_buffer_mark(uk);
     msgpack_unpacker_mark(uk);
     msgpack_unpacker_ext_registry_mark(uk->ext_registry);
 }
@@ -117,7 +118,7 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 
     msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
-    uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
+    uk->buffer_ref = Qnil;
 
     MessagePack_Buffer_set_options(UNPACKER_BUFFER_(uk), io, options);
 
@@ -177,6 +178,9 @@ NORETURN(static void raise_unpacker_error(int r))
 static VALUE Unpacker_buffer(VALUE self)
 {
     msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
+    if (!RTEST(uk->buffer_ref)) {
+        uk->buffer_ref = MessagePack_Buffer_wrap(UNPACKER_BUFFER_(uk), self);
+    }
     return uk->buffer_ref;
 }
 
