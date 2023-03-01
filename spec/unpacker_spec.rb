@@ -866,4 +866,20 @@ describe MessagePack::Unpacker do
       end
     end
   end
+
+  it "doesn't crash when marking an uninitialized buffer" do
+    if RUBY_PLATFORM == "java"
+      pending("THe java extension is missing Unpacker#buffer https://github.com/msgpack/msgpack-ruby/issues/315")
+    end
+
+    stress = GC.stress
+    begin
+      GC.stress = true
+
+      MessagePack::Unpacker.new.buffer
+      Object.new
+    ensure
+      GC.stress = stress
+    end
+  end
 end

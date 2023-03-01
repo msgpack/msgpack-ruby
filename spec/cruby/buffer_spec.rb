@@ -589,4 +589,15 @@ describe Buffer do
     buffer.read_all
     expect(ObjectSpace.memsize_of(buffer)).to be == empty_size
   end
+
+  it "doesn't crash when marking an uninitialized buffer" do
+    stress = GC.stress
+    begin
+      GC.stress = true
+
+      MessagePack::Buffer.new
+    ensure
+      GC.stress = stress
+    end
+  end
 end

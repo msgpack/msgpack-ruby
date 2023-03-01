@@ -572,4 +572,16 @@ describe MessagePack::Packer do
         [0xc9, 65538, -1].pack('CNC') + "a"*65538
     end
   end
+
+  it "doesn't crash when marking an uninitialized buffer" do
+    stress = GC.stress
+    begin
+      GC.stress = true
+
+      MessagePack::Packer.new.buffer
+      Object.new
+    ensure
+      GC.stress = stress
+    end
+  end
 end
