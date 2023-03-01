@@ -7,6 +7,7 @@ else
   require "msgpack/msgpack"
 end
 
+require "msgpack/buffer"
 require "msgpack/packer"
 require "msgpack/unpacker"
 require "msgpack/factory"

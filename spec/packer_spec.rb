@@ -573,6 +573,11 @@ describe MessagePack::Packer do
     end
   end
 
+  it "doesn't allow #dup or #clone" do
+    expect(subject).to_not respond_to :dup
+    expect(subject).to_not respond_to :clone
+  end
+
   it "doesn't crash when marking an uninitialized buffer" do
     stress = GC.stress
     begin
