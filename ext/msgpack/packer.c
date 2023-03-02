@@ -43,6 +43,7 @@ void msgpack_packer_mark(msgpack_packer_t* pk)
     /* See MessagePack_Buffer_wrap */
     /* msgpack_buffer_mark(PACKER_BUFFER_(pk)); */
     rb_gc_mark(pk->buffer_ref);
+    rb_gc_mark(pk->to_msgpack_arg);
 }
 
 void msgpack_packer_reset(msgpack_packer_t* pk)
