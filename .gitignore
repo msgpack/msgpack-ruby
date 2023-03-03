@@ -7,3 +7,7 @@ Gemfile*
 /vendor
 /.yardoc
 /doc
+/tmp
+/pkg
+/lib
+

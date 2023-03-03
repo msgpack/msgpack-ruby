@@ -1,23 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>
   Class: MessagePack::Factory
   
-    &mdash; Documentation by YARD 0.8.7.6
+    &mdash; Documentation by YARD 0.9.28
   
 </title>
 
-  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
+  <link rel="stylesheet" href="../css/style.css" type="text/css" />
 
-  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
+  <link rel="stylesheet" href="../css/common.css" type="text/css" />
 
-<script type="text/javascript" charset="utf-8">
-  hasFrames = window.top.frames.main ? true : false;
+<script type="text/javascript">
+  pathId = "MessagePack::Factory";
   relpath = '../';
-  framesUrl = "../frames.html#!MessagePack/Factory.html";
 </script>
 
 
@@ -28,51 +27,48 @@
 
   </head>
   <body>
-    <div id="header">
-      <div id="menu">
+    <div class="nav_wrap">
+      <iframe id="nav" src="../class_list.html?1"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
   
     <a href="../_index.html">Index (F)</a> &raquo;
     <span class='title'><span class='object_link'><a href="../MessagePack.html" title="MessagePack (module)">MessagePack</a></span></span>
      &raquo; 
     <span class="title">Factory</span>
   
-
-  <div class="noframes"><span class="title">(</span><a href="." target="_top">no frames</a><span class="title">)</span></div>
 </div>
 
-      <div id="search">
+        <div id="search">
   
     <a class="full_list_link" id="class_list_link"
         href="../class_list.html">
-      Class List
-    </a>
-  
-    <a class="full_list_link" id="method_list_link"
-        href="../method_list.html">
-      Method List
-    </a>
-  
-    <a class="full_list_link" id="file_list_link"
-        href="../file_list.html">
-      File List
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
     </a>
   
 </div>
-      <div class="clear"></div>
-    </div>
+        <div class="clear"></div>
+      </div>
 
-    <iframe id="search_frame"></iframe>
-
-    <div id="content"><h1>Class: MessagePack::Factory
+      <div id="content"><h1>Class: MessagePack::Factory
   
   
   
 </h1>
-
-<dl class="box">
+<div class="box_info">
   
-    <dt class="r1">Inherits:</dt>
-    <dd class="r1">
+  <dl>
+    <dt>Inherits:</dt>
+    <dd>
       <span class="inheritName">Object</span>
       
         <ul class="fullTree">
@@ -83,27 +79,30 @@
         </ul>
         <a href="#" class="inheritanceTree">show all</a>
       
-      </dd>
-    
+    </dd>
+  </dl>
   
-  
-    
-  
-    
+
   
   
   
-    <dt class="r2 last">Defined in:</dt>
-    <dd class="r2 last">doclib/msgpack/factory.rb</dd>
   
-</dl>
-<div class="clear"></div>
+  
+
+  
+
+  
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>doclib/msgpack/factory.rb</dd>
+  </dl>
+  
+</div>
 
 <h2>Overview</h2><div class="docstring">
   <div class="discussion">
     
-<p>MessagePack::Factory is a class to generate Packer and Unpacker which has
-same set of ext types.</p>
+<p>MessagePack::Factory is a class to generate Packer and Unpacker which has same set of ext types.</p>
 
 
   </div>
@@ -111,7 +110,17 @@ same set of ext types.</p>
 <div class="tags">
   
 
-</div>
+</div><h2>Defined Under Namespace</h2>
+<p class="children">
+  
+    
+  
+    
+      <strong class="classes">Classes:</strong> <span class='object_link'><a href="Factory/Pool.html" title="MessagePack::Factory::Pool (class)">Pool</a></span>
+    
+  
+</p>
+
 
 
 
@@ -121,7 +130,7 @@ same set of ext types.</p>
   
     <h2>
       Instance Method Summary
-      <small>(<a href="#" class="summary_toggle">collapse</a>)</small>
+      <small><a href="#" class="summary_toggle">collapse</a></small>
     </h2>
 
     <ul class="summary">
@@ -129,7 +138,7 @@ same set of ext types.</p>
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#dump-instance_method" title="#dump (instance method)">- (String) <strong>dump</strong>(obj, options = {}) </a>
+      <a href="#dump-instance_method" title="#dump (instance method)">#<strong>dump</strong>(obj, options = nil)  &#x21d2; String </a>
     
 
     
@@ -155,7 +164,7 @@ same set of ext types.</p>
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#initialize-instance_method" title="#initialize (instance method)">- (Factory) <strong>initialize</strong> </a>
+      <a href="#initialize-instance_method" title="#initialize (instance method)">#<strong>initialize</strong>  &#x21d2; Factory </a>
     
 
     
@@ -181,7 +190,7 @@ same set of ext types.</p>
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#load-instance_method" title="#load (instance method)">- (Object) <strong>load</strong>(data, options = {}) </a>
+      <a href="#load-instance_method" title="#load (instance method)">#<strong>load</strong>(data, options = nil)  &#x21d2; Object </a>
     
 
     
@@ -207,7 +216,7 @@ same set of ext types.</p>
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#packer-instance_method" title="#packer (instance method)">- (Object) <strong>packer</strong>(*args) </a>
+      <a href="#packer-instance_method" title="#packer (instance method)">#<strong>packer</strong>(*args)  &#x21d2; Object </a>
     
 
     
@@ -222,8 +231,7 @@ same set of ext types.</p>
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Creates a MessagePack::Packer instance, which has ext types already
-registered.</p>
+<p>Creates a MessagePack::Packer instance, which has ext types already registered.</p>
 </div></span>
   
 </li>
@@ -232,7 +240,31 @@ registered.</p>
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#register_type-instance_method" title="#register_type (instance method)">- (Object) <strong>register_type</strong>(type, klass, options = {}) </a>
+      <a href="#pool-instance_method" title="#pool (instance method)">#<strong>pool</strong>(size = 1, **options)  &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Creates a MessagePack::PooledFactory instance of the given size.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#register_type-instance_method" title="#register_type (instance method)">#<strong>register_type</strong>(type, klass, options = {})  &#x21d2; Object </a>
     
 
     
@@ -256,7 +288,7 @@ registered.</p>
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#registered_types-instance_method" title="#registered_types (instance method)">- (Object) <strong>registered_types</strong>(selector = :both) </a>
+      <a href="#registered_types-instance_method" title="#registered_types (instance method)">#<strong>registered_types</strong>(selector = :both)  &#x21d2; Object </a>
     
 
     
@@ -280,7 +312,7 @@ registered.</p>
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#type_registered%3F-instance_method" title="#type_registered? (instance method)">- (Boolean) <strong>type_registered?</strong>(klass_or_type, selector = :both) </a>
+      <a href="#type_registered%3F-instance_method" title="#type_registered? (instance method)">#<strong>type_registered?</strong>(klass_or_type, selector = :both)  &#x21d2; Boolean </a>
     
 
     
@@ -295,8 +327,7 @@ registered.</p>
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Returns true/false which indicate specified class or type id is registered
-or not.</p>
+<p>Returns true/false which indicate specified class or type id is registered or not.</p>
 </div></span>
   
 </li>
@@ -305,7 +336,7 @@ or not.</p>
         <li class="public ">
   <span class="summary_signature">
     
-      <a href="#unpacker-instance_method" title="#unpacker (instance method)">- (Object) <strong>unpacker</strong>(*args) </a>
+      <a href="#unpacker-instance_method" title="#unpacker (instance method)">#<strong>unpacker</strong>(*args)  &#x21d2; Object </a>
     
 
     
@@ -320,8 +351,7 @@ or not.</p>
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Creates a MessagePack::Unpacker instance, which has ext types already
-registered.</p>
+<p>Creates a MessagePack::Unpacker instance, which has ext types already registered.</p>
 </div></span>
   
 </li>
@@ -336,7 +366,7 @@ registered.</p>
     <div class="method_details first">
   <h3 class="signature first" id="initialize-instance_method">
   
-    - (<tt><span class='object_link'><a href="" title="MessagePack::Factory (class)">Factory</a></span></tt>) <strong>initialize</strong> 
+    #<strong>initialize</strong>  &#x21d2; <tt><span class='object_link'><a href="" title="MessagePack::Factory (class)">Factory</a></span></tt> 
   
 
   
@@ -382,7 +412,7 @@ registered.</p>
       <div class="method_details first">
   <h3 class="signature first" id="dump-instance_method">
   
-    - (<tt><span class='object_link'><a href="../String.html" title="String (class)">String</a></span></tt>) <strong>dump</strong>(obj, options = {}) 
+    #<strong>dump</strong>(obj, options = nil)  &#x21d2; <tt><span class='object_link'><a href="../String.html" title="String (class)">String</a></span></tt> 
   
 
   
@@ -397,8 +427,7 @@ registered.</p>
     
 <p>Serialize the passed value</p>
 
-<p>If it could not serialize the object, it raises NoMethodError: undefined
-method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
+<p>If it could not serialize the object, it raises NoMethodError: undefined method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
 
 <p>See Packer#initialize for supported options.</p>
 
@@ -433,7 +462,7 @@ method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
         <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
       
       
-        <em class="default">(defaults to: <tt>{}</tt>)</em>
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
       
       
     </li>
@@ -471,7 +500,7 @@ method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
     <td>
       <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 34</span>
 
-<span class='kw'>def</span> <span class='id identifier rubyid_dump'>dump</span><span class='lparen'>(</span><span class='id identifier rubyid_obj'>obj</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='id identifier rubyid_dump'>dump</span><span class='lparen'>(</span><span class='id identifier rubyid_obj'>obj</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='kw'>nil</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -481,7 +510,7 @@ method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
       <div class="method_details ">
   <h3 class="signature " id="load-instance_method">
   
-    - (<tt>Object</tt>) <strong>load</strong>(data, options = {}) 
+    #<strong>load</strong>(data, options = nil)  &#x21d2; <tt>Object</tt> 
   
 
   
@@ -496,10 +525,7 @@ method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
     
 <p>Deserializes an object from the string or io and returns it.</p>
 
-<p>If there&#39;re not enough data to deserialize one object, this method
-raises EOFError. If data format is invalid, this method raises
-MessagePack::MalformedFormatError. If the object nests too deeply, this
-method raises MessagePack::StackError.</p>
+<p>If there&#39;re not enough data to deserialize one object, this method raises EOFError. If data format is invalid, this method raises MessagePack::MalformedFormatError. If the object nests too deeply, this method raises MessagePack::StackError.</p>
 
 <p>See Unpacker#initialize for supported options.</p>
 
@@ -529,7 +555,7 @@ method raises MessagePack::StackError.</p>
         <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
       
       
-        <em class="default">(defaults to: <tt>{}</tt>)</em>
+        <em class="default">(defaults to: <tt>nil</tt>)</em>
       
       
     </li>
@@ -567,7 +593,7 @@ method raises MessagePack::StackError.</p>
     <td>
       <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 60</span>
 
-<span class='kw'>def</span> <span class='id identifier rubyid_load'>load</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
+<span class='kw'>def</span> <span class='id identifier rubyid_load'>load</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='kw'>nil</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -577,7 +603,7 @@ method raises MessagePack::StackError.</p>
       <div class="method_details ">
   <h3 class="signature " id="packer-instance_method">
   
-    - (<tt>Object</tt>) <strong>packer</strong>(*args) 
+    #<strong>packer</strong>(*args)  &#x21d2; <tt>Object</tt> 
   
 
   
@@ -586,8 +612,7 @@ method raises MessagePack::StackError.</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Creates a MessagePack::Packer instance, which has ext types already
-registered. Options are passed to MessagePack::Packer#initialized.</p>
+<p>Creates a MessagePack::Packer instance, which has ext types already registered. Options are passed to MessagePack::Packer#initialized.</p>
 
 <p>See also Packer#initialize for options.</p>
 
@@ -617,9 +642,9 @@ registered. Options are passed to MessagePack::Packer#initialized.</p>
 </div>
     
       <div class="method_details ">
-  <h3 class="signature " id="register_type-instance_method">
+  <h3 class="signature " id="pool-instance_method">
   
-    - (<tt>Object</tt>) <strong>register_type</strong>(type, klass, options = {}) 
+    #<strong>pool</strong>(size = 1, **options)  &#x21d2; <tt>Object</tt> 
   
 
   
@@ -628,15 +653,96 @@ registered. Options are passed to MessagePack::Packer#initialized.</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Register a type and Class to be registered for packer and/or unpacker. If
-options are not speicified, factory will use :to_msgpack_ext for packer,
-and :from_msgpack_ext for unpacker.</p>
+<p>Creates a MessagePack::PooledFactory instance of the given size.</p>
+
+<p>PooledFactory keeps Packer and Unpacker instance in a pool for improved performance. Note that the size defines how many instances are kept in cache, not the maximum of instances that can be created. If the pool limit is reached, a new instance is created anyway.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  <p class="tag_title">Parameters:</p>
+<ul class="param">
+  
+    <li>
+      
+        <span class='name'>size</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Fixnum.html" title="Fixnum (class)">Fixnum</a></span></tt>)</span>
+      
+      
+        <em class="default">(defaults to: <tt>1</tt>)</em>
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>specify how many Packer and Unpacker to keep in cache (default 1)</p>
+</div>
+      
+    </li>
+  
+    <li>
+      
+        <span class='name'>options</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Hash.html" title="Hash (class)">Hash</a></span></tt>)</span>
+      
+      
+      
+        &mdash;
+        <div class='inline'>
+<p>Combined options for Packer and Unpacker. See Packer#initialize and Unpacker#initialize for supported options.</p>
+</div>
+      
+    </li>
+  
+</ul>
+
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+113
+114</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 113</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_pool'>pool</span><span class='lparen'>(</span><span class='id identifier rubyid_size'>size</span><span class='op'>=</span><span class='int'>1</span><span class='comma'>,</span> <span class='op'>**</span><span class='id identifier rubyid_options'>options</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="register_type-instance_method">
+  
+    #<strong>register_type</strong>(type, klass, options = {})  &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Register a type and Class to be registered for packer and/or unpacker. If options are not specified, factory will use :to_msgpack_ext for packer, and :from_msgpack_ext for unpacker.</p>
 
 <p>Supported options:</p>
 <ul><li>
 <p><strong>:packer</strong> specify symbol or proc object for packer</p>
 </li><li>
 <p><strong>:unpacker</strong> specify symbol or proc object for unpacker</p>
+</li><li>
+<p><strong>:optimized_symbols_parsing</strong> specify true to use the optimized symbols parsing (not supported on JRuby now)</p>
+</li><li>
+<p><strong>recursive</strong> specify true to receive the packer or unpacker as argument to generate the extension body manually.</p>
 </li></ul>
 
 
@@ -723,11 +829,11 @@ and :from_msgpack_ext for unpacker.</p>
       <pre class="lines">
 
 
-79
-80</pre>
+81
+82</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 79</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 81</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span><span class='id identifier rubyid_type'>type</span><span class='comma'>,</span> <span class='id identifier rubyid_klass'>klass</span><span class='comma'>,</span> <span class='id identifier rubyid_options'>options</span><span class='op'>=</span><span class='lbrace'>{</span><span class='rbrace'>}</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -739,7 +845,7 @@ and :from_msgpack_ext for unpacker.</p>
       <div class="method_details ">
   <h3 class="signature " id="registered_types-instance_method">
   
-    - (<tt>Object</tt>) <strong>registered_types</strong>(selector = :both) 
+    #<strong>registered_types</strong>(selector = :both)  &#x21d2; <tt>Object</tt> 
   
 
   
@@ -802,11 +908,11 @@ and :from_msgpack_ext for unpacker.</p>
       <pre class="lines">
 
 
-88
-89</pre>
+90
+91</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 88</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 90</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_registered_types'>registered_types</span><span class='lparen'>(</span><span class='id identifier rubyid_selector'>selector</span><span class='op'>=</span><span class='symbol'>:both</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -818,7 +924,7 @@ and :from_msgpack_ext for unpacker.</p>
       <div class="method_details ">
   <h3 class="signature " id="type_registered?-instance_method">
   
-    - (<tt>Boolean</tt>) <strong>type_registered?</strong>(klass_or_type, selector = :both) 
+    #<strong>type_registered?</strong>(klass_or_type, selector = :both)  &#x21d2; <tt>Boolean</tt> 
   
 
   
@@ -827,8 +933,7 @@ and :from_msgpack_ext for unpacker.</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Returns true/false which indicate specified class or type id is registered
-or not.</p>
+<p>Returns true/false which indicate specified class or type id is registered or not.</p>
 
 
   </div>
@@ -898,11 +1003,11 @@ or not.</p>
       <pre class="lines">
 
 
-98
-99</pre>
+100
+101</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 98</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 100</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_type_registered?'>type_registered?</span><span class='lparen'>(</span><span class='id identifier rubyid_klass_or_type'>klass_or_type</span><span class='comma'>,</span> <span class='id identifier rubyid_selector'>selector</span><span class='op'>=</span><span class='symbol'>:both</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -914,7 +1019,7 @@ or not.</p>
       <div class="method_details ">
   <h3 class="signature " id="unpacker-instance_method">
   
-    - (<tt>Object</tt>) <strong>unpacker</strong>(*args) 
+    #<strong>unpacker</strong>(*args)  &#x21d2; <tt>Object</tt> 
   
 
   
@@ -923,8 +1028,7 @@ or not.</p>
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Creates a MessagePack::Unpacker instance, which has ext types already
-registered. Options are passed to MessagePack::Unpacker#initialized.</p>
+<p>Creates a MessagePack::Unpacker instance, which has ext types already registered. Options are passed to MessagePack::Unpacker#initialized.</p>
 
 <p>See also Unpacker#initialize for options.</p>
 
@@ -957,11 +1061,12 @@ registered. Options are passed to MessagePack::Unpacker#initialized.</p>
 
 </div>
 
-    <div id="footer">
-  Generated on Thu Dec  7 11:57:39 2017 by
-  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.8.7.6 (ruby-2.4.2).
+      <div id="footer">
+  Generated on Fri Mar  3 17:45:20 2023 by
+  <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.28 (ruby-2.7.1).
 </div>
 
+    </div>
   </body>
 </html>
