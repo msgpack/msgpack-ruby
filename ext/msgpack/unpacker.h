@@ -49,7 +49,7 @@ struct msgpack_unpacker_stack_t {
     msgpack_unpacker_stack_t *parent;
 };
 
-#define MSGPACK_UNPACKER_STACK_SIZE (8+4+8+8)  /* assumes size_t <= 64bit, enum <= 32bit, VALUE <= 64bit */
+#define MSGPACK_UNPACKER_STACK_SIZE sizeof(msgpack_unpacker_stack_entry_t)
 
 struct msgpack_unpacker_t {
     msgpack_buffer_t buffer;
