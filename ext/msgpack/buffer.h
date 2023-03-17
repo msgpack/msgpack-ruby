@@ -78,6 +78,7 @@ struct msgpack_buffer_chunk_t {
     void* mem;
     msgpack_buffer_chunk_t* next;
     VALUE mapped_string;  /* RBString or NO_MAPPED_STRING */
+    bool rmem;
 };
 
 union msgpack_buffer_cast_block_t {
