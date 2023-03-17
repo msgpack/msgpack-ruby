@@ -66,7 +66,11 @@ void msgpack_buffer_init(msgpack_buffer_t* b)
 static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
 {
     if(c->mem != NULL) {
-        if(!msgpack_rmem_free(&s_rmem, c->mem)) {
+        if(c->rmem) {
+            if(!msgpack_rmem_free(&s_rmem, c->mem)) {
+                rb_bug("Failed to free an rmem pointer, memory leak?");
+            }
+        } else {
             xfree(c->mem);
         }
         /* no needs to update rmem_owner because chunks will not be
@@ -349,6 +353,8 @@ static inline void* _msgpack_buffer_chunk_malloc(
         size_t required_size, size_t* allocated_size)
 {
     if(required_size <= MSGPACK_RMEM_PAGE_SIZE) {
+        c->rmem = true;
+
         if((size_t)(b->rmem_end - b->rmem_last) < required_size) {
             /* alloc new rmem page */
             *allocated_size = MSGPACK_RMEM_PAGE_SIZE;
@@ -379,6 +385,7 @@ static inline void* _msgpack_buffer_chunk_malloc(
     *allocated_size = required_size;
     void* mem = xmalloc(required_size);
     c->mem = mem;
+    c->rmem = false;
     return mem;
 }
 

@@ -86,7 +86,9 @@ void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
 
 static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {
     #ifdef UNPACKER_STACK_RMEM
-        msgpack_rmem_free(&s_stack_rmem, stack->data);
+        if (!msgpack_rmem_free(&s_stack_rmem, stack->data)) {
+            rb_bug("Failed to free an rmem pointer, memory leak?");
+        }
     #else
         xfree(stack->data);
     #endif
