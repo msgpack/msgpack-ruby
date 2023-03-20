@@ -326,14 +326,12 @@ static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE s
 
 void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string)
 {
-    size_t length = RSTRING_LEN(string);
-
     if(b->io != Qnil) {
         msgpack_buffer_flush(b);
         if (ENCODING_GET(string) == msgpack_rb_encindex_ascii8bit) {
             rb_funcall(b->io, b->io_write_all_method, 1, string);
         } else {
-            msgpack_buffer_append(b, RSTRING_PTR(string), length);
+            msgpack_buffer_append(b, RSTRING_PTR(string), RSTRING_LEN(string));
         }
     } else {
        _msgpack_buffer_append_reference(b, string);

@@ -268,14 +268,7 @@ static inline size_t msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE str
 static inline size_t msgpack_buffer_append_string_reference(msgpack_buffer_t* b, VALUE string)
 {
     size_t length = RSTRING_LEN(string);
-
-    if(length > MSGPACK_BUFFER_STRING_WRITE_REFERENCE_MINIMUM) {
-        _msgpack_buffer_append_long_string(b, string);
-
-    } else {
-        msgpack_buffer_append(b, RSTRING_PTR(string), length);
-    }
-
+    _msgpack_buffer_append_long_string(b, string);
     return length;
 }
 

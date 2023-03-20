@@ -249,18 +249,6 @@ static VALUE Unpacker_read_map_header(VALUE self)
     return ULONG2NUM(size); // long at least 32 bits
 }
 
-
-static VALUE Unpacker_feed(VALUE self, VALUE data)
-{
-    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
-
-    StringValue(data);
-
-    msgpack_buffer_append_string(UNPACKER_BUFFER_(uk), data);
-
-    return self;
-}
-
 static VALUE Unpacker_feed_reference(VALUE self, VALUE data)
 {
     msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
@@ -457,7 +445,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "skip_nil", Unpacker_skip_nil, 0);
     rb_define_method(cMessagePack_Unpacker, "read_array_header", Unpacker_read_array_header, 0);
     rb_define_method(cMessagePack_Unpacker, "read_map_header", Unpacker_read_map_header, 0);
-    rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed, 1);
+    rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed_reference, 1);
     rb_define_method(cMessagePack_Unpacker, "feed_reference", Unpacker_feed_reference, 1);
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
