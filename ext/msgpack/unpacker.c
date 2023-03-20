@@ -20,19 +20,17 @@
 #include "rmem.h"
 #include "extension_value_class.h"
 
-#if !defined(DISABLE_UNPACKER_STACK_RMEM) && \
-        MSGPACK_UNPACKER_STACK_CAPACITY * MSGPACK_UNPACKER_STACK_SIZE <= MSGPACK_RMEM_PAGE_SIZE
-#define UNPACKER_STACK_RMEM
-#endif
+_Static_assert(
+    sizeof(msgpack_unpacker_stack_entry_t) * MSGPACK_UNPACKER_STACK_CAPACITY <= MSGPACK_RMEM_PAGE_SIZE,
+    "msgpack_unpacker_stack_entry_t is too big to fit MSGPACK_UNPACKER_STACK_CAPACITY in MSGPACK_RMEM_PAGE_SIZE"
+);
 
 static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
 
 static ID s_call;
 
-#ifdef UNPACKER_STACK_RMEM
 static msgpack_rmem_t s_stack_rmem;
-#endif
 
 #if !defined(HAVE_RB_HASH_NEW_CAPA)
 static inline VALUE rb_hash_new_capa(long capa)
@@ -43,18 +41,14 @@ static inline VALUE rb_hash_new_capa(long capa)
 
 void msgpack_unpacker_static_init(void)
 {
-#ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_init(&s_stack_rmem);
-#endif
 
     s_call = rb_intern("call");
 }
 
 void msgpack_unpacker_static_destroy(void)
 {
-#ifdef UNPACKER_STACK_RMEM
     msgpack_rmem_destroy(&s_stack_rmem);
-#endif
 }
 
 #define HEAD_BYTE_REQUIRED 0xc1
@@ -62,13 +56,8 @@ void msgpack_unpacker_static_destroy(void)
 static inline msgpack_unpacker_stack_t* _msgpack_unpacker_new_stack(void) {
     msgpack_unpacker_stack_t *stack = ZALLOC(msgpack_unpacker_stack_t);
     stack->capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
-#ifdef UNPACKER_STACK_RMEM
     stack->data = msgpack_rmem_alloc(&s_stack_rmem);
     /*memset(uk->stack, 0, MSGPACK_UNPACKER_STACK_CAPACITY);*/
-#else
-    /*uk->stack = calloc(MSGPACK_UNPACKER_STACK_CAPACITY, sizeof(msgpack_unpacker_stack_entry_t));*/
-    stack->data = xmalloc(MSGPACK_UNPACKER_STACK_CAPACITY * sizeof(msgpack_unpacker_stack_entry_t));
-#endif
     return stack;
 }
 
@@ -85,13 +74,9 @@ void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
 }
 
 static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {
-    #ifdef UNPACKER_STACK_RMEM
-        if (!msgpack_rmem_free(&s_stack_rmem, stack->data)) {
-            rb_bug("Failed to free an rmem pointer, memory leak?");
-        }
-    #else
-        xfree(stack->data);
-    #endif
+    if (!msgpack_rmem_free(&s_stack_rmem, stack->data)) {
+        rb_bug("Failed to free an rmem pointer, memory leak?");
+    }
     xfree(stack);
 }
 
