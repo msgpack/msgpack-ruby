@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
     s.extensions = ["ext/msgpack/extconf.rb"]
   end
 
-  s.required_ruby_version = ">= 2.4"
+  s.required_ruby_version = ">= 2.5"
 
   s.add_development_dependency 'bundler'
   s.add_development_dependency 'rake'
