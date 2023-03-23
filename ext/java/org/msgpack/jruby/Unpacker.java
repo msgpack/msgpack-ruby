@@ -130,6 +130,9 @@ public class Unpacker extends RubyObject {
   @JRubyMethod(name = "register_type", required = 1, optional = 2)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
     Ruby runtime = ctx.runtime;
+    if (isFrozen()) {
+        throw runtime.newFrozenError("MessagePack::Unpacker");
+    }
     IRubyObject type = args[0];
 
     RubyModule extModule;

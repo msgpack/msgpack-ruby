@@ -92,7 +92,7 @@ public class Factory extends RubyObject {
     RubyHash options = null;
 
     if (isFrozen()) {
-        throw runtime.newRuntimeError("can't modify frozen Factory");
+        throw runtime.newFrozenError("MessagePack::Factory");
     }
 
     if (args.length == 2) {

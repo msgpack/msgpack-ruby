@@ -96,6 +96,9 @@ public class Packer extends RubyObject {
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
     Ruby runtime = ctx.runtime;
+    if (isFrozen()) {
+        throw runtime.newFrozenError("MessagePack::Packer");
+    }
     IRubyObject type = args[0];
     IRubyObject mod = args[1];
 

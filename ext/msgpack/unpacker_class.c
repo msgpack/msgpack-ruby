@@ -348,6 +348,10 @@ static VALUE Unpacker_registered_types_internal(VALUE self)
 
 static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
 {
+    if (OBJ_FROZEN(self)) {
+        rb_raise(rb_eFrozenError, "can't modify frozen MessagePack::Unpacker");
+    }
+
     msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
 
     int ext_type;

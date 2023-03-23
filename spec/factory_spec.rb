@@ -80,7 +80,7 @@ describe MessagePack::Factory do
       subject.register_type(0x00, Symbol)
       subject.freeze
       expect(subject.frozen?).to be_truthy
-      expect{ subject.register_type(0x01, Array) }.to raise_error(RuntimeError, "can't modify frozen Factory")
+      expect{ subject.register_type(0x01, Array) }.to raise_error(FrozenError, "can't modify frozen MessagePack::Factory")
     end
   end
 
@@ -704,6 +704,24 @@ describe MessagePack::Factory do
         unpacker.read
       end
       expect(object).to be == 42
+    end
+
+    it '#packer does not allow to register types' do
+      pool = factory.pool(1)
+      expect do
+        pool.packer do |packer|
+          packer.register_type(0x20, ::MyType) { "type" }
+        end
+      end.to raise_error(FrozenError, "can't modify frozen MessagePack::Packer")
+    end
+
+    it '#unpacker does not allow to register types' do
+      pool = factory.pool(1)
+      expect do
+        pool.unpacker do |unpacker|
+          unpacker.register_type(0x20, ::MyType) { "type" }
+        end
+      end.to raise_error(FrozenError, "can't modify frozen MessagePack::Unpacker")
     end
 
     it 'types can be registered before the pool is created' do

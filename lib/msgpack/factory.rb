@@ -140,8 +140,8 @@ module MessagePack
       def initialize(factory, size, options = nil)
         options = nil if !options || options.empty?
         @factory = factory
-        @packers = MemberPool.new(size) { factory.packer(options) }
-        @unpackers = MemberPool.new(size) { factory.unpacker(options) }
+        @packers = MemberPool.new(size) { factory.packer(options).freeze }
+        @unpackers = MemberPool.new(size) { factory.unpacker(options).freeze }
       end
 
       def load(data)
