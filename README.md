@@ -211,6 +211,33 @@ factory.register_type(
 factory.load(factory.dump(Point.new(12, 34))) # => #<struct Point x=12, y=34>
 ```
 
+## Pooling
+
+Creating `Packer` and `Unpacker` objects is expensive. For best performance it is preferable to re-use these objects.
+
+`MessagePack::Factory#pool` makes that easier:
+
+```ruby
+factory = MessagePack::Factory.new
+factory.register_type(
+  0x01,
+  Point,
+  packer: ->(point, packer) {
+    packer.write(point.x)
+    packer.write(point.y)
+  },
+  unpacker: ->(unpacker) {
+    x = unpacker.read
+    y = unpacker.read
+    Point.new(x, y)
+  },
+  recursive: true,
+)
+pool = factory.pool(5) # The pool size should match the number of threads expected to use the factory concurrently.
+
+pool.load(pool.dump(Point.new(12, 34))) # => #<struct Point x=12, y=34>
+```
+
 ## Buffer API
 
 MessagePack for Ruby provides a buffer API so that you can read or write data by hand, not via Packer or Unpacker API.
