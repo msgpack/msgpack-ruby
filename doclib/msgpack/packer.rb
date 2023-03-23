@@ -177,7 +177,17 @@ module MessagePack
     end
 
     #
+    # Returns all data in the buffer as a string, and reset the buffer.
+    #
+    # @return [String]
+    #
+    def full_pack
+    end
+
+    #
     # Returns all data in the buffer as a string. Same as buffer.to_str.
+    #
+    # Does not empty the buffer, in most case _full_pack_ is prefered.
     #
     # @return [String]
     #
