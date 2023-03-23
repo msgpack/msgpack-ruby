@@ -88,7 +88,7 @@ module MessagePack
 
     class Pool
       if RUBY_ENGINE == "ruby"
-        class AbstractPool
+        class MemberPool
           def initialize(size, &block)
             @size = size
             @new_member = block
@@ -114,7 +114,7 @@ module MessagePack
           end
         end
       else
-        class AbstractPool
+        class MemberPool
           def initialize(size, &block)
             @size = size
             @new_member = block
@@ -137,27 +137,11 @@ module MessagePack
         end
       end
 
-      class PackerPool < AbstractPool
-        private
-
-        def reset(packer)
-          packer.clear
-        end
-      end
-
-      class UnpackerPool < AbstractPool
-        private
-
-        def reset(unpacker)
-          unpacker.reset
-        end
-      end
-
       def initialize(factory, size, options = nil)
         options = nil if !options || options.empty?
         @factory = factory
-        @packers = PackerPool.new(size) { factory.packer(options) }
-        @unpackers = UnpackerPool.new(size) { factory.unpacker(options) }
+        @packers = MemberPool.new(size) { factory.packer(options) }
+        @unpackers = MemberPool.new(size) { factory.unpacker(options) }
       end
 
       def load(data)
