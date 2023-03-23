@@ -127,9 +127,9 @@ module MessagePack
           end
 
           def checkin(member)
+            member.reset
             @mutex.synchronize do
               if member && @members.size < @size
-                member.reset
                 @members << member
               end
             end
@@ -159,6 +159,24 @@ module MessagePack
         begin
           packer.write(object)
           packer.full_pack
+        ensure
+          @packers.checkin(packer)
+        end
+      end
+
+      def unpacker
+        unpacker = @unpackers.checkout
+        begin
+          yield unpacker
+        ensure
+          @unpackers.checkin(unpacker)
+        end
+      end
+
+      def packer
+        packer = @packers.checkout
+        begin
+          yield packer
         ensure
           @packers.checkin(packer)
         end

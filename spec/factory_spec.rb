@@ -686,6 +686,26 @@ describe MessagePack::Factory do
       expect(pool.load(pool.dump(42))).to be == 42
     end
 
+    it 'responds to #packer with a block' do
+      pool = factory.pool(1)
+      payload = pool.packer do |packer|
+        packer.write(42)
+        packer.full_pack
+      end
+      expect(payload).to be == factory.dump(42)
+    end
+
+    it 'responds to #unpacker with a block' do
+      pool = factory.pool(1)
+      payload = factory.dump(42)
+
+      object = pool.unpacker do |unpacker|
+        unpacker.feed(payload)
+        unpacker.read
+      end
+      expect(object).to be == 42
+    end
+
     it 'types can be registered before the pool is created' do
       factory.register_type(0x00, Symbol)
       pool = factory.pool(1)
