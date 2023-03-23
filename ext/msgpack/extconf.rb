@@ -28,20 +28,6 @@ else
   $CFLAGS << ' -DHASH_ASET_DEDUPE=0 '
 end
 
-
-# checking if String#-@ (str_uminus) dedupes... ' (Ruby 2.5+)
-begin
-  a = -(%w(t e s t).join)
-  b = -(%w(t e s t).join)
-  if a.equal?(b)
-    $CFLAGS << ' -DSTR_UMINUS_DEDUPE=1 '
-  else
-    $CFLAGS += ' -DSTR_UMINUS_DEDUPE=0 '
-  end
-rescue NoMethodError
-  $CFLAGS << ' -DSTR_UMINUS_DEDUPE=0 '
-end
-
 # checking if String#-@ (str_uminus) directly interns frozen strings... ' (Ruby 3.0+)
 begin
   s = rand.to_s.freeze

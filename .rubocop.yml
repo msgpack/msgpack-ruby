@@ -6,7 +6,7 @@
 # versions of RuboCop, may require this file to be generated again.
 
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.5
 
 # Offense count: 3
 Lint/AmbiguousOperator:

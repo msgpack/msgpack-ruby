@@ -473,7 +473,6 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
         result = rb_str_new(b->read_buffer, length);
     }
 
-#if STR_UMINUS_DEDUPE
     if (will_be_frozen) {
 #if STR_UMINUS_DEDUPE_FROZEN
         // Starting from MRI 2.8 it is preferable to freeze the string
@@ -485,7 +484,6 @@ static inline VALUE msgpack_buffer_read_top_as_string(msgpack_buffer_t* b, size_
         // frozen.
         result = rb_funcall(result, s_uminus, 0);
     }
-#endif // STR_UMINUS_DEDUPE
     _msgpack_buffer_consumed(b, length);
     return result;
 
