@@ -212,7 +212,7 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     VALUE packer_proc, unpacker_proc;
 
     if (OBJ_FROZEN(self)) {
-        rb_raise(rb_eRuntimeError, "can't modify frozen Factory");
+        rb_raise(rb_eFrozenError, "can't modify frozen MessagePack::Factory");
     }
 
     switch (argc) {

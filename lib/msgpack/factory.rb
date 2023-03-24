@@ -88,46 +88,25 @@ module MessagePack
 
     class Pool
       if RUBY_ENGINE == "ruby"
-        class AbstractPool
+        class MemberPool
           def initialize(size, &block)
             @size = size
             @new_member = block
             @members = []
           end
 
-          def checkout
-            @members.pop || @new_member.call
-          end
-
-          def checkin(member)
-            # If the pool is already full, we simply drop the extra member.
-            # This is because contrary to a connection pool, creating an extra instance
-            # is extremely unlikely to cause some kind of resource exhaustion.
-            #
-            # We could cycle the members (keep the newer one) but first It's more work and second
-            # the older member might have been created pre-fork, so it might be at least partially
-            # in shared memory.
-            if member && @members.size < @size
-              member.reset
-              @members << member
-            end
-          end
-        end
-      else
-        class AbstractPool
-          def initialize(size, &block)
-            @size = size
-            @new_member = block
-            @members = []
-            @mutex = Mutex.new
-          end
-
-          def checkout
-            @mutex.synchronize { @members.pop } || @new_member.call
-          end
-
-          def checkin(member)
-            @mutex.synchronize do
+          def with
+            member = @members.pop || @new_member.call
+            begin
+              yield member
+            ensure
+              # If the pool is already full, we simply drop the extra member.
+              # This is because contrary to a connection pool, creating an extra instance
+              # is extremely unlikely to cause some kind of resource exhaustion.
+              #
+              # We could cycle the members (keep the newer one) but first It's more work and second
+              # the older member might have been created pre-fork, so it might be at least partially
+              # in shared memory.
               if member && @members.size < @size
                 member.reset
                 @members << member
@@ -135,49 +114,58 @@ module MessagePack
             end
           end
         end
-      end
+      else
+        class MemberPool
+          def initialize(size, &block)
+            @size = size
+            @new_member = block
+            @members = []
+            @mutex = Mutex.new
+          end
 
-      class PackerPool < AbstractPool
-        private
-
-        def reset(packer)
-          packer.clear
-        end
-      end
-
-      class UnpackerPool < AbstractPool
-        private
-
-        def reset(unpacker)
-          unpacker.reset
+          def with
+            member = @mutex.synchronize { @members.pop } || @new_member.call
+            begin
+              yield member
+            ensure
+              member.reset
+              @mutex.synchronize do
+                if member && @members.size < @size
+                  @members << member
+                end
+              end
+            end
+          end
         end
       end
 
       def initialize(factory, size, options = nil)
         options = nil if !options || options.empty?
         @factory = factory
-        @packers = PackerPool.new(size) { factory.packer(options) }
-        @unpackers = UnpackerPool.new(size) { factory.unpacker(options) }
+        @packers = MemberPool.new(size) { factory.packer(options).freeze }
+        @unpackers = MemberPool.new(size) { factory.unpacker(options).freeze }
       end
 
       def load(data)
-        unpacker = @unpackers.checkout
-        begin
-          unpacker.feed_reference(data)
+        @unpackers.with do |unpacker|
+          unpacker.feed(data)
           unpacker.full_unpack
-        ensure
-          @unpackers.checkin(unpacker)
         end
       end
 
       def dump(object)
-        packer = @packers.checkout
-        begin
+        @packers.with do |packer|
           packer.write(object)
           packer.full_pack
-        ensure
-          @packers.checkin(packer)
         end
+      end
+
+      def unpacker(&block)
+        @unpackers.with(&block)
+      end
+
+      def packer(&block)
+        @packers.with(&block)
       end
     end
   end

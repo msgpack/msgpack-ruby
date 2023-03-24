@@ -349,6 +349,10 @@ static VALUE Packer_registered_types_internal(VALUE self)
 
 static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
 {
+    if (OBJ_FROZEN(self)) {
+        rb_raise(rb_eFrozenError, "can't modify frozen MessagePack::Packer");
+    }
+
     msgpack_packer_t *pk = MessagePack_Packer_get(self);
 
     int ext_type;

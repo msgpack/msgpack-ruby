@@ -124,8 +124,6 @@ module MessagePack
       # @param data [String]
       # @return [Object] deserialized object
       #
-      # See Unpacker#initialize for supported options.
-      #
       def load(data)
       end
 
@@ -139,6 +137,28 @@ module MessagePack
       # @return [String] serialized object
       #
       def dump(object)
+      end
+
+      #
+      # Yields an Unpacker from the pool, and check it back in.
+      #
+      # The unpacker should no longer be held after the block has returned.
+      #
+      # @yieldparam unpacker [MessagePack::Unpacker]
+      # @returns [Object] the block return value
+      #
+      def unpacker(&block)
+      end
+
+      #
+      # Yields a Packer from the pool, and check it back in.
+      #
+      # The packer should no longer be held after the block has returned.
+      #
+      # @yieldparam packer [MessagePack::Packer]
+      # @returns [Object] the block return value
+      #
+      def packer(&block)
       end
     end
   end
