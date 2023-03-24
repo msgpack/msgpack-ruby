@@ -95,21 +95,22 @@ module MessagePack
             @members = []
           end
 
-          def checkout
-            @members.pop || @new_member.call
-          end
-
-          def checkin(member)
-            # If the pool is already full, we simply drop the extra member.
-            # This is because contrary to a connection pool, creating an extra instance
-            # is extremely unlikely to cause some kind of resource exhaustion.
-            #
-            # We could cycle the members (keep the newer one) but first It's more work and second
-            # the older member might have been created pre-fork, so it might be at least partially
-            # in shared memory.
-            if member && @members.size < @size
-              member.reset
-              @members << member
+          def with
+            member = @members.pop || @new_member.call
+            begin
+              yield member
+            ensure
+              # If the pool is already full, we simply drop the extra member.
+              # This is because contrary to a connection pool, creating an extra instance
+              # is extremely unlikely to cause some kind of resource exhaustion.
+              #
+              # We could cycle the members (keep the newer one) but first It's more work and second
+              # the older member might have been created pre-fork, so it might be at least partially
+              # in shared memory.
+              if member && @members.size < @size
+                member.reset
+                @members << member
+              end
             end
           end
         end
@@ -122,15 +123,16 @@ module MessagePack
             @mutex = Mutex.new
           end
 
-          def checkout
-            @mutex.synchronize { @members.pop } || @new_member.call
-          end
-
-          def checkin(member)
-            member.reset
-            @mutex.synchronize do
-              if member && @members.size < @size
-                @members << member
+          def with
+            member = @mutex.synchronize { @members.pop } || @new_member.call
+            begin
+              yield member
+            ensure
+              member.reset
+              @mutex.synchronize do
+                if member && @members.size < @size
+                  @members << member
+                end
               end
             end
           end
@@ -145,41 +147,25 @@ module MessagePack
       end
 
       def load(data)
-        unpacker = @unpackers.checkout
-        begin
-          unpacker.feed_reference(data)
+        @unpackers.with do |unpacker|
+          unpacker.feed(data)
           unpacker.full_unpack
-        ensure
-          @unpackers.checkin(unpacker)
         end
       end
 
       def dump(object)
-        packer = @packers.checkout
-        begin
+        @packers.with do |packer|
           packer.write(object)
           packer.full_pack
-        ensure
-          @packers.checkin(packer)
         end
       end
 
-      def unpacker
-        unpacker = @unpackers.checkout
-        begin
-          yield unpacker
-        ensure
-          @unpackers.checkin(unpacker)
-        end
+      def unpacker(&block)
+        @unpackers.with(&block)
       end
 
-      def packer
-        packer = @packers.checkout
-        begin
-          yield packer
-        ensure
-          @packers.checkin(packer)
-        end
+      def packer(&block)
+        @packers.with(&block)
       end
     end
   end

@@ -1,3 +1,4 @@
+* Implement `Factory::Pool#unpacker` and `Factory::Pool#packer` to allow for more precise serialization.
 * Require Ruby 2.5+.
 
 2023-03-03 1.6.1:

@@ -450,7 +450,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "read_array_header", Unpacker_read_array_header, 0);
     rb_define_method(cMessagePack_Unpacker, "read_map_header", Unpacker_read_map_header, 0);
     rb_define_method(cMessagePack_Unpacker, "feed", Unpacker_feed_reference, 1);
-    rb_define_method(cMessagePack_Unpacker, "feed_reference", Unpacker_feed_reference, 1);
+    rb_define_alias(cMessagePack_Unpacker, "feed_reference", "feed");
     rb_define_method(cMessagePack_Unpacker, "each", Unpacker_each, 0);
     rb_define_method(cMessagePack_Unpacker, "feed_each", Unpacker_feed_each, 1);
     rb_define_method(cMessagePack_Unpacker, "reset", Unpacker_reset, 0);
