@@ -1,3 +1,5 @@
+2023-03-29 1.7.0:
+
 * Fix a possible double-free issue when GC triggers inside `_msgpack_rmem_alloc2`.
 * `Unpacker#feed` now always directly read in provided strings instead of copying content in its buffer.
 * `Unpacker#feed` is now an alias of `Unpacker#feed_reference`.
