@@ -129,7 +129,7 @@ public class Packer extends RubyObject {
 
     registry.put(extModule, (int) typeId, false, proc, arg, null, null);
 
-    if (extModule == runtime.getSymbol()) {
+    if (extModule == runtime.getSymbol() && !proc.isNil()) {
       encoder.hasSymbolExtType = true;
     }
 

@@ -222,11 +222,12 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         unpacker_arg = ID2SYM(rb_intern("from_msgpack_ext"));
         break;
     case 3:
-        /* register_type(0x7f, Time, packer: proc-like, unapcker: proc-like) */
+        /* register_type(0x7f, Time, packer: proc-like, unpacker: proc-like) */
         options = argv[2];
         if(rb_type(options) != T_HASH) {
             rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
         }
+
         packer_arg = rb_hash_aref(options, ID2SYM(rb_intern("packer")));
         unpacker_arg = rb_hash_aref(options, ID2SYM(rb_intern("unpacker")));
         break;
@@ -266,7 +267,9 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
     }
 
     if(ext_module == rb_cSymbol) {
-        fc->has_symbol_ext_type = true;
+        if(NIL_P(options) || RTEST(rb_hash_aref(options, ID2SYM(rb_intern("packer"))))) {
+            fc->has_symbol_ext_type = true;
+        }
         if(RTEST(options) && RTEST(rb_hash_aref(options, ID2SYM(rb_intern("optimized_symbols_parsing"))))) {
             fc->optimized_symbol_ext_type = true;
         }

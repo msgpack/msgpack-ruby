@@ -1,3 +1,5 @@
+* Fix an infinite recursion issue when registering a Symbol type with a `nil` packer.
+
 2023-03-29 1.7.0:
 
 * Fix a possible double-free issue when GC triggers inside `_msgpack_rmem_alloc2`.
