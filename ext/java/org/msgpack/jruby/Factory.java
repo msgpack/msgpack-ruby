@@ -26,8 +26,8 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 @JRubyClass(name="MessagePack::Factory")
 public class Factory extends RubyObject {
   private static final long serialVersionUID = 8441284623445322492L;
-  private final Ruby runtime;
-  private ExtensionRegistry extensionRegistry;
+  private transient final Ruby runtime;
+  private transient ExtensionRegistry extensionRegistry;
   private boolean hasSymbolExtType;
   private boolean hasBigIntExtType;
 
@@ -82,6 +82,8 @@ public class Factory extends RubyObject {
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args) {
+    testFrozen("MessagePack::Factory");
+
     Ruby runtime = ctx.runtime;
     IRubyObject type = args[0];
     IRubyObject mod = args[1];
@@ -90,10 +92,6 @@ public class Factory extends RubyObject {
     IRubyObject unpackerArg;
 
     RubyHash options = null;
-
-    if (isFrozen()) {
-        throw runtime.newFrozenError("MessagePack::Factory");
-    }
 
     if (args.length == 2) {
       packerArg = runtime.newSymbol("to_msgpack_ext");

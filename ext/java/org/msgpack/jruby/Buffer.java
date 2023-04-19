@@ -22,10 +22,10 @@ import org.jcodings.Encoding;
 @JRubyClass(name="MessagePack::Buffer")
 public class Buffer extends RubyObject {
   private static final long serialVersionUID = 8441244627425629412L;
-  private IRubyObject io;
-  private ByteBuffer buffer;
+  private transient IRubyObject io;
+  private transient ByteBuffer buffer;
   private boolean writeMode;
-  private Encoding binaryEncoding;
+  private transient Encoding binaryEncoding;
 
   private static final int CACHE_LINE_SIZE = 64;
   private static final int ARRAY_HEADER_SIZE = 24;
