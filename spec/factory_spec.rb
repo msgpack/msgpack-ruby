@@ -249,6 +249,12 @@ describe MessagePack::Factory do
       my.b.should == 2
     end
 
+    it 'handles Symbol type with `packer: nil`' do
+      factory = MessagePack::Factory.new
+      factory.register_type(0x00, Symbol, packer: nil)
+      expect(factory.load(factory.dump(:foo))).to be == "foo"
+    end
+
     describe "registering multiple ext type for the same class" do
       let(:payload) do
         factory = MessagePack::Factory.new

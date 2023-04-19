@@ -100,7 +100,13 @@ public class Factory extends RubyObject {
       if (args[args.length - 1] instanceof RubyHash) {
         options = (RubyHash) args[args.length - 1];
         packerArg = options.fastARef(runtime.newSymbol("packer"));
+        if (packerArg != null && packerArg.isNil()) {
+          packerArg = null;
+        }
         unpackerArg = options.fastARef(runtime.newSymbol("unpacker"));
+        if (unpackerArg != null && unpackerArg.isNil()) {
+          unpackerArg = null;
+        }
         IRubyObject optimizedSymbolsParsingArg = options.fastARef(runtime.newSymbol("optimized_symbols_parsing"));
         if (optimizedSymbolsParsingArg != null && optimizedSymbolsParsingArg.isTrue()) {
           throw runtime.newArgumentError("JRuby implementation does not support the optimized_symbols_parsing option");
@@ -147,7 +153,7 @@ public class Factory extends RubyObject {
 
     extensionRegistry.put(extModule, (int) typeId, recursive, packerProc, packerArg, unpackerProc, unpackerArg);
 
-    if (extModule == runtime.getSymbol()) {
+    if (extModule == runtime.getSymbol() && !packerProc.isNil()) {
       hasSymbolExtType = true;
     }
 

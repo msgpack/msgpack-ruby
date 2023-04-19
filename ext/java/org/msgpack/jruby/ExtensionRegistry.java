@@ -141,11 +141,11 @@ public class ExtensionRegistry {
     }
 
     public boolean hasPacker() {
-      return packerProc != null;
+      return packerProc != null && !packerProc.isNil();
     }
 
     public boolean hasUnpacker() {
-      return unpackerProc != null;
+      return unpackerProc != null && !unpackerProc.isNil();
     }
 
     public IRubyObject getPackerProc() {
