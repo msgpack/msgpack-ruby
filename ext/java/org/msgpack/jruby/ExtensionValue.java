@@ -26,7 +26,7 @@ import static org.msgpack.jruby.Types.*;
 @JRubyClass(name="MessagePack::ExtensionValue")
 public class ExtensionValue extends RubyObject {
   private static final long serialVersionUID = 8451274621449322492L;
-  private final Encoding binaryEncoding;
+  private transient final Encoding binaryEncoding;
 
   private RubyFixnum type;
   private RubyString payload;

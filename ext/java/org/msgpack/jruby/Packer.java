@@ -28,12 +28,12 @@ import static org.jruby.runtime.Visibility.PRIVATE;
 @JRubyClass(name="MessagePack::Packer")
 public class Packer extends RubyObject {
   private static final long serialVersionUID = 8451274621499362492L;
-  public ExtensionRegistry registry;
+  public transient ExtensionRegistry registry;
   private Buffer buffer;
-  private Encoder encoder;
+  private transient Encoder encoder;
   private boolean hasSymbolExtType;
   private boolean hasBigintExtType;
-  private Encoding binaryEncoding;
+  private transient Encoding binaryEncoding;
 
   public Packer(Ruby runtime, RubyClass type, ExtensionRegistry registry, boolean hasSymbolExtType, boolean hasBigintExtType) {
     super(runtime, type);
@@ -95,10 +95,9 @@ public class Packer extends RubyObject {
 
   @JRubyMethod(name = "register_type", required = 2, optional = 1)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
+    testFrozen("MessagePack::Packer");
+
     Ruby runtime = ctx.runtime;
-    if (isFrozen()) {
-        throw runtime.newFrozenError("MessagePack::Packer");
-    }
     IRubyObject type = args[0];
     IRubyObject mod = args[1];
 

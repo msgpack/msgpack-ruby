@@ -21,18 +21,17 @@ import org.jruby.runtime.ThreadContext;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.util.ByteList;
-import org.jruby.ext.stringio.StringIO;
 
 import static org.jruby.runtime.Visibility.PRIVATE;
 
 @JRubyClass(name="MessagePack::Unpacker")
 public class Unpacker extends RubyObject {
   private static final long serialVersionUID = 8451264671199362492L;
-  private final ExtensionRegistry registry;
+  private transient final ExtensionRegistry registry;
 
-  private IRubyObject stream;
-  private IRubyObject data;
-  private Decoder decoder;
+  private transient IRubyObject stream;
+  private transient IRubyObject data;
+  private transient Decoder decoder;
   private final RubyClass underflowErrorClass;
   private boolean symbolizeKeys;
   private boolean freeze;
@@ -129,10 +128,9 @@ public class Unpacker extends RubyObject {
 
   @JRubyMethod(name = "register_type", required = 1, optional = 2)
   public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
+    testFrozen("MessagePack::Unpacker");
+
     Ruby runtime = ctx.runtime;
-    if (isFrozen()) {
-        throw runtime.newFrozenError("MessagePack::Unpacker");
-    }
     IRubyObject type = args[0];
 
     RubyModule extModule;
@@ -334,9 +332,7 @@ public class Unpacker extends RubyObject {
   @JRubyMethod(name = "stream=", required = 1)
   public IRubyObject setStream(ThreadContext ctx, IRubyObject stream) {
     RubyString str;
-    if (stream instanceof StringIO) {
-      str = stream.callMethod(ctx, "string").asString();
-    } else if (stream instanceof RubyIO) {
+    if (stream instanceof RubyIO) {
       str = stream.callMethod(ctx, "read").asString();
     } else if (stream.respondsTo("read")) {
       str = stream.callMethod(ctx, "read").asString();
