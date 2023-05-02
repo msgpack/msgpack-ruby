@@ -33,6 +33,8 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # 'bundle install' and cache
       - run: bundle exec rake
+        env:
+          MSGPACK_DEBUG: "true"
 
   valgrind:
     runs-on: ubuntu-latest
@@ -59,6 +61,8 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # 'bundle install' and cache
       - run: bundle exec rake spec
+        env:
+          MSGPACK_DEBUG: "true"
 
   head-versions:
     continue-on-error: true
@@ -75,3 +79,5 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true # 'bundle install' and cache
       - run: bundle exec rake spec || echo "failed, but ignore it"
+        env:
+          MSGPACK_DEBUG: "true"
