@@ -14,6 +14,8 @@ append_cflags([
 ])
 append_cflags(RbConfig::CONFIG["debugflags"]) if RbConfig::CONFIG["debugflags"]
 
+append_cflags("-DRUBY_DEBUG=1") if ENV["MSGPACK_DEBUG"]
+
 if RUBY_VERSION.start_with?('3.0.') && RUBY_VERSION <= '3.0.5'
   # https://bugs.ruby-lang.org/issues/18772
   append_cflags("-DRB_ENC_INTERNED_STR_NULL_CHECK=1")

@@ -19,11 +19,7 @@
 #include "unpacker.h"
 #include "rmem.h"
 #include "extension_value_class.h"
-
-_Static_assert(
-    sizeof(msgpack_unpacker_stack_entry_t) * MSGPACK_UNPACKER_STACK_CAPACITY <= MSGPACK_RMEM_PAGE_SIZE,
-    "msgpack_unpacker_stack_entry_t is too big to fit MSGPACK_UNPACKER_STACK_CAPACITY in MSGPACK_RMEM_PAGE_SIZE"
-);
+#include <assert.h>
 
 static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
@@ -41,6 +37,8 @@ static inline VALUE rb_hash_new_capa(long capa)
 
 void msgpack_unpacker_static_init(void)
 {
+    assert(sizeof(msgpack_unpacker_stack_entry_t) * MSGPACK_UNPACKER_STACK_CAPACITY <= MSGPACK_RMEM_PAGE_SIZE);
+
     msgpack_rmem_init(&s_stack_rmem);
 
     s_call = rb_intern("call");
