@@ -233,7 +233,12 @@ static VALUE Packer_write_extension(VALUE self, VALUE obj)
     msgpack_packer_t *pk = MessagePack_Packer_get(self);
     Check_Type(obj, T_STRUCT);
 
-    int ext_type = FIX2INT(RSTRUCT_GET(obj, 0));
+    VALUE rb_ext_type = RSTRUCT_GET(obj, 0);
+    if(!RB_TYPE_P(rb_ext_type, T_FIXNUM)) {
+        rb_raise(rb_eRangeError, "integer %s too big to convert to `signed char'", RSTRING_PTR(rb_String(rb_ext_type)));
+    }
+
+    int ext_type = FIX2INT(rb_ext_type);
     if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
