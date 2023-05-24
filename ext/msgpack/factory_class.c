@@ -75,7 +75,7 @@ static const rb_data_type_t factory_data_type = {
         .dfree = Factory_free,
         .dsize = Factory_memsize,
     },
-    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY | RUBY_TYPED_WB_PROTECTED
 };
 
 static inline msgpack_factory_t *Factory_get(VALUE object)
@@ -98,7 +98,7 @@ static VALUE Factory_initialize(int argc, VALUE* argv, VALUE self)
 {
     msgpack_factory_t *fc = Factory_get(self);
 
-    msgpack_packer_ext_registry_init(&fc->pkrg);
+    msgpack_packer_ext_registry_init(self, &fc->pkrg);
     // fc->ukrg is lazily initialized
 
     fc->has_symbol_ext_type = false;
@@ -124,7 +124,7 @@ static VALUE Factory_dup(VALUE self)
     cloned_fc->has_symbol_ext_type = fc->has_symbol_ext_type;
     cloned_fc->pkrg = fc->pkrg;
     msgpack_unpacker_ext_registry_borrow(fc->ukrg, &cloned_fc->ukrg);
-    msgpack_packer_ext_registry_dup(&fc->pkrg, &cloned_fc->pkrg);
+    msgpack_packer_ext_registry_dup(clone, &fc->pkrg, &cloned_fc->pkrg);
 
     return clone;
 }
@@ -139,7 +139,7 @@ static VALUE Factory_freeze(VALUE self) {
                 // If the factory is frozen, we can safely share the packer cache between
                 // all packers. So we eagerly create it now so it's available when #packer
                 // is called.
-                fc->pkrg.cache = rb_hash_new();
+                RB_OBJ_WRITE(self, &fc->pkrg.cache, rb_hash_new());
             }
         }
 
@@ -158,7 +158,7 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
 
     msgpack_packer_t* pk = MessagePack_Packer_get(packer);
     msgpack_packer_ext_registry_destroy(&pk->ext_registry);
-    msgpack_packer_ext_registry_dup(&fc->pkrg, &pk->ext_registry);
+    msgpack_packer_ext_registry_borrow(packer, &fc->pkrg, &pk->ext_registry);
     pk->has_bigint_ext_type = fc->has_bigint_ext_type;
     pk->has_symbol_ext_type = fc->has_symbol_ext_type;
 
@@ -289,8 +289,8 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         }
     }
 
-    msgpack_packer_ext_registry_put(&fc->pkrg, ext_module, ext_type, flags, packer_proc, packer_arg);
-    msgpack_unpacker_ext_registry_put(&fc->ukrg, ext_module, ext_type, flags, unpacker_proc, unpacker_arg);
+    msgpack_packer_ext_registry_put(self, &fc->pkrg, ext_module, ext_type, flags, packer_proc, packer_arg);
+    msgpack_unpacker_ext_registry_put(self, &fc->ukrg, ext_module, ext_type, flags, unpacker_proc, unpacker_arg);
 
     return Qnil;
 }

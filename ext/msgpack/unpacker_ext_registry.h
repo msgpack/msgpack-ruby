@@ -47,7 +47,7 @@ static inline void msgpack_unpacker_ext_registry_borrow(msgpack_unpacker_ext_reg
 
 void msgpack_unpacker_ext_registry_mark(msgpack_unpacker_ext_registry_t* ukrg);
 
-void msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t** ukrg,
+void msgpack_unpacker_ext_registry_put(VALUE owner, msgpack_unpacker_ext_registry_t** ukrg,
         VALUE ext_module, int ext_type, int flags, VALUE proc, VALUE arg);
 
 static inline VALUE msgpack_unpacker_ext_registry_lookup(msgpack_unpacker_ext_registry_t* ukrg,

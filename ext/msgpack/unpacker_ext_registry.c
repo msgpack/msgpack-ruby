@@ -76,11 +76,12 @@ void msgpack_unpacker_ext_registry_release(msgpack_unpacker_ext_registry_t* ukrg
     }
 }
 
-void msgpack_unpacker_ext_registry_put(msgpack_unpacker_ext_registry_t** ukrg,
+void msgpack_unpacker_ext_registry_put(VALUE owner, msgpack_unpacker_ext_registry_t** ukrg,
         VALUE ext_module, int ext_type, int flags, VALUE proc, VALUE arg)
 {
     msgpack_unpacker_ext_registry_t* ext_registry = msgpack_unpacker_ext_registry_cow(*ukrg);
 
-    ext_registry->array[ext_type + 128] = rb_ary_new3(4, ext_module, proc, arg, INT2FIX(flags));
+    VALUE entry = rb_ary_new3(4, ext_module, proc, arg, INT2FIX(flags));
+    RB_OBJ_WRITE(owner, &ext_registry->array[ext_type + 128], entry);
     *ukrg = ext_registry;
 }
