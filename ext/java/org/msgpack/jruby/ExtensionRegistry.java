@@ -54,8 +54,8 @@ public class ExtensionRegistry {
     return hash;
   }
 
-  public void put(RubyModule mod, int typeId, boolean recursive, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
-    ExtensionEntry entry = new ExtensionEntry(mod, typeId, recursive, packerProc, packerArg, unpackerProc, unpackerArg);
+  public void put(RubyModule mod, int typeId, boolean recursive, IRubyObject packerProc, IRubyObject unpackerProc) {
+    ExtensionEntry entry = new ExtensionEntry(mod, typeId, recursive, packerProc, unpackerProc);
     extensionsByModule.put(mod, entry);
     extensionsByTypeId[typeId + 128] = entry;
     extensionsByAncestor.clear();
@@ -114,18 +114,14 @@ public class ExtensionRegistry {
     private final int typeId;
     private final boolean recursive;
     private final IRubyObject packerProc;
-    private final IRubyObject packerArg;
     private final IRubyObject unpackerProc;
-    private final IRubyObject unpackerArg;
 
-    public ExtensionEntry(RubyModule mod, int typeId, boolean recursive, IRubyObject packerProc, IRubyObject packerArg, IRubyObject unpackerProc, IRubyObject unpackerArg) {
+    public ExtensionEntry(RubyModule mod, int typeId, boolean recursive, IRubyObject packerProc, IRubyObject unpackerProc) {
       this.mod = mod;
       this.typeId = typeId;
       this.recursive = recursive;
       this.packerProc = packerProc;
-      this.packerArg = packerArg;
       this.unpackerProc = unpackerProc;
-      this.unpackerArg = unpackerArg;
     }
 
     public RubyModule getExtensionModule() {
@@ -157,11 +153,11 @@ public class ExtensionRegistry {
     }
 
     public RubyArray<?> toPackerTuple(ThreadContext ctx) {
-      return ctx.runtime.newArray(new IRubyObject[] {ctx.runtime.newFixnum(typeId), packerProc, packerArg});
+      return ctx.runtime.newArray(new IRubyObject[] {ctx.runtime.newFixnum(typeId), packerProc});
     }
 
     public RubyArray<?> toUnpackerTuple(ThreadContext ctx) {
-      return ctx.runtime.newArray(new IRubyObject[] {mod, unpackerProc, unpackerArg});
+      return ctx.runtime.newArray(new IRubyObject[] {mod, unpackerProc});
     }
 
     public IRubyObject[] toPackerProcTypeIdPair(ThreadContext ctx) {

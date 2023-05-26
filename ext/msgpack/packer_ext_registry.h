@@ -31,10 +31,6 @@ struct msgpack_packer_ext_registry_t {
     VALUE cache; // lookup cache for ext types inherited from a super class
 };
 
-void msgpack_packer_ext_registry_static_init(void);
-
-void msgpack_packer_ext_registry_static_destroy(void);
-
 void msgpack_packer_ext_registry_init(VALUE owner, msgpack_packer_ext_registry_t* pkrg);
 
 static inline void msgpack_packer_ext_registry_destroy(msgpack_packer_ext_registry_t* pkrg)
@@ -49,7 +45,7 @@ void msgpack_packer_ext_registry_dup(VALUE owner, msgpack_packer_ext_registry_t*
         msgpack_packer_ext_registry_t* dst);
 
 void msgpack_packer_ext_registry_put(VALUE owner, msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_module, int ext_type, int flags, VALUE proc, VALUE arg);
+        VALUE ext_module, int ext_type, int flags, VALUE proc);
 
 static int msgpack_packer_ext_find_superclass(VALUE key, VALUE value, VALUE arg)
 {
@@ -71,7 +67,7 @@ static inline VALUE msgpack_packer_ext_registry_fetch(msgpack_packer_ext_registr
     VALUE type = rb_hash_lookup(pkrg->hash, lookup_class);
     if(type != Qnil) {
         *ext_type_result = FIX2INT(rb_ary_entry(type, 0));
-        *ext_flags_result = FIX2INT(rb_ary_entry(type, 3));
+        *ext_flags_result = FIX2INT(rb_ary_entry(type, 2));
         return rb_ary_entry(type, 1);
     }
 
@@ -80,7 +76,7 @@ static inline VALUE msgpack_packer_ext_registry_fetch(msgpack_packer_ext_registr
         VALUE type_inht = rb_hash_lookup(pkrg->cache, lookup_class);
         if(type_inht != Qnil) {
             *ext_type_result = FIX2INT(rb_ary_entry(type_inht, 0));
-            *ext_flags_result = FIX2INT(rb_ary_entry(type_inht, 3));
+            *ext_flags_result = FIX2INT(rb_ary_entry(type_inht, 2));
             return rb_ary_entry(type_inht, 1);
         }
     }
@@ -134,7 +130,7 @@ static inline VALUE msgpack_packer_ext_registry_lookup(msgpack_packer_ext_regist
         VALUE superclass_type = rb_hash_lookup(pkrg->hash, superclass);
         rb_hash_aset(pkrg->cache, lookup_class, superclass_type);
         *ext_type_result = FIX2INT(rb_ary_entry(superclass_type, 0));
-        *ext_flags_result = FIX2INT(rb_ary_entry(superclass_type, 3));
+        *ext_flags_result = FIX2INT(rb_ary_entry(superclass_type, 2));
         return rb_ary_entry(superclass_type, 1);
     }
 

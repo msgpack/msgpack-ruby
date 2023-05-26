@@ -346,43 +346,19 @@ static VALUE Unpacker_registered_types_internal(VALUE self)
     return mapping;
 }
 
-static VALUE Unpacker_register_type(int argc, VALUE* argv, VALUE self)
+static VALUE Unpacker_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE ext_module, VALUE proc)
 {
     if (OBJ_FROZEN(self)) {
         rb_raise(rb_eFrozenError, "can't modify frozen MessagePack::Unpacker");
     }
 
-    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
-
-    int ext_type;
-    VALUE proc;
-    VALUE arg;
-    VALUE ext_module;
-
-    switch (argc) {
-    case 1:
-        /* register_type(0x7f) {|data| block... } */
-        rb_need_block();
-        proc = rb_block_lambda();
-        arg = proc;
-        ext_module = Qnil;
-        break;
-    case 3:
-        /* register_type(0x7f, Time, :from_msgpack_ext) */
-        ext_module = argv[1];
-        arg = argv[2];
-        proc = rb_obj_method(ext_module, arg);
-        break;
-    default:
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 1 or 3)", argc);
-    }
-
-    ext_type = NUM2INT(argv[0]);
+    int ext_type = NUM2INT(rb_ext_type);
     if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
-    msgpack_unpacker_ext_registry_put(self, &uk->ext_registry, ext_module, ext_type, 0, proc, arg);
+    msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
+    msgpack_unpacker_ext_registry_put(self, &uk->ext_registry, ext_module, ext_type, 0, proc);
 
     return Qnil;
 }
@@ -415,7 +391,6 @@ VALUE MessagePack_Unpacker_new(int argc, VALUE* argv)
 void MessagePack_Unpacker_module_init(VALUE mMessagePack)
 {
     msgpack_unpacker_static_init();
-    msgpack_unpacker_ext_registry_static_init();
 
     mTypeError = rb_define_module_under(mMessagePack, "TypeError");
 
@@ -456,7 +431,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Unpacker, "reset", Unpacker_reset, 0);
 
     rb_define_private_method(cMessagePack_Unpacker, "registered_types_internal", Unpacker_registered_types_internal, 0);
-    rb_define_method(cMessagePack_Unpacker, "register_type", Unpacker_register_type, -1);
+    rb_define_private_method(cMessagePack_Unpacker, "register_type_internal", Unpacker_register_type_internal, 3);
 
     rb_define_method(cMessagePack_Unpacker, "full_unpack", Unpacker_full_unpack, 0);
 }

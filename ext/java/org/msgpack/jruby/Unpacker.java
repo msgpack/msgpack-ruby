@@ -126,39 +126,23 @@ public class Unpacker extends RubyObject {
     return registry.toInternalUnpackerRegistry(ctx);
   }
 
-  @JRubyMethod(name = "register_type", required = 1, optional = 2)
-  public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
+  @JRubyMethod(name = "register_type_internal", required = 3, visibility = PRIVATE)
+  public IRubyObject registerTypeInternal(ThreadContext ctx, IRubyObject type, IRubyObject mod, IRubyObject proc) {
     testFrozen("MessagePack::Unpacker");
 
     Ruby runtime = ctx.runtime;
-    IRubyObject type = args[0];
-
-    RubyModule extModule;
-    IRubyObject arg;
-    IRubyObject proc;
-    if (args.length == 1) {
-      if (! block.isGiven()) {
-        throw runtime.newLocalJumpErrorNoBlock();
-      }
-      proc = RubyProc.newProc(runtime, block, block.type);
-      if (proc == null)
-        System.err.println("proc from Block is null");
-      arg = proc;
-      extModule = null;
-    } else if (args.length == 3) {
-      extModule = (RubyModule) args[1];
-      arg = args[2];
-      proc = extModule.method(arg);
-    } else {
-      throw runtime.newArgumentError(String.format("wrong number of arguments (%d for 1 or 3)", 2 + args.length));
-    }
 
     long typeId = ((RubyFixnum) type).getLongValue();
     if (typeId < -128 || typeId > 127) {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
     }
 
-    registry.put(extModule, (int) typeId, false, null, null, proc, arg);
+    RubyModule extModule = null;
+    if (mod != runtime.getNil()) {
+      extModule = (RubyModule)mod;
+    }
+
+    registry.put(extModule, (int) typeId, false, null, proc);
     return runtime.getNil();
   }
 

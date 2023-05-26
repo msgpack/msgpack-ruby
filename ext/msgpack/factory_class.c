@@ -187,7 +187,7 @@ static VALUE Factory_registered_types_internal(VALUE self)
     VALUE uk_mapping = rb_hash_new();
     if (fc->ukrg) {
         for(int i=0; i < 256; i++) {
-            if(fc->ukrg->array[i] != Qnil) {
+            if(!NIL_P(fc->ukrg->array[i])) {
                 rb_hash_aset(uk_mapping, INT2FIX(i - 128), fc->ukrg->array[i]);
             }
         }
@@ -200,70 +200,33 @@ static VALUE Factory_registered_types_internal(VALUE self)
     );
 }
 
-static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
+static VALUE Factory_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE ext_module, VALUE options)
 {
     msgpack_factory_t *fc = Factory_get(self);
 
-    int ext_type;
+    Check_Type(rb_ext_type, T_FIXNUM);
+
+    if(rb_type(ext_module) != T_MODULE && rb_type(ext_module) != T_CLASS) {
+        rb_raise(rb_eArgError, "expected Module/Class but found %s.", rb_obj_classname(ext_module));
+    }
+
     int flags = 0;
-    VALUE ext_module;
-    VALUE options = Qnil;
-    VALUE packer_arg, unpacker_arg;
-    VALUE packer_proc, unpacker_proc;
+
+    VALUE packer_proc = Qnil;
+    VALUE unpacker_proc = Qnil;
+    if(!NIL_P(options)) {
+        Check_Type(options, T_HASH);
+        packer_proc = rb_hash_aref(options, ID2SYM(rb_intern("packer")));
+        unpacker_proc = rb_hash_aref(options, ID2SYM(rb_intern("unpacker")));
+    }
 
     if (OBJ_FROZEN(self)) {
         rb_raise(rb_eFrozenError, "can't modify frozen MessagePack::Factory");
     }
 
-    switch (argc) {
-    case 2:
-        /* register_type(0x7f, Time) */
-        packer_arg = ID2SYM(rb_intern("to_msgpack_ext"));
-        unpacker_arg = ID2SYM(rb_intern("from_msgpack_ext"));
-        break;
-    case 3:
-        /* register_type(0x7f, Time, packer: proc-like, unpacker: proc-like) */
-        options = argv[2];
-        if(rb_type(options) != T_HASH) {
-            rb_raise(rb_eArgError, "expected Hash but found %s.", rb_obj_classname(options));
-        }
-
-        packer_arg = rb_hash_aref(options, ID2SYM(rb_intern("packer")));
-        unpacker_arg = rb_hash_aref(options, ID2SYM(rb_intern("unpacker")));
-        break;
-    default:
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 2..3)", argc);
-    }
-
-    if (options != Qnil) {
-        Check_Type(options, T_HASH);
-    }
-
-    ext_type = NUM2INT(argv[0]);
+    int ext_type = NUM2INT(rb_ext_type);
     if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
-    }
-
-    ext_module = argv[1];
-    if(rb_type(ext_module) != T_MODULE && rb_type(ext_module) != T_CLASS) {
-        rb_raise(rb_eArgError, "expected Module/Class but found %s.", rb_obj_classname(ext_module));
-    }
-
-    packer_proc = Qnil;
-    unpacker_proc = Qnil;
-
-    if(packer_arg != Qnil) {
-        packer_proc = rb_funcall(packer_arg, rb_intern("to_proc"), 0);
-    }
-
-    if(unpacker_arg != Qnil) {
-        if(rb_type(unpacker_arg) == T_SYMBOL || rb_type(unpacker_arg) == T_STRING) {
-            unpacker_proc = rb_obj_method(ext_module, unpacker_arg);
-        } else if (rb_respond_to(unpacker_arg, rb_intern("call"))) {
-            unpacker_proc = unpacker_arg;
-        } else {
-            unpacker_proc = rb_funcall(unpacker_arg, rb_intern("method"), 1, ID2SYM(rb_intern("call")));
-        }
     }
 
     if(ext_module == rb_cSymbol) {
@@ -289,8 +252,8 @@ static VALUE Factory_register_type(int argc, VALUE* argv, VALUE self)
         }
     }
 
-    msgpack_packer_ext_registry_put(self, &fc->pkrg, ext_module, ext_type, flags, packer_proc, packer_arg);
-    msgpack_unpacker_ext_registry_put(self, &fc->ukrg, ext_module, ext_type, flags, unpacker_proc, unpacker_arg);
+    msgpack_packer_ext_registry_put(self, &fc->pkrg, ext_module, ext_type, flags, packer_proc);
+    msgpack_unpacker_ext_registry_put(self, &fc->ukrg, ext_module, ext_type, flags, unpacker_proc);
 
     return Qnil;
 }
@@ -309,5 +272,5 @@ void MessagePack_Factory_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Factory, "unpacker", MessagePack_Factory_unpacker, -1);
 
     rb_define_private_method(cMessagePack_Factory, "registered_types_internal", Factory_registered_types_internal, 0);
-    rb_define_method(cMessagePack_Factory, "register_type", Factory_register_type, -1);
+    rb_define_private_method(cMessagePack_Factory, "register_type_internal", Factory_register_type_internal, 3);
 }

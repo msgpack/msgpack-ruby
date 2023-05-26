@@ -93,28 +93,11 @@ public class Packer extends RubyObject {
     return registry.toInternalPackerRegistry(ctx);
   }
 
-  @JRubyMethod(name = "register_type", required = 2, optional = 1)
-  public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args, final Block block) {
+  @JRubyMethod(name = "register_type_internal", required = 3, visibility = PRIVATE)
+  public IRubyObject registerType(ThreadContext ctx, IRubyObject type, IRubyObject mod, IRubyObject proc) {
     testFrozen("MessagePack::Packer");
 
     Ruby runtime = ctx.runtime;
-    IRubyObject type = args[0];
-    IRubyObject mod = args[1];
-
-    IRubyObject arg;
-    IRubyObject proc;
-    if (args.length == 2) {
-      if (! block.isGiven()) {
-        throw runtime.newLocalJumpErrorNoBlock();
-      }
-      proc = block.getProcObject();
-      arg = proc;
-    } else if (args.length == 3) {
-      arg = args[2];
-      proc = arg.callMethod(ctx, "to_proc");
-    } else {
-      throw runtime.newArgumentError(String.format("wrong number of arguments (%d for 2..3)", 2 + args.length));
-    }
 
     long typeId = ((RubyFixnum) type).getLongValue();
     if (typeId < -128 || typeId > 127) {
@@ -126,7 +109,7 @@ public class Packer extends RubyObject {
     }
     RubyModule extModule = (RubyModule) mod;
 
-    registry.put(extModule, (int) typeId, false, proc, arg, null, null);
+    registry.put(extModule, (int) typeId, false, proc, null);
 
     if (extModule == runtime.getSymbol() && !proc.isNil()) {
       encoder.hasSymbolExtType = true;

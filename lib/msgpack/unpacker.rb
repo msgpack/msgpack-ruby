@@ -6,11 +6,20 @@ module MessagePack
     undef_method :dup
     undef_method :clone
 
+    def register_type(type, klass = nil, method_name = nil, &block)
+      if klass && method_name
+        block = klass.method(method_name).to_proc
+      elsif !block_given?
+        raise ArgumentError, "register_type takes either 3 arguments or a block"
+      end
+      register_type_internal(type, klass, block)
+    end
+
     def registered_types
       list = []
 
       registered_types_internal.each_pair do |type, ary|
-        list << {type: type, class: ary[0], unpacker: ary[2]}
+        list << {type: type, class: ary[0], unpacker: ary[1]}
       end
 
       list.sort{|a, b| a[:type] <=> b[:type] }

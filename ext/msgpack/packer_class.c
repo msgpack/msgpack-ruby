@@ -352,7 +352,7 @@ static VALUE Packer_registered_types_internal(VALUE self)
     return rb_hash_new();
 }
 
-static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
+static VALUE Packer_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE ext_module, VALUE proc)
 {
     if (OBJ_FROZEN(self)) {
         rb_raise(rb_eFrozenError, "can't modify frozen MessagePack::Packer");
@@ -360,38 +360,12 @@ static VALUE Packer_register_type(int argc, VALUE* argv, VALUE self)
 
     msgpack_packer_t *pk = MessagePack_Packer_get(self);
 
-    int ext_type;
-    VALUE ext_module;
-    VALUE proc;
-    VALUE arg;
-
-    switch (argc) {
-    case 2:
-        /* register_type(0x7f, Time) {|obj| block... } */
-        rb_need_block();
-        proc = rb_block_lambda();
-        arg = proc;
-        break;
-    case 3:
-        /* register_type(0x7f, Time, :to_msgpack_ext) */
-        arg = argv[2];
-        proc = rb_funcall(arg, rb_intern("to_proc"), 0);
-        break;
-    default:
-        rb_raise(rb_eArgError, "wrong number of arguments (%d for 2..3)", argc);
-    }
-
-    ext_type = NUM2INT(argv[0]);
+    int ext_type = NUM2INT(rb_ext_type);
     if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
-    ext_module = argv[1];
-    if(rb_type(ext_module) != T_MODULE && rb_type(ext_module) != T_CLASS) {
-        rb_raise(rb_eArgError, "expected Module/Class but found %s.", rb_obj_classname(ext_module));
-    }
-
-    msgpack_packer_ext_registry_put(self, &pk->ext_registry, ext_module, ext_type, 0, proc, arg);
+    msgpack_packer_ext_registry_put(self, &pk->ext_registry, ext_module, ext_type, 0, proc);
 
     if (ext_module == rb_cSymbol) {
         pk->has_symbol_ext_type = true;
@@ -424,10 +398,6 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     s_write = rb_intern("write");
 
     sym_compatibility_mode = ID2SYM(rb_intern("compatibility_mode"));
-
-    msgpack_packer_static_init();
-    msgpack_packer_ext_registry_static_init();
-
     cMessagePack_Packer = rb_define_class_under(mMessagePack, "Packer", rb_cObject);
 
     rb_define_alloc_func(cMessagePack_Packer, MessagePack_Packer_alloc);
@@ -466,7 +436,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "to_a", Packer_to_a, 0);
 
     rb_define_private_method(cMessagePack_Packer, "registered_types_internal", Packer_registered_types_internal, 0);
-    rb_define_method(cMessagePack_Packer, "register_type", Packer_register_type, -1);
+    rb_define_method(cMessagePack_Packer, "register_type_internal", Packer_register_type_internal, 3);
 
     rb_define_method(cMessagePack_Packer, "full_pack", Packer_full_pack, 0);
 }

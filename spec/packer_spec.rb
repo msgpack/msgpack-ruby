@@ -373,13 +373,13 @@ describe MessagePack::Packer do
       expect(one.keys.sort).to eq([:type, :class, :packer].sort)
       expect(one[:type]).to eq(0x01)
       expect(one[:class]).to eq(ValueOne)
-      expect(one[:packer]).to eq(:to_msgpack_ext)
+      expect(one[:packer]).to be_a(Proc)
 
       two = packer.registered_types[1]
       expect(two.keys.sort).to eq([:type, :class, :packer].sort)
       expect(two[:type]).to eq(0x02)
       expect(two[:class]).to eq(ValueTwo)
-      expect(two[:packer]).to eq(:to_msgpack_ext)
+      expect(two[:packer]).to be_a(Proc)
     end
 
     context 'when it has no ext type but a super class has' do
