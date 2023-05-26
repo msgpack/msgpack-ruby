@@ -1,7 +1,5 @@
 require 'mkmf'
 
-have_header("ruby/st.h")
-have_header("st.h")
 have_func("rb_enc_interned_str", "ruby.h") # Ruby 3.0+
 have_func("rb_hash_new_capa", "ruby.h") # Ruby 3.2+
 
