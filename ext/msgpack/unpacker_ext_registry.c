@@ -18,19 +18,6 @@
 
 #include "unpacker_ext_registry.h"
 
-static ID s_call;
-static ID s_dup;
-
-void msgpack_unpacker_ext_registry_static_init(void)
-{
-    s_call = rb_intern("call");
-    s_dup = rb_intern("dup");
-}
-
-
-void msgpack_unpacker_ext_registry_static_destroy(void)
-{ }
-
 void msgpack_unpacker_ext_registry_mark(msgpack_unpacker_ext_registry_t* ukrg)
 {
     if (ukrg) {
@@ -77,11 +64,11 @@ void msgpack_unpacker_ext_registry_release(msgpack_unpacker_ext_registry_t* ukrg
 }
 
 void msgpack_unpacker_ext_registry_put(VALUE owner, msgpack_unpacker_ext_registry_t** ukrg,
-        VALUE ext_module, int ext_type, int flags, VALUE proc, VALUE arg)
+        VALUE ext_module, int ext_type, int flags, VALUE proc)
 {
     msgpack_unpacker_ext_registry_t* ext_registry = msgpack_unpacker_ext_registry_cow(*ukrg);
 
-    VALUE entry = rb_ary_new3(4, ext_module, proc, arg, INT2FIX(flags));
+    VALUE entry = rb_ary_new3(3, ext_module, proc, INT2FIX(flags));
     RB_OBJ_WRITE(owner, &ext_registry->array[ext_type + 128], entry);
     *ukrg = ext_registry;
 }

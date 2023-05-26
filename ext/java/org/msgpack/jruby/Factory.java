@@ -80,43 +80,15 @@ public class Factory extends RubyObject {
     });
   }
 
-  @JRubyMethod(name = "register_type", required = 2, optional = 1)
-  public IRubyObject registerType(ThreadContext ctx, IRubyObject[] args) {
+  @JRubyMethod(name = "register_type_internal", required = 3, visibility = PRIVATE)
+  public IRubyObject registerTypeInternal(ThreadContext ctx, IRubyObject type, IRubyObject mod, IRubyObject opts) {
     testFrozen("MessagePack::Factory");
 
     Ruby runtime = ctx.runtime;
-    IRubyObject type = args[0];
-    IRubyObject mod = args[1];
+    RubyHash options = (RubyHash) opts;
 
-    IRubyObject packerArg;
-    IRubyObject unpackerArg;
-
-    RubyHash options = null;
-
-    if (args.length == 2) {
-      packerArg = runtime.newSymbol("to_msgpack_ext");
-      unpackerArg = runtime.newSymbol("from_msgpack_ext");
-    } else if (args.length == 3) {
-      if (args[args.length - 1] instanceof RubyHash) {
-        options = (RubyHash) args[args.length - 1];
-        packerArg = options.fastARef(runtime.newSymbol("packer"));
-        if (packerArg != null && packerArg.isNil()) {
-          packerArg = null;
-        }
-        unpackerArg = options.fastARef(runtime.newSymbol("unpacker"));
-        if (unpackerArg != null && unpackerArg.isNil()) {
-          unpackerArg = null;
-        }
-        IRubyObject optimizedSymbolsParsingArg = options.fastARef(runtime.newSymbol("optimized_symbols_parsing"));
-        if (optimizedSymbolsParsingArg != null && optimizedSymbolsParsingArg.isTrue()) {
-          throw runtime.newArgumentError("JRuby implementation does not support the optimized_symbols_parsing option");
-        }
-      } else {
-        throw runtime.newArgumentError(String.format("expected Hash but found %s.", args[args.length - 1].getType().getName()));
-      }
-    } else {
-      throw runtime.newArgumentError(String.format("wrong number of arguments (%d for 2..3)", 2 + args.length));
-    }
+    IRubyObject packerProc = options.fastARef(runtime.newSymbol("packer"));
+    IRubyObject unpackerProc = options.fastARef(runtime.newSymbol("unpacker"));
 
     long typeId = ((RubyFixnum) type).getLongValue();
     if (typeId < -128 || typeId > 127) {
@@ -128,21 +100,6 @@ public class Factory extends RubyObject {
     }
     RubyModule extModule = (RubyModule) mod;
 
-    IRubyObject packerProc = runtime.getNil();
-    IRubyObject unpackerProc = runtime.getNil();
-    if (packerArg != null) {
-      packerProc = packerArg.callMethod(ctx, "to_proc");
-    }
-    if (unpackerArg != null) {
-      if (unpackerArg instanceof RubyString || unpackerArg instanceof RubySymbol) {
-        unpackerProc = extModule.method(unpackerArg.callMethod(ctx, "to_sym"));
-      } else if (unpackerArg instanceof RubyProc || unpackerArg instanceof RubyMethod) {
-        unpackerProc = unpackerArg;
-      } else {
-        unpackerProc = unpackerArg.callMethod(ctx, "method", runtime.newSymbol("call"));
-      }
-    }
-
     boolean recursive = false;
     if (options != null) {
       IRubyObject recursiveExtensionArg = options.fastARef(runtime.newSymbol("recursive"));
@@ -151,7 +108,7 @@ public class Factory extends RubyObject {
       }
     }
 
-    extensionRegistry.put(extModule, (int) typeId, recursive, packerProc, packerArg, unpackerProc, unpackerArg);
+    extensionRegistry.put(extModule, (int) typeId, recursive, packerProc, unpackerProc);
 
     if (extModule == runtime.getSymbol() && !packerProc.isNil()) {
       hasSymbolExtType = true;

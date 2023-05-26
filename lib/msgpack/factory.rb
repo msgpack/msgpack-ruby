@@ -2,11 +2,46 @@ module MessagePack
   class Factory
     # see ext for other methods
 
+    def register_type(type, klass, options = { packer: :to_msgpack_ext, unpacker: :from_msgpack_ext })
+      raise FrozenError, "can't modify frozen MessagePack::Factory" if frozen?
+
+      if options
+        options = options.dup
+        case packer = options[:packer]
+        when nil, Proc
+          # all good
+        when String, Symbol
+          options[:packer] = packer.to_sym.to_proc
+        when Method
+          options[:packer] = packer.to_proc
+        when packer.respond_to?(:call)
+          options[:packer] = packer.method(:call).to_proc
+        else
+          raise ::TypeError, "expected :packer argument to be a callable object, got: #{packer.inspect}"
+        end
+
+        case unpacker = options[:unpacker]
+        when nil, Proc
+          # all good
+        when String, Symbol
+          options[:unpacker] = klass.method(unpacker).to_proc
+        when Method
+          options[:unpacker] = unpacker.to_proc
+        when packer.respond_to?(:call)
+          options[:unpacker] = unpacker.method(:call).to_proc
+        else
+          raise ::TypeError, "expected :unpacker argument to be a callable object, got: #{unpacker.inspect}"
+        end
+      end
+
+      register_type_internal(type, klass, options)
+    end
+
     # [ {type: id, class: Class(or nil), packer: arg, unpacker: arg}, ... ]
     def registered_types(selector=:both)
       packer, unpacker = registered_types_internal
-      # packer: Class -> [tid, proc, arg]
-      # unpacker: tid -> [klass, proc, arg]
+      # packer: Class -> [tid, proc, _flags]
+      # unpacker: tid -> [klass, proc, _flags]
 
       list = []
 
@@ -14,27 +49,31 @@ module MessagePack
       when :both
         packer.each_pair do |klass, ary|
           type = ary[0]
-          packer_arg = ary[2]
-          unpacker_arg = nil
-          if unpacker.has_key?(type) && unpacker[type][0] == klass
-            unpacker_arg = unpacker.delete(type)[2]
+          packer_proc = ary[1]
+          unpacker_proc = nil
+          if unpacker.has_key?(type)
+            unpacker_proc = unpacker.delete(type)[1]
           end
-          list << {type: type, class: klass, packer: packer_arg, unpacker: unpacker_arg}
+          list << {type: type, class: klass, packer: packer_proc, unpacker: unpacker_proc}
         end
 
         # unpacker definition only
         unpacker.each_pair do |type, ary|
-          list << {type: type, class: ary[0], packer: nil, unpacker: ary[2]}
+          list << {type: type, class: ary[0], packer: nil, unpacker: ary[1]}
         end
 
       when :packer
         packer.each_pair do |klass, ary|
-          list << {type: ary[0], class: klass, packer: ary[2]}
+          if ary[1]
+            list << {type: ary[0], class: klass, packer: ary[1]}
+          end
         end
 
       when :unpacker
         unpacker.each_pair do |type, ary|
-          list << {type: type, class: ary[0], unpacker: ary[2]}
+          if ary[1]
+            list << {type: type, class: ary[0], unpacker: ary[1]}
+          end
         end
 
       else

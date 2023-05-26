@@ -18,16 +18,6 @@
 
 #include "packer_ext_registry.h"
 
-static ID s_call;
-
-void msgpack_packer_ext_registry_static_init(void)
-{
-    s_call = rb_intern("call");
-}
-
-void msgpack_packer_ext_registry_static_destroy(void)
-{ }
-
 void msgpack_packer_ext_registry_init(VALUE owner, msgpack_packer_ext_registry_t* pkrg)
 {
     RB_OBJ_WRITE(owner, &pkrg->hash, Qnil);
@@ -66,7 +56,7 @@ void msgpack_packer_ext_registry_dup(VALUE owner, msgpack_packer_ext_registry_t*
 }
 
 void msgpack_packer_ext_registry_put(VALUE owner, msgpack_packer_ext_registry_t* pkrg,
-        VALUE ext_module, int ext_type, int flags, VALUE proc, VALUE arg)
+        VALUE ext_module, int ext_type, int flags, VALUE proc)
 {
     if(NIL_P(pkrg->hash)) {
         RB_OBJ_WRITE(owner, &pkrg->hash, rb_hash_new());
@@ -79,7 +69,6 @@ void msgpack_packer_ext_registry_put(VALUE owner, msgpack_packer_ext_registry_t*
         rb_hash_clear(pkrg->cache);
     }
 
-    // TODO: Ruby embeded array limit is 3, merging `proc` and `arg` would be good.
-    VALUE entry = rb_ary_new3(4, INT2FIX(ext_type), proc, arg, INT2FIX(flags));
+    VALUE entry = rb_ary_new3(3, INT2FIX(ext_type), proc, INT2FIX(flags));
     rb_hash_aset(pkrg->hash, ext_module, entry);
 }

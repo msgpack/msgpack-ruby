@@ -6,11 +6,16 @@ module MessagePack
     undef_method :dup
     undef_method :clone
 
+    def register_type(type, klass, method_name = nil, &block)
+      raise ArgumentError, "expected Module/Class got: #{klass.inspect}" unless klass.is_a?(Module)
+      register_type_internal(type, klass, block || method_name.to_proc)
+    end
+
     def registered_types
       list = []
 
       registered_types_internal.each_pair do |klass, ary|
-        list << {type: ary[0], class: klass, packer: ary[2]}
+        list << {type: ary[0], class: klass, packer: ary[1]}
       end
 
       list.sort{|a, b| a[:type] <=> b[:type] }

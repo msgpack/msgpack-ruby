@@ -481,13 +481,13 @@ describe MessagePack::Unpacker do
       expect(one.keys.sort).to eq([:type, :class, :unpacker].sort)
       expect(one[:type]).to eq(0x01)
       expect(one[:class]).to eq(ValueOne)
-      expect(one[:unpacker]).to eq(:from_msgpack_ext)
+      expect(one[:unpacker]).to be_a(Proc)
 
       two = list[1]
       expect(two.keys.sort).to eq([:type, :class, :unpacker].sort)
       expect(two[:type]).to eq(0x02)
       expect(two[:class]).to eq(ValueTwo)
-      expect(two[:unpacker]).to eq(:from_msgpack_ext)
+      expect(two[:unpacker]).to be_a(Proc)
     end
 
     it 'returns a Array of Hash, which contains nil for class if block unpacker specified' do

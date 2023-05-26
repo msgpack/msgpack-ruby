@@ -18,15 +18,9 @@
 
 #include "packer.h"
 
-static ID s_call;
-
-void msgpack_packer_static_init(void)
-{
-    s_call = rb_intern("call");
-}
-
-void msgpack_packer_static_destroy(void)
-{ }
+#if !defined(HAVE_RB_PROC_CALL_WITH_BLOCK)
+#define rb_proc_call_with_block(recv, argc, argv, block) rb_funcallv(recv, rb_intern("call"), argc, argv)
+#endif
 
 void msgpack_packer_init(msgpack_packer_t* pk)
 {
@@ -100,14 +94,13 @@ struct msgpack_call_proc_args_t;
 typedef struct msgpack_call_proc_args_t msgpack_call_proc_args_t;
 struct msgpack_call_proc_args_t {
     VALUE proc;
-    VALUE arg;
-    VALUE packer;
+    VALUE args[2];
 };
 
 VALUE msgpack_packer_try_calling_proc(VALUE value)
 {
     msgpack_call_proc_args_t *args = (msgpack_call_proc_args_t *)value;
-    return rb_funcall(args->proc, s_call, 2, args->arg, args->packer);
+    return rb_proc_call_with_block(args->proc, 2, args->args, Qnil);
 }
 
 bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v)
@@ -125,7 +118,7 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
         msgpack_buffer_init(PACKER_BUFFER_(pk));
 
         int exception_occured = 0;
-        msgpack_call_proc_args_t args = { proc, v, pk->to_msgpack_arg };
+        msgpack_call_proc_args_t args = { proc, { v, pk->to_msgpack_arg } };
         rb_protect(msgpack_packer_try_calling_proc, (VALUE)&args, &exception_occured);
 
         if (exception_occured) {
@@ -140,7 +133,7 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
             msgpack_packer_write_ext(pk, ext_type, payload);
         }
     } else {
-        VALUE payload = rb_funcall(proc, s_call, 1, v);
+        VALUE payload = rb_proc_call_with_block(proc, 1, &v, Qnil);
         StringValue(payload);
         msgpack_packer_write_ext(pk, ext_type, payload);
     }

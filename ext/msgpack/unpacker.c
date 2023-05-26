@@ -21,10 +21,12 @@
 #include "extension_value_class.h"
 #include <assert.h>
 
+#if !defined(HAVE_RB_PROC_CALL_WITH_BLOCK)
+#define rb_proc_call_with_block(recv, argc, argv, block) rb_funcallv(recv, rb_intern("call"), argc, argv)
+#endif
+
 static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
-
-static ID s_call;
 
 static msgpack_rmem_t s_stack_rmem;
 
@@ -40,8 +42,6 @@ void msgpack_unpacker_static_init(void)
     assert(sizeof(msgpack_unpacker_stack_entry_t) * MSGPACK_UNPACKER_STACK_CAPACITY <= MSGPACK_RMEM_PAGE_SIZE);
 
     msgpack_rmem_init(&s_stack_rmem);
-
-    s_call = rb_intern("call");
 }
 
 void msgpack_unpacker_static_destroy(void)
@@ -178,7 +178,8 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
 
     if(proc != Qnil) {
         VALUE obj;
-        obj = rb_funcall(proc, s_call, 1, str == Qnil ? rb_str_buf_new(0) : str);
+        VALUE arg = (str == Qnil ? rb_str_buf_new(0) : str);
+        obj = rb_proc_call_with_block(proc, 1, &arg, Qnil);
         return object_complete(uk, obj);
     }
 
@@ -308,7 +309,7 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             child_stack->parent = uk->stack;
             uk->stack = child_stack;
 
-            obj = rb_funcall(proc, s_call, 1, uk->self);
+            obj = rb_proc_call_with_block(proc, 1, &uk->self, Qnil);
 
             uk->stack = child_stack->parent;
             _msgpack_unpacker_free_stack(child_stack);

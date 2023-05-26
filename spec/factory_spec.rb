@@ -132,18 +132,18 @@ describe MessagePack::Factory do
 
       expect(list[0][:type]).to eq(0x20)
       expect(list[0][:class]).to eq(::MyType)
-      expect(list[0][:packer]).to eq(:to_msgpack_ext)
-      expect(list[0][:unpacker]).to eq(:from_msgpack_ext)
+      expect(list[0][:packer]).to be_a(Proc)
+      expect(list[0][:unpacker]).to be_a(Proc)
 
       expect(list[1][:type]).to eq(0x21)
       expect(list[1][:class]).to eq(::MyType2)
-      expect(list[1][:packer]).to eq(:to_msgpack_ext)
-      expect(list[1][:unpacker]).to eq(:from_msgpack_ext)
+      expect(list[1][:packer]).to be_a(Proc)
+      expect(list[1][:unpacker]).to be_a(Proc)
     end
 
     it 'returns Array of Hash which has nil for unregistered feature' do
-      subject.register_type(0x21, ::MyType2, unpacker: :from_msgpack_ext)
       subject.register_type(0x20, ::MyType, packer: :to_msgpack_ext)
+      subject.register_type(0x21, ::MyType2, unpacker: :from_msgpack_ext)
 
       list = subject.registered_types
 
@@ -155,13 +155,31 @@ describe MessagePack::Factory do
 
       expect(list[0][:type]).to eq(0x20)
       expect(list[0][:class]).to eq(::MyType)
-      expect(list[0][:packer]).to eq(:to_msgpack_ext)
+      expect(list[0][:packer]).to be_a(Proc)
       expect(list[0][:unpacker]).to be_nil
 
       expect(list[1][:type]).to eq(0x21)
       expect(list[1][:class]).to eq(::MyType2)
       expect(list[1][:packer]).to be_nil
-      expect(list[1][:unpacker]).to eq(:from_msgpack_ext)
+      expect(list[1][:unpacker]).to be_a(Proc)
+
+      list = subject.registered_types(:packer)
+      expect(list.size).to eq(1)
+      expect(list[0]).to be_instance_of(Hash)
+      expect(list[0].keys.sort).to eq([:type, :class, :packer].sort)
+
+      expect(list[0][:type]).to eq(0x20)
+      expect(list[0][:class]).to eq(::MyType)
+      expect(list[0][:packer]).to be_a(Proc)
+
+      list = subject.registered_types(:unpacker)
+      expect(list.size).to eq(1)
+      expect(list[0]).to be_instance_of(Hash)
+      expect(list[0].keys.sort).to eq([:type, :class, :unpacker].sort)
+
+      expect(list[0][:type]).to eq(0x21)
+      expect(list[0][:class]).to eq(::MyType2)
+      expect(list[0][:unpacker]).to be_a(Proc)
     end
   end
 
