@@ -251,12 +251,14 @@ bool _msgpack_buffer_read_all2(msgpack_buffer_t* b, char* buffer, size_t length)
 
 static inline msgpack_buffer_chunk_t* _msgpack_buffer_alloc_new_chunk(msgpack_buffer_t* b)
 {
-    msgpack_buffer_chunk_t* reuse = b->free_list;
-    if(reuse == NULL) {
-        return xmalloc(sizeof(msgpack_buffer_chunk_t));
+    msgpack_buffer_chunk_t* chunk = b->free_list;
+    if (chunk) {
+        b->free_list = b->free_list->next;
+    } else {
+        chunk = xmalloc(sizeof(msgpack_buffer_chunk_t));
     }
-    b->free_list = b->free_list->next;
-    return reuse;
+    memset(chunk, 0, sizeof(msgpack_buffer_chunk_t));
+    return chunk;
 }
 
 static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
