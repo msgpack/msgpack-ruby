@@ -55,6 +55,22 @@ void msgpack_buffer_init(msgpack_buffer_t* b)
     b->io_buffer = Qnil;
 }
 
+void msgpack_buffer_move(msgpack_buffer_t* source, msgpack_buffer_t* destination)
+{
+    *destination = *source;
+
+    if (destination->head == &source->tail) {
+        destination->head = &destination->tail;
+    } else {
+        msgpack_buffer_chunk_t* c = source->head;
+        while (c->next != &source->tail) {
+            c = c->next;
+        }
+        c->next = &destination->tail;
+    }
+
+}
+
 static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
 {
     if(c->mem != NULL) {
@@ -112,6 +128,9 @@ size_t msgpack_buffer_memsize(const msgpack_buffer_t* b)
 
 void msgpack_buffer_mark(void *ptr)
 {
+    if (!ptr) {
+        return; // Uninitialized buffer pointer. See msgpack_packer_try_write_with_ext_type_lookup.
+    }
     msgpack_buffer_t* b = ptr;
     /* head is always available */
     msgpack_buffer_chunk_t* c = b->head;

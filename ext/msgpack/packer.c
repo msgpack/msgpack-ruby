@@ -17,6 +17,7 @@
  */
 
 #include "packer.h"
+#include "buffer_class.h"
 
 #if !defined(HAVE_RB_PROC_CALL_WITH_BLOCK)
 #define rb_proc_call_with_block(recv, argc, argv, block) rb_funcallv(recv, rb_intern("call"), argc, argv)
@@ -114,7 +115,10 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
     }
 
     if(ext_flags & MSGPACK_EXT_RECURSIVE) {
-        msgpack_buffer_t parent_buffer = pk->buffer;
+        msgpack_buffer_t parent_buffer = {0};
+        VALUE parent_buffer_value = MessagePack_Buffer_pointer(&parent_buffer);
+        msgpack_buffer_move(&pk->buffer, &parent_buffer);
+
         msgpack_buffer_init(PACKER_BUFFER_(pk));
 
         int exception_occured = 0;
@@ -123,15 +127,16 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
 
         if (exception_occured) {
             msgpack_buffer_destroy(PACKER_BUFFER_(pk));
-            pk->buffer = parent_buffer;
+            msgpack_buffer_move(&parent_buffer, &pk->buffer);
             rb_jump_tag(exception_occured); // re-raise the exception
         } else {
             VALUE payload = msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
             StringValue(payload);
             msgpack_buffer_destroy(PACKER_BUFFER_(pk));
-            pk->buffer = parent_buffer;
+            msgpack_buffer_move(&parent_buffer, &pk->buffer);
             msgpack_packer_write_ext(pk, ext_type, payload);
         }
+        RB_GC_GUARD(parent_buffer_value);
     } else {
         VALUE payload = rb_proc_call_with_block(proc, 1, &v, Qnil);
         StringValue(payload);

@@ -132,6 +132,8 @@ void msgpack_buffer_destroy(msgpack_buffer_t* b);
 
 void msgpack_buffer_mark(void* b);
 
+void msgpack_buffer_move(msgpack_buffer_t* source, msgpack_buffer_t* destination);
+
 void msgpack_buffer_clear(msgpack_buffer_t* b);
 
 size_t msgpack_buffer_memsize(const msgpack_buffer_t* b);

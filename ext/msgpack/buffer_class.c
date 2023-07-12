@@ -66,6 +66,16 @@ static const rb_data_type_t buffer_data_type = {
     .flags = RUBY_TYPED_FREE_IMMEDIATELY
 };
 
+static const rb_data_type_t buffer_pointer_data_type = {
+    .wrap_struct_name = "msgpack:buffer_pointer",
+    .function = {
+        .dmark = msgpack_buffer_mark,
+        .dfree = NULL,
+        .dsize = Buffer_memsize,
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
 static const rb_data_type_t buffer_view_data_type = {
     .wrap_struct_name = "msgpack:buffer_view",
     .function = {
@@ -140,6 +150,11 @@ void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options
             msgpack_buffer_set_io_buffer_size(b, NUM2SIZET(v));
         }
     }
+}
+
+VALUE MessagePack_Buffer_pointer(msgpack_buffer_t* b)
+{
+    return TypedData_Wrap_Struct(cMessagePack_Buffer, &buffer_pointer_data_type, b);
 }
 
 VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner)
