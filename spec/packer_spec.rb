@@ -589,4 +589,31 @@ describe MessagePack::Packer do
       GC.stress = stress
     end
   end
+
+  it "doesn't crash when using recursive packers concurrently" do
+    hash_with_indifferent_access = Class.new(Hash)
+    msgpack = MessagePack::Factory.new
+    msgpack.register_type(
+      0x02,
+      hash_with_indifferent_access,
+      packer: ->(value, packer) do
+        packer.write("a".b * 600_0000) # Over MSGPACK_BUFFER_STRING_WRITE_REFERENCE_DEFAULT
+        packer.write(value.to_h)
+        GC.start(full_mark: true, immediate_mark: true, immediate_sweep: true)
+      end,
+      unpacker: ->(unpacker) { hash_with_indifferent_access.new(unpacker.read) },
+      recursive: true
+    )
+
+    packer = msgpack.packer
+
+    top_hash = hash = hash_with_indifferent_access.new
+    10.times do
+      hash["a"] = new_hash = hash_with_indifferent_access.new
+      hash = new_hash
+    end
+    packer.write(top_hash)
+    packer.write(top_hash)
+    packer.full_pack
+  end
 end
