@@ -113,9 +113,28 @@ size_t msgpack_buffer_memsize(const msgpack_buffer_t* b)
 void msgpack_buffer_mark(void *ptr)
 {
     msgpack_buffer_t* b = ptr;
+    printf("%p: msgpack_buffer_mark\n", b);
     /* head is always available */
     msgpack_buffer_chunk_t* c = b->head;
     while(c != &b->tail) {
+
+        if (RB_TYPE_P(c->mapped_string, T_NONE)) {
+          int i = 0;
+          msgpack_buffer_chunk_t* t = b->head;
+          printf("================ MEGA BUG ==================\n");
+          while(t != &b->tail) {
+            int x = !rb_special_const_p(t->mapped_string) && RB_TYPE_P(t->mapped_string, T_NONE) ? 1 : 0;
+            printf("> %d: %p - %p - %lx - %x\n", i++, b, t, t->mapped_string, (int)(x));
+            t = t->next;
+          }
+          if (b->head != &b->tail) {
+            msgpack_buffer_chunk_t* t = &b->tail;
+            int x = !rb_special_const_p(t->mapped_string) && RB_TYPE_P(t->mapped_string, T_NONE) ? 1 : 0;
+            printf("> %d: %p - %p - %lx - %x\n", i++, b, t, t->mapped_string, (int)(x));
+          }
+          printf("================ END ==================\n");
+        }
+
         rb_gc_mark(c->mapped_string);
         c = c->next;
     }
@@ -297,14 +316,48 @@ static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
     }
 }
 
-static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE string)
+void _msgpack_buffer_inspect(msgpack_buffer_t* b, char* tag)
+{
+    int i = 0;
+    int detected = 0;
+    msgpack_buffer_chunk_t* t = b->head;
+    while(t != &b->tail) {
+      int x = !rb_special_const_p(t->mapped_string) && RB_TYPE_P(t->mapped_string, T_NONE) ? 1 : 0;
+      if (x) {
+         if (detected == 0) printf("%p: %s\n", b, tag);
+         detected = 1;
+         printf("T_NONE DETECTED %d: %p - %p - %lx - %x\n", i, b, t, t->mapped_string, (int)(x));
+      }
+      i++;
+      t = t->next;
+    }
+    if (b->head != &b->tail) {
+      t = &b->tail;
+      int x = !rb_special_const_p(t->mapped_string) && RB_TYPE_P(t->mapped_string, T_NONE) ? 1 : 0;
+      if (x) {
+        if (detected == 0) printf("%p: %s\n", b, tag);
+        detected = 1;
+        printf("T_NONE DETECTED %d: %p - %p - %lx - %x\n", i++, b, t, t->mapped_string, (int)(x));
+      }
+    }
+    if (detected == 1) printf("%p: %s\n", b, tag);
+}
+
+static void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE string)
 {
     VALUE mapped_string;
     if(ENCODING_GET(string) == msgpack_rb_encindex_ascii8bit && RTEST(rb_obj_frozen_p(string))) {
         mapped_string = string;
+        printf("%p: _msgpack_buffer_append_reference: frozen: %lx\n", b, mapped_string);
     } else {
         mapped_string = rb_str_dup(string);
         ENCODING_SET(mapped_string, msgpack_rb_encindex_ascii8bit);
+        printf("%p: _msgpack_buffer_append_reference: rb_str_dup: %lx\n", b, mapped_string);
+    }
+
+    int x = !rb_special_const_p(mapped_string) && RB_TYPE_P(mapped_string, T_NONE) ? 1 : 0;
+    if (x) {
+      printf("%p: _msgpack_buffer_append_reference: before: %lx - %x\n", b, mapped_string, (int)(x));
     }
 
     _msgpack_buffer_add_new_chunk(b);
@@ -324,6 +377,12 @@ static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE s
     if(b->head == &b->tail) {
         b->read_buffer = b->tail.first;
     }
+
+    x = !rb_special_const_p(mapped_string) && RB_TYPE_P(mapped_string, T_NONE) ? 1 : 0;
+    if (x) {
+      printf("%p: _msgpack_buffer_append_reference: after: %lx - %x\n", b, mapped_string, (int)(x));
+    }
+    _msgpack_buffer_inspect(b, "_msgpack_buffer_append_reference");
 }
 
 void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string)
@@ -510,6 +569,12 @@ VALUE msgpack_buffer_all_as_string(msgpack_buffer_t* b)
     }
 
     size_t length = msgpack_buffer_all_readable_size(b);
+
+    printf("%p: msgpack_buffer_all_as_string: start\n", b);
+    _msgpack_buffer_inspect(b, "msgpack_buffer_all_as_string: before gc");
+    rb_eval_string("GC.start full_mark: true, immediate_mark: true, immediate_sweep: true");
+    _msgpack_buffer_inspect(b, "msgpack_buffer_all_as_string: after gc");
+
     VALUE string = rb_str_new(NULL, length);
     char* buffer = RSTRING_PTR(string);
 

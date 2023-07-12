@@ -1,5 +1,7 @@
 require 'spec_helper'
 require 'random_compat'
+require 'active_support'
+require 'active_support/all'
 
 require 'stringio'
 if defined?(Encoding)
@@ -604,5 +606,37 @@ describe Buffer do
     ensure
       GC.stress = stress
     end
+  end
+
+  it "is thread-safe" do
+    msgpack = MessagePack::Factory.new
+    msgpack.register_type(
+      0x02,
+      ActiveSupport::HashWithIndifferentAccess,
+      packer: ->(value, packer) { packer.write(value.to_h) },
+      unpacker: ->(unpacker) { ActiveSupport::HashWithIndifferentAccess.new(unpacker.read) },
+      recursive: true
+    )
+
+    threads = (1..2).map do
+      Thread.new do
+        data = JSON.parse(File.read('spec/cruby/gh-341.json')).map(&:with_indifferent_access)
+
+        GC.disable
+        i = StringIO.new
+        packer = msgpack.packer(i)
+        packer.write(data)
+        packer.flush
+
+        o = StringIO.new(i.string)
+        unpacker = msgpack.unpacker(o)
+        unpacker.read
+        GC.enable
+      rescue => e
+        puts e
+      end
+    end
+
+    threads.each(&:join)
   end
 end
