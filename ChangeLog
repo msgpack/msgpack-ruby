@@ -1,3 +1,4 @@
+* Fix a potential GC bug when packing data using recursive extensions and buffers containing over 512KkiB of data (See #341).
 * Fix a regression where feeding an empty string to an Unpacker would be considered like the end of the buffer.
 
 2023-05-19 1.7.1:
