@@ -52,7 +52,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu]
-        ruby: ['jruby-9.2', 'jruby-9.3', 'jruby-9.4', 'truffleruby']
+        ruby: ['jruby-9.3', 'jruby-9.4', 'truffleruby']
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v2
