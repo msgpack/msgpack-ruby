@@ -188,6 +188,20 @@ describe MessagePack::Unpacker do
     objects.should == [sample_object] * 4
   end
 
+  it 'feed and each empty string' do
+    raw = sample_object.to_msgpack.to_s
+    objects = []
+
+    unpacker.feed("")
+    unpacker.feed(raw)
+    unpacker.feed("")
+
+    unpacker.each { |c|
+      objects << c
+    }
+    objects.should == [sample_object]
+  end
+
   it 'feed_each continues internal state' do
     raw = sample_object.to_msgpack.to_s * 4
     objects = []
