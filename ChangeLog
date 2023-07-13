@@ -1,3 +1,5 @@
+* Fix a regression where feeding an empty string to an Unpacker would be considered like the end of the buffer.
+
 2023-05-19 1.7.1:
 
 * Fix JRuby 9.4 compatibility.
