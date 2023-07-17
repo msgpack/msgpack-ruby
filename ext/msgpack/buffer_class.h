@@ -25,6 +25,7 @@ extern VALUE cMessagePack_Buffer;
 void MessagePack_Buffer_module_init(VALUE mMessagePack);
 
 VALUE MessagePack_Buffer_wrap(msgpack_buffer_t* b, VALUE owner);
+VALUE MessagePack_Buffer_hold(msgpack_buffer_t* b);
 
 void MessagePack_Buffer_set_options(msgpack_buffer_t* b, VALUE io, VALUE options);
 

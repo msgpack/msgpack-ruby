@@ -17,6 +17,7 @@
  */
 
 #include "packer.h"
+#include "buffer_class.h"
 
 #if !defined(HAVE_RB_PROC_CALL_WITH_BLOCK)
 #define rb_proc_call_with_block(recv, argc, argv, block) rb_funcallv(recv, rb_intern("call"), argc, argv)
@@ -114,39 +115,7 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
     }
 
     if(ext_flags & MSGPACK_EXT_RECURSIVE) {
-        // HACK: While we call the proc, the current pk->buffer won't be reachable
-        // as it will be stored on the stack.
-        // To ensure all the `mapped_string` reference in that buffer are properly
-        // marked and pined, we copy them all on the stack.
-        VALUE* mapped_strings = NULL;
-        size_t mapped_strings_count = 0;
-        msgpack_buffer_chunk_t* c = pk->buffer.head;
-        while (c != &pk->buffer.tail) {
-            if (c->mapped_string != NO_MAPPED_STRING) {
-                mapped_strings_count++;
-            }
-            c = c->next;
-        }
-        if (c->mapped_string != NO_MAPPED_STRING) {
-            mapped_strings_count++;
-        }
-
-        if (mapped_strings_count > 0) {
-            mapped_strings = ALLOCA_N(VALUE, mapped_strings_count);
-            mapped_strings_count = 0;
-            c = pk->buffer.head;
-            while (c != &pk->buffer.tail) {
-                if (c->mapped_string != NO_MAPPED_STRING) {
-                    mapped_strings[mapped_strings_count] = c->mapped_string;
-                    mapped_strings_count++;
-                }
-                c = c->next;
-            }
-            if (c->mapped_string != NO_MAPPED_STRING) {
-                mapped_strings[mapped_strings_count] = c->mapped_string;
-                mapped_strings_count++;
-            }
-        }
+        VALUE held_buffer = MessagePack_Buffer_hold(&pk->buffer);
 
         msgpack_buffer_t parent_buffer = pk->buffer;
         msgpack_buffer_init(PACKER_BUFFER_(pk));
@@ -167,9 +136,7 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
             msgpack_packer_write_ext(pk, ext_type, payload);
         }
 
-        if (mapped_strings_count > 0) {
-            RB_GC_GUARD(mapped_strings[0]);
-        }
+        RB_GC_GUARD(held_buffer);
     } else {
         VALUE payload = rb_proc_call_with_block(proc, 1, &v, Qnil);
         StringValue(payload);
