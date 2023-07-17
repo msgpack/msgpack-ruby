@@ -21,7 +21,8 @@
 #include "buffer.h"
 #include "buffer_class.h"
 
-VALUE cMessagePack_Buffer;
+VALUE cMessagePack_Buffer = Qnil;
+VALUE cMessagePack_HeldBuffer = Qnil;
 
 static ID s_read;
 static ID s_readpartial;
@@ -33,6 +34,73 @@ static ID s_at_owner;
 static VALUE sym_read_reference_threshold;
 static VALUE sym_write_reference_threshold;
 static VALUE sym_io_buffer_size;
+
+typedef struct msgpack_held_buffer_t msgpack_held_buffer_t;
+struct msgpack_held_buffer_t {
+    size_t size;
+    VALUE mapped_strings[];
+};
+
+static void HeldBuffer_mark(void *data)
+{
+    msgpack_held_buffer_t* held_buffer = (msgpack_held_buffer_t*)data;
+    for (size_t index = 0; index < held_buffer->size; index++) {
+        rb_gc_mark(held_buffer->mapped_strings[index]);
+    }
+}
+
+static size_t HeldBuffer_memsize(const void *data)
+{
+    const msgpack_held_buffer_t* held_buffer = (msgpack_held_buffer_t*)data;
+    return sizeof(size_t) + sizeof(VALUE) * held_buffer->size;
+}
+
+static const rb_data_type_t held_buffer_data_type = {
+    .wrap_struct_name = "msgpack:held_buffer",
+    .function = {
+        .dmark = HeldBuffer_mark,
+        .dfree = RUBY_TYPED_DEFAULT_FREE,
+        .dsize = HeldBuffer_memsize,
+    },
+    .flags = RUBY_TYPED_FREE_IMMEDIATELY
+};
+
+VALUE MessagePack_Buffer_hold(msgpack_buffer_t* buffer)
+{
+    size_t mapped_strings_count = 0;
+    msgpack_buffer_chunk_t* c = buffer->head;
+    while (c != &buffer->tail) {
+        if (c->mapped_string != NO_MAPPED_STRING) {
+            mapped_strings_count++;
+        }
+        c = c->next;
+    }
+    if (c->mapped_string != NO_MAPPED_STRING) {
+        mapped_strings_count++;
+    }
+
+    if (mapped_strings_count == 0) {
+        return Qnil;
+    }
+
+    msgpack_held_buffer_t* held_buffer = xmalloc(sizeof(msgpack_held_buffer_t) + mapped_strings_count * sizeof(VALUE));
+
+    c = buffer->head;
+    mapped_strings_count = 0;
+    while (c != &buffer->tail) {
+        if (c->mapped_string != NO_MAPPED_STRING) {
+            held_buffer->mapped_strings[mapped_strings_count] = c->mapped_string;
+            mapped_strings_count++;
+        }
+        c = c->next;
+    }
+    if (c->mapped_string != NO_MAPPED_STRING) {
+        held_buffer->mapped_strings[mapped_strings_count] = c->mapped_string;
+        mapped_strings_count++;
+    }
+    held_buffer->size = mapped_strings_count;
+    return TypedData_Wrap_Struct(cMessagePack_HeldBuffer, &held_buffer_data_type, held_buffer);
+}
 
 
 #define CHECK_STRING_TYPE(value) \
@@ -519,6 +587,9 @@ void MessagePack_Buffer_module_init(VALUE mMessagePack)
     sym_io_buffer_size = ID2SYM(rb_intern("io_buffer_size"));
 
     msgpack_buffer_static_init();
+
+    cMessagePack_HeldBuffer = rb_define_class_under(mMessagePack, "HeldBuffer", rb_cBasicObject);
+    rb_undef_alloc_func(cMessagePack_HeldBuffer);
 
     cMessagePack_Buffer = rb_define_class_under(mMessagePack, "Buffer", rb_cObject);
 
