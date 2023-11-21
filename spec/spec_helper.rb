@@ -29,7 +29,11 @@ if GC.respond_to?(:verify_compaction_references)
 end
 
 if GC.respond_to?(:auto_compact=)
-  GC.auto_compact = true
+  begin
+    GC.auto_compact = true
+  rescue NotImplementedError
+    # Some platforms don't support compaction
+  end
 end
 
 IS_JRUBY = RUBY_ENGINE == 'jruby'
