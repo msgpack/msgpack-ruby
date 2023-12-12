@@ -197,13 +197,11 @@ factory = MessagePack::Factory.new
 factory.register_type(
   0x01,
   Point,
-  packer: ->(point, packer) {
-    packer.write(point.x)
-    packer.write(point.y)
+  packer: ->(point) {
+    [point.x, point.y].pack("L>2")
   },
-  unpacker: ->(unpacker) {
-    x = unpacker.read
-    y = unpacker.read
+  unpacker: ->(data) {
+    x, y = data.unpack("L>2")
     Point.new(x, y)
   },
   recursive: true,
@@ -222,13 +220,11 @@ factory = MessagePack::Factory.new
 factory.register_type(
   0x01,
   Point,
-  packer: ->(point, packer) {
-    packer.write(point.x)
-    packer.write(point.y)
+  packer: ->(point) {
+    [point.x, point.y].pack("L>2")
   },
-  unpacker: ->(unpacker) {
-    x = unpacker.read
-    y = unpacker.read
+  unpacker: ->(data) {
+    x, y = data.unpack("L>2")
     Point.new(x, y)
   },
   recursive: true,
