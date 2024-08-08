@@ -8,6 +8,15 @@ MessagePack.unpack(msg)   #=> [1,2,3]
 
 ## Install
 
+Add msgpack to your Gemfile to install with Bundler:
+
+```
+# Gemfile
+gem 'msgpack'
+```
+
+Or, use RubyGems to install:
+
 ```
 gem install msgpack
 ```
@@ -20,8 +29,8 @@ gem install msgpack
 
 ## Links
 
-* [Github](https://github.com/msgpack/msgpack-ruby)
-* [API document](http://ruby.msgpack.org/)
+* [GitHub repo msgpack/msgpack-ruby](https://github.com/msgpack/msgpack-ruby)
+* [API documentation](https://ruby.msgpack.org/)
 
 ## Streaming API
 
