@@ -8,15 +8,24 @@ and typical short strings only require an extra byte in addition to the strings 
 If you ever wished to use JSON for convenience (storing an image with metadata) but could
 not for technical reasons (binary data, size, speed...), MessagePack is a perfect replacement.
 
-    require 'msgpack'
-    msg = [1,2,3].to_msgpack  #=> "\x93\x01\x02\x03"
-    MessagePack.unpack(msg)   #=> [1,2,3]
+```ruby
+require 'msgpack'
+msg = [1,2,3].to_msgpack  #=> "\x93\x01\x02\x03"
+MessagePack.unpack(msg)   #=> [1,2,3]
+```
 
-Use RubyGems to install:
+Add msgpack to your Gemfile to install with Bundler:
+
+```ruby
+# Gemfile
+gem 'msgpack'
+```
+
+Or, use RubyGems to install:
 
     gem install msgpack
 
-or build msgpack-ruby and install:
+Or, build msgpack-ruby and install from a checked-out msgpack-ruby repository:
 
     bundle
     rake
@@ -27,11 +36,11 @@ or build msgpack-ruby and install:
 
 * Create REST API returing MessagePack using Rails + [RABL](https://github.com/nesquena/rabl)
 * Store objects efficiently serialized by msgpack on memcached or Redis
-  * In fact Redis supports msgpack in [EVAL-scripts](http://redis.io/commands/eval)
+  * In fact Redis supports msgpack in [EVAL-scripts](https://redis.io/docs/latest/commands/eval/)
 * Upload data in efficient format from mobile devices such as smartphones
   * MessagePack works on iPhone/iPad and Android. See also [Objective-C](https://github.com/msgpack/msgpack-objectivec) and [Java](https://github.com/msgpack/msgpack-java) implementations
 * Design a portable protocol to communicate with embedded devices
-  * Check also [Fluentd](http://fluentd.org/) which is a log collector which uses msgpack for the log format (they say it uses JSON but actually it's msgpack, which is compatible with JSON)
+  * Check also [Fluentd](https://www.fluentd.org) which is a log collector which uses msgpack for the log format (they say it uses JSON but actually it's msgpack, which is compatible with JSON)
 * Exchange objects between software components written in different languages
   * You'll need a flexible but efficient format so that components exchange objects while keeping compatibility
 
@@ -276,8 +285,8 @@ If this directory has Gemfile.lock (generated with MRI), remove it beforehand.
 
 ## Updating documents
 
-Online documents (http://ruby.msgpack.org) is generated from gh-pages branch.
-Following commands update documents in gh-pages branch:
+Online documentation (https://ruby.msgpack.org) is generated from the gh-pages branch.
+To update documents in gh-pages branch:
 
     bundle exec rake doc
     git checkout gh-pages
