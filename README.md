@@ -128,9 +128,9 @@ being serialized altogether by throwing an exception:
 
 ```ruby
 class Symbol
-    def to_msgpack_ext
-        raise "Serialization of symbols prohibited"
-    end
+  def to_msgpack_ext
+    raise "Serialization of symbols prohibited"
+  end
 end
 
 MessagePack::DefaultFactory.register_type(0x00, Symbol)
