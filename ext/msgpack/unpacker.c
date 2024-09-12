@@ -605,6 +605,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_ary_new());
                 }
+                if (uk->initial_capacity_max > 0) {
+                    count = count > uk->initial_capacity_max ? uk->initial_capacity_max : count;
+                }
                 return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(count));
             }
 
@@ -614,6 +617,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint32_t count = _msgpack_be32(cb->u32);
                 if(count == 0) {
                     return object_complete(uk, rb_ary_new());
+                }
+                if (uk->initial_capacity_max > 0) {
+                    count = count > uk->initial_capacity_max ? uk->initial_capacity_max : count;
                 }
                 return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(count));
             }
@@ -625,6 +631,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
+                if (uk->initial_capacity_max > 0) {
+                    count = count > uk->initial_capacity_max ? uk->initial_capacity_max : count;
+                }
                 return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(count));
             }
 
@@ -634,6 +643,9 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 uint32_t count = _msgpack_be32(cb->u32);
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
+                }
+                if (uk->initial_capacity_max > 0) {
+                    count = count > uk->initial_capacity_max ? uk->initial_capacity_max : count;
                 }
                 return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(count));
             }

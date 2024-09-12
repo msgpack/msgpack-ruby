@@ -36,6 +36,7 @@ static VALUE mTypeError;  // obsoleted. only for backward compatibility. See #86
 static VALUE sym_symbolize_keys;
 static VALUE sym_freeze;
 static VALUE sym_allow_unknown_ext;
+static VALUE sym_initial_capacity_max;
 
 static void Unpacker_free(void *ptr)
 {
@@ -133,6 +134,11 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 
         v = rb_hash_aref(options, sym_allow_unknown_ext);
         msgpack_unpacker_set_allow_unknown_ext(uk, RTEST(v));
+
+        v = rb_hash_aref(options, sym_initial_capacity_max);
+        if (v != Qnil) {
+            msgpack_unpacker_set_initial_capacity_max(uk, NUM2ULONG(v));
+        }
     }
 
     return self;
@@ -410,6 +416,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     sym_symbolize_keys = ID2SYM(rb_intern("symbolize_keys"));
     sym_freeze = ID2SYM(rb_intern("freeze"));
     sym_allow_unknown_ext = ID2SYM(rb_intern("allow_unknown_ext"));
+    sym_initial_capacity_max = ID2SYM(rb_intern("initial_capacity_max"));
 
     rb_define_alloc_func(cMessagePack_Unpacker, MessagePack_Unpacker_alloc);
 

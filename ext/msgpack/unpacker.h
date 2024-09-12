@@ -69,6 +69,7 @@ struct msgpack_unpacker_t {
     bool allow_unknown_ext;
     bool optimized_symbol_ext_type;
     int symbol_ext_type;
+    unsigned long initial_capacity_max;
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)
@@ -110,6 +111,10 @@ static inline void msgpack_unpacker_set_allow_unknown_ext(msgpack_unpacker_t* uk
     uk->allow_unknown_ext = enable;
 }
 
+static inline void msgpack_unpacker_set_initial_capacity_max(msgpack_unpacker_t* uk, unsigned long max)
+{
+    uk->initial_capacity_max = max;
+}
 
 /* error codes */
 #define PRIMITIVE_CONTAINER_START 1
