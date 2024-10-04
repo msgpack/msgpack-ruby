@@ -1,3 +1,7 @@
+2024-10-03 1.7.3
+
+* Limit initial containers pre-allocation to `SHRT_MAX` (32k) entries.
+
 2023-07-18 1.7.2:
 
 * Fix a potential GC bug when packing data using recursive extensions and buffers containing over 512KkiB of data (See #341).
