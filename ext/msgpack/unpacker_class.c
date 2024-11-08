@@ -65,7 +65,11 @@ static size_t Unpacker_memsize(const void *ptr)
         total_size += sizeof(msgpack_unpacker_ext_registry_t) / (uk->ext_registry->borrow_count + 1);
     }
 
-    total_size += (uk->stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
+    msgpack_unpacker_stack_t *stack = uk->stack;
+    while (stack) {
+        total_size += (stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
+        stack = stack->parent;
+    }
 
     return total_size + msgpack_buffer_memsize(&uk->buffer);
 }
@@ -156,20 +160,28 @@ static VALUE Unpacker_allow_unknown_ext_p(VALUE self)
     return uk->allow_unknown_ext ? Qtrue : Qfalse;
 }
 
-NORETURN(static void raise_unpacker_error(int r))
+NORETURN(static void raise_unpacker_error(msgpack_unpacker_t *uk, int r))
 {
+    uk->stack->depth = 0;
     switch(r) {
     case PRIMITIVE_EOF:
         rb_raise(rb_eEOFError, "end of buffer reached");
+        break;
     case PRIMITIVE_INVALID_BYTE:
         rb_raise(eMalformedFormatError, "invalid byte");
+        break;
     case PRIMITIVE_STACK_TOO_DEEP:
         rb_raise(eStackError, "stack level too deep");
+        break;
     case PRIMITIVE_UNEXPECTED_TYPE:
         rb_raise(eUnexpectedTypeError, "unexpected type");
+        break;
     case PRIMITIVE_UNEXPECTED_EXT_TYPE:
-    // rb_bug("unexpected extension type");
         rb_raise(eUnknownExtTypeError, "unexpected extension type");
+        break;
+    case PRIMITIVE_RECURSIVE_RAISED:
+        rb_exc_raise(msgpack_unpacker_get_last_object(uk));
+        break;
     default:
         rb_raise(eUnpackError, "logically unknown error %d", r);
     }
@@ -190,7 +202,7 @@ static VALUE Unpacker_read(VALUE self)
 
     int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
-        raise_unpacker_error(r);
+        raise_unpacker_error(uk, r);
     }
 
     return msgpack_unpacker_get_last_object(uk);
@@ -202,7 +214,7 @@ static VALUE Unpacker_skip(VALUE self)
 
     int r = msgpack_unpacker_skip(uk, 0);
     if(r < 0) {
-        raise_unpacker_error(r);
+        raise_unpacker_error(uk, r);
     }
 
     return Qnil;
@@ -214,7 +226,7 @@ static VALUE Unpacker_skip_nil(VALUE self)
 
     int r = msgpack_unpacker_skip_nil(uk);
     if(r < 0) {
-        raise_unpacker_error(r);
+        raise_unpacker_error(uk, r);
     }
 
     if(r) {
@@ -230,7 +242,7 @@ static VALUE Unpacker_read_array_header(VALUE self)
     uint32_t size;
     int r = msgpack_unpacker_read_array_header(uk, &size);
     if(r < 0) {
-        raise_unpacker_error(r);
+        raise_unpacker_error(uk, r);
     }
 
     return ULONG2NUM(size); // long at least 32 bits
@@ -243,7 +255,7 @@ static VALUE Unpacker_read_map_header(VALUE self)
     uint32_t size;
     int r = msgpack_unpacker_read_map_header(uk, &size);
     if(r < 0) {
-        raise_unpacker_error((int)r);
+        raise_unpacker_error(uk, r);
     }
 
     return ULONG2NUM(size); // long at least 32 bits
@@ -270,7 +282,7 @@ static VALUE Unpacker_each_impl(VALUE self)
             if(r == PRIMITIVE_EOF) {
                 return Qnil;
             }
-            raise_unpacker_error(r);
+            raise_unpacker_error(uk, r);
         }
         VALUE v = msgpack_unpacker_get_last_object(uk);
 #ifdef JRUBY
@@ -369,7 +381,7 @@ static VALUE Unpacker_full_unpack(VALUE self)
 
     int r = msgpack_unpacker_read(uk, 0);
     if(r < 0) {
-        raise_unpacker_error(r);
+        raise_unpacker_error(uk, r);
     }
 
     /* raise if extra bytes follow */
