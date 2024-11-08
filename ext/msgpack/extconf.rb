@@ -3,6 +3,7 @@ require 'mkmf'
 have_func("rb_enc_interned_str", "ruby.h") # Ruby 3.0+
 have_func("rb_hash_new_capa", "ruby.h") # Ruby 3.2+
 have_func("rb_proc_call_with_block", "ruby.h") # CRuby (TruffleRuby doesn't have it)
+have_func("rb_hash_bulk_insert", "ruby.h") # Ruby 2.6+ and missing on TruffleRuby 24.0
 
 append_cflags([
   "-fvisibility=hidden",

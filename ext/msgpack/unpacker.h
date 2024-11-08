@@ -26,29 +26,42 @@
 struct msgpack_unpacker_t;
 typedef struct msgpack_unpacker_t msgpack_unpacker_t;
 typedef struct msgpack_unpacker_stack_t msgpack_unpacker_stack_t;
+typedef struct msgpack_rvalue_stack_t msgpack_rvalue_stack_t;
+
+enum rvalue_stack_type_t {
+    STACK_TYPE_UNALLOCATED = 0,
+    STACK_TYPE_RMEM = 1,
+    STACK_TYPE_HEAP = 2,
+};
+
+struct msgpack_rvalue_stack_t {
+    enum rvalue_stack_type_t type;
+    size_t depth;
+    size_t capacity;
+    VALUE *data;
+};
 
 enum stack_type_t {
     STACK_TYPE_ARRAY,
-    STACK_TYPE_MAP_KEY,
-    STACK_TYPE_MAP_VALUE,
+    STACK_TYPE_MAP,
+    STACK_TYPE_RECURSIVE,
 };
 
 typedef struct {
     size_t count;
+    size_t size;
     enum stack_type_t type;
-    VALUE object;
-    VALUE key;
 } msgpack_unpacker_stack_entry_t;
 
 struct msgpack_unpacker_stack_t {
     size_t depth;
     size_t capacity;
     msgpack_unpacker_stack_entry_t *data;
-    msgpack_unpacker_stack_t *parent;
 };
 
 struct msgpack_unpacker_t {
     msgpack_buffer_t buffer;
+    msgpack_rvalue_stack_t value_stack;
     msgpack_unpacker_stack_t *stack;
     unsigned int head_byte;
 
@@ -125,9 +138,13 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth);
 
 int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth);
 
+static inline VALUE _msgpack_unpacker_rvalue_stack_pop(msgpack_unpacker_t* uk) {
+    return uk->value_stack.data[--uk->value_stack.depth];
+}
+
 static inline VALUE msgpack_unpacker_get_last_object(msgpack_unpacker_t* uk)
 {
-    return uk->last_object;
+    return _msgpack_unpacker_rvalue_stack_pop(uk);
 }
 
 
