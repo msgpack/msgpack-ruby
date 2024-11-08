@@ -901,4 +901,45 @@ describe MessagePack::Unpacker do
       GC.stress = stress
     end
   end
+
+  if RUBY_PLATFORM != "java"
+    it "doesn't leak when a recursive unpacker raises" do
+      hash_with_indifferent_access = Class.new(Hash)
+      msgpack = MessagePack::Factory.new
+      msgpack.register_type(
+        0x02,
+        hash_with_indifferent_access,
+        packer: ->(value, packer) do
+          packer.write(value.to_h)
+        end,
+        unpacker: ->(unpacker) { raise RuntimeError, "Ooops" },
+        recursive: true
+      )
+
+      packer = msgpack.packer
+      data = [[[[[[[hash_with_indifferent_access.new]]]]]]]
+      payload = msgpack.dump(data)
+
+      unpacker = msgpack.unpacker
+      2.times do
+        unpacker.buffer.clear
+        unpacker.feed(payload)
+        expect {
+          unpacker.full_unpack
+        }.to raise_error(RuntimeError, "Ooops")
+      end
+
+      memsize = ObjectSpace.memsize_of(unpacker)
+
+      10.times do
+        unpacker.buffer.clear
+        unpacker.feed(payload)
+        expect {
+          unpacker.full_unpack
+        }.to raise_error(RuntimeError, "Ooops")
+      end
+
+      expect(memsize).to eq ObjectSpace.memsize_of(unpacker)
+    end
+  end
 end

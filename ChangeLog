@@ -1,3 +1,5 @@
+* Fixed a potental memory leak when recursive unpacker raise.
+
 2024-10-03 1.7.3
 
 * Limit initial containers pre-allocation to `SHRT_MAX` (32k) entries.

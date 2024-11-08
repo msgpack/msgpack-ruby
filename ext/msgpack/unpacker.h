@@ -119,6 +119,7 @@ static inline void msgpack_unpacker_set_allow_unknown_ext(msgpack_unpacker_t* uk
 #define PRIMITIVE_STACK_TOO_DEEP -3
 #define PRIMITIVE_UNEXPECTED_TYPE -4
 #define PRIMITIVE_UNEXPECTED_EXT_TYPE -5
+#define PRIMITIVE_RECURSIVE_RAISED -6
 
 int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth);
 

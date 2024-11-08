@@ -26,6 +26,27 @@
 #define rb_proc_call_with_block(recv, argc, argv, block) rb_funcallv(recv, rb_intern("call"), argc, argv)
 #endif
 
+struct protected_proc_call_args {
+    VALUE proc;
+    int argc;
+    VALUE *argv;
+};
+
+static VALUE protected_proc_call_safe(VALUE _args) {
+    struct protected_proc_call_args *args = (struct protected_proc_call_args *)_args;
+
+    return rb_proc_call_with_block(args->proc, args->argc, args->argv, Qnil);
+}
+
+static VALUE protected_proc_call(VALUE proc, int argc, VALUE *argv, int *raised) {
+    struct protected_proc_call_args args = {
+      .proc = proc,
+      .argc = argc,
+      .argv = argv,
+    };
+    return rb_protect(protected_proc_call_safe, (VALUE)&args, raised);
+}
+
 static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
 static int16_t INITIAL_BUFFER_CAPACITY_MAX = SHRT_MAX;
@@ -87,7 +108,12 @@ static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack)
 
 void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 {
-    _msgpack_unpacker_free_stack(uk->stack);
+    msgpack_unpacker_stack_t *stack;
+    while ((stack = uk->stack)) {
+        uk->stack = stack->parent;
+        _msgpack_unpacker_free_stack(stack);
+    }
+
     msgpack_buffer_destroy(UNPACKER_BUFFER_(uk));
 }
 
@@ -186,7 +212,12 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
     if(proc != Qnil) {
         VALUE obj;
         VALUE arg = (str == Qnil ? rb_str_buf_new(0) : str);
-        obj = rb_proc_call_with_block(proc, 1, &arg, Qnil);
+        int raised;
+        obj = protected_proc_call(proc, 1, &arg, &raised);
+        if (raised) {
+            uk->last_object = rb_errinfo();
+            return PRIMITIVE_RECURSIVE_RAISED;
+        }
         return object_complete(uk, obj);
     }
 
@@ -316,10 +347,15 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             child_stack->parent = uk->stack;
             uk->stack = child_stack;
 
-            obj = rb_proc_call_with_block(proc, 1, &uk->self, Qnil);
-
+            int raised;
+            obj = protected_proc_call(proc, 1, &uk->self, &raised);
             uk->stack = child_stack->parent;
             _msgpack_unpacker_free_stack(child_stack);
+
+            if (raised) {
+                uk->last_object = rb_errinfo();
+                return PRIMITIVE_RECURSIVE_RAISED;
+            }
 
             return object_complete(uk, obj);
         }
