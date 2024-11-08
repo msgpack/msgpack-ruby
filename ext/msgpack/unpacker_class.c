@@ -65,11 +65,8 @@ static size_t Unpacker_memsize(const void *ptr)
         total_size += sizeof(msgpack_unpacker_ext_registry_t) / (uk->ext_registry->borrow_count + 1);
     }
 
-    msgpack_unpacker_stack_t *stack = uk->stack;
-    while (stack) {
-        total_size += (stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
-        stack = stack->parent;
-    }
+    total_size += (uk->stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
+    total_size += (uk->value_stack.depth * sizeof(VALUE));
 
     return total_size + msgpack_buffer_memsize(&uk->buffer);
 }
@@ -163,6 +160,7 @@ static VALUE Unpacker_allow_unknown_ext_p(VALUE self)
 NORETURN(static void raise_unpacker_error(msgpack_unpacker_t *uk, int r))
 {
     uk->stack->depth = 0;
+
     switch(r) {
     case PRIMITIVE_EOF:
         rb_raise(rb_eEOFError, "end of buffer reached");
