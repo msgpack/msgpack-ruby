@@ -245,7 +245,7 @@ static inline int _msgpack_unpacker_stack_push(msgpack_unpacker_t* uk, enum stac
     return PRIMITIVE_CONTAINER_START;
 }
 
-static inline VALUE msgpack_unpacker_stack_pop(msgpack_unpacker_t* uk)
+static inline size_t msgpack_unpacker_stack_pop(msgpack_unpacker_t* uk)
 {
     return --uk->stack.depth;
 }
