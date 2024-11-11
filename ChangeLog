@@ -1,3 +1,5 @@
+2024-11-11 1.7.4
+
 * Fixed a potental memory leak when recursive unpacker raise.
 
 2024-10-03 1.7.3
