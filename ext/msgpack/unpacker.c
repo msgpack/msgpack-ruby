@@ -279,10 +279,23 @@ static inline bool msgpack_unpacker_stack_is_empty(msgpack_unpacker_t* uk)
 
 #endif
 
+union msgpack_buffer_cast_block_t {
+    char buffer[8];
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    uint64_t u64;
+    int8_t i8;
+    int16_t i16;
+    int32_t i32;
+    int64_t i64;
+    float f;
+    double d;
+};
 
 #define READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, n) \
-    union msgpack_buffer_cast_block_t* cb = msgpack_buffer_read_cast_block(UNPACKER_BUFFER_(uk), n); \
-    if(cb == NULL) { \
+    union msgpack_buffer_cast_block_t cb; \
+    if (!msgpack_buffer_read_all(UNPACKER_BUFFER_(uk), (char *)&cb.buffer, n)) { \
         return PRIMITIVE_EOF; \
     }
 
@@ -443,8 +456,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc7: // ext 8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint8_t length = cb->u8;
-                int ext_type = (signed char) cb->buffer[1];
+                uint8_t length = cb.u8;
+                int ext_type = (signed char) cb.buffer[1];
                 if(length == 0) {
                     return object_complete_ext(uk, ext_type, Qnil);
                 }
@@ -455,8 +468,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc8: // ext 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 3);
-                uint16_t length = _msgpack_be16(cb->u16);
-                int ext_type = (signed char) cb->buffer[2];
+                uint16_t length = _msgpack_be16(cb.u16);
+                int ext_type = (signed char) cb.buffer[2];
                 if(length == 0) {
                     return object_complete_ext(uk, ext_type, Qnil);
                 }
@@ -467,8 +480,8 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc9: // ext 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 5);
-                uint32_t length = _msgpack_be32(cb->u32);
-                int ext_type = (signed char) cb->buffer[4];
+                uint32_t length = _msgpack_be32(cb.u32);
+                int ext_type = (signed char) cb.buffer[4];
                 if(length == 0) {
                     return object_complete_ext(uk, ext_type, Qnil);
                 }
@@ -479,77 +492,77 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xca:  // float
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                cb->u32 = _msgpack_be_float(cb->u32);
-                return object_complete(uk, rb_float_new(cb->f));
+                cb.u32 = _msgpack_be_float(cb.u32);
+                return object_complete(uk, rb_float_new(cb.f));
             }
 
         case 0xcb:  // double
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 8);
-                cb->u64 = _msgpack_be_double(cb->u64);
-                return object_complete(uk, rb_float_new(cb->d));
+                cb.u64 = _msgpack_be_double(cb.u64);
+                return object_complete(uk, rb_float_new(cb.d));
             }
 
         case 0xcc:  // unsigned int  8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                uint8_t u8 = cb->u8;
+                uint8_t u8 = cb.u8;
                 return object_complete(uk, INT2NUM((int)u8));
             }
 
         case 0xcd:  // unsigned int 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t u16 = _msgpack_be16(cb->u16);
+                uint16_t u16 = _msgpack_be16(cb.u16);
                 return object_complete(uk, INT2NUM((int)u16));
             }
 
         case 0xce:  // unsigned int 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t u32 = _msgpack_be32(cb->u32);
+                uint32_t u32 = _msgpack_be32(cb.u32);
                 return object_complete(uk, ULONG2NUM(u32)); // long at least 32 bits
             }
 
         case 0xcf:  // unsigned int 64
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 8);
-                uint64_t u64 = _msgpack_be64(cb->u64);
+                uint64_t u64 = _msgpack_be64(cb.u64);
                 return object_complete(uk, rb_ull2inum(u64));
             }
 
         case 0xd0:  // signed int  8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                int8_t i8 = cb->i8;
+                int8_t i8 = cb.i8;
                 return object_complete(uk, INT2NUM((int)i8));
             }
 
         case 0xd1:  // signed int 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                int16_t i16 = _msgpack_be16(cb->i16);
+                int16_t i16 = _msgpack_be16(cb.i16);
                 return object_complete(uk, INT2NUM((int)i16));
             }
 
         case 0xd2:  // signed int 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                int32_t i32 = _msgpack_be32(cb->i32);
+                int32_t i32 = _msgpack_be32(cb.i32);
                 return object_complete(uk, LONG2NUM(i32)); // long at least 32 bits
             }
 
         case 0xd3:  // signed int 64
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 8);
-                int64_t i64 = _msgpack_be64(cb->i64);
+                int64_t i64 = _msgpack_be64(cb.i64);
                 return object_complete(uk, rb_ll2inum(i64));
             }
 
         case 0xd4:  // fixext 1
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                int ext_type = cb->i8;
+                int ext_type = cb.i8;
                 uk->reading_raw_remaining = 1;
                 return read_raw_body_begin(uk, ext_type);
             }
@@ -557,7 +570,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xd5:  // fixext 2
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                int ext_type = cb->i8;
+                int ext_type = cb.i8;
                 uk->reading_raw_remaining = 2;
                 return read_raw_body_begin(uk, ext_type);
             }
@@ -565,7 +578,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xd6:  // fixext 4
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                int ext_type = cb->i8;
+                int ext_type = cb.i8;
                 uk->reading_raw_remaining = 4;
                 return read_raw_body_begin(uk, ext_type);
             }
@@ -573,7 +586,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xd7:  // fixext 8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                int ext_type = cb->i8;
+                int ext_type = cb.i8;
                 uk->reading_raw_remaining = 8;
                 return read_raw_body_begin(uk, ext_type);
             }
@@ -581,7 +594,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xd8:  // fixext 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                int ext_type = cb->i8;
+                int ext_type = cb.i8;
                 uk->reading_raw_remaining = 16;
                 return read_raw_body_begin(uk, ext_type);
             }
@@ -590,7 +603,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xd9:  // raw 8 / str 8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                uint8_t count = cb->u8;
+                uint8_t count = cb.u8;
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_STRING);
@@ -599,7 +612,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xda:  // raw 16 / str 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t count = _msgpack_be16(cb->u16);
+                uint16_t count = _msgpack_be16(cb.u16);
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_STRING);
@@ -608,7 +621,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xdb:  // raw 32 / str 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t count = _msgpack_be32(cb->u32);
+                uint32_t count = _msgpack_be32(cb.u32);
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_STRING);
@@ -617,7 +630,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc4:  // bin 8
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 1);
-                uint8_t count = cb->u8;
+                uint8_t count = cb.u8;
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_BINARY);
@@ -626,7 +639,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc5:  // bin 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t count = _msgpack_be16(cb->u16);
+                uint16_t count = _msgpack_be16(cb.u16);
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_BINARY);
@@ -635,7 +648,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xc6:  // bin 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t count = _msgpack_be32(cb->u32);
+                uint32_t count = _msgpack_be32(cb.u32);
                 /* read_raw_body_begin sets uk->reading_raw */
                 uk->reading_raw_remaining = count;
                 return read_raw_body_begin(uk, RAW_TYPE_BINARY);
@@ -644,7 +657,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xdc:  // array 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t count = _msgpack_be16(cb->u16);
+                uint16_t count = _msgpack_be16(cb.u16);
                 if(count == 0) {
                     return object_complete(uk, rb_ary_new());
                 }
@@ -654,7 +667,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xdd:  // array 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t count = _msgpack_be32(cb->u32);
+                uint32_t count = _msgpack_be32(cb.u32);
                 if(count == 0) {
                     return object_complete(uk, rb_ary_new());
                 }
@@ -664,7 +677,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xde:  // map 16
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-                uint16_t count = _msgpack_be16(cb->u16);
+                uint16_t count = _msgpack_be16(cb.u16);
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
@@ -674,7 +687,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
         case 0xdf:  // map 32
             {
                 READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-                uint32_t count = _msgpack_be32(cb->u32);
+                uint32_t count = _msgpack_be32(cb.u32);
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
@@ -704,12 +717,12 @@ int msgpack_unpacker_read_array_header(msgpack_unpacker_t* uk, uint32_t* result_
     } else if(b == 0xdc) {
         /* array 16 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-        *result_size = _msgpack_be16(cb->u16);
+        *result_size = _msgpack_be16(cb.u16);
 
     } else if(b == 0xdd) {
         /* array 32 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-        *result_size = _msgpack_be32(cb->u32);
+        *result_size = _msgpack_be32(cb.u32);
 
     } else {
         return PRIMITIVE_UNEXPECTED_TYPE;
@@ -732,12 +745,12 @@ int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk, uint32_t* result_si
     } else if(b == 0xde) {
         /* map 16 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 2);
-        *result_size = _msgpack_be16(cb->u16);
+        *result_size = _msgpack_be16(cb.u16);
 
     } else if(b == 0xdf) {
         /* map 32 */
         READ_CAST_BLOCK_OR_RETURN_EOF(cb, uk, 4);
-        *result_size = _msgpack_be32(cb->u32);
+        *result_size = _msgpack_be32(cb.u32);
 
     } else {
         return PRIMITIVE_UNEXPECTED_TYPE;

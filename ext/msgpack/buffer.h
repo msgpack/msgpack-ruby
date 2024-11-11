@@ -81,20 +81,6 @@ struct msgpack_buffer_chunk_t {
     bool rmem;
 };
 
-union msgpack_buffer_cast_block_t {
-    char buffer[8];
-    uint8_t u8;
-    uint16_t u16;
-    uint32_t u32;
-    uint64_t u64;
-    int8_t i8;
-    int16_t i16;
-    int32_t i32;
-    int64_t i64;
-    float f;
-    double d;
-};
-
 struct msgpack_buffer_t {
     char* read_buffer;
     char* tail_buffer_end;
@@ -106,8 +92,6 @@ struct msgpack_buffer_t {
     char* rmem_last;
     char* rmem_end;
     void** rmem_owner;
-
-    union msgpack_buffer_cast_block_t cast_block;
 
     VALUE io;
     VALUE io_buffer;
@@ -381,14 +365,6 @@ static inline size_t msgpack_buffer_skip_nonblock(msgpack_buffer_t* b, size_t le
     }
     _msgpack_buffer_consumed(b, length);
     return length;
-}
-
-static inline union msgpack_buffer_cast_block_t* msgpack_buffer_read_cast_block(msgpack_buffer_t* b, size_t n)
-{
-    if(!msgpack_buffer_read_all(b, b->cast_block.buffer, n)) {
-        return NULL;
-    }
-    return &b->cast_block;
 }
 
 size_t msgpack_buffer_read_to_string_nonblock(msgpack_buffer_t* b, VALUE string, size_t length);
