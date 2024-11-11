@@ -31,6 +31,7 @@ enum stack_type_t {
     STACK_TYPE_ARRAY,
     STACK_TYPE_MAP_KEY,
     STACK_TYPE_MAP_VALUE,
+    STACK_TYPE_RECURSIVE,
 };
 
 typedef struct {
@@ -44,7 +45,6 @@ struct msgpack_unpacker_stack_t {
     size_t depth;
     size_t capacity;
     msgpack_unpacker_stack_entry_t *data;
-    msgpack_unpacker_stack_t *parent;
 };
 
 struct msgpack_unpacker_t {

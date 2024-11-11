@@ -108,25 +108,19 @@ static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack)
 
 void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 {
-    msgpack_unpacker_stack_t *stack;
-    while ((stack = uk->stack)) {
-        uk->stack = stack->parent;
-        _msgpack_unpacker_free_stack(stack);
-    }
-
+    _msgpack_unpacker_free_stack(uk->stack);
     msgpack_buffer_destroy(UNPACKER_BUFFER_(uk));
 }
 
 void msgpack_unpacker_mark_stack(msgpack_unpacker_stack_t* stack)
 {
-    while (stack) {
+    if (stack) {
         msgpack_unpacker_stack_entry_t* s = stack->data;
         msgpack_unpacker_stack_entry_t* send = stack->data + stack->depth;
         for(; s < send; s++) {
             rb_gc_mark(s->object);
             rb_gc_mark(s->key);
         }
-        stack = stack->parent;
     }
 }
 
@@ -343,14 +337,10 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             reset_head_byte(uk);
             uk->reading_raw_remaining = 0;
 
-            msgpack_unpacker_stack_t* child_stack = _msgpack_unpacker_new_stack();
-            child_stack->parent = uk->stack;
-            uk->stack = child_stack;
-
+            _msgpack_unpacker_stack_push(uk, STACK_TYPE_RECURSIVE, 1, Qnil);
             int raised;
             obj = protected_proc_call(proc, 1, &uk->self, &raised);
-            uk->stack = child_stack->parent;
-            _msgpack_unpacker_free_stack(child_stack);
+            msgpack_unpacker_stack_pop(uk);
 
             if (raised) {
                 uk->last_object = rb_errinfo();
@@ -783,6 +773,8 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
                 }
                 top->type = STACK_TYPE_MAP_KEY;
                 break;
+            case STACK_TYPE_RECURSIVE:
+                return PRIMITIVE_OBJECT_COMPLETE;
             }
             size_t count = --top->count;
 

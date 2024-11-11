@@ -58,17 +58,16 @@ static void Unpacker_mark(void *ptr)
 
 static size_t Unpacker_memsize(const void *ptr)
 {
+    const msgpack_unpacker_t* uk = ptr;
+
     size_t total_size = sizeof(msgpack_unpacker_t);
 
-    const msgpack_unpacker_t* uk = ptr;
     if (uk->ext_registry) {
         total_size += sizeof(msgpack_unpacker_ext_registry_t) / (uk->ext_registry->borrow_count + 1);
     }
 
-    msgpack_unpacker_stack_t *stack = uk->stack;
-    while (stack) {
-        total_size += (stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
-        stack = stack->parent;
+    if (uk->stack) {
+        total_size += (uk->stack->depth + 1) * sizeof(msgpack_unpacker_stack_t);
     }
 
     return total_size + msgpack_buffer_memsize(&uk->buffer);
