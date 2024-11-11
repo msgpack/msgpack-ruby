@@ -49,7 +49,7 @@ struct msgpack_unpacker_stack_t {
 
 struct msgpack_unpacker_t {
     msgpack_buffer_t buffer;
-    msgpack_unpacker_stack_t *stack;
+    msgpack_unpacker_stack_t stack;
     unsigned int head_byte;
 
     VALUE self;

@@ -79,12 +79,9 @@ void msgpack_unpacker_static_destroy(void)
 
 #define HEAD_BYTE_REQUIRED 0xc1
 
-static inline msgpack_unpacker_stack_t* _msgpack_unpacker_new_stack(void) {
-    msgpack_unpacker_stack_t *stack = ZALLOC(msgpack_unpacker_stack_t);
+static inline void _msgpack_unpacker_stack_init(msgpack_unpacker_stack_t *stack) {
     stack->capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
     stack->data = msgpack_rmem_alloc(&s_stack_rmem);
-    /*memset(uk->stack, 0, MSGPACK_UNPACKER_STACK_CAPACITY);*/
-    return stack;
 }
 
 void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
@@ -96,25 +93,26 @@ void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
 
-    uk->stack = _msgpack_unpacker_new_stack();
+    _msgpack_unpacker_stack_init(&uk->stack);
 }
 
 static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {
     if (!msgpack_rmem_free(&s_stack_rmem, stack->data)) {
         rb_bug("Failed to free an rmem pointer, memory leak?");
     }
-    xfree(stack);
+    stack->data = NULL;
+    stack->depth = 0;
 }
 
 void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
 {
-    _msgpack_unpacker_free_stack(uk->stack);
+    _msgpack_unpacker_free_stack(&uk->stack);
     msgpack_buffer_destroy(UNPACKER_BUFFER_(uk));
 }
 
 void msgpack_unpacker_mark_stack(msgpack_unpacker_stack_t* stack)
 {
-    if (stack) {
+    if (stack->data) {
         msgpack_unpacker_stack_entry_t* s = stack->data;
         msgpack_unpacker_stack_entry_t* send = stack->data + stack->depth;
         for(; s < send; s++) {
@@ -128,7 +126,7 @@ void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
 {
     rb_gc_mark(uk->last_object);
     rb_gc_mark(uk->reading_raw);
-    msgpack_unpacker_mark_stack(uk->stack);
+    msgpack_unpacker_mark_stack(&uk->stack);
     /* See MessagePack_Buffer_wrap */
     /* msgpack_buffer_mark(UNPACKER_BUFFER_(uk)); */
     rb_gc_mark(uk->buffer_ref);
@@ -141,8 +139,8 @@ void _msgpack_unpacker_reset(msgpack_unpacker_t* uk)
 
     uk->head_byte = HEAD_BYTE_REQUIRED;
 
-    /*memset(uk->stack, 0, sizeof(msgpack_unpacker_t) * uk->stack->depth);*/
-    uk->stack->depth = 0;
+    /*memset(uk->stack, 0, sizeof(msgpack_unpacker_t) * uk->stack.depth);*/
+    uk->stack.depth = 0;
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
     uk->reading_raw_remaining = 0;
@@ -226,35 +224,35 @@ static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALU
 /* stack funcs */
 static inline msgpack_unpacker_stack_entry_t* _msgpack_unpacker_stack_entry_top(msgpack_unpacker_t* uk)
 {
-    return &uk->stack->data[uk->stack->depth-1];
+    return &uk->stack.data[uk->stack.depth-1];
 }
 
 static inline int _msgpack_unpacker_stack_push(msgpack_unpacker_t* uk, enum stack_type_t type, size_t count, VALUE object)
 {
     reset_head_byte(uk);
 
-    if(uk->stack->capacity - uk->stack->depth <= 0) {
+    if(uk->stack.capacity - uk->stack.depth <= 0) {
         return PRIMITIVE_STACK_TOO_DEEP;
     }
 
-    msgpack_unpacker_stack_entry_t* next = &uk->stack->data[uk->stack->depth];
+    msgpack_unpacker_stack_entry_t* next = &uk->stack.data[uk->stack.depth];
     next->count = count;
     next->type = type;
     next->object = object;
     next->key = Qnil;
 
-    uk->stack->depth++;
+    uk->stack.depth++;
     return PRIMITIVE_CONTAINER_START;
 }
 
 static inline VALUE msgpack_unpacker_stack_pop(msgpack_unpacker_t* uk)
 {
-    return --uk->stack->depth;
+    return --uk->stack.depth;
 }
 
 static inline bool msgpack_unpacker_stack_is_empty(msgpack_unpacker_t* uk)
 {
-    return uk->stack->depth == 0;
+    return uk->stack.depth == 0;
 }
 
 #ifdef USE_CASE_RANGE
@@ -282,7 +280,7 @@ static inline bool msgpack_unpacker_stack_is_empty(msgpack_unpacker_t* uk)
 
 static inline bool is_reading_map_key(msgpack_unpacker_t* uk)
 {
-    if(uk->stack->depth > 0) {
+    if(uk->stack.depth > 0) {
         msgpack_unpacker_stack_entry_t* top = _msgpack_unpacker_stack_entry_top(uk);
         if(top->type == STACK_TYPE_MAP_KEY) {
             return true;
