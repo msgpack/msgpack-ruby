@@ -31,14 +31,14 @@ typedef struct msgpack_packer_t msgpack_packer_t;
 struct msgpack_packer_t {
     msgpack_buffer_t buffer;
 
-    bool compatibility_mode;
-    bool has_bigint_ext_type;
-    bool has_symbol_ext_type;
-
     ID to_msgpack_method;
     VALUE to_msgpack_arg;
 
     VALUE buffer_ref;
+
+    bool compatibility_mode;
+    bool has_bigint_ext_type;
+    bool has_symbol_ext_type;
 
     /* options */
     bool comaptibility_mode;
