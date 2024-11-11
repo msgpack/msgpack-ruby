@@ -50,25 +50,26 @@ struct msgpack_unpacker_stack_t {
 struct msgpack_unpacker_t {
     msgpack_buffer_t buffer;
     msgpack_unpacker_stack_t stack;
-    unsigned int head_byte;
 
     VALUE self;
     VALUE last_object;
 
     VALUE reading_raw;
     size_t reading_raw_remaining;
-    int reading_raw_type;
 
     VALUE buffer_ref;
 
     msgpack_unpacker_ext_registry_t *ext_registry;
 
+    int reading_raw_type;
+    unsigned int head_byte;
+
     /* options */
+    int symbol_ext_type;
     bool symbolize_keys;
     bool freeze;
     bool allow_unknown_ext;
     bool optimized_symbol_ext_type;
-    int symbol_ext_type;
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)
