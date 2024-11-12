@@ -50,6 +50,7 @@ struct msgpack_unpacker_stack_t {
 struct msgpack_unpacker_t {
     msgpack_buffer_t buffer;
     msgpack_unpacker_stack_t stack;
+    msgpack_key_cache_t key_cache;
 
     VALUE self;
     VALUE last_object;
@@ -66,10 +67,12 @@ struct msgpack_unpacker_t {
 
     /* options */
     int symbol_ext_type;
-    bool symbolize_keys;
-    bool freeze;
-    bool allow_unknown_ext;
-    bool optimized_symbol_ext_type;
+
+    bool use_key_cache: 1;
+    bool symbolize_keys: 1;
+    bool freeze: 1;
+    bool allow_unknown_ext: 1;
+    bool optimized_symbol_ext_type: 1;
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)
@@ -99,6 +102,11 @@ void _msgpack_unpacker_reset(msgpack_unpacker_t* uk);
 static inline void msgpack_unpacker_set_symbolized_keys(msgpack_unpacker_t* uk, bool enable)
 {
     uk->symbolize_keys = enable;
+}
+
+static inline void msgpack_unpacker_set_key_cache(msgpack_unpacker_t* uk, bool enable)
+{
+    uk->use_key_cache = enable;
 }
 
 static inline void msgpack_unpacker_set_freeze(msgpack_unpacker_t* uk, bool enable)
