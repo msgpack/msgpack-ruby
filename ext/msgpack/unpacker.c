@@ -79,10 +79,28 @@ void msgpack_unpacker_static_destroy(void)
 
 #define HEAD_BYTE_REQUIRED 0xc1
 
-static inline void _msgpack_unpacker_stack_init(msgpack_unpacker_stack_t *stack) {
-    stack->capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
-    stack->data = msgpack_rmem_alloc(&s_stack_rmem);
+static inline bool _msgpack_unpacker_stack_init(msgpack_unpacker_stack_t *stack) {
+    if (!stack->data) {
+        stack->capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
+        stack->data = msgpack_rmem_alloc(&s_stack_rmem);
+        stack->depth = 0;
+        return true;
+    }
+    return false;
 }
+
+static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {
+    if (stack->data) {
+        if (!msgpack_rmem_free(&s_stack_rmem, stack->data)) {
+            rb_bug("Failed to free an rmem pointer, memory leak?");
+        }
+        stack->data = NULL;
+        stack->depth = 0;
+    }
+}
+
+#define STACK_INIT(uk) bool stack_allocated = _msgpack_unpacker_stack_init(&uk->stack);
+#define STACK_FREE(uk) if (stack_allocated) { _msgpack_unpacker_free_stack(&uk->stack); }
 
 void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
 {
@@ -92,16 +110,6 @@ void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
 
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
-
-    _msgpack_unpacker_stack_init(&uk->stack);
-}
-
-static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {
-    if (!msgpack_rmem_free(&s_stack_rmem, stack->data)) {
-        rb_bug("Failed to free an rmem pointer, memory leak?");
-    }
-    stack->data = NULL;
-    stack->depth = 0;
 }
 
 void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
@@ -750,9 +758,15 @@ int msgpack_unpacker_read_map_header(msgpack_unpacker_t* uk, uint32_t* result_si
 
 int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
 {
+    STACK_INIT(uk);
+
     while(true) {
         int r = read_primitive(uk);
         if(r < 0) {
+            if (r != PRIMITIVE_EOF) {
+                // We keep the stack on EOF as the parsing may be resumed.
+                STACK_FREE(uk);
+            }
             return r;
         }
         if(r == PRIMITIVE_CONTAINER_START) {
@@ -761,6 +775,7 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
         /* PRIMITIVE_OBJECT_COMPLETE */
 
         if(msgpack_unpacker_stack_is_empty(uk)) {
+            STACK_FREE(uk);
             return PRIMITIVE_OBJECT_COMPLETE;
         }
 
@@ -785,6 +800,7 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
                 top->type = STACK_TYPE_MAP_KEY;
                 break;
             case STACK_TYPE_RECURSIVE:
+                STACK_FREE(uk);
                 return PRIMITIVE_OBJECT_COMPLETE;
             }
             size_t count = --top->count;
@@ -792,6 +808,7 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
             if(count == 0) {
                 object_complete(uk, top->object);
                 if(msgpack_unpacker_stack_pop(uk) <= target_stack_depth) {
+                    STACK_FREE(uk);
                     return PRIMITIVE_OBJECT_COMPLETE;
                 }
                 goto container_completed;
@@ -802,9 +819,12 @@ int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth)
 
 int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth)
 {
+    STACK_INIT(uk);
+
     while(true) {
         int r = read_primitive(uk);
         if(r < 0) {
+            STACK_FREE(uk);
             return r;
         }
         if(r == PRIMITIVE_CONTAINER_START) {
@@ -813,6 +833,7 @@ int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth)
         /* PRIMITIVE_OBJECT_COMPLETE */
 
         if(msgpack_unpacker_stack_is_empty(uk)) {
+            STACK_FREE(uk);
             return PRIMITIVE_OBJECT_COMPLETE;
         }
 
@@ -828,6 +849,7 @@ int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth)
             if(count == 0) {
                 object_complete(uk, Qnil);
                 if(msgpack_unpacker_stack_pop(uk) <= target_stack_depth) {
+                    STACK_FREE(uk);
                     return PRIMITIVE_OBJECT_COMPLETE;
                 }
                 goto container_completed;
