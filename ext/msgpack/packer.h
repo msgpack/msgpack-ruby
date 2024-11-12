@@ -453,11 +453,7 @@ static inline void msgpack_packer_write_symbol_value(msgpack_packer_t* pk, VALUE
 
 static inline void msgpack_packer_write_fixnum_value(msgpack_packer_t* pk, VALUE v)
 {
-#ifdef JRUBY
-    msgpack_packer_write_long(pk, FIXNUM_P(v) ? FIX2LONG(v) : rb_num2ll(v));
-#else
     msgpack_packer_write_long(pk, FIX2LONG(v));
-#endif
 }
 
 static inline void msgpack_packer_write_bignum_value(msgpack_packer_t* pk, VALUE v)
