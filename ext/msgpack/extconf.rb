@@ -9,12 +9,13 @@ append_cflags([
   "-fvisibility=hidden",
   "-I..",
   "-Wall",
-  "-O3",
   "-std=gnu99"
 ])
-append_cflags(RbConfig::CONFIG["debugflags"]) if RbConfig::CONFIG["debugflags"]
 
-append_cflags("-DRUBY_DEBUG=1") if ENV["MSGPACK_DEBUG"]
+if ENV["MSGPACK_DEBUG"]
+  append_cflags(RbConfig::CONFIG["debugflags"]) if RbConfig::CONFIG["debugflags"]
+  append_cflags("-DRUBY_DEBUG=1")
+end
 
 if RUBY_VERSION.start_with?('3.0.') && RUBY_VERSION <= '3.0.5'
   # https://bugs.ruby-lang.org/issues/18772

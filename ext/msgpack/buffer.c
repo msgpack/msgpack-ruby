@@ -300,7 +300,7 @@ static inline void _msgpack_buffer_add_new_chunk(msgpack_buffer_t* b)
 static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE string)
 {
     VALUE mapped_string;
-    if(ENCODING_GET(string) == msgpack_rb_encindex_ascii8bit && RTEST(rb_obj_frozen_p(string))) {
+    if(ENCODING_GET_INLINED(string) == msgpack_rb_encindex_ascii8bit && RB_OBJ_FROZEN_RAW(string)) {
         mapped_string = string;
     } else {
         mapped_string = rb_str_dup(string);
@@ -309,8 +309,9 @@ static inline void _msgpack_buffer_append_reference(msgpack_buffer_t* b, VALUE s
 
     _msgpack_buffer_add_new_chunk(b);
 
-    char* data = RSTRING_PTR(mapped_string);
-    size_t length = RSTRING_LEN(mapped_string);
+    char* data;
+    size_t length;
+    RSTRING_GETMEM(mapped_string, data, length);
 
     b->tail.first = (char*) data;
     b->tail.last = (char*) data + length;
@@ -330,7 +331,7 @@ void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string)
 {
     if(b->io != Qnil) {
         msgpack_buffer_flush(b);
-        if (ENCODING_GET(string) == msgpack_rb_encindex_ascii8bit) {
+        if (ENCODING_GET_INLINED(string) == msgpack_rb_encindex_ascii8bit) {
             rb_funcall(b->io, b->io_write_all_method, 1, string);
         } else {
             msgpack_buffer_append(b, RSTRING_PTR(string), RSTRING_LEN(string));
