@@ -112,7 +112,7 @@ describe MessagePack do
 
   context 'with other things' do
     it 'raises an error on #pack with an unsupported type' do
-      expect { MessagePack.pack(self) }.to raise_error(NoMethodError, /^undefined method `to_msgpack'/)
+      expect { MessagePack.pack(self) }.to raise_error(NoMethodError, /undefined method .*to_msgpack/)
     end
 
     it 'raises an error on #unpack with garbage' do
