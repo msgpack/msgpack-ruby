@@ -473,4 +473,131 @@ static inline VALUE msgpack_buffer_read_top_as_symbol(msgpack_buffer_t* b, size_
     return rb_str_intern(msgpack_buffer_read_top_as_string(b, length, true, utf8));
 }
 
+// Hash keys are likely to be repeated, and are frozen.
+// As such we can re-use them if we keep a cache of the ones we've seen so far,
+// and save much more expensive lookups into the global fstring table.
+// This cache implementation is deliberately simple, as we're optimizing for compactness,
+// to be able to fit easily embeded inside msgpack_unpacker_t.
+// As such, binary search into a sorted array gives a good tradeoff between compactness and
+// performance.
+#define MSGPACK_KEY_CACHE_CAPACITY 63
+
+typedef struct msgpack_key_cache_t msgpack_key_cache_t;
+struct msgpack_key_cache_t {
+    int length;
+    VALUE entries[MSGPACK_KEY_CACHE_CAPACITY];
+};
+
+static inline VALUE build_interned_string(const char *str, const long length)
+{
+# ifdef HAVE_RB_ENC_INTERNED_STR
+    return rb_enc_interned_str(str, length, rb_utf8_encoding());
+# else
+    VALUE rstring = rb_utf8_str_new(str, length);
+    return rb_funcall(rb_str_freeze(rstring), s_uminus, 0);
+# endif
+}
+
+static inline VALUE build_symbol(const char *str, const long length)
+{
+    return rb_str_intern(build_interned_string(str, length));
+}
+
+static void rvalue_cache_insert_at(msgpack_key_cache_t *cache, int index, VALUE rstring)
+{
+    MEMMOVE(&cache->entries[index + 1], &cache->entries[index], VALUE, cache->length - index);
+    cache->length++;
+    cache->entries[index] = rstring;
+}
+
+static inline int rstring_cache_cmp(const char *str, const long length, VALUE rstring)
+{
+    long rstring_length = RSTRING_LEN(rstring);
+    if (length == rstring_length) {
+        return memcmp(str, RSTRING_PTR(rstring), length);
+    } else {
+        return (int)(length - rstring_length);
+    }
+}
+
+static VALUE rstring_cache_fetch(msgpack_key_cache_t *cache, const char *str, const long length)
+{
+    int low = 0;
+    int high = cache->length - 1;
+    int mid = 0;
+    int last_cmp = 0;
+
+    while (low <= high) {
+        mid = (high + low) >> 1;
+        VALUE entry = cache->entries[mid];
+        last_cmp = rstring_cache_cmp(str, length, entry);
+
+        if (last_cmp == 0) {
+            return entry;
+        } else if (last_cmp > 0) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+
+    VALUE rstring = build_interned_string(str, length);
+
+    if (cache->length < MSGPACK_KEY_CACHE_CAPACITY) {
+        if (last_cmp > 0) {
+            mid += 1;
+        }
+
+        rvalue_cache_insert_at(cache, mid, rstring);
+    }
+    return rstring;
+}
+
+static VALUE rsymbol_cache_fetch(msgpack_key_cache_t *cache, const char *str, const long length)
+{
+    int low = 0;
+    int high = cache->length - 1;
+    int mid = 0;
+    int last_cmp = 0;
+
+    while (low <= high) {
+        mid = (high + low) >> 1;
+        VALUE entry = cache->entries[mid];
+        last_cmp = rstring_cache_cmp(str, length, rb_sym2str(entry));
+
+        if (last_cmp == 0) {
+            return entry;
+        } else if (last_cmp > 0) {
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+
+    VALUE rsymbol = build_symbol(str, length);
+
+    if (cache->length < MSGPACK_KEY_CACHE_CAPACITY) {
+        if (last_cmp > 0) {
+            mid += 1;
+        }
+
+        rvalue_cache_insert_at(cache, mid, rsymbol);
+    }
+    return rsymbol;
+}
+
+static inline VALUE msgpack_buffer_read_top_as_interned_symbol(msgpack_buffer_t* b, msgpack_key_cache_t *cache, size_t length)
+{
+    VALUE result = rsymbol_cache_fetch(cache, b->read_buffer, length);
+    _msgpack_buffer_consumed(b, length);
+    return result;
+}
+
+static inline VALUE msgpack_buffer_read_top_as_interned_string(msgpack_buffer_t* b, msgpack_key_cache_t *cache, size_t length)
+{
+    VALUE result = rstring_cache_fetch(cache, b->read_buffer, length);
+    _msgpack_buffer_consumed(b, length);
+    return result;
+}
+
 #endif

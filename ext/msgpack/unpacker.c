@@ -26,6 +26,19 @@
 #define rb_proc_call_with_block(recv, argc, argv, block) rb_funcallv(recv, rb_intern("call"), argc, argv)
 #endif
 
+#ifndef HAVE_RB_GC_MARK_LOCATIONS
+// For TruffleRuby
+void rb_gc_mark_locations(const VALUE *start, const VALUE *end)
+{
+    VALUE *value = start;
+
+    while (value < end) {
+        rb_gc_mark(*value);
+        value++;
+    }
+}
+#endif
+
 struct protected_proc_call_args {
     VALUE proc;
     int argc;
@@ -130,11 +143,18 @@ void msgpack_unpacker_mark_stack(msgpack_unpacker_stack_t* stack)
     }
 }
 
+void msgpack_unpacker_mark_key_cache(msgpack_key_cache_t *cache)
+{
+    const VALUE *entries = &cache->entries[0];
+    rb_gc_mark_locations(entries, entries + cache->length);
+}
+
 void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
 {
     rb_gc_mark(uk->last_object);
     rb_gc_mark(uk->reading_raw);
     msgpack_unpacker_mark_stack(&uk->stack);
+    msgpack_unpacker_mark_key_cache(&uk->key_cache);
     /* See MessagePack_Buffer_wrap */
     /* msgpack_buffer_mark(UNPACKER_BUFFER_(uk)); */
     rb_gc_mark(uk->buffer_ref);
@@ -374,15 +394,32 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
     size_t length = uk->reading_raw_remaining;
     if(length <= msgpack_buffer_top_readable_size(UNPACKER_BUFFER_(uk))) {
         int ret;
-        if ((uk->optimized_symbol_ext_type && uk->symbol_ext_type == raw_type) || (uk->symbolize_keys && is_reading_map_key(uk))) {
+        if ((uk->optimized_symbol_ext_type && uk->symbol_ext_type == raw_type)) {
             VALUE symbol = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length, raw_type != RAW_TYPE_BINARY);
             ret = object_complete_symbol(uk, symbol);
+        } else if (is_reading_map_key(uk) && raw_type == RAW_TYPE_STRING) {
+           /* don't use zerocopy for hash keys but get a frozen string directly
+            * because rb_hash_aset freezes keys and it causes copying */
+            VALUE key;
+            if (uk->symbolize_keys) {
+                if (uk->use_key_cache) {
+                    key = msgpack_buffer_read_top_as_interned_symbol(UNPACKER_BUFFER_(uk), &uk->key_cache, length);
+                } else {
+                    key = msgpack_buffer_read_top_as_symbol(UNPACKER_BUFFER_(uk), length, true);
+                }
+                ret = object_complete_symbol(uk, key);
+            } else {
+                if (uk->use_key_cache) {
+                    key = msgpack_buffer_read_top_as_interned_string(UNPACKER_BUFFER_(uk), &uk->key_cache, length);
+                } else {
+                    key = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, true, true);
+                }
+
+                ret = object_complete(uk, key);
+            }
         } else {
             bool will_freeze = uk->freeze;
             if(raw_type == RAW_TYPE_STRING || raw_type == RAW_TYPE_BINARY) {
-               /* don't use zerocopy for hash keys but get a frozen string directly
-                * because rb_hash_aset freezes keys and it causes copying */
-                will_freeze = will_freeze || is_reading_map_key(uk);
                 VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, will_freeze, raw_type == RAW_TYPE_STRING);
                 ret = object_complete(uk, string);
             } else {

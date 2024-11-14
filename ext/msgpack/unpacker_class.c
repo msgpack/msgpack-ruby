@@ -34,6 +34,7 @@ static VALUE eUnknownExtTypeError;
 static VALUE mTypeError;  // obsoleted. only for backward compatibility. See #86.
 
 static VALUE sym_symbolize_keys;
+static VALUE sym_key_cache;
 static VALUE sym_freeze;
 static VALUE sym_allow_unknown_ext;
 
@@ -127,6 +128,9 @@ VALUE MessagePack_Unpacker_initialize(int argc, VALUE* argv, VALUE self)
 
     if(options != Qnil) {
         VALUE v;
+
+        v = rb_hash_aref(options, sym_key_cache);
+        msgpack_unpacker_set_key_cache(uk, RTEST(v));
 
         v = rb_hash_aref(options, sym_symbolize_keys);
         msgpack_unpacker_set_symbolized_keys(uk, RTEST(v));
@@ -413,6 +417,7 @@ void MessagePack_Unpacker_module_init(VALUE mMessagePack)
     eUnknownExtTypeError = rb_define_class_under(mMessagePack, "UnknownExtTypeError", eUnpackError);
 
     sym_symbolize_keys = ID2SYM(rb_intern("symbolize_keys"));
+    sym_key_cache = ID2SYM(rb_intern("key_cache"));
     sym_freeze = ID2SYM(rb_intern("freeze"));
     sym_allow_unknown_ext = ID2SYM(rb_intern("allow_unknown_ext"));
 
