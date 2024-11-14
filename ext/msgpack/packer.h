@@ -25,6 +25,11 @@
 #define MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY (1024)
 #endif
 
+#ifndef UNREACHABLE_RETURN
+// Ruby 2.5
+#define UNREACHABLE_RETURN() return
+#endif
+
 struct msgpack_packer_t;
 typedef struct msgpack_packer_t msgpack_packer_t;
 
@@ -404,27 +409,33 @@ static inline bool msgpack_packer_is_utf8_compat_string(VALUE v, int encindex)
 {
     return encindex == msgpack_rb_encindex_utf8
         || encindex == msgpack_rb_encindex_usascii
-        || (rb_enc_asciicompat(rb_enc_from_index(encindex)) && ENC_CODERANGE_ASCIIONLY(v));
+        || ENC_CODERANGE_ASCIIONLY(v);
 }
 
 static inline void msgpack_packer_write_string_value(msgpack_packer_t* pk, VALUE v)
 {
-    /* actual return type of RSTRING_LEN is long */
-    unsigned long len = RSTRING_LEN(v);
-    if(len > 0xffffffffUL) {
-        // TODO rb_eArgError?
-        rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %lu", len, 0xffffffffUL);
+    long len = RSTRING_LEN(v);
+
+    if(RB_UNLIKELY(len > 0xffffffffL)) {
+        rb_raise(rb_eArgError, "size of string is too long to pack: %lu bytes should be <= %ld", len, 0xffffffffL);
+        UNREACHABLE_RETURN();
     }
 
-    int encindex = ENCODING_GET(v);
-    if(msgpack_packer_is_binary(v, encindex) && !pk->compatibility_mode) {
+    if (RB_UNLIKELY(pk->compatibility_mode)) {
+        msgpack_packer_write_raw_header(pk, (unsigned int)len);
+        msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
+        return;
+    }
+
+    int encindex = ENCODING_GET_INLINED(v);
+    if(msgpack_packer_is_binary(v, encindex)) {
         /* write ASCII-8BIT string using Binary type */
         msgpack_packer_write_bin_header(pk, (unsigned int)len);
         msgpack_buffer_append_string(PACKER_BUFFER_(pk), v);
     } else {
         /* write UTF-8, US-ASCII, or 7bit-safe ascii-compatible string using String type directly */
         /* in compatibility mode, packer packs String values as is */
-        if(!pk->compatibility_mode && !msgpack_packer_is_utf8_compat_string(v, encindex)) {
+        if(RB_UNLIKELY(!msgpack_packer_is_utf8_compat_string(v, encindex))) {
             /* transcode other strings to UTF-8 and write using String type */
             VALUE enc = rb_enc_from_encoding(rb_utf8_encoding()); /* rb_enc_from_encoding_index is not extern */
             v = rb_str_encode(v, enc, 0, Qnil);

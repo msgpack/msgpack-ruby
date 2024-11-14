@@ -237,13 +237,14 @@ void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string);
 
 static inline size_t msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE string)
 {
-    size_t length = RSTRING_LEN(string);
+    size_t length;
+    char *ptr;
+    RSTRING_GETMEM(string, ptr, length);
 
     if(length > b->write_reference_threshold) {
         _msgpack_buffer_append_long_string(b, string);
-
     } else {
-        msgpack_buffer_append(b, RSTRING_PTR(string), length);
+        msgpack_buffer_append(b, ptr, length);
     }
 
     return length;
