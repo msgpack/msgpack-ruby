@@ -31,4 +31,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'yard'
   s.add_development_dependency 'json'
   s.add_development_dependency 'benchmark-ips', ['~> 2.10.0']
+
+  s.metadata["changelog_uri"] = "https://github.com/msgpack/msgpack-ruby/blob/master/ChangeLog"
 end
