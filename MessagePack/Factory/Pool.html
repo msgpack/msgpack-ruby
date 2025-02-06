@@ -6,7 +6,7 @@
 <title>
   Class: MessagePack::Factory::Pool
   
-    &mdash; Documentation by YARD 0.9.28
+    &mdash; Documentation by YARD 0.9.37
   
 </title>
 
@@ -162,6 +162,54 @@
 </li>
 
       
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#packer-instance_method" title="#packer (instance method)">#<strong>packer</strong> {|packer| ... } &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Yields a Packer from the pool, and check it back in.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#unpacker-instance_method" title="#unpacker (instance method)">#<strong>unpacker</strong> {|unpacker| ... } &#x21d2; Object </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Yields an Unpacker from the pool, and check it back in.</p>
+</div></span>
+  
+</li>
+
+      
     </ul>
   
 
@@ -185,7 +233,7 @@
     
 <p>Serialize the passed value</p>
 
-<p>If it could not serialize the object, it raises NoMethodError: undefined method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
+<p>If it could not serialize the object, it raises NoMethodError: undefined method ‘to_msgpack’ for #&lt;the_object&gt;.</p>
 
 
   </div>
@@ -237,11 +285,11 @@
       <pre class="lines">
 
 
-141
-142</pre>
+139
+140</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 141</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 139</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_dump'>dump</span><span class='lparen'>(</span><span class='id identifier rubyid_object'>object</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -264,9 +312,7 @@
     
 <p>Deserializes an object from the string or io and returns it.</p>
 
-<p>If there&#39;re not enough data to deserialize one object, this method raises EOFError. If data format is invalid, this method raises MessagePack::MalformedFormatError. If the object nests too deeply, this method raises MessagePack::StackError.</p>
-
-<p>See Unpacker#initialize for supported options.</p>
+<p>If there’re not enough data to deserialize one object, this method raises EOFError. If data format is invalid, this method raises MessagePack::MalformedFormatError. If the object nests too deeply, this method raises MessagePack::StackError.</p>
 
 
   </div>
@@ -313,13 +359,125 @@
       <pre class="lines">
 
 
-129
-130</pre>
+127
+128</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 129</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 127</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_load'>load</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="packer-instance_method">
+  
+    #<strong>packer</strong> {|packer| ... } &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Yields a Packer from the pool, and check it back in.</p>
+
+<p>The packer should no longer be held after the block has returned.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Yield Parameters:</p>
+<ul class="yieldparam">
+  
+    <li>
+      
+        <span class='name'>packer</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Packer.html" title="MessagePack::Packer (class)">MessagePack::Packer</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+161
+162</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 161</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_packer'>packer</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
+  <h3 class="signature " id="unpacker-instance_method">
+  
+    #<strong>unpacker</strong> {|unpacker| ... } &#x21d2; <tt>Object</tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Yields an Unpacker from the pool, and check it back in.</p>
+
+<p>The unpacker should no longer be held after the block has returned.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Yield Parameters:</p>
+<ul class="yieldparam">
+  
+    <li>
+      
+        <span class='name'>unpacker</span>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../Unpacker.html" title="MessagePack::Unpacker (class)">MessagePack::Unpacker</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+150
+151</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/factory.rb', line 150</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_unpacker'>unpacker</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
     </td>
   </tr>
@@ -331,9 +489,9 @@
 </div>
 
       <div id="footer">
-  Generated on Fri Mar  3 17:45:20 2023 by
+  Generated on Thu Feb  6 09:27:11 2025 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.28 (ruby-2.7.1).
+  0.9.37 (ruby-3.4.1).
 </div>
 
     </div>

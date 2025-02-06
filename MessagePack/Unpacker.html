@@ -6,7 +6,7 @@
 <title>
   Class: MessagePack::Unpacker
   
-    &mdash; Documentation by YARD 0.9.28
+    &mdash; Documentation by YARD 0.9.37
   
 </title>
 
@@ -503,6 +503,10 @@
 <ul><li>
 <p><strong>:symbolize_keys</strong> deserialize keys of Hash objects as Symbol instead of String</p>
 </li><li>
+<p><strong>:freeze</strong> freeze the deserialized objects. Can allow string deduplication and some allocation elision.</p>
+</li><li>
+<p><strong>:key_cache</strong> Enable caching of map keys, this can improve performance significantly if the same map keys are frequently encountered, but also degrade performance if that’s not the case.</p>
+</li><li>
 <p><strong>:allow_unknown_ext</strong> allow to deserialize ext type object with unknown type id as ExtensionValue instance. Otherwise (by default), unpacker throws UnknownExtTypeError.</p>
 </li></ul>
 
@@ -602,11 +606,11 @@
       <pre class="lines">
 
 
-26
-27</pre>
+28
+29</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 26</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 28</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_initialize'>initialize</span><span class='lparen'>(</span><span class='op'>*</span><span class='id identifier rubyid_args'>args</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -661,12 +665,12 @@
       <pre class="lines">
 
 
-70
-71
-72</pre>
+72
+73
+74</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 70</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 72</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_buffer'>buffer</span>
   <span class='ivar'>@buffer</span>
@@ -753,11 +757,11 @@
       <pre class="lines">
 
 
-160
-161</pre>
+162
+163</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 160</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 162</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_each'>each</span><span class='lparen'>(</span><span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -825,11 +829,11 @@
       <pre class="lines">
 
 
-144
-145</pre>
+146
+147</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 144</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 146</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_feed'>feed</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -917,11 +921,11 @@
       <pre class="lines">
 
 
-171
-172</pre>
+173
+174</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 171</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 173</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_feed_each'>feed_each</span><span class='lparen'>(</span><span class='id identifier rubyid_data'>data</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -950,7 +954,7 @@
 
 <p>This method reads data from io into the internal buffer and deserializes an object from the buffer. It repeats reading data from the io until enough data is available to deserialize at least one object. After deserializing one object, unused data is left in the internal buffer.</p>
 
-<p>If there&#39;re not enough data to deserialize one object, this method raises EOFError. If data format is invalid, this method raises MessagePack::MalformedFormatError. If the object nests too deeply, this method raises MessagePack::StackError.</p>
+<p>If there’re not enough data to deserialize one object, this method raises EOFError. If data format is invalid, this method raises MessagePack::MalformedFormatError. If the object nests too deeply, this method raises MessagePack::StackError.</p>
 
 
   </div>
@@ -982,11 +986,11 @@
       <pre class="lines">
 
 
-86
-87</pre>
+88
+89</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 86</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 88</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read'>read</span>
 <span class='kw'>end</span></pre>
@@ -1009,7 +1013,7 @@
     
 <p>Read a header of an array and returns its size. It converts a serialized array into a stream of elements.</p>
 
-<p>If the serialized object is not an array, it raises MessagePack::UnexpectedTypeError. If there&#39;re not enough data, this method raises EOFError.</p>
+<p>If the serialized object is not an array, it raises MessagePack::UnexpectedTypeError. If there’re not enough data, this method raises EOFError.</p>
 
 
   </div>
@@ -1041,11 +1045,11 @@
       <pre class="lines">
 
 
-122
-123</pre>
+124
+125</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 122</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 124</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read_array_header'>read_array_header</span>
 <span class='kw'>end</span></pre>
@@ -1068,7 +1072,7 @@
     
 <p>Reads a header of an map and returns its size. It converts a serialized map into a stream of key-value pairs.</p>
 
-<p>If the serialized object is not a map, it raises MessagePack::UnexpectedTypeError. If there&#39;re not enough data, this method raises EOFError.</p>
+<p>If the serialized object is not a map, it raises MessagePack::UnexpectedTypeError. If there’re not enough data, this method raises EOFError.</p>
 
 
   </div>
@@ -1100,11 +1104,11 @@
       <pre class="lines">
 
 
-134
-135</pre>
+136
+137</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 134</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 136</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_read_map_header'>read_map_header</span>
 <span class='kw'>end</span></pre>
@@ -1288,11 +1292,11 @@
       <pre class="lines">
 
 
-44
-45</pre>
+46
+47</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 44</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 46</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span><span class='id identifier rubyid_type'>type</span><span class='comma'>,</span> <span class='id identifier rubyid_klass'>klass</span><span class='comma'>,</span> <span class='id identifier rubyid_method_name'>method_name</span><span class='comma'>,</span> <span class='op'>&amp;</span><span class='id identifier rubyid_block'>block</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -1345,11 +1349,11 @@
       <pre class="lines">
 
 
-53
-54</pre>
+55
+56</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 53</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 55</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_registered_types'>registered_types</span>
 <span class='kw'>end</span></pre>
@@ -1402,11 +1406,11 @@
       <pre class="lines">
 
 
-179
-180</pre>
+181
+182</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 179</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 181</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_reset'>reset</span>
 <span class='kw'>end</span></pre>
@@ -1461,11 +1465,11 @@
       <pre class="lines">
 
 
-98
-99</pre>
+100
+101</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 98</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 100</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_skip'>skip</span>
 <span class='kw'>end</span></pre>
@@ -1486,9 +1490,9 @@
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Deserializes a nil value if it exists and returns <em>true</em>. Otherwise, if a byte exists but the byte doesn&#39;t represent nil value, returns <em>false</em>.</p>
+<p>Deserializes a nil value if it exists and returns <em>true</em>. Otherwise, if a byte exists but the byte doesn’t represent nil value, returns <em>false</em>.</p>
 
-<p>If there&#39;re not enough data, this method raises EOFError.</p>
+<p>If there’re not enough data, this method raises EOFError.</p>
 
 
   </div>
@@ -1515,11 +1519,11 @@
       <pre class="lines">
 
 
-110
-111</pre>
+112
+113</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 110</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 112</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_skip_nil'>skip_nil</span>
 <span class='kw'>end</span></pre>
@@ -1592,11 +1596,11 @@
       <pre class="lines">
 
 
-62
-63</pre>
+64
+65</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 62</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/unpacker.rb', line 64</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_type_registered?'>type_registered?</span><span class='lparen'>(</span><span class='id identifier rubyid_klass_or_type'>klass_or_type</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -1610,9 +1614,9 @@
 </div>
 
       <div id="footer">
-  Generated on Fri Mar  3 17:45:20 2023 by
+  Generated on Thu Feb  6 09:27:11 2025 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.28 (ruby-2.7.1).
+  0.9.37 (ruby-3.4.1).
 </div>
 
     </div>

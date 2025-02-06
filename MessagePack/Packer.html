@@ -6,7 +6,7 @@
 <title>
   Class: MessagePack::Packer
   
-    &mdash; Documentation by YARD 0.9.28
+    &mdash; Documentation by YARD 0.9.37
   
 </title>
 
@@ -202,6 +202,30 @@
   
     <span class="summary_desc"><div class='inline'>
 <p>Flushes data in the internal buffer to the internal IO.</p>
+</div></span>
+  
+</li>
+
+      
+        <li class="public ">
+  <span class="summary_signature">
+    
+      <a href="#full_pack-instance_method" title="#full_pack (instance method)">#<strong>full_pack</strong>  &#x21d2; String </a>
+    
+
+    
+  </span>
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <span class="summary_desc"><div class='inline'>
+<p>Returns all data in the buffer as a string, and reset the buffer.</p>
 </div></span>
   
 </li>
@@ -920,6 +944,58 @@
 </div>
     
       <div class="method_details ">
+  <h3 class="signature " id="full_pack-instance_method">
+  
+    #<strong>full_pack</strong>  &#x21d2; <tt><span class='object_link'><a href="../String.html" title="String (class)">String</a></span></tt> 
+  
+
+  
+
+  
+</h3><div class="docstring">
+  <div class="discussion">
+    
+<p>Returns all data in the buffer as a string, and reset the buffer.</p>
+
+
+  </div>
+</div>
+<div class="tags">
+  
+<p class="tag_title">Returns:</p>
+<ul class="return">
+  
+    <li>
+      
+      
+        <span class='type'>(<tt><span class='object_link'><a href="../String.html" title="String (class)">String</a></span></tt>)</span>
+      
+      
+      
+    </li>
+  
+</ul>
+
+</div><table class="source_code">
+  <tr>
+    <td>
+      <pre class="lines">
+
+
+184
+185</pre>
+    </td>
+    <td>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 184</span>
+
+<span class='kw'>def</span> <span class='id identifier rubyid_full_pack'>full_pack</span>
+<span class='kw'>end</span></pre>
+    </td>
+  </tr>
+</table>
+</div>
+    
+      <div class="method_details ">
   <h3 class="signature " id="register_type-instance_method">
   
     
@@ -1337,11 +1413,11 @@
       <pre class="lines">
 
 
-195
-196</pre>
+205
+206</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 195</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 205</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_a'>to_a</span>
 <span class='kw'>end</span></pre>
@@ -1368,6 +1444,8 @@
     
 <p>Returns all data in the buffer as a string. Same as buffer.to_str.</p>
 
+<p>Does not empty the buffer, in most case <em>full_pack</em> is prefered.</p>
+
 
   </div>
 </div>
@@ -1393,11 +1471,11 @@
       <pre class="lines">
 
 
-184
-185</pre>
+194
+195</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 184</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 194</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_to_str'>to_str</span>
 <span class='kw'>end</span></pre>
@@ -1501,7 +1579,7 @@
     
 <p>Serializes an object into internal buffer, and flushes to io if necessary.</p>
 
-<p>If it could not serialize the object, it raises NoMethodError: undefined method `to_msgpack&#39; for #&lt;the_object&gt;.</p>
+<p>If it could not serialize the object, it raises NoMethodError: undefined method ‘to_msgpack’ for #&lt;the_object&gt;.</p>
 
 
   </div>
@@ -1674,7 +1752,7 @@
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Write a header of a binary string whose size is <em>n</em>. Useful if you want to append large binary data without loading it into memory at once. For example, MessagePack::Packer.new(io).write_bin_header(12).flush io.write(&#39;chunk1&#39;) io.write(&#39;chunk2&#39;) is the same as write(&#39;chunk1chunk2&#39;.encode(Encoding::BINARY)).</p>
+<p>Write a header of a binary string whose size is <em>n</em>. Useful if you want to append large binary data without loading it into memory at once. For example, MessagePack::Packer.new(io).write_bin_header(12).flush io.write(‘chunk1’) io.write(‘chunk2’) is the same as write(‘chunk1chunk2’.encode(Encoding::BINARY)).</p>
 
 
   </div>
@@ -1803,7 +1881,7 @@
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Write a header of an map whose size is <em>n</em>. For example, write_map_header(1).write(&#39;key&#39;).write(true) is same as write(&#39;key&#39;=&gt;true).</p>
+<p>Write a header of an map whose size is <em>n</em>. For example, write_map_header(1).write(‘key’).write(true) is same as write(‘key’=&gt;true).</p>
 
 
   </div>
@@ -1946,11 +2024,11 @@
       <pre class="lines">
 
 
-206
-207</pre>
+216
+217</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 206</span>
+      <pre class="code"><span class="info file"># File 'doclib/msgpack/packer.rb', line 216</span>
 
 <span class='kw'>def</span> <span class='id identifier rubyid_write_to'>write_to</span><span class='lparen'>(</span><span class='id identifier rubyid_io'>io</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -1964,9 +2042,9 @@
 </div>
 
       <div id="footer">
-  Generated on Fri Mar  3 17:45:20 2023 by
+  Generated on Thu Feb  6 09:27:11 2025 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.28 (ruby-2.7.1).
+  0.9.37 (ruby-3.4.1).
 </div>
 
     </div>

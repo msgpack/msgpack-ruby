@@ -6,7 +6,7 @@
 <title>
   File: README
   
-    &mdash; Documentation by YARD 0.9.28
+    &mdash; Documentation by YARD 0.9.37
   
 </title>
 
@@ -60,7 +60,7 @@
       <div id="content"><div id='filecontents'>
 <h1 id="label-MessagePack">MessagePack</h1>
 
-<p><a href="http://msgpack.org">MessagePack</a> is an efficient binary serialization format. It lets you exchange data among multiple languages like JSON but it&#39;s faster and smaller. For example, small integers (like flags or error code) are encoded into a single byte, and typical short strings only require an extra byte in addition to the strings themselves.</p>
+<p><a href="http://msgpack.org">MessagePack</a> is an efficient binary serialization format. It lets you exchange data among multiple languages like JSON but it’s faster and smaller. For example, small integers (like flags or error code) are encoded into a single byte, and typical short strings only require an extra byte in addition to the strings themselves.</p>
 
 <p>If you ever wished to use JSON for convenience (storing an image with metadata) but could not for technical reasons (binary data, size, speed…), MessagePack is a perfect replacement.</p>
 
@@ -69,12 +69,18 @@
 </span><span class='const'><span class='object_link'><a href="MessagePack.html" title="MessagePack (module)">MessagePack</a></span></span><span class='period'>.</span><span class='id identifier rubyid_unpack'><span class='object_link'><a href="MessagePack.html#unpack-class_method" title="MessagePack.unpack (method)">unpack</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_msg'>msg</span><span class='rparen'>)</span>   <span class='comment'>#=&gt; [1,2,3]
 </span></code></pre>
 
-<p>Use RubyGems to install:</p>
+<p>Add msgpack to your Gemfile to install with Bundler:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='comment'># Gemfile
+</span><span class='id identifier rubyid_gem'>gem</span> <span class='tstring'><span class='tstring_beg'>&#39;</span><span class='tstring_content'>msgpack</span><span class='tstring_end'>&#39;</span></span>
+</code></pre>
+
+<p>Or, use RubyGems to install:</p>
 
 <pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_gem'>gem</span> <span class='id identifier rubyid_install'>install</span> <span class='id identifier rubyid_msgpack'>msgpack</span>
 </code></pre>
 
-<p>or build msgpack-ruby and install:</p>
+<p>Or, build msgpack-ruby and install from a checked-out msgpack-ruby repository:</p>
 
 <pre class="code ruby"><code class="ruby">bundle
 rake
@@ -87,7 +93,7 @@ gem install --local pkg/msgpack
 </li><li>
 <p>Store objects efficiently serialized by msgpack on memcached or Redis</p>
 </li><li>
-<p>In fact Redis supports msgpack in <a href="http://redis.io/commands/eval">EVAL-scripts</a></p>
+<p>In fact Redis supports msgpack in <a href="https://redis.io/docs/latest/commands/eval/">EVAL-scripts</a></p>
 </li><li>
 <p>Upload data in efficient format from mobile devices such as smartphones</p>
 </li><li>
@@ -95,11 +101,11 @@ gem install --local pkg/msgpack
 </li><li>
 <p>Design a portable protocol to communicate with embedded devices</p>
 </li><li>
-<p>Check also <a href="http://fluentd.org/">Fluentd</a> which is a log collector which uses msgpack for the log format (they say it uses JSON but actually it&#39;s msgpack, which is compatible with JSON)</p>
+<p>Check also <a href="https://www.fluentd.org">Fluentd</a> which is a log collector which uses msgpack for the log format (they say it uses JSON but actually it’s msgpack, which is compatible with JSON)</p>
 </li><li>
 <p>Exchange objects between software components written in different languages</p>
 </li><li>
-<p>You&#39;ll need a flexible but efficient format so that components exchange objects while keeping compatibility</p>
+<p>You’ll need a flexible but efficient format so that components exchange objects while keeping compatibility</p>
 </li></ul>
 
 <h2 id="label-Portability">Portability</h2>
@@ -182,9 +188,9 @@ gem install --local pkg/msgpack
 <p>The extension type for symbols is configurable like any other extension type. For example, to customize how symbols are packed you can just redefine Symbol#to_msgpack_ext. Doing this gives you an option to prevent symbols from being serialized altogether by throwing an exception:</p>
 
 <pre class="code ruby"><code class="ruby"><span class='kw'>class</span> <span class='const'><span class='object_link'><a href="Symbol.html" title="Symbol (class)">Symbol</a></span></span>
-    <span class='kw'>def</span> <span class='id identifier rubyid_to_msgpack_ext'>to_msgpack_ext</span>
-        <span class='id identifier rubyid_raise'>raise</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Serialization of symbols prohibited</span><span class='tstring_end'>&quot;</span></span>
-    <span class='kw'>end</span>
+  <span class='kw'>def</span> <span class='id identifier rubyid_to_msgpack_ext'>to_msgpack_ext</span>
+    <span class='id identifier rubyid_raise'>raise</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>Serialization of symbols prohibited</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>end</span>
 <span class='kw'>end</span>
 
 <span class='const'><span class='object_link'><a href="MessagePack.html" title="MessagePack (module)">MessagePack</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="MessagePack.html#DefaultFactory-constant" title="MessagePack::DefaultFactory (constant)">DefaultFactory</a></span></span><span class='period'>.</span><span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span><span class='int'>0x00</span><span class='comma'>,</span> <span class='const'><span class='object_link'><a href="Symbol.html" title="Symbol (class)">Symbol</a></span></span><span class='rparen'>)</span>
@@ -196,7 +202,7 @@ gem install --local pkg/msgpack
 
 <p>There are the timestamp extension type in MessagePack, but it is not registered by default.</p>
 
-<p>To map Ruby&#39;s Time to MessagePack&#39;s timestamp for the default factory:</p>
+<p>To map Ruby’s Time to MessagePack’s timestamp for the default factory:</p>
 
 <pre class="code ruby"><code class="ruby"><span class='const'><span class='object_link'><a href="MessagePack.html" title="MessagePack (module)">MessagePack</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="MessagePack.html#DefaultFactory-constant" title="MessagePack::DefaultFactory (constant)">DefaultFactory</a></span></span><span class='period'>.</span><span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span>
   <span class='const'><span class='object_link'><a href="MessagePack.html" title="MessagePack (module)">MessagePack</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="MessagePack/Timestamp.html" title="MessagePack::Timestamp (class)">Timestamp</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="MessagePack/Timestamp.html#TYPE-constant" title="MessagePack::Timestamp::TYPE (constant)">TYPE</a></span></span><span class='comma'>,</span> <span class='comment'># or just -1
@@ -259,6 +265,32 @@ gem install --local pkg/msgpack
 <span class='id identifier rubyid_factory'>factory</span><span class='period'>.</span><span class='id identifier rubyid_load'>load</span><span class='lparen'>(</span><span class='id identifier rubyid_factory'>factory</span><span class='period'>.</span><span class='id identifier rubyid_dump'>dump</span><span class='lparen'>(</span><span class='const'>Point</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='int'>12</span><span class='comma'>,</span> <span class='int'>34</span><span class='rparen'>)</span><span class='rparen'>)</span><span class='rparen'>)</span> <span class='comment'># =&gt; #&lt;struct Point x=12, y=34&gt;
 </span></code></pre>
 
+<h2 id="label-Pooling">Pooling</h2>
+
+<p>Creating <code>Packer</code> and <code>Unpacker</code> objects is expensive. For best performance it is preferable to re-use these objects.</p>
+
+<p><code>MessagePack::Factory#pool</code> makes that easier:</p>
+
+<pre class="code ruby"><code class="ruby"><span class='id identifier rubyid_factory'>factory</span> <span class='op'>=</span> <span class='const'><span class='object_link'><a href="MessagePack.html" title="MessagePack (module)">MessagePack</a></span></span><span class='op'>::</span><span class='const'><span class='object_link'><a href="MessagePack/Factory.html" title="MessagePack::Factory (class)">Factory</a></span></span><span class='period'>.</span><span class='id identifier rubyid_new'><span class='object_link'><a href="MessagePack/Factory.html#initialize-instance_method" title="MessagePack::Factory#initialize (method)">new</a></span></span>
+<span class='id identifier rubyid_factory'>factory</span><span class='period'>.</span><span class='id identifier rubyid_register_type'>register_type</span><span class='lparen'>(</span>
+  <span class='int'>0x01</span><span class='comma'>,</span>
+  <span class='const'>Point</span><span class='comma'>,</span>
+  <span class='label'>packer:</span> <span class='tlambda'>-&gt;</span><span class='lparen'>(</span><span class='id identifier rubyid_point'>point</span><span class='comma'>,</span> <span class='id identifier rubyid_packer'>packer</span><span class='rparen'>)</span> <span class='tlambeg'>{</span>
+    <span class='id identifier rubyid_packer'>packer</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span><span class='lparen'>(</span><span class='id identifier rubyid_point'>point</span><span class='period'>.</span><span class='id identifier rubyid_x'>x</span><span class='rparen'>)</span>
+    <span class='id identifier rubyid_packer'>packer</span><span class='period'>.</span><span class='id identifier rubyid_write'>write</span><span class='lparen'>(</span><span class='id identifier rubyid_point'>point</span><span class='period'>.</span><span class='id identifier rubyid_y'>y</span><span class='rparen'>)</span>
+  <span class='rbrace'>}</span><span class='comma'>,</span>
+  <span class='label'>unpacker:</span> <span class='tlambda'>-&gt;</span><span class='lparen'>(</span><span class='id identifier rubyid_unpacker'>unpacker</span><span class='rparen'>)</span> <span class='tlambeg'>{</span>
+    <span class='id identifier rubyid_x'>x</span> <span class='op'>=</span> <span class='id identifier rubyid_unpacker'>unpacker</span><span class='period'>.</span><span class='id identifier rubyid_read'>read</span>
+    <span class='id identifier rubyid_y'>y</span> <span class='op'>=</span> <span class='id identifier rubyid_unpacker'>unpacker</span><span class='period'>.</span><span class='id identifier rubyid_read'>read</span>
+    <span class='const'>Point</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='id identifier rubyid_x'>x</span><span class='comma'>,</span> <span class='id identifier rubyid_y'>y</span><span class='rparen'>)</span>
+  <span class='rbrace'>}</span><span class='comma'>,</span>
+  <span class='label'>recursive:</span> <span class='kw'>true</span><span class='comma'>,</span>
+<span class='rparen'>)</span>
+<span class='id identifier rubyid_pool'>pool</span> <span class='op'>=</span> <span class='id identifier rubyid_factory'>factory</span><span class='period'>.</span><span class='id identifier rubyid_pool'>pool</span><span class='lparen'>(</span><span class='int'>5</span><span class='rparen'>)</span> <span class='comment'># The pool size should match the number of threads expected to use the factory concurrently.
+</span>
+<span class='id identifier rubyid_pool'>pool</span><span class='period'>.</span><span class='id identifier rubyid_load'>load</span><span class='lparen'>(</span><span class='id identifier rubyid_pool'>pool</span><span class='period'>.</span><span class='id identifier rubyid_dump'>dump</span><span class='lparen'>(</span><span class='const'>Point</span><span class='period'>.</span><span class='id identifier rubyid_new'>new</span><span class='lparen'>(</span><span class='int'>12</span><span class='comma'>,</span> <span class='int'>34</span><span class='rparen'>)</span><span class='rparen'>)</span><span class='rparen'>)</span> <span class='comment'># =&gt; #&lt;struct Point x=12, y=34&gt;
+</span></code></pre>
+
 <h2 id="label-Buffer+API">Buffer API</h2>
 
 <p>MessagePack for Ruby provides a buffer API so that you can read or write data by hand, not via Packer or Unpacker API.</p>
@@ -301,7 +333,7 @@ gem install --local pkg/msgpack
 
 <h2 id="label-Updating+documents">Updating documents</h2>
 
-<p>Online documents (<a href="http://ruby.msgpack.org">ruby.msgpack.org</a>) is generated from gh-pages branch. Following commands update documents in gh-pages branch:</p>
+<p>Online documentation (<a href="https://ruby.msgpack.org">ruby.msgpack.org</a>) is generated from the gh-pages branch. To update documents in gh-pages branch:</p>
 
 <pre class="code ruby"><code class="ruby">bundle exec rake doc
 git checkout gh-pages
@@ -325,9 +357,9 @@ cp doc/* ./ -a
 </div></div>
 
       <div id="footer">
-  Generated on Fri Mar  3 17:45:19 2023 by
+  Generated on Thu Feb  6 09:27:11 2025 by
   <a href="https://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
-  0.9.28 (ruby-2.7.1).
+  0.9.37 (ruby-3.4.1).
 </div>
 
     </div>
