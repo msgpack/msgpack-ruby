@@ -290,7 +290,7 @@ To update documents in gh-pages branch:
 
     bundle exec rake doc
     git checkout gh-pages
-    cp doc/* ./ -a
+    cp -a doc/* ./
 
 ## Copyright
 
