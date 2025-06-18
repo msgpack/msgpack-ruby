@@ -67,10 +67,11 @@ static int16_t INITIAL_BUFFER_CAPACITY_MAX = SHRT_MAX;
 static msgpack_rmem_t s_stack_rmem;
 
 #if !defined(HAVE_RB_HASH_NEW_CAPA)
-static inline VALUE rb_hash_new_capa(long capa)
+static inline VALUE rb_hash_new_capa_inline(long capa)
 {
   return rb_hash_new();
 }
+#define rb_hash_new_capa rb_hash_new_capa_inline
 #endif
 
 static inline int16_t initial_buffer_size(long size)
