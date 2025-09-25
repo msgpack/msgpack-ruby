@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.authors = ["Sadayuki Furuhashi", "Theo Hultberg", "Satoshi Tagomori"]
   s.email = ["frsyuki@gmail.com", "theo@iconara.net", "tagomoris@gmail.com"]
   s.license = "Apache-2.0"
-  s.homepage = "http://msgpack.org/"
+  s.homepage = "https://msgpack.org/"
   s.require_paths = ["lib"]
   if /java/ =~ RUBY_PLATFORM
     s.files = Dir['lib/**/*.rb', 'lib/**/*.jar', 'LICENSE']
