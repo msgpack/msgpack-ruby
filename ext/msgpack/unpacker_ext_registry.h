@@ -22,6 +22,7 @@
 #include "ruby.h"
 
 #define MSGPACK_EXT_RECURSIVE 0b0001
+#define MSGPACK_EXT_STRUCT_FAST_PATH 0b0010
 
 struct msgpack_unpacker_ext_registry_t;
 typedef struct msgpack_unpacker_ext_registry_t msgpack_unpacker_ext_registry_t;

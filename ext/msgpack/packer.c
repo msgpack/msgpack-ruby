@@ -91,6 +91,28 @@ void msgpack_packer_write_hash_value(msgpack_packer_t* pk, VALUE v)
     rb_hash_foreach(v, write_hash_foreach, (VALUE) pk);
 }
 
+/* Pack a Struct's fields directly using C API, bypassing Ruby callbacks */
+struct msgpack_packer_struct_args_t;
+typedef struct msgpack_packer_struct_args_t msgpack_packer_struct_args_t;
+struct msgpack_packer_struct_args_t {
+    msgpack_packer_t* pk;
+    VALUE v;
+};
+
+static VALUE msgpack_packer_write_struct_fields_protected(VALUE value)
+{
+    msgpack_packer_struct_args_t *args = (msgpack_packer_struct_args_t *)value;
+    msgpack_packer_t* pk = args->pk;
+    VALUE v = args->v;
+
+    long len = RSTRUCT_LEN(v);
+    for (int i = 0; i < len; i++) {
+        VALUE field = RSTRUCT_GET(v, i);
+        msgpack_packer_write_value(pk, field);
+    }
+    return Qnil;
+}
+
 struct msgpack_call_proc_args_t;
 typedef struct msgpack_call_proc_args_t msgpack_call_proc_args_t;
 struct msgpack_call_proc_args_t {
@@ -112,6 +134,33 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
 
     if(proc == Qnil) {
         return false;
+    }
+
+    if(ext_flags & MSGPACK_EXT_STRUCT_FAST_PATH) {
+        /* Fast path for Struct: directly access fields in C, no Ruby callbacks */
+        VALUE held_buffer = MessagePack_Buffer_hold(&pk->buffer);
+
+        msgpack_buffer_t parent_buffer = pk->buffer;
+        msgpack_buffer_init(PACKER_BUFFER_(pk));
+
+        /* Write struct fields with exception handling */
+        int exception_occured = 0;
+        msgpack_packer_struct_args_t args = { pk, v };
+        rb_protect(msgpack_packer_write_struct_fields_protected, (VALUE)&args, &exception_occured);
+
+        if (exception_occured) {
+            msgpack_buffer_destroy(PACKER_BUFFER_(pk));
+            pk->buffer = parent_buffer;
+            rb_jump_tag(exception_occured); // re-raise the exception
+        } else {
+            VALUE payload = msgpack_buffer_all_as_string(PACKER_BUFFER_(pk));
+            msgpack_buffer_destroy(PACKER_BUFFER_(pk));
+            pk->buffer = parent_buffer;
+            msgpack_packer_write_ext(pk, ext_type, payload);
+        }
+
+        RB_GC_GUARD(held_buffer);
+        return true;
     }
 
     if(ext_flags & MSGPACK_EXT_RECURSIVE) {

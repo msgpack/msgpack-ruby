@@ -250,6 +250,27 @@ static VALUE Factory_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE
         if(RTEST(rb_hash_aref(options, ID2SYM(rb_intern("recursive"))))) {
             flags |= MSGPACK_EXT_RECURSIVE;
         }
+
+        /* optimized_struct: true enables C-level fast path for Struct types */
+        if (RTEST(rb_hash_aref(options, ID2SYM(rb_intern("optimized_struct"))))) {
+            /* Verify it's actually a Struct subclass */
+            if (!(rb_obj_is_kind_of(ext_module, rb_cClass) &&
+                  RTEST(rb_class_inherited_p(ext_module, rb_cStruct)))) {
+                rb_raise(rb_eArgError, "optimized_struct: true requires a Struct subclass");
+            }
+            /* Verify packer/unpacker procs weren't also provided */
+            if (RTEST(packer_proc) || RTEST(unpacker_proc)) {
+                rb_raise(rb_eArgError, "optimized_struct: true cannot be used with packer or unpacker options");
+            }
+            /* Verify recursive wasn't also provided - optimized_struct handles recursion automatically */
+            if (flags & MSGPACK_EXT_RECURSIVE) {
+                rb_raise(rb_eArgError, "optimized_struct: true cannot be used with recursive option");
+            }
+            flags |= MSGPACK_EXT_STRUCT_FAST_PATH;
+            /* Store the class itself - C code uses it directly */
+            packer_proc = ext_module;
+            unpacker_proc = ext_module;
+        }
     }
 
     msgpack_packer_ext_registry_put(self, &fc->pkrg, ext_module, ext_type, flags, packer_proc);
