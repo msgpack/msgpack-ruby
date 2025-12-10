@@ -304,6 +304,13 @@ static VALUE Packer_reset(VALUE self)
 {
     msgpack_packer_t *pk = MessagePack_Packer_get(self);
     msgpack_buffer_clear(PACKER_BUFFER_(pk));
+
+    /* Reset ref tracking state */
+    if (pk->ref_table) {
+        st_clear(pk->ref_table);
+    }
+    pk->next_ref_id = 1;
+
     return Qnil;
 }
 

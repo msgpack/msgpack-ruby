@@ -23,6 +23,7 @@
 
 #define MSGPACK_EXT_RECURSIVE 0b0001
 #define MSGPACK_EXT_STRUCT_FAST_PATH 0b0010
+#define MSGPACK_EXT_REF_TRACKING 0b0100
 
 struct msgpack_packer_ext_registry_t;
 typedef struct msgpack_packer_ext_registry_t msgpack_packer_ext_registry_t;

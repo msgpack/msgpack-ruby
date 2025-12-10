@@ -26,11 +26,17 @@
 void msgpack_packer_init(msgpack_packer_t* pk)
 {
     msgpack_buffer_init(PACKER_BUFFER_(pk));
+    pk->ref_table = NULL;
+    pk->next_ref_id = 1;  /* 1-indexed */
 }
 
 void msgpack_packer_destroy(msgpack_packer_t* pk)
 {
     msgpack_buffer_destroy(PACKER_BUFFER_(pk));
+    if (pk->ref_table) {
+        st_free_table(pk->ref_table);
+        pk->ref_table = NULL;
+    }
 }
 
 void msgpack_packer_mark(msgpack_packer_t* pk)
@@ -46,6 +52,68 @@ void msgpack_packer_reset(msgpack_packer_t* pk)
     msgpack_buffer_clear(PACKER_BUFFER_(pk));
 
     pk->buffer_ref = Qnil;
+
+    /* Reset ref tracking state */
+    if (pk->ref_table) {
+        st_clear(pk->ref_table);
+    }
+    pk->next_ref_id = 1;
+}
+
+/*
+ * Write a back-reference to a previously serialized object.
+ * Wire format: ext type 127 followed by msgpack integer ref_id
+ * We use fixext 1 with a 0 byte as a marker, then write the ref_id as a normal msgpack int.
+ */
+static void msgpack_packer_write_back_ref(msgpack_packer_t* pk, long ref_id)
+{
+    /* fixext 1, type 127, payload 0x01 (marker for back-ref) */
+    msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
+    msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd4, MSGPACK_EXT_REF_TYPE);
+    msgpack_buffer_write_1(PACKER_BUFFER_(pk), 0x01);
+    /* Write ref_id as a variable-length msgpack integer */
+    msgpack_packer_write_long(pk, ref_id);
+}
+
+/*
+ * Write a new reference marker followed by the object.
+ * Wire format: ext type 127 with payload = [nil, serialized_object]
+ * The nil indicates this is a new ref (vs back-ref which has positive int).
+ */
+static void msgpack_packer_write_new_ref_header(msgpack_packer_t* pk)
+{
+    /* We write: ext header (variable len) + nil (1 byte) + object (variable)
+     * Since we don't know the total length yet, we use a different approach:
+     * Write nil as ext payload marker, then the object follows in the stream.
+     * 
+     * Actually, let's use fixext 1 with nil (0xc0) as the 1-byte payload.
+     * The unpacker will see ext type 127 with payload [0xc0] and know it's a new ref,
+     * then read the next object from the stream.
+     */
+    msgpack_buffer_ensure_writable(PACKER_BUFFER_(pk), 3);
+    msgpack_buffer_write_2(PACKER_BUFFER_(pk), 0xd4, MSGPACK_EXT_REF_TYPE);  /* fixext 1, type 127 */
+    msgpack_buffer_write_1(PACKER_BUFFER_(pk), 0xc0);  /* nil marker */
+}
+
+/*
+ * Check if a value was already serialized and return its ref_id if so.
+ * If not found, registers the value and returns 0.
+ */
+static long msgpack_packer_check_ref(msgpack_packer_t* pk, VALUE v)
+{
+    if (!pk->ref_table) {
+        pk->ref_table = st_init_numtable();
+    }
+    
+    st_data_t ref_id;
+    if (st_lookup(pk->ref_table, (st_data_t)v, &ref_id)) {
+        return (long)ref_id;
+    }
+    
+    /* Not found - register this value */
+    st_insert(pk->ref_table, (st_data_t)v, (st_data_t)pk->next_ref_id);
+    pk->next_ref_id++;
+    return 0;  /* 0 means "not a back-reference" */
 }
 
 
@@ -134,6 +202,18 @@ bool msgpack_packer_try_write_with_ext_type_lookup(msgpack_packer_t* pk, VALUE v
 
     if(proc == Qnil) {
         return false;
+    }
+
+    /* Handle ref_tracking: check if we've seen this object before */
+    if (ext_flags & MSGPACK_EXT_REF_TRACKING) {
+        long ref_id = msgpack_packer_check_ref(pk, v);
+        if (ref_id > 0) {
+            /* Already seen - write back-reference */
+            msgpack_packer_write_back_ref(pk, ref_id);
+            return true;
+        }
+        /* Not seen before - write new-ref header, then continue to serialize normally */
+        msgpack_packer_write_new_ref_header(pk);
     }
 
     if(ext_flags & MSGPACK_EXT_STRUCT_FAST_PATH) {

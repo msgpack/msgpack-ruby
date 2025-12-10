@@ -21,6 +21,9 @@
 #include "buffer.h"
 #include "unpacker_ext_registry.h"
 
+/* Extension type for reference tracking (used for deduplication) */
+#define MSGPACK_EXT_REF_TYPE 127
+
 #define MSGPACK_UNPACKER_STACK_CAPACITY 128
 
 struct msgpack_unpacker_t;
@@ -73,6 +76,10 @@ struct msgpack_unpacker_t {
     bool freeze: 1;
     bool allow_unknown_ext: 1;
     bool optimized_symbol_ext_type: 1;
+    bool has_ref_tracking_ext_type: 1;
+
+    /* reference tracking for deduplication */
+    VALUE ref_array;  /* array of previously unpacked objects (1-indexed) */
 };
 
 #define UNPACKER_BUFFER_(uk) (&(uk)->buffer)

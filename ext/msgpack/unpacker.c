@@ -17,6 +17,7 @@
  */
 
 #include "unpacker.h"
+#include "unpacker_class.h"
 #include "rmem.h"
 #include "extension_value_class.h"
 #include <assert.h>
@@ -124,6 +125,7 @@ void _msgpack_unpacker_init(msgpack_unpacker_t* uk)
 
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
+    uk->ref_array = Qnil;
 }
 
 void _msgpack_unpacker_destroy(msgpack_unpacker_t* uk)
@@ -154,6 +156,7 @@ void msgpack_unpacker_mark(msgpack_unpacker_t* uk)
 {
     rb_gc_mark(uk->last_object);
     rb_gc_mark(uk->reading_raw);
+    rb_gc_mark(uk->ref_array);
     msgpack_unpacker_mark_stack(&uk->stack);
     msgpack_unpacker_mark_key_cache(&uk->key_cache);
     /* See MessagePack_Buffer_wrap */
@@ -173,6 +176,11 @@ void _msgpack_unpacker_reset(msgpack_unpacker_t* uk)
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
     uk->reading_raw_remaining = 0;
+
+    /* Reset ref tracking state */
+    if (uk->ref_array != Qnil) {
+        rb_ary_clear(uk->ref_array);
+    }
 }
 
 
@@ -218,8 +226,102 @@ static inline int object_complete_symbol(msgpack_unpacker_t* uk, VALUE object)
     return PRIMITIVE_OBJECT_COMPLETE;
 }
 
+/* Forward declarations for ref tracking */
+static inline int _msgpack_unpacker_stack_push(msgpack_unpacker_t* uk, enum stack_type_t type, size_t count, VALUE object);
+static inline size_t msgpack_unpacker_stack_pop(msgpack_unpacker_t* uk);
+int msgpack_unpacker_read(msgpack_unpacker_t* uk, size_t target_stack_depth);
+
+/*
+ * Handle ext type 127 (ref tracking).
+ * Payload format:
+ *   - nil (0xc0): new ref marker, the actual object follows in the main stream
+ *   - positive integer: back-reference to a previously unpacked object
+ */
+static inline int object_complete_ref_tracking(msgpack_unpacker_t* uk, VALUE str)
+{
+    if (str == Qnil || RSTRING_LEN(str) == 0) {
+        rb_raise(rb_eArgError, "Invalid ref tracking payload: empty");
+    }
+
+    const unsigned char *data = (const unsigned char *)RSTRING_PTR(str);
+    size_t len = RSTRING_LEN(str);
+
+    /* Check marker byte: 0xc0 (nil) = new ref, 0x01 = back-ref */
+    if (data[0] == 0xc0) {
+        /* New ref marker - the actual object follows in the stream */
+
+        /* Initialize ref_array lazily */
+        if (uk->ref_array == Qnil) {
+            uk->ref_array = rb_ary_new();
+        }
+
+        /* Reserve a slot in the ref_array BEFORE reading the object.
+         * This is necessary because the object being read may contain
+         * nested refs that need to be registered in pre-order (DFS order).
+         * We use Qnil as a placeholder and fill it in after reading. */
+        long slot_index = RARRAY_LEN(uk->ref_array);
+        rb_ary_push(uk->ref_array, Qnil);  /* Reserve slot */
+
+        /* Read the next object from the main stream */
+        _msgpack_unpacker_stack_push(uk, STACK_TYPE_RECURSIVE, 1, Qnil);
+        int ret = msgpack_unpacker_read(uk, 0);
+        msgpack_unpacker_stack_pop(uk);
+
+        if (ret < 0) {
+            return ret;
+        }
+
+        /* Fill in the reserved slot with the actual object */
+        rb_ary_store(uk->ref_array, slot_index, uk->last_object);
+        return PRIMITIVE_OBJECT_COMPLETE;
+    }
+
+    if (data[0] != 0x01 || len != 1) {
+        rb_raise(rb_eArgError, "Invalid ref tracking marker: expected 0x01, got 0x%02x", data[0]);
+    }
+
+    /* Back-reference marker - read the ref_id as a msgpack integer from the stream */
+    _msgpack_unpacker_stack_push(uk, STACK_TYPE_RECURSIVE, 1, Qnil);
+    int ret = msgpack_unpacker_read(uk, 0);
+    msgpack_unpacker_stack_pop(uk);
+
+    if (ret < 0) {
+        return ret;
+    }
+
+    if (!FIXNUM_P(uk->last_object)) {
+        rb_raise(rb_eArgError, "Invalid ref_id: expected integer");
+    }
+    long ref_id = FIX2LONG(uk->last_object);
+
+    if (ref_id <= 0) {
+        rb_raise(rb_eArgError, "Invalid ref_id: %ld (must be positive)", ref_id);
+    }
+
+    if (uk->ref_array == Qnil) {
+        rb_raise(rb_eArgError, "Back-reference to ref_id %ld but no objects registered yet", ref_id);
+    }
+
+    /* ref_id is 1-indexed, array is 0-indexed */
+    long index = ref_id - 1;
+    if (index >= RARRAY_LEN(uk->ref_array)) {
+        rb_raise(rb_eArgError, "Back-reference to ref_id %ld but only %ld objects registered",
+                 ref_id, RARRAY_LEN(uk->ref_array));
+    }
+
+    VALUE obj = rb_ary_entry(uk->ref_array, index);
+    uk->last_object = obj;
+    reset_head_byte(uk);
+    return PRIMITIVE_OBJECT_COMPLETE;
+}
+
 static inline int object_complete_ext(msgpack_unpacker_t* uk, int ext_type, VALUE str)
 {
+    /* Handle ref tracking ext type 127 */
+    if (uk->has_ref_tracking_ext_type && ext_type == MSGPACK_EXT_REF_TYPE) {
+        return object_complete_ref_tracking(uk, str);
+    }
+
     if (uk->optimized_symbol_ext_type && ext_type == uk->symbol_ext_type) {
         if (RB_UNLIKELY(NIL_P(str))) { // empty extension is returned as Qnil
             return object_complete_symbol(uk, ID2SYM(rb_intern3("", 0, rb_utf8_encoding())));
@@ -496,7 +598,11 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
                 ret = object_complete(uk, string);
             } else {
                 VALUE string = msgpack_buffer_read_top_as_string(UNPACKER_BUFFER_(uk), length, false, false);
+                /* Clear reading_raw_remaining BEFORE calling object_complete_ext
+                 * because ref tracking may recursively call msgpack_unpacker_read */
+                uk->reading_raw_remaining = 0;
                 ret = object_complete_ext(uk, raw_type, string);
+                return ret;
             }
         }
         uk->reading_raw_remaining = 0;

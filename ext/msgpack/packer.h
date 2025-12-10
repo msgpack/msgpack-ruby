@@ -21,6 +21,9 @@
 #include "buffer.h"
 #include "packer_ext_registry.h"
 
+/* Extension type for reference tracking (used for deduplication) */
+#define MSGPACK_EXT_REF_TYPE 127
+
 #ifndef MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY
 #define MSGPACK_PACKER_IO_FLUSH_THRESHOLD_TO_WRITE_STRING_BODY (1024)
 #endif
@@ -44,6 +47,11 @@ struct msgpack_packer_t {
     bool compatibility_mode;
     bool has_bigint_ext_type;
     bool has_symbol_ext_type;
+    bool has_ref_tracking_ext_type;
+
+    /* reference tracking for deduplication */
+    st_table *ref_table;  /* maps VALUE -> ref_id (1-indexed) */
+    long next_ref_id;
 
     /* options */
     bool comaptibility_mode;

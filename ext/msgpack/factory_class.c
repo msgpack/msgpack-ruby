@@ -34,6 +34,7 @@ struct msgpack_factory_t {
     bool has_bigint_ext_type;
     bool has_symbol_ext_type;
     bool optimized_symbol_ext_type;
+    bool has_ref_tracking_ext_type;
     int symbol_ext_type;
 };
 
@@ -161,6 +162,7 @@ VALUE MessagePack_Factory_packer(int argc, VALUE* argv, VALUE self)
     msgpack_packer_ext_registry_borrow(packer, &fc->pkrg, &pk->ext_registry);
     pk->has_bigint_ext_type = fc->has_bigint_ext_type;
     pk->has_symbol_ext_type = fc->has_symbol_ext_type;
+    pk->has_ref_tracking_ext_type = fc->has_ref_tracking_ext_type;
 
     return packer;
 }
@@ -176,6 +178,7 @@ VALUE MessagePack_Factory_unpacker(int argc, VALUE* argv, VALUE self)
     msgpack_unpacker_ext_registry_borrow(fc->ukrg, &uk->ext_registry);
     uk->optimized_symbol_ext_type = fc->optimized_symbol_ext_type;
     uk->symbol_ext_type = fc->symbol_ext_type;
+    uk->has_ref_tracking_ext_type = fc->has_ref_tracking_ext_type;
 
     return unpacker;
 }
@@ -270,6 +273,12 @@ static VALUE Factory_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE
             /* Store the class itself - C code uses it directly */
             packer_proc = ext_module;
             unpacker_proc = ext_module;
+        }
+
+        /* ref_tracking: true enables deduplication of repeated objects */
+        if (RTEST(rb_hash_aref(options, ID2SYM(rb_intern("ref_tracking"))))) {
+            flags |= MSGPACK_EXT_REF_TRACKING;
+            fc->has_ref_tracking_ext_type = true;
         }
     }
 
