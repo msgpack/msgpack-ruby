@@ -77,29 +77,25 @@ Metafield = Struct.new(
   :owner_id,
   :created_at,
   :updated_at,
-  :original_type,
-  keyword_init: true,
+  :original_type
 )
 
 SellingPlanPriceAdjustment = Struct.new(
   :order_count,
   :position,
   :value_type,
-  :value,
-  keyword_init: true,
+  :value
 )
 
 SellingPlanOption = Struct.new(
   :name,
   :position,
-  :value,
-  keyword_init: true,
+  :value
 )
 
 SellingPlanCheckoutCharge = Struct.new(
   :value_type,
-  :value,
-  keyword_init: true,
+  :value
 )
 
 # SellingPlan is SHARED - the same selling plan instance is referenced by
@@ -111,16 +107,14 @@ SellingPlan = Struct.new(
   :recurring_deliveries,
   :options,
   :price_adjustments,
-  :checkout_charge,
-  keyword_init: true,
+  :checkout_charge
 )
 
 SellingPlanGroup = Struct.new(
   :id,
   :name,
   :options,
-  :selling_plans,
-  keyword_init: true,
+  :selling_plans
 )
 
 # ProductOptionValue is SHARED - the same option value instance appears in
@@ -129,16 +123,14 @@ ProductOptionValue = Struct.new(
   :id,
   :name,
   :position,
-  :swatch_color,
-  keyword_init: true,
+  :swatch_color
 )
 
 ProductOption = Struct.new(
   :id,
   :name,
   :position,
-  :values,
-  keyword_init: true,
+  :values
 )
 
 # ProductVariant - matches real ProductLoader::Messages::ProductVariant (37 fields)
@@ -172,8 +164,7 @@ ProductVariant = Struct.new(
   :requires_shipping,
   :selling_plans,     # References SHARED SellingPlan objects
   :metafields,
-  :variant_unit_price_measurement,
-  keyword_init: true,
+  :variant_unit_price_measurement
 )
 
 # Product - matches real ProductLoader::Messages::Product (28 fields)
@@ -196,8 +187,7 @@ Product = Struct.new(
   :variants,
   :options,              # Contains SHARED ProductOptionValue objects
   :selling_plan_groups,  # Contains SHARED SellingPlan objects
-  :metafields,
-  keyword_init: true,
+  :metafields
 )
 
 ALL_STRUCTS = [
@@ -254,7 +244,7 @@ module CodeGen
   end
 
   def self.build_tracked_unpacker(struct)
-    args = struct.members.map { |m| "#{m}: unpacker.read" }.join(", ")
+    args = struct.members.map { |_m| "unpacker.read" }.join(", ")
 
     eval(<<~RUBY, binding, __FILE__, __LINE__ + 1)
       ->(unpacker) {
@@ -273,7 +263,7 @@ module CodeGen
   end
 
   def self.build_untracked_unpacker(struct)
-    args = struct.members.map { |m| "#{m}: unpacker.read" }.join(", ")
+    args = struct.members.map { |_m| "unpacker.read" }.join(", ")
     eval(<<~RUBY, binding, __FILE__, __LINE__ + 1)
       ->(unpacker) {
         #{struct}.new(#{args})
@@ -340,8 +330,8 @@ module Coders
       ALL_STRUCTS.each do |struct|
         unpacker = eval(<<~RUBY, binding, __FILE__, __LINE__ + 1)
           -> (unpacker) {
-            #{struct.members.join(", ")} = unpacker.read 
-            #{struct}.new(#{struct.members.map{ |m| "#{m}: #{m}" }.join(", ")})
+            #{struct.members.join(",")} = unpacker.read
+            #{struct}.new(#{struct.members.join(", ")})
           }
         RUBY
 
@@ -510,26 +500,26 @@ end
 
 def create_selling_plan(id:)
   SellingPlan.new(
-    id: id,
-    name: "Subscribe & Save #{id}",
-    description: "Save 10% with a subscription",
-    recurring_deliveries: true,
-    options: [
-      SellingPlanOption.new(name: "Delivery Frequency", position: 1, value: "1 Month"),
+    id,
+    "Subscribe & Save #{id}",
+    "Save 10% with a subscription",
+    true,
+    [
+      SellingPlanOption.new("Delivery Frequency", 1, "1 Month")
     ],
-    price_adjustments: [
-      SellingPlanPriceAdjustment.new(order_count: nil, position: 1, value_type: "percentage", value: 10),
+    [
+      SellingPlanPriceAdjustment.new(nil, 1, "percentage", 10)
     ],
-    checkout_charge: SellingPlanCheckoutCharge.new(value_type: "percentage", value: 100),
+    SellingPlanCheckoutCharge.new("percentage", 100)
   )
 end
 
 def create_selling_plan_group(id:, selling_plans:)
   SellingPlanGroup.new(
-    id: id,
-    name: "Subscription Group #{id}",
-    options: [{ name: "Delivery Frequency", position: 1, values: ["1 Month", "2 Months"] }],
-    selling_plans: selling_plans,
+    id,
+    "Subscription Group #{id}",
+    [{ name: "Delivery Frequency", position: 1, values: ["1 Month", "2 Months"] }],
+    selling_plans
   )
 end
 
@@ -540,41 +530,42 @@ def create_metafields(owner_id:, count:, owner_type:)
   # - Relatively short values
   (1..count).map do |i|
     Metafield.new(
-      id: owner_id * 1000 + i,
-      namespace: "custom",
-      key: "field_#{i}",
-      value: "Value #{i}",
-      type: "single_line_text_field", # this should be an enum
-      value_type: "string",
-      definition_id: nil,
-      owner_type: owner_type,
-      owner_id: owner_id,
-      created_at: Time.now,
-      updated_at: Time.now,
-      original_type: nil,
+      owner_id * 1000 + i,
+      "custom",
+      "field_#{i}",
+      "Value #{i}",
+      "single_line_text_field", # this should be an enum
+      "string",
+      nil,
+      owner_type,
+      owner_id,
+      Time.now,
+      Time.now,
+      nil
     )
   end
 end
 
-def create_product(id:, num_variants:, num_options:, selling_plan_groups:, num_product_metafields:, num_variant_metafields:)
+def create_product(id:, num_variants:, num_options:, selling_plan_groups:, num_product_metafields:,
+                   num_variant_metafields:)
   # Create shared option values
   option_values_by_option = {}
   options = (1..num_options).map do |opt_idx|
     values = (1..3).map do |val_idx|
       ProductOptionValue.new(
-        id: id * 1000 + opt_idx * 100 + val_idx,
-        name: "Option#{opt_idx} Value#{val_idx}",
-        position: val_idx,
-        swatch_color: nil, # Most products don't have swatch colors
+        id * 1000 + opt_idx * 100 + val_idx,
+        "Option#{opt_idx} Value#{val_idx}",
+        val_idx,
+        nil # Most products don"t have swatch colors
       )
     end
     option_values_by_option[opt_idx] = values
 
     ProductOption.new(
-      id: id * 100 + opt_idx,
-      name: "Option #{opt_idx}",
-      position: opt_idx,
-      values: values,
+      id * 100 + opt_idx,
+      "Option #{opt_idx}",
+      opt_idx,
+      values
     )
   end
 
@@ -588,59 +579,63 @@ def create_product(id:, num_variants:, num_options:, selling_plan_groups:, num_p
 
     # Match real ProductVariant structure with some nil fields (sparse data)
     ProductVariant.new(
-      id: id * 1000 + var_idx,
-      product_id: id,
-      title: "Variant #{var_idx}",
-      uncontextualized_title: nil,
-      price: 1999 + var_idx * 100,
-      compare_at_price: nil, # Most variants don't have compare_at_price
-      barcode: nil, # Most variants don't have barcodes
-      options: variant_options,
-      option1: variant_options[0]&.name,
-      option2: variant_options[1]&.name,
-      option1_id: variant_options[0]&.id,
-      option2_id: variant_options[1]&.id,
-      taxable: true,
-      position: var_idx,
-      created_at: Time.now,
-      updated_at: Time.now,
-      fulfillment_service: "manual",
-      requires_components: false,
-      inventory_management: "shopify",
-      inventory_policy: "deny",
-      weight_unit: "kg",
-      weight_value: nil,
-      sku: "SKU-#{id}-#{var_idx}",
-      requires_shipping: true,
-      selling_plans: variant_selling_plans,
-      metafields: create_metafields(owner_id: id * 1000 + var_idx, count: num_variant_metafields, owner_type: "ProductVariant"),
-      variant_unit_price_measurement: nil,
+      id * 1000 + var_idx,
+      id,
+      "Variant #{var_idx}",
+      nil,
+      1999 + var_idx * 100,
+      nil, # Most variants don"t have compare_at_price
+      nil, # Most variants don"t have barcodes
+      variant_options,
+      variant_options[0]&.name,
+      variant_options[1]&.name,
+      variant_options[0]&.id,
+      variant_options[1]&.id,
+      nil,
+      true,
+      nil,
+      var_idx,
+      Time.now,
+      Time.now,
+      "manual",
+      false,
+      "shopify",
+      "deny",
+      "kg",
+      nil,
+      "SKU-#{id}-#{var_idx}",
+      true,
+      variant_selling_plans,
+      create_metafields(owner_id: id * 1000 + var_idx, count: num_variant_metafields, owner_type: "ProductVariant"),
+      nil
     )
   end
 
   # Match real Product structure with some nil fields (sparse data)
   Product.new(
-    id: id,
-    title: "Product #{id}",
-    handle: "product-#{id}",
-    description: "Description for product #{id}",
-    vendor: "Vendor",
-    published_at: Time.now,
-    created_at: Time.now,
-    updated_at: Time.now,
-    template_suffix: nil,
-    gift_card: false,
-    is_published: true,
-    requires_selling_plan: selling_plan_groups.any?,
-    published_scope: :published_scope_global,
-    variants: variants,
-    options: options,
-    selling_plan_groups: selling_plan_groups,
-    metafields: create_metafields(owner_id: id, count: num_product_metafields, owner_type: "Product"),
+    id,
+    "Product #{id}",
+    "product-#{id}",
+    "Description for product #{id}",
+    nil,
+    "Vendor",
+    Time.now,
+    Time.now,
+    Time.now,
+    nil,
+    false,
+    true,
+    selling_plan_groups.any?,
+    :published_scope_global,
+    variants,
+    options,
+    selling_plan_groups,
+    create_metafields(owner_id: id, count: num_product_metafields, owner_type: "Product")
   )
 end
 
-def create_test_data(num_products:, num_variants:, num_selling_plan_groups:, num_selling_plans_per_group:, num_product_metafields: 0, num_variant_metafields: 0)
+def create_test_data(num_products:, num_variants:, num_selling_plan_groups:, num_selling_plans_per_group:,
+                     num_product_metafields: 0, num_variant_metafields: 0)
   # Create SHARED selling plans - same instances used across all products
   selling_plan_id = 1
   selling_plan_groups = (1..num_selling_plan_groups).map do |group_idx|
@@ -705,14 +700,14 @@ def run_benchmark(coders, scenario)
     num_selling_plan_groups: scenario[:spg],
     num_selling_plans_per_group: scenario[:sp],
     num_product_metafields: scenario[:product_metafields] || 0,
-    num_variant_metafields: scenario[:variant_metafields] || 0,
+    num_variant_metafields: scenario[:variant_metafields] || 0
   )
 
   puts "\nBenchmarking scenario: P:#{scenario[:products]} V:#{scenario[:variants]} PM:#{scenario[:product_metafields]} VM:#{scenario[:variant_metafields]} SPG:#{scenario[:spg]} SP:#{scenario[:sp]}"
 
   payloads = coders.map { |coder| coder.factory.dump(data) }
 
-  result = Benchmark.ips(quiet: true) do |x|
+  result = Benchmark.ips(time: ENV.fetch("BENCH_TIME", 5).to_f, warmup: ENV.fetch("BENCH_WARMUP", 2).to_f, quiet: true) do |x|
     coders.each.with_index do |coder, index|
       x.report(coder.name.split("::").last) do
         coder.factory.load(payloads[index])
@@ -760,19 +755,19 @@ def print_results(coders, reports)
     marshal_size = report.bytesize_results[Coders::Marshal]
 
     puts "Scenario: #{scenario_str}"
-    puts "Winner: #{sorted_results.first[0].name.split("::").last} with #{'%.2f' % sorted_results.first[1]}x speedup"
+    puts "Winner: #{sorted_results.first[0].name.split("::").last} with #{"%.2f" % sorted_results.first[1]}x speedup"
     linesize = 56
     puts "-" * linesize
-    puts format("%-20s %12s %10s %10s", "Coder", "Size (bytes)", "Size (%)", "Speedup")
+    puts format("%-20s %12s %10s %10s", "Coder", "Size (bytes)", "Size factor", "Speedup")
     puts "-" * linesize
 
     sorted_results.each do |result|
       coder, speedup = result
       size = report.bytesize_results[coder]
-      size_pct = (size.to_f / marshal_size) * 100
+      size_pct = (size.to_f / marshal_size)
       coder_name = coder.name.split("::").last
 
-      line = format("%-20s %12d %9.1f%% %9.2fx", coder_name, size, size_pct, speedup)
+      line = format("%-20s %12d %9.2fx %9.2fx", coder_name, size, size_pct, speedup)
       if coder == Coders::Marshal
         puts "#{BOLD}#{line}#{RESET}"
       else
