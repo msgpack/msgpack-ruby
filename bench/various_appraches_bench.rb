@@ -243,6 +243,15 @@ module CodeGen
     RUBY
   end
 
+  def self.build_untracked_alloc_packer(struct)
+    packer_body = struct.members.size.times.map { |i| "packer.write(obj[#{i}])" }.join("\n")
+    eval(<<~RUBY, binding, __FILE__, __LINE__ + 1)
+      ->(obj, packer) {
+        #{packer_body}
+      }
+    RUBY
+  end
+
   def self.build_tracked_unpacker(struct)
     args = struct.members.map { |_m| "unpacker.read" }.join(", ")
 
@@ -267,6 +276,16 @@ module CodeGen
     eval(<<~RUBY, binding, __FILE__, __LINE__ + 1)
       ->(unpacker) {
         #{struct}.new(#{args})
+      }
+    RUBY
+  end
+
+  def self.build_untracked_alloc_unpacker(struct)
+    args = struct.members.size.times.map { |i| "s[#{i}] = unpacker.read" }.join("\n")
+    eval(<<~RUBY, binding, __FILE__, __LINE__ + 1)
+      ->(unpacker) {
+        s = #{struct}.allocate
+        #{args}
       }
     RUBY
   end
@@ -318,6 +337,35 @@ module Coders
 
     def self.description
       "A naive pure-Ruby coder without any optimizations to the msgpack-ruby gem, and no ref_tracking."
+    end
+  end
+
+  module PlainRubyNaiveAlloc
+    def self.build_factory
+      factory = MessagePack::Factory.new
+      Coders.register_time(factory)
+
+      type_id = 0x20
+      ALL_STRUCTS.each do |struct|
+        factory.register_type(
+          type_id,
+          struct,
+          packer: CodeGen.build_untracked_alloc_packer(struct),
+          unpacker: CodeGen.build_untracked_alloc_unpacker(struct),
+          recursive: true,
+        )
+        type_id += 1
+      end
+
+      factory
+    end
+
+    def self.factory
+      @factory ||= build_factory
+    end
+
+    def self.description
+      "A naive pure-Ruby coder without any optimizations to the msgpack-ruby gem, and no ref_tracking, but using smarter initialization."
     end
   end
 
