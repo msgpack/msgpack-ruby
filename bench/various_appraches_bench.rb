@@ -340,7 +340,24 @@ module Coders
     end
   end
 
-  module PlainRubyNaiveAlloc
+  module PlainRubyPooled
+    class PooledFactory
+      def initialize(factory)
+        @packer = factory.packer
+        @unpacker = factory.unpacker
+      end
+
+      def load(data)
+        @unpacker.feed(data)
+        @unpacker.full_unpack
+      end
+
+      def dump(obj)
+        @packer.write(obj)
+        @packer.full_pack.freeze
+      end
+    end
+
     def self.build_factory
       factory = MessagePack::Factory.new
       Coders.register_time(factory)
@@ -361,7 +378,7 @@ module Coders
     end
 
     def self.factory
-      @factory ||= build_factory
+      @factory ||= PooledFactory.new(build_factory)
     end
 
     def self.description
