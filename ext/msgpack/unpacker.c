@@ -489,57 +489,21 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
             reset_head_byte(uk);
             uk->reading_raw_remaining = 0;
 
-            /* Get struct members */
-            VALUE members = rb_struct_s_members(struct_class);
-            long num_fields = RARRAY_LEN(members);
-
-            /* Check if this is a keyword_init struct (Ruby 2.7+) */
-            VALUE keyword_init = Qfalse;
-            if (rb_respond_to(struct_class, rb_intern("keyword_init?"))) {
-                keyword_init = rb_funcall(struct_class, rb_intern("keyword_init?"), 0);
-            }
-
             /* Push a recursive marker so nested reads don't prematurely return */
             _msgpack_unpacker_stack_push(uk, STACK_TYPE_RECURSIVE, 1, Qnil);
 
-            VALUE obj;
-            if (num_fields == 0) {
-                /* Special case for empty structs */
-                obj = rb_class_new_instance(0, NULL, struct_class);
-            } else if (RTEST(keyword_init)) {
-                /* For keyword_init structs, build a hash with member names as keys */
-                VALUE kwargs = rb_hash_new();
-                for (long i = 0; i < num_fields; i++) {
-                    int ret = msgpack_unpacker_read(uk, 0);
-                    if (ret < 0) {
-                        msgpack_unpacker_stack_pop(uk);
-                        return ret;
-                    }
-                    VALUE key = rb_ary_entry(members, i);
-                    rb_hash_aset(kwargs, key, uk->last_object);
+            VALUE obj = rb_obj_alloc(struct_class);
+            long num_fields = RSTRUCT_LEN(obj);
+
+            for (int i = 0; i < num_fields; i++) {
+                int ret = msgpack_unpacker_read(uk, 0);
+                if (RB_UNLIKELY(ret < 0)) {
+                    msgpack_unpacker_stack_pop(uk);
+                    return ret;
                 }
-                /* Call new with keyword arguments */
-                obj = rb_class_new_instance_kw(1, &kwargs, struct_class, RB_PASS_KEYWORDS);
-            } else {
-                /* For regular structs, use positional arguments
-                 * Use RB_ALLOCV to avoid stack overflow with large structs */
-                VALUE allocv_holder;
-                VALUE *values = RB_ALLOCV_N(VALUE, allocv_holder, num_fields);
-                for (int i = 0; i < num_fields; i++) {
-                    int ret = msgpack_unpacker_read(uk, 0);
-                    if (ret < 0) {
-                        msgpack_unpacker_stack_pop(uk);
-                        RB_ALLOCV_END(allocv_holder);
-                        return ret;
-                    }
-                    values[i] = uk->last_object;
-                }
-                obj = rb_class_new_instance((int)num_fields, values, struct_class);
-                RB_ALLOCV_END(allocv_holder);
+                RSTRUCT_SET(obj, i, uk->last_object);
             }
 
-            RB_GC_GUARD(struct_class);
-            RB_GC_GUARD(members);
             msgpack_unpacker_stack_pop(uk);
             return object_complete(uk, obj);
         }
