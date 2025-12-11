@@ -21,11 +21,16 @@ RubyVM::YJIT.enable
 begin
   factory = MessagePack::Factory.new
   test_struct = Struct.new(:a, keyword_init: true)
-  factory.register_type(0x01, test_struct, optimized_struct: true)
+  factory.register_type(0x01, test_struct, optimized_struct: true, ref_tracking: true)
   obj = test_struct.new(a: 1)
   arr = [obj, obj, obj]
   dump = factory.dump(arr)
   loaded = factory.load(dump)
+
+  unless loaded[0].object_id == loaded[1].object_id
+    puts "ERROR: msgpack-ruby does not support ref_tracking; the benchmark cannot run."
+    exit(1)
+  end
 rescue StandardError
   puts "ERROR: msgpack-ruby does not support optimized_struct; the benchmark cannot run."
   exit(2)
@@ -466,6 +471,37 @@ module Coders
     end
   end
 
+  module RefTrackingInC
+    def self.build_factory
+      factory = MessagePack::Factory.new
+      Coders.register_time(factory)
+
+      type_id = 0x20
+      ALL_STRUCTS.each do |struct|
+        if SHARED_STRUCTS.include?(struct)
+          factory.register_type(
+            type_id,
+            struct,
+            optimized_struct: true,
+            ref_tracking: true,
+          )
+        else
+          factory.register_type(type_id, struct, optimized_struct: true)
+        end
+        type_id += 1
+      end
+
+      factory
+    end
+
+    def self.factory
+      @factory ||= build_factory
+    end
+
+    def self.description
+      "Uses optimized_struct with C-level reference tracking for shared types"
+    end
+  end
 end
 
 # =============================================================================
