@@ -336,7 +336,8 @@ static int read_raw_body_cont(msgpack_unpacker_t* uk)
     size_t length = uk->reading_raw_remaining;
 
     if(uk->reading_raw == Qnil) {
-        uk->reading_raw = rb_str_buf_new(length);
+        size_t buffered_size = msgpack_buffer_all_readable_size(UNPACKER_BUFFER_(uk));
+        uk->reading_raw = rb_str_buf_new(length > buffered_size ? buffered_size : length);
     }
 
     do {
