@@ -1,3 +1,8 @@
+2026-05-28 1.8.1
+
+* Workaround rare compilation issue when `rb_hash_new_capa` isn't properly detected.
+* Never pre-allocate strings larger than the buffered size.
+
 2025-02-06 1.8.0
 
 * Numerous small optimizations.
