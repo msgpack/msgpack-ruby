@@ -134,6 +134,9 @@ bool _msgpack_buffer_shift_chunk(msgpack_buffer_t* b)
          * because head should be always available */
         b->tail_buffer_end = NULL;
         b->read_buffer = NULL;
+        b->rmem_end = NULL;
+        b->rmem_last = NULL;
+        b->rmem_owner = NULL;
         return false;
     }
 
