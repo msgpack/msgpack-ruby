@@ -605,4 +605,19 @@ describe Buffer do
       GC.stress = stress
     end
   end
+
+  it "properly reset the arenas" do
+    b1 = MessagePack::Buffer.new(nil, write_reference_threshold: 256)
+    b1.write('M' * 1000)
+    b1.write('A' * 200)
+    b1.write('N' * 1000)
+    b1.clear
+    b1.write('C' * 128)
+
+    secret = ('_' * 200) + ('ABCD' * 32) + ('_' * 400)
+    b2 = MessagePack::Buffer.new(nil, write_reference_threshold: 4096)
+    b2.write(secret)
+
+    expect(b1.read_all).to eq(('C' * 128).b)
+  end
 end
