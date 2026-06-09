@@ -1,3 +1,9 @@
+2026-06-09 1.8.2
+
+* Fix `Buffer#clear` to properly reset memory chunks before adding them back to the pool.
+  This could have caused data to leak across buffers when using the MessagePack::Buffer API
+  directly. [CVE-PENDING].
+
 2026-05-28 1.8.1
 
 * Workaround rare compilation issue when `rb_hash_new_capa` isn't properly detected.
