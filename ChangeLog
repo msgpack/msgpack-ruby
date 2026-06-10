@@ -1,3 +1,5 @@
+2026-06-10 1.8.3
+
 * Fix an integer overflow when parsing maps.
 
 2026-06-09 1.8.2
