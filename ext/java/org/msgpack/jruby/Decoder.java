@@ -85,6 +85,14 @@ public class Decoder implements Iterator<IRubyObject> {
     feed(bytes, offset, length);
   }
 
+  private int getUnsignedInt() {
+    int size = buffer.getInt();
+    if (size < 0) {
+      throw runtime.newRaiseException(underflowErrorClass, "Size too large (limited to 2**31 for the Java version)");
+    }
+    return size;
+  }
+
   public void feed(byte[] bytes) {
     feed(bytes, 0, bytes.length);
   }
@@ -200,7 +208,7 @@ public class Decoder implements Iterator<IRubyObject> {
       } else if (b == ARY16) {
         return runtime.newFixnum(buffer.getShort() & 0xffff);
       } else if (b == ARY32) {
-        return runtime.newFixnum(buffer.getInt());
+        return runtime.newFixnum(getUnsignedInt());
       }
       throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
@@ -221,7 +229,7 @@ public class Decoder implements Iterator<IRubyObject> {
       } else if (b == MAP16) {
         return runtime.newFixnum(buffer.getShort() & 0xffff);
       } else if (b == MAP32) {
-        return runtime.newFixnum(buffer.getInt());
+        return runtime.newFixnum(getUnsignedInt());
       }
       throw runtime.newRaiseException(unexpectedTypeErrorClass, "unexpected type");
     } catch (RaiseException re) {
@@ -258,10 +266,10 @@ public class Decoder implements Iterator<IRubyObject> {
         case TRUE:     return runtime.getTrue();
         case BIN8:     return consumeString(buffer.get() & 0xff, binaryEncoding);
         case BIN16:    return consumeString(buffer.getShort() & 0xffff, binaryEncoding);
-        case BIN32:    return consumeString(buffer.getInt(), binaryEncoding);
+        case BIN32:    return consumeString(getUnsignedInt(), binaryEncoding);
         case VAREXT8:  return consumeExtension(buffer.get() & 0xff);
         case VAREXT16: return consumeExtension(buffer.getShort() & 0xffff);
-        case VAREXT32: return consumeExtension(buffer.getInt());
+        case VAREXT32: return consumeExtension(getUnsignedInt());
         case FLOAT32:  return runtime.newFloat(buffer.getFloat());
         case FLOAT64:  return runtime.newFloat(buffer.getDouble());
         case UINT8:    return runtime.newFixnum(buffer.get() & 0xffL);
@@ -283,11 +291,11 @@ public class Decoder implements Iterator<IRubyObject> {
         case FIXEXT16: return consumeExtension(16);
         case STR8:     return consumeString(buffer.get() & 0xff, utf8Encoding);
         case STR16:    return consumeString(buffer.getShort() & 0xffff, utf8Encoding);
-        case STR32:    return consumeString(buffer.getInt(), utf8Encoding);
+        case STR32:    return consumeString(getUnsignedInt(), utf8Encoding);
         case ARY16:    return consumeArray(buffer.getShort() & 0xffff);
-        case ARY32:    return consumeArray(buffer.getInt());
+        case ARY32:    return consumeArray(getUnsignedInt());
         case MAP16:    return consumeHash(buffer.getShort() & 0xffff);
-        case MAP32:    return consumeHash(buffer.getInt());
+        case MAP32:    return consumeHash(getUnsignedInt());
         default: break outer;
         }
       case 0xe:
