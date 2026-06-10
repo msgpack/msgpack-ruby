@@ -25,8 +25,6 @@ int msgpack_rb_encindex_ascii8bit;
 
 ID s_uminus;
 
-static msgpack_rmem_t s_rmem;
-
 void msgpack_buffer_static_init(void)
 {
     s_uminus = rb_intern("-@");
@@ -34,13 +32,10 @@ void msgpack_buffer_static_init(void)
     msgpack_rb_encindex_utf8 = rb_utf8_encindex();
     msgpack_rb_encindex_usascii = rb_usascii_encindex();
     msgpack_rb_encindex_ascii8bit = rb_ascii8bit_encindex();
-
-    msgpack_rmem_init(&s_rmem);
 }
 
 void msgpack_buffer_static_destroy(void)
 {
-    msgpack_rmem_destroy(&s_rmem);
 }
 
 void msgpack_buffer_init(msgpack_buffer_t* b)
@@ -59,9 +54,7 @@ static void _msgpack_buffer_chunk_destroy(msgpack_buffer_chunk_t* c)
 {
     if(c->mem != NULL) {
         if(c->rmem) {
-            if(!msgpack_rmem_free(&s_rmem, c->mem)) {
-                rb_bug("Failed to free an rmem pointer, memory leak?");
-            }
+            msgpack_rmem_free(c->mem);
         } else {
             xfree(c->mem);
         }
@@ -354,7 +347,7 @@ static inline void* _msgpack_buffer_chunk_malloc(
         if((size_t)(b->rmem_end - b->rmem_last) < required_size) {
             /* alloc new rmem page */
             *allocated_size = MSGPACK_RMEM_PAGE_SIZE;
-            char* buffer = msgpack_rmem_alloc(&s_rmem);
+            char* buffer = msgpack_rmem_alloc();
             c->mem = buffer;
 
             /* update rmem owner */

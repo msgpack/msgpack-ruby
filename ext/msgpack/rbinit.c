@@ -24,6 +24,12 @@
 
 RUBY_FUNC_EXPORTED void Init_msgpack(void)
 {
+    /* No process-global mutable state, so packing/unpacking is safe per-Ractor.
+     * rb_ext_ractor_safe is Ruby 3.0+, so guard for older supported Rubies. */
+#ifdef HAVE_RB_EXT_RACTOR_SAFE
+    rb_ext_ractor_safe(true);
+#endif
+
     VALUE mMessagePack = rb_define_module("MessagePack");
 
     MessagePack_Buffer_module_init(mMessagePack);
