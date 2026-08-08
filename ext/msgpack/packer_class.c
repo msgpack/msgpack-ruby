@@ -235,7 +235,7 @@ static VALUE Packer_write_extension(VALUE self, VALUE obj)
 
     VALUE rb_ext_type = RSTRUCT_GET(obj, 0);
     if(!RB_TYPE_P(rb_ext_type, T_FIXNUM)) {
-        rb_raise(rb_eRangeError, "integer %s too big to convert to `signed char'", RSTRING_PTR(rb_String(rb_ext_type)));
+        rb_raise(rb_eRangeError, "integer %"PRIsVALUE" too big to convert to `signed char'", rb_ext_type);
     }
 
     int ext_type = FIX2INT(rb_ext_type);
