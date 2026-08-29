@@ -11,8 +11,9 @@ describe Unpacker do
   end
 
   it 'skip_nil succeeds' do
-    unpacker.feed("\xc0")
+    unpacker.feed("\xc0*")
     unpacker.skip_nil.should == true
+    unpacker.unpack.should == 42
   end
 
   it 'skip_nil fails' do

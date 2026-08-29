@@ -911,8 +911,8 @@ int msgpack_unpacker_skip_nil(msgpack_unpacker_t* uk)
         return b;
     }
     if(b == 0xc0) {
+        reset_head_byte(uk);
         return 1;
     }
     return 0;
 }
-
