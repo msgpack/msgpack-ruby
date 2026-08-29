@@ -27,7 +27,7 @@ module MessagePack
 
     def type_registered?(klass_or_type)
       case klass_or_type
-      when Class
+      when Module
         klass = klass_or_type
         registered_types.any?{|entry| klass == entry[:class] }
       when Integer

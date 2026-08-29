@@ -14,10 +14,12 @@ module MessagePack
           options[:packer] = packer.to_sym.to_proc
         when Method
           options[:packer] = packer.to_proc
-        when packer.respond_to?(:call)
-          options[:packer] = packer.method(:call).to_proc
         else
-          raise ::TypeError, "expected :packer argument to be a callable object, got: #{packer.inspect}"
+          if packer.respond_to?(:call)
+            options[:packer] = packer.method(:call).to_proc
+          else
+            raise ::TypeError, "expected :packer argument to be a callable object, got: #{packer.inspect}"
+          end
         end
 
         case unpacker = options[:unpacker]
@@ -27,10 +29,12 @@ module MessagePack
           options[:unpacker] = klass.method(unpacker).to_proc
         when Method
           options[:unpacker] = unpacker.to_proc
-        when packer.respond_to?(:call)
-          options[:unpacker] = unpacker.method(:call).to_proc
         else
-          raise ::TypeError, "expected :unpacker argument to be a callable object, got: #{unpacker.inspect}"
+          if unpacker.respond_to?(:call)
+            options[:unpacker] = unpacker.method(:call).to_proc
+          else
+            raise ::TypeError, "expected :unpacker argument to be a callable object, got: #{unpacker.inspect}"
+          end
         end
       end
 
@@ -51,7 +55,7 @@ module MessagePack
           type = ary[0]
           packer_proc = ary[1]
           unpacker_proc = nil
-          if unpacker.has_key?(type)
+          if unpacker.has_key?(type) && unpacker[type][0] == klass
             unpacker_proc = unpacker.delete(type)[1]
           end
           list << {type: type, class: klass, packer: packer_proc, unpacker: unpacker_proc}
@@ -85,7 +89,7 @@ module MessagePack
 
     def type_registered?(klass_or_type, selector=:both)
       case klass_or_type
-      when Class
+      when Module
         klass = klass_or_type
         registered_types(selector).any?{|entry| klass <= entry[:class] }
       when Integer

@@ -234,12 +234,12 @@ static VALUE Factory_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE
 
     if(ext_module == rb_cSymbol) {
         fc->symbol_ext_type = ext_type;
-        if(NIL_P(options) || RTEST(rb_hash_aref(options, ID2SYM(rb_intern("packer"))))) {
-            fc->has_symbol_ext_type = true;
-        }
-        if(RTEST(options) && RTEST(rb_hash_aref(options, ID2SYM(rb_intern("optimized_symbols_parsing"))))) {
-            fc->optimized_symbol_ext_type = true;
-        }
+        fc->has_symbol_ext_type = NIL_P(options) || RTEST(packer_proc);
+        fc->optimized_symbol_ext_type = RTEST(options) && RTEST(rb_hash_aref(options, ID2SYM(rb_intern("optimized_symbols_parsing"))));
+    }
+
+    if(ext_module == rb_cInteger) {
+        fc->has_bigint_ext_type = false;
     }
 
     if(RTEST(options)) {
@@ -250,7 +250,6 @@ static VALUE Factory_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE
                 rb_raise(rb_eArgError, "oversized_integer_extension: true is only for Integer class");
             }
         }
-
         if(RTEST(rb_hash_aref(options, ID2SYM(rb_intern("recursive"))))) {
             flags |= MSGPACK_EXT_RECURSIVE;
         }

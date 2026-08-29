@@ -111,8 +111,8 @@ public class Factory extends RubyObject {
 
     extensionRegistry.put(extModule, (int) typeId, recursive, packerProc, unpackerProc);
 
-    if (extModule == runtime.getSymbol() && !packerProc.isNil()) {
-      hasSymbolExtType = true;
+    if (extModule == runtime.getSymbol()) {
+      hasSymbolExtType = !packerProc.isNil();
     }
 
     if (options != null) {
@@ -123,6 +123,8 @@ public class Factory extends RubyObject {
         } else {
           throw runtime.newArgumentError("oversized_integer_extension: true is only for Integer class");
         }
+      } else if (extModule == runtime.getModule("Integer")) {
+        hasBigIntExtType = false;
       }
     }
 
