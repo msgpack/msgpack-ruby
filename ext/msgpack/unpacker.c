@@ -386,9 +386,15 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
                  * instead of raising StackError like every other container type. */
                 return PRIMITIVE_STACK_TOO_DEEP;
             }
+            size_t barrier_depth = uk->stack.depth;
             int raised;
             obj = protected_proc_call(proc, 1, &uk->self, &raised);
-            msgpack_unpacker_stack_pop(uk);
+
+            /* The user proc can drive the unpacker itself (Unpacker#read, #skip,
+             * or a rescued error) and leave stack.depth anywhere, including 0.
+             * Restore it to just below the barrier we pushed instead of an
+             * unconditional decrement, which would underflow to SIZE_MAX. */
+            uk->stack.depth = barrier_depth - 1;
 
             if (raised) {
                 uk->last_object = rb_errinfo();
