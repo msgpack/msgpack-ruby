@@ -699,6 +699,48 @@ describe MessagePack::Factory do
       # recursed unbounded in C and crashed the VM (SIGSEGV) rather than raising.
       expect { factory.load(payload) }.to raise_error(MessagePack::StackError)
     end
+
+    it 'does not corrupt the stack when a recursive unpacker leaves the depth at zero' do
+      # A recursive proc that rescues an inner read error, or that calls #skip,
+      # can drive stack.depth down to 0 before read_raw_body_begin pops its
+      # barrier. The unconditional pop then underflowed depth to SIZE_MAX and
+      # read/wrote out-of-bounds stack entries (SIGSEGV). The payloads leave no
+      # trailing bytes, so a fixed unpacker returns without raising.
+      skip if IS_JRUBY
+
+      rescuing = MessagePack::Factory.new
+      rescuing.register_type(0x01, Class.new,
+        packer: ->(_obj, packer) { packer.write(nil) },
+        unpacker: ->(u) {
+          begin
+            u.read
+          rescue MessagePack::MalformedFormatError, EOFError
+            nil
+          end
+        },
+        recursive: true,
+      )
+
+      skipping = MessagePack::Factory.new
+      skipping.register_type(0x02, Class.new,
+        packer: ->(_obj, packer) { packer.write(nil) },
+        unpacker: ->(u) { u.skip },
+        recursive: true,
+      )
+
+      payloads = [
+        [rescuing, "\xd4\x01\xc1".b],     # fixext1 type=1, then an invalid byte
+        [rescuing, "\xd4\x01".b],         # fixext1 type=1, then truncated (EOF)
+        [skipping, "\xd4\x02\x91\x2a".b], # fixext1 type=2, fixarray(1), 42
+      ]
+      payloads.each do |factory, bytes|
+        100.times { factory.unpack(bytes) }
+      end
+
+      # The stack is intact: a fresh unpack still decodes correctly.
+      expect(rescuing.unpack(MessagePack.pack([1, 2, 3]))).to eq([1, 2, 3])
+      expect(skipping.unpack(MessagePack.pack("ok"))).to eq("ok")
+    end
   end
 
   describe 'memsize' do
