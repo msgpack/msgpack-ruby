@@ -112,7 +112,7 @@ public class Factory extends RubyObject {
     extensionRegistry.put(extModule, (int) typeId, recursive, packerProc, unpackerProc);
 
     if (extModule == runtime.getSymbol()) {
-      hasSymbolExtType = !packerProc.isNil();
+      hasSymbolExtType = packerProc != null && !packerProc.isNil();
     }
 
     if (options != null) {
