@@ -273,6 +273,12 @@ describe MessagePack::Factory do
       expect(factory.load(factory.dump(:foo))).to be == "foo"
     end
 
+    it 'handles Symbol type registered with only an unpacker' do
+      factory = MessagePack::Factory.new
+      factory.register_type(0x00, Symbol, unpacker: :to_sym.to_proc)
+      expect(factory.load(factory.dump(:foo))).to be == "foo"
+    end
+
     describe "registering multiple ext type for the same class" do
       let(:payload) do
         factory = MessagePack::Factory.new
