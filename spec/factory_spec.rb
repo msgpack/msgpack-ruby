@@ -707,11 +707,10 @@ describe MessagePack::Factory do
     end
 
     it 'does not corrupt the stack when a recursive unpacker leaves the depth at zero' do
-      # A recursive proc that rescues an inner read error, or that calls #skip,
-      # can drive stack.depth down to 0 before read_raw_body_begin pops its
-      # barrier. The unconditional pop then underflowed depth to SIZE_MAX and
-      # read/wrote out-of-bounds stack entries (SIGSEGV). The payloads leave no
-      # trailing bytes, so a fixed unpacker returns without raising.
+      # A recursive proc that rescued an inner read error, or that called #skip,
+      # used to make read_raw_body_begin underflow stack.depth to SIZE_MAX when
+      # it popped its barrier (SIGSEGV). The payloads leave no trailing bytes,
+      # so a fixed unpacker returns without raising.
       skip if IS_JRUBY
 
       rescuing = MessagePack::Factory.new
@@ -746,6 +745,52 @@ describe MessagePack::Factory do
       # The stack is intact: a fresh unpack still decodes correctly.
       expect(rescuing.unpack(MessagePack.pack([1, 2, 3]))).to eq([1, 2, 3])
       expect(skipping.unpack(MessagePack.pack("ok"))).to eq("ok")
+    end
+
+    it 'keeps outer containers GC-marked while a recursive unpacker rescues, skips or resets' do
+      skip if IS_JRUBY
+
+      factory = MessagePack::Factory.new
+      factory.register_type(0x01, Class.new,
+        packer: ->(_obj, packer) { packer.write(nil) },
+        unpacker: ->(u) {
+          begin
+            u.read
+          rescue MessagePack::MalformedFormatError
+          end
+          [:rescued]
+        },
+        recursive: true,
+      )
+      factory.register_type(0x02, Class.new,
+        packer: ->(_obj, packer) { packer.write(nil) },
+        unpacker: ->(u) { u.skip; [:skipped] },
+        recursive: true,
+      )
+      factory.register_type(0x03, Class.new,
+        packer: ->(_obj, packer) { packer.write(nil) },
+        unpacker: ->(u) { u.reset; [:reset] },
+        recursive: true,
+      )
+
+      payloads = ["\x92\xd4\x01\xc1\x2b".b, "\x92\xd4\x02\x2a\x2b".b, "\x91\xd4\x03".b]
+      results = []
+      begin
+        GC.stress = true
+        10.times do
+          payloads.each do |bytes|
+            results << begin
+              factory.unpack(bytes)
+            rescue => e
+              e
+            end
+          end
+        end
+      ensure
+        GC.stress = false
+      end
+
+      expect(results).to eq([[[:rescued], 43], [[:skipped], 43], [[:reset]]] * 10)
     end
   end
 

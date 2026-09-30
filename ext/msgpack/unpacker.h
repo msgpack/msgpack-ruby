@@ -43,6 +43,7 @@ typedef struct {
 
 struct msgpack_unpacker_stack_t {
     size_t depth;
+    size_t floor;
     size_t capacity;
     msgpack_unpacker_stack_entry_t *data;
 };
@@ -107,6 +108,11 @@ static inline void msgpack_unpacker_set_freeze(msgpack_unpacker_t* uk, bool enab
 static inline void msgpack_unpacker_set_allow_unknown_ext(msgpack_unpacker_t* uk, bool enable)
 {
     uk->allow_unknown_ext = enable;
+}
+
+static inline void msgpack_unpacker_stack_rewind(msgpack_unpacker_t* uk)
+{
+    uk->stack.depth = uk->stack.floor;
 }
 
 
