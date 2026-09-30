@@ -165,7 +165,7 @@ static VALUE Unpacker_allow_unknown_ext_p(VALUE self)
 
 NORETURN(static void raise_unpacker_error(msgpack_unpacker_t *uk, int r))
 {
-    uk->stack.depth = 0;
+    msgpack_unpacker_stack_rewind(uk);
     switch(r) {
     case PRIMITIVE_EOF:
         rb_raise(rb_eEOFError, "end of buffer reached");

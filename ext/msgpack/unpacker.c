@@ -110,6 +110,7 @@ static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack)
         }
         stack->data = NULL;
         stack->depth = 0;
+        stack->floor = 0;
     }
 }
 
@@ -169,7 +170,7 @@ void _msgpack_unpacker_reset(msgpack_unpacker_t* uk)
     uk->head_byte = HEAD_BYTE_REQUIRED;
 
     /*memset(uk->stack, 0, sizeof(msgpack_unpacker_t) * uk->stack.depth);*/
-    uk->stack.depth = 0;
+    msgpack_unpacker_stack_rewind(uk);
     uk->last_object = Qnil;
     uk->reading_raw = Qnil;
     uk->reading_raw_remaining = 0;
@@ -387,13 +388,14 @@ static inline int read_raw_body_begin(msgpack_unpacker_t* uk, int raw_type)
                 return PRIMITIVE_STACK_TOO_DEEP;
             }
             size_t barrier_depth = uk->stack.depth;
+            size_t saved_floor = uk->stack.floor;
             int raised;
-            obj = protected_proc_call(proc, 1, &uk->self, &raised);
 
-            /* The user proc can drive the unpacker itself (Unpacker#read, #skip,
-             * or a rescued error) and leave stack.depth anywhere, including 0.
-             * Restore it to just below the barrier we pushed instead of an
-             * unconditional decrement, which would underflow to SIZE_MAX. */
+            uk->stack.floor = barrier_depth;
+            obj = protected_proc_call(proc, 1, &uk->self, &raised);
+            uk->stack.floor = saved_floor;
+
+            /* Not --depth: the proc may return with entries left above the barrier. */
             uk->stack.depth = barrier_depth - 1;
 
             if (raised) {
@@ -892,6 +894,10 @@ int msgpack_unpacker_skip(msgpack_unpacker_t* uk, size_t target_stack_depth)
         container_completed:
         {
             msgpack_unpacker_stack_entry_t* top = _msgpack_unpacker_stack_entry_top(uk);
+            if(top->type == STACK_TYPE_RECURSIVE) {
+                STACK_FREE(uk);
+                return PRIMITIVE_OBJECT_COMPLETE;
+            }
 
             /* this section optimized out */
             // TODO object_complete still creates objects which should be optimized out
