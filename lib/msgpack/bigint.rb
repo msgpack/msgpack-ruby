@@ -5,7 +5,8 @@ module MessagePack
     # We split the bigint in 32bits chunks so that individual part fits into
     # a MRI immediate Integer.
     CHUNK_BITLENGTH = 32
-    FORMAT = 'CL>*'
+    CHUNK_FORMAT = 'L>*'
+    FORMAT = "C#{CHUNK_FORMAT}"
 
     if Integer.instance_method(:[]).arity != 1 # Ruby 2.7 and newer
       # Starting from Ruby 2.7 we can address arbitrary bitranges inside an Integer with Integer#[]
@@ -56,12 +57,7 @@ module MessagePack
       parts = data.unpack(FORMAT)
 
       sign = parts.shift
-      sum = parts.pop.to_i
-
-      parts.reverse_each do |part|
-        sum = sum << CHUNK_BITLENGTH
-        sum += part
-      end
+      sum = parts.reverse.pack(CHUNK_FORMAT).unpack1('H*').to_i(16)
 
       sign == 0 ? sum : -sum
     end
