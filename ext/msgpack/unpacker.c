@@ -74,9 +74,13 @@ static inline VALUE rb_hash_new_capa_inline(long capa)
 #define rb_hash_new_capa rb_hash_new_capa_inline
 #endif
 
-static inline int16_t initial_buffer_size(long size)
+static inline int16_t initial_buffer_size(msgpack_unpacker_t* uk, long count, size_t bytes_per_element)
 {
-    return (size > INITIAL_BUFFER_CAPACITY_MAX) ? INITIAL_BUFFER_CAPACITY_MAX : size;
+    size_t available = msgpack_buffer_all_readable_size(UNPACKER_BUFFER_(uk)) / bytes_per_element;
+    if((size_t)count > available) {
+        count = (long)available;
+    }
+    return (count > INITIAL_BUFFER_CAPACITY_MAX) ? INITIAL_BUFFER_CAPACITY_MAX : count;
 }
 
 void msgpack_unpacker_static_init(void)
@@ -481,14 +485,14 @@ static int read_primitive(msgpack_unpacker_t* uk)
         if(count == 0) {
             return object_complete(uk, rb_ary_new());
         }
-        return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(initial_buffer_size(count)));
+        return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(initial_buffer_size(uk, count, 1)));
 
     SWITCH_RANGE(b, 0x80, 0x8f)  // FixMap
         int count = b & 0x0f;
         if(count == 0) {
             return object_complete(uk, rb_hash_new());
         }
-        return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(initial_buffer_size(count)));
+        return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(initial_buffer_size(uk, count, 2)));
 
     SWITCH_RANGE(b, 0xc0, 0xdf)  // Variable
         switch(b) {
@@ -711,7 +715,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_ary_new());
                 }
-                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(initial_buffer_size(count)));
+                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(initial_buffer_size(uk, count, 1)));
             }
 
         case 0xdd:  // array 32
@@ -721,7 +725,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_ary_new());
                 }
-                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(initial_buffer_size(count)));
+                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_ARRAY, count, rb_ary_new2(initial_buffer_size(uk, count, 1)));
             }
 
         case 0xde:  // map 16
@@ -731,7 +735,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
-                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(initial_buffer_size(count)));
+                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(initial_buffer_size(uk, count, 2)));
             }
 
         case 0xdf:  // map 32
@@ -741,7 +745,7 @@ static int read_primitive(msgpack_unpacker_t* uk)
                 if(count == 0) {
                     return object_complete(uk, rb_hash_new());
                 }
-                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(initial_buffer_size(count)));
+                return _msgpack_unpacker_stack_push(uk, STACK_TYPE_MAP_KEY, count*2, rb_hash_new_capa(initial_buffer_size(uk, count, 2)));
             }
 
         default:
