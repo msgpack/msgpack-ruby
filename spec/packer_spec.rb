@@ -616,4 +616,32 @@ describe MessagePack::Packer do
     packer.write(top_hash)
     packer.full_pack
   end
+
+  it 'does not copy freed memory when a string is freed during io.write' do
+    skip if IS_JRUBY
+
+    size = 100_000 # larger than the io buffer, smaller than the write reference threshold
+    src = "A".b * size
+    captured = "".b
+    flipped = false
+    io = Object.new
+    io.define_singleton_method(:write) do |data|
+      unless flipped
+        flipped = true
+        src.replace("".b)                 # free the buffer the packer still points at
+        GC.start
+        Array.new(20) { "Z".b * size }    # reuse the freed region
+      end
+      captured << data.b
+      data.bytesize
+    end
+
+    packer = MessagePack::Packer.new(io)
+    packer.write(src)
+    packer.full_pack
+
+    body = MessagePack.unpack(captured)
+    expect(body.bytesize).to eq(size)
+    expect(body.b.count("Z".b)).to eq(0)  # must not surface the reused heap region
+  end
 end

@@ -237,14 +237,27 @@ void _msgpack_buffer_append_long_string(msgpack_buffer_t* b, VALUE string);
 
 static inline size_t msgpack_buffer_append_string(msgpack_buffer_t* b, VALUE string)
 {
-    size_t length;
-    char *ptr;
-    RSTRING_GETMEM(string, ptr, length);
+    size_t length = RSTRING_LEN(string);
 
     if(length > b->write_reference_threshold) {
         _msgpack_buffer_append_long_string(b, string);
-    } else {
-        msgpack_buffer_append(b, ptr, length);
+    } else if(length > 0) {
+        /* Making room can run io.write or trigger GC, either of which may free
+         * or shrink the string, so reserve the space first and only then read
+         * its pointer. */
+        msgpack_buffer_ensure_writable(b, length);
+        char *ptr;
+        size_t current;
+        RSTRING_GETMEM(string, ptr, current);
+        if(current > length) {
+            current = length;
+        }
+        memcpy(b->tail.last, ptr, current);
+        if(current < length) {
+            memset(b->tail.last + current, 0, length - current);
+        }
+        b->tail.last += length;
+        RB_GC_GUARD(string);
     }
 
     return length;
