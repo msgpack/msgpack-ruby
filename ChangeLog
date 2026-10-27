@@ -1,3 +1,9 @@
+2026-10-27 1.8.6
+
+* Fix use-after-free when a recursive extension proc rescues, skips or resets.
+* Speed up decoding of oversized integers.
+* Avoid excessive memory allocation from crafted container headers.
+
 2026-09-11 1.8.5
 
 * Prevent stack depth underflow when skipping from recursive unpacker.
