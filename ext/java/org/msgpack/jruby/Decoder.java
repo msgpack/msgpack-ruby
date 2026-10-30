@@ -137,11 +137,15 @@ public class Decoder implements Iterator<IRubyObject> {
   }
 
   private IRubyObject consumeArray(int size) {
-    IRubyObject[] elements = new IRubyObject[size];
-    for (int i = 0; i < size; i++) {
-      elements[i] = next();
+    int preallocatedSize = size;
+    if (preallocatedSize > buffer.remaining()) {
+      preallocatedSize = buffer.remaining();
     }
-    return runtime.newArray(elements);
+    RubyArray array = runtime.newArray(preallocatedSize);
+    for (int i = 0; i < size; i++) {
+      array.push(next());
+    }
+    return array;
   }
 
   private IRubyObject consumeHash(int size) {
@@ -184,9 +188,12 @@ public class Decoder implements Iterator<IRubyObject> {
   }
 
   private byte[] readBytes(int size) {
-    byte[] payload = new byte[size];
-    buffer.get(payload);
-    return payload;
+    if (buffer.remaining() >= size) {
+      byte[] payload = new byte[size];
+      buffer.get(payload);
+      return payload;
+    }
+    throw new BufferUnderflowException();
   }
 
   @Override
