@@ -95,7 +95,8 @@ void msgpack_unpacker_static_destroy(void)
     msgpack_rmem_destroy(&s_stack_rmem);
 }
 
-#define HEAD_BYTE_REQUIRED 0xc1
+/* outside 0..255 so it never collides with a real byte, including the invalid 0xc1 */
+#define HEAD_BYTE_REQUIRED 0x100
 
 static inline bool _msgpack_unpacker_stack_init(msgpack_unpacker_stack_t *stack) {
     if (!stack->data) {
