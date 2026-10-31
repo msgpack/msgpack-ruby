@@ -67,5 +67,33 @@ describe Unpacker do
       unpacker.skip
     }.should raise_error(MessagePack::MalformedFormatError)
   end
+
+  it 'skip_nil keeps invalid byte' do
+    unpacker.feed("\xc1\x01")
+    unpacker.skip_nil.should == false
+    lambda {
+      unpacker.read
+    }.should raise_error(MessagePack::MalformedFormatError)
+  end
+
+  it 'read_array_header keeps invalid byte' do
+    unpacker.feed("\xc1\x01")
+    lambda {
+      unpacker.read_array_header
+    }.should raise_error(MessagePack::UnpackError)
+    lambda {
+      unpacker.read
+    }.should raise_error(MessagePack::MalformedFormatError)
+  end
+
+  it 'read_map_header keeps invalid byte' do
+    unpacker.feed("\xc1\x01")
+    lambda {
+      unpacker.read_map_header
+    }.should raise_error(MessagePack::UnpackError)
+    lambda {
+      unpacker.read
+    }.should raise_error(MessagePack::MalformedFormatError)
+  end
 end
 
