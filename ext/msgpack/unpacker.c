@@ -64,8 +64,6 @@ static int RAW_TYPE_STRING = 256;
 static int RAW_TYPE_BINARY = 257;
 static int16_t INITIAL_BUFFER_CAPACITY_MAX = SHRT_MAX;
 
-static msgpack_rmem_t s_stack_rmem;
-
 #if !defined(HAVE_RB_HASH_NEW_CAPA)
 static inline VALUE rb_hash_new_capa_inline(long capa)
 {
@@ -86,13 +84,10 @@ static inline int16_t initial_buffer_size(msgpack_unpacker_t* uk, long count, si
 void msgpack_unpacker_static_init(void)
 {
     assert(sizeof(msgpack_unpacker_stack_entry_t) * MSGPACK_UNPACKER_STACK_CAPACITY <= MSGPACK_RMEM_PAGE_SIZE);
-
-    msgpack_rmem_init(&s_stack_rmem);
 }
 
 void msgpack_unpacker_static_destroy(void)
 {
-    msgpack_rmem_destroy(&s_stack_rmem);
 }
 
 /* outside 0..255 so it never collides with a real byte, including the invalid 0xc1 */
@@ -101,7 +96,7 @@ void msgpack_unpacker_static_destroy(void)
 static inline bool _msgpack_unpacker_stack_init(msgpack_unpacker_stack_t *stack) {
     if (!stack->data) {
         stack->capacity = MSGPACK_UNPACKER_STACK_CAPACITY;
-        stack->data = msgpack_rmem_alloc(&s_stack_rmem);
+        stack->data = msgpack_rmem_alloc();
         stack->depth = 0;
         return true;
     }
@@ -110,9 +105,7 @@ static inline bool _msgpack_unpacker_stack_init(msgpack_unpacker_stack_t *stack)
 
 static inline void _msgpack_unpacker_free_stack(msgpack_unpacker_stack_t* stack) {
     if (stack->data) {
-        if (!msgpack_rmem_free(&s_stack_rmem, stack->data)) {
-            rb_bug("Failed to free an rmem pointer, memory leak?");
-        }
+        msgpack_rmem_free(stack->data);
         stack->data = NULL;
         stack->depth = 0;
         stack->floor = 0;
