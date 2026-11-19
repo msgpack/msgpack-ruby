@@ -366,6 +366,10 @@ static VALUE Unpacker_register_type_internal(VALUE self, VALUE rb_ext_type, VALU
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
+    if (!rb_obj_is_proc(proc)) {
+        rb_raise(rb_eTypeError, "wrong argument type %"PRIsVALUE" (expected Proc)", rb_obj_class(proc));
+    }
+
     msgpack_unpacker_t *uk = MessagePack_Unpacker_get(self);
     msgpack_unpacker_ext_registry_put(self, &uk->ext_registry, ext_module, ext_type, 0, proc);
 

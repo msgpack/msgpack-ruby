@@ -137,6 +137,10 @@ public class Unpacker extends RubyObject {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
     }
 
+    if (proc != null && !proc.isNil() && !(proc instanceof RubyProc)) {
+        throw runtime.newTypeError(String.format("expected Proc but found %s.", proc.getType().getName()));
+    }
+
     RubyModule extModule = null;
     if (mod != runtime.getNil()) {
       extModule = (RubyModule)mod;

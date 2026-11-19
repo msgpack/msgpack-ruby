@@ -227,6 +227,14 @@ static VALUE Factory_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE
         rb_raise(rb_eFrozenError, "can't modify frozen MessagePack::Factory");
     }
 
+    if (!NIL_P(packer_proc) && !rb_obj_is_proc(packer_proc)) {
+        rb_raise(rb_eTypeError, "wrong argument type %"PRIsVALUE" (expected Proc)", rb_obj_class(packer_proc));
+    }
+
+    if (!NIL_P(unpacker_proc) && !rb_obj_is_proc(unpacker_proc)) {
+        rb_raise(rb_eTypeError, "wrong argument type %"PRIsVALUE" (expected Proc)", rb_obj_class(unpacker_proc));
+    }
+
     int ext_type = NUM2INT(rb_ext_type);
     if(ext_type < -128 || ext_type > 127) {
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);

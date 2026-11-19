@@ -11,6 +11,7 @@ import org.jruby.RubyIO;
 import org.jruby.RubyNumeric;
 import org.jruby.RubyInteger;
 import org.jruby.RubyFixnum;
+import org.jruby.RubyProc;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.builtin.IRubyObject;
 import org.jruby.anno.JRubyClass;
@@ -108,6 +109,10 @@ public class Packer extends RubyObject {
       throw runtime.newArgumentError(String.format("expected Module/Class but found %s.", mod.getType().getName()));
     }
     RubyModule extModule = (RubyModule) mod;
+
+    if (proc != null && !proc.isNil() && !(proc instanceof RubyProc)) {
+        throw runtime.newTypeError(String.format("expected Proc but found %s.", proc.getType().getName()));
+    }
 
     registry.put(extModule, (int) typeId, false, proc, null);
 

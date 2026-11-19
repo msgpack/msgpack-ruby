@@ -91,6 +91,13 @@ public class Factory extends RubyObject {
     IRubyObject packerProc = options.fastARef(runtime.newSymbol("packer"));
     IRubyObject unpackerProc = options.fastARef(runtime.newSymbol("unpacker"));
 
+    if (packerProc != null && !packerProc.isNil() && !(packerProc instanceof RubyProc)) {
+        throw runtime.newTypeError(String.format("expected Proc but found %s.", packerProc.getType().getName()));
+    }
+    if (unpackerProc != null && !unpackerProc.isNil() && !(unpackerProc instanceof RubyProc)) {
+        throw runtime.newTypeError(String.format("expected Proc but found %s.", unpackerProc.getType().getName()));
+    }
+
     long typeId = ((RubyFixnum) type).getLongValue();
     if (typeId < -128 || typeId > 127) {
       throw runtime.newRangeError(String.format("integer %d too big to convert to `signed char'", typeId));
