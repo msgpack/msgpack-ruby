@@ -361,6 +361,15 @@ describe MessagePack::Packer do
       packer.register_type(0x02, ValueTwo, &:to_msgpack_ext)
     end
 
+    it 'rejects a callback that is not a Proc' do
+      packer = MessagePack::Packer.new
+      not_a_proc = Object.new
+      def not_a_proc.to_proc; "not a proc"; end
+
+      expect { packer.register_type(0x01, ValueOne, not_a_proc) }.to raise_error(TypeError, /expected Proc/)
+      expect(packer.registered_types).to be_empty
+    end
+
     it 'returns a Hash which contains map of Class and type' do
       packer = MessagePack::Packer.new
       packer.register_type(0x01, ValueOne, :to_msgpack_ext)

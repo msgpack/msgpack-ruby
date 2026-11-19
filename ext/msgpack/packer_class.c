@@ -365,6 +365,10 @@ static VALUE Packer_register_type_internal(VALUE self, VALUE rb_ext_type, VALUE 
         rb_raise(rb_eRangeError, "integer %d too big to convert to `signed char'", ext_type);
     }
 
+    if (!rb_obj_is_proc(proc)) {
+        rb_raise(rb_eTypeError, "wrong argument type %"PRIsVALUE" (expected Proc)", rb_obj_class(proc));
+    }
+
     msgpack_packer_ext_registry_put(self, &pk->ext_registry, ext_module, ext_type, 0, proc);
 
     if (ext_module == rb_cSymbol) {
@@ -436,7 +440,7 @@ void MessagePack_Packer_module_init(VALUE mMessagePack)
     rb_define_method(cMessagePack_Packer, "to_a", Packer_to_a, 0);
 
     rb_define_private_method(cMessagePack_Packer, "registered_types_internal", Packer_registered_types_internal, 0);
-    rb_define_method(cMessagePack_Packer, "register_type_internal", Packer_register_type_internal, 3);
+    rb_define_private_method(cMessagePack_Packer, "register_type_internal", Packer_register_type_internal, 3);
 
     rb_define_method(cMessagePack_Packer, "full_pack", Packer_full_pack, 0);
 }
